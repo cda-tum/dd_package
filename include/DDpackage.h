@@ -132,11 +132,14 @@ namespace dd {
 	    std::array<std::array<NodePtr, NBUCKET>, MAXN> Unique{ };
 	    // Three types since different possibilities for complex numbers  (caused by caching)
 	    // weights of operands and result are from complex table (e.g., transpose, conjugateTranspose)
-	    std::array<CTentry1, CTSLOTS> CTable1{ };
+	    std::array<CTentry1, CTSLOTS> CTable1_matrix{ };
+	    std::array<CTentry1, CTSLOTS> CTable1_vector{ };
 	    // weights of operands are from complex table, weight of result from cache/ZERO (e.g., mult)
-	    std::array<CTentry2, CTSLOTS> CTable2{ };
+	    std::array<CTentry2, CTSLOTS> CTable2_matrix{ };
+	    std::array<CTentry2, CTSLOTS> CTable2_vector{ };
 	    // weights of operands and result are from cache/ZERO (e.g., add)
-	    std::array<CTentry3, CTSLOTS> CTable3{ };
+	    std::array<CTentry3, CTSLOTS> CTable3_matrix{ };
+	    std::array<CTentry3, CTSLOTS> CTable3_vector{ };
 	    // Toffoli gate table
 	    std::array<TTentry, TTSLOTS> TTable{ };
 	    // Identity matrix table
@@ -310,7 +313,11 @@ namespace dd {
 
 	    // statistics and info
 	    void statistics();
-	    static void printInformation();
+	    static void printInformation();		
+	    unsigned int nodeCount(const Edge& e) const {
+			std::unordered_set<NodePtr> v;
+			return nodeCount(e, v);
+		}
 
 	    // debugging - not normally used
 	    void debugnode(NodePtr p) const;
