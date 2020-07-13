@@ -519,18 +519,18 @@ namespace dd {
     // set identity table to empty
     void Package::initComputeTable() {
         for (unsigned int i = 0; i < CTSLOTS; i++) {
-            CTable1_vector[i].r.p = nullptr;
-            CTable1_vector[i].which = none;
-            CTable1_matrix[i].r.p = nullptr;
-            CTable1_matrix[i].which = none;
-            CTable2_vector[i].r = nullptr;
-            CTable2_vector[i].which = none;
-            CTable2_matrix[i].r = nullptr;
-            CTable2_matrix[i].which = none;
-            CTable3_vector[i].r = nullptr;
-            CTable3_vector[i].which = none;
-            CTable3_matrix[i].r = nullptr;
-            CTable3_matrix[i].which = none;
+            for (auto & table : CTable1) {
+                table.second[i].r.p = nullptr;
+                table.second[i].which = none;
+            }
+            for (auto & table : CTable2) {
+                table.second[i].r = nullptr;
+                table.second[i].which = none;
+            }
+            for (auto & table : CTable3) {
+                table.second[i].r = nullptr;
+                table.second[i].which = none;
+            }
         }
         for (auto & i : TTable) {
             i.e.p = nullptr;
@@ -872,11 +872,11 @@ namespace dd {
     }
 
     Package::Package() : cn(ComplexNumbers()) {
+        mode = Mode::Matrix;
 	    initComputeTable();  // init computed table to empty
         currentNodeGCLimit = GCLIMIT1; // set initial garbage collection limit
 	    currentComplexGCLimit = ComplexNumbers::GCLIMIT1;
 	    visited.max_load_factor(10);
-        mode = Mode::Matrix;
 
         for (unsigned short i = 0; i < MAXN; i++) //  set initial variable order to 0,1,2... from bottom up
         {
