@@ -872,7 +872,7 @@ namespace dd {
     }
 
     Package::Package() : cn(ComplexNumbers()) {
-        mode = Mode::Matrix;
+        mode = Mode::Vector;
 	    initComputeTable();  // init computed table to empty
         currentNodeGCLimit = GCLIMIT1; // set initial garbage collection limit
 	    currentComplexGCLimit = ComplexNumbers::GCLIMIT1;
