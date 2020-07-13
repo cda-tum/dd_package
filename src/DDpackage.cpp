@@ -327,7 +327,7 @@ namespace dd {
 	    }
 
 	    /// --- Matrix treatment ---
-	    if (forceMatrixNormalization || !zero[1] || !zero[3]) {
+	    if (mode == Mode::Matrix || !zero[1] || !zero[3]) {
 	    	fp max = 0.L;
 	    	Complex maxc = ComplexNumbers::ONE;
 		    // determine max amplitude
@@ -703,7 +703,7 @@ namespace dd {
         CTlook[which]++;
 
         if (which == mult || which == fid || which == kron) {
-            std::array<CTentry2, CTSLOTS>& table = forceMatrixNormalization ? CTable2_matrix : CTable2_vector;
+            std::array<CTentry2, CTSLOTS>& table = CTable2[mode];
             const unsigned long i = CThash(a, b, which);
 
             if (table[i].which != which) return r;
@@ -721,7 +721,7 @@ namespace dd {
 
             return r;
         } else if (which == ad || which == noise || which == noNoise) {
-            std::array<CTentry3, CTSLOTS>& table = forceMatrixNormalization ? CTable3_matrix : CTable3_vector;
+            std::array<CTentry3, CTSLOTS>& table = CTable3[mode];
             ComplexValue aw{ a.w.r->val, a.w.i->val};
             ComplexValue bw{ b.w.r->val, b.w.i->val };
             const unsigned long i = CThash2(a.p, aw, b.p, bw, which);
@@ -741,7 +741,7 @@ namespace dd {
 
             return r;
         } else if (which == conjTransp || which == transp) {
-            std::array<CTentry1, CTSLOTS>& table = forceMatrixNormalization ? CTable1_matrix : CTable1_vector;
+            std::array<CTentry1, CTSLOTS>& table = CTable1[mode];
             const unsigned long i = CThash(a, b, which);
 
             if (table[i].which != which) return r;
@@ -763,7 +763,7 @@ namespace dd {
                 std::cerr << "[WARN] CTinsert: Edge with near zero weight a.w=" << a.w << "  b.w=" << b.w << "\n";
             }
             assert(((std::uintptr_t)r.w.r & 1u) == 0 && ((std::uintptr_t)r.w.i & 1u) == 0);
-            std::array<CTentry2, CTSLOTS>& table = forceMatrixNormalization ? CTable2_matrix : CTable2_vector;
+            std::array<CTentry2, CTSLOTS>& table = CTable2[mode];
             const unsigned long i = CThash(a, b, which);
 
             table[i].a = a;
@@ -773,7 +773,7 @@ namespace dd {
             table[i].rw.r = r.w.r->val;
             table[i].rw.i = r.w.i->val;
         } else if (which == ad || which == noise || which == noNoise) {
-            std::array<CTentry3, CTSLOTS>& table = forceMatrixNormalization ? CTable3_matrix : CTable3_vector;
+            std::array<CTentry3, CTSLOTS>& table = CTable3[mode];
 	        ComplexValue aw{ a.w.r->val, a.w.i->val };
 	        ComplexValue bw{ b.w.r->val, b.w.i->val };
             const unsigned long i = CThash2(a.p, aw, b.p, bw, which);
@@ -790,7 +790,7 @@ namespace dd {
             table[i].which = which;
 
         } else if (which == conjTransp || which == transp) {
-            std::array<CTentry1, CTSLOTS>& table = forceMatrixNormalization ? CTable1_matrix : CTable1_vector;
+            std::array<CTentry1, CTSLOTS>& table = CTable1[mode];
             const unsigned long i = CThash(a, b, which);
 
             table[i].a = a;
@@ -876,6 +876,7 @@ namespace dd {
         currentNodeGCLimit = GCLIMIT1; // set initial garbage collection limit
 	    currentComplexGCLimit = ComplexNumbers::GCLIMIT1;
 	    visited.max_load_factor(10);
+        mode = Mode::Matrix;
 
         for (unsigned short i = 0; i < MAXN; i++) //  set initial variable order to 0,1,2... from bottom up
         {
