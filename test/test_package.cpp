@@ -47,3 +47,26 @@ TEST(DDPackageTest, IdentifyTrace) {
     ASSERT_EQ(fullTrace, (dd::ComplexValue{16,0}));
 }
 
+TEST(DDPackageTest, BaseConversion) {
+    short line[3] = {2, -1, -1};
+    auto dd = std::make_unique<dd::Package>();
+    dd::Edge e_comp = dd->multiply(dd->makeGateDD(Hmat, 3, line), dd->makeZeroState(3));
+    line[0] = -1;
+    line[1] = 2;
+    e_comp = dd->multiply(dd->makeGateDD(Hmat, 3, line), e_comp);
+    line[1] = -1;
+    line[2] = 2;
+    e_comp = dd->multiply(dd->makeGateDD(Hmat, 3, line), e_comp);
+    line[2] = -1;
+    line[0] = 2;
+    e_comp = dd->multiply(dd->makeGateDD(Xmat, 3, line), e_comp);
+    dd::Edge e_hadamard = dd->multiply(dd->makeGateDD(Zmat, 3, line), dd->makeZeroState(3));
+
+    dd->export2Dot(e_hadamard, "e_hadamard", true);
+    dd::Edge e_comp_conv = dd->convert(e_hadamard, dd::Basis::Hadamard, dd::Basis::Computational);
+    dd->export2Dot(e_comp, "e_comp", true);
+    dd->export2Dot(e_comp_conv, "e_comp_conv", true);
+    EXPECT_TRUE(dd->equals(e_comp, e_comp_conv));
+}
+
+

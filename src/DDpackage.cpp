@@ -1675,6 +1675,49 @@ namespace dd {
     	return in;
 	}
 
+    
+	Edge Package::convert(Edge e, Basis from, Basis to) {
+		if(isTerminal(e)) {
+			return e;
+		}
+        assert(e.p->e[1].p == DDzero.p && e.p->e[3].p == DDzero.p);
+
+        Edge n{ getNode(), e.w};
+        n.p->v = e.p->v;       
+	    n.p->e[1] = n.p->e[3] = DDzero;
+        n.p->e[0] = convert(e.p->e[0], from, to);
+        n.p->e[2] = convert(e.p->e[2], from, to);
+
+        Complex w0 = n.p->e[0].w;
+        Complex w2 = n.p->e[1].w;
+        if(from == Basis::Computational && to == Basis::Hadamard) {
+            n.p->e[0].w = cn.addCached(w0, w2);
+            cn.div(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
+            n.p->e[2].w = cn.subCached(w0, w2);
+            cn.div(n.p->e[2].w, n.p->e[2].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
+        } else if(from == Basis::Hadamard && to == Basis::Computational) {
+            n.p->e[0].w = cn.addCached(w0, w2);
+            cn.mul(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
+            std::cout << n.p->e[0].w << std::endl;
+            n.p->e[2].w = cn.subCached(w0, w2);
+            cn.mul(n.p->e[2].w, n.p->e[2].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
+        } else {
+            return e;
+        }
+
+        if(!cn.equalsZero(n.p->e[0].w) && n.p->e[0].p == DDzero.p) {
+            n.p->e[0].p = n.p->e[2].p;
+        } 
+        
+        if(!cn.equalsZero(n.p->e[2].w) && n.p->e[2].p == DDzero.p) {
+            n.p->e[2].p = n.p->e[0].p;
+        } 
+
+        n = normalize(n, true); // normalize it
+        n = UTlookup(n);  // look it up in the unique tables
+        return n;
+	}
+
 	void Package::printUniqueTable(unsigned short n) {
 		std::cout << "Unique Table: " << std::endl;
 		for (int i = n-1; i >=0; --i) {

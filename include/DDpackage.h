@@ -119,8 +119,11 @@ namespace dd {
 		None, Sifting
 	};
 
-    class Package {
+	enum Basis {
+		Computational, Hadamard
+	};
 
+    class Package {
     	static Node terminal;
 	    constexpr static Node* terminalNode{&terminal};        // pointer to terminal node
 
@@ -268,6 +271,11 @@ namespace dd {
 	    /// \param varMap stores the variable mapping (cf. dynamicReorder(...))
 	    /// \return the resulting decision diagram (and the changed variable map, which is returned as reference)
 	    Edge sifting(Edge in, std::map<unsigned short, unsigned short>& varMap);
+
+		/**
+		 * Convert dd from one bases to another (note that this dd has to represent a state)
+		 */
+		Edge convert(Edge e, Basis from, Basis to);
 
 	    unsigned int size(const Edge& e);
 
