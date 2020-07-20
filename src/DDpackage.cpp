@@ -1682,14 +1682,14 @@ namespace dd {
 		}
         assert(e.p->e[1].p == DDzero.p && e.p->e[3].p == DDzero.p);
 
-        Edge n{ getNode(), e.w};
+        Edge n{ getNode(), CN::ONE};
         n.p->v = e.p->v;       
 	    n.p->e[1] = n.p->e[3] = DDzero;
         n.p->e[0] = convert(e.p->e[0], from, to);
         n.p->e[2] = convert(e.p->e[2], from, to);
 
         Complex w0 = n.p->e[0].w;
-        Complex w2 = n.p->e[1].w;
+        Complex w2 = n.p->e[2].w;
         if(from == Basis::Computational && to == Basis::Hadamard) {
             n.p->e[0].w = cn.addCached(w0, w2);
             cn.div(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
@@ -1698,7 +1698,6 @@ namespace dd {
         } else if(from == Basis::Hadamard && to == Basis::Computational) {
             n.p->e[0].w = cn.addCached(w0, w2);
             cn.mul(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
-            std::cout << n.p->e[0].w << std::endl;
             n.p->e[2].w = cn.subCached(w0, w2);
             cn.mul(n.p->e[2].w, n.p->e[2].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
         } else {
@@ -1712,9 +1711,13 @@ namespace dd {
         if(!cn.equalsZero(n.p->e[2].w) && n.p->e[2].p == DDzero.p) {
             n.p->e[2].p = n.p->e[0].p;
         } 
-
+        
         n = normalize(n, true); // normalize it
         n = UTlookup(n);  // look it up in the unique tables
+
+        Complex w = cn.mulCached(n.w, e.w);
+        n.w = cn.lookup(w);
+        cn.releaseCached(w);
         return n;
 	}
 
