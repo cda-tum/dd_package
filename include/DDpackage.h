@@ -276,8 +276,16 @@ namespace dd {
 		 * Convert dd from one bases to another (note that this dd has to represent a state)
 		 */
 		Edge convert(Edge e, Basis from, Basis to);
-
-	    unsigned int size(const Edge& e);
+		void getAllAmplitudes(Edge& e, std::map<std::string, ComplexValue>& amplitudes, int idx, std::string& elements);
+    	ComplexValue convertAmplitude(unsigned short nqubits, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, std::string elements);		    
+		void convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements);
+		void convertAmplitudes(Edge e, unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, Basis from, Basis to);
+		
+    	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements);
+    	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print = false);
+	    
+		
+		unsigned int size(const Edge& e);
 
 		/**
 		 * Get a single element of the vector or matrix represented by the dd with root edge e

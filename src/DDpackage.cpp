@@ -1721,6 +1721,93 @@ namespace dd {
         return n;
 	}
 
+    void Package::getAllAmplitudes(Edge& e, std::map<std::string, ComplexValue>& amplitudes, int idx, std::string& elements) {
+        if(idx < 0) {
+            amplitudes[elements] = getValueByPath(e, elements);
+            return;
+        }
+
+        elements[idx] = '0';
+        getAllAmplitudes(e, amplitudes, idx - 1, elements);
+        elements[idx] = '2';
+        getAllAmplitudes(e, amplitudes, idx - 1, elements);
+        elements[idx] = '0';
+    }		
+    
+    ComplexValue Package::convertAmplitude(unsigned short nqubits, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, std::string elements) {
+        if(from == Basis::Hadamard && to == Computational) {
+            Complex amp = cn.getCachedComplex(0, 0);
+            Complex norm = cn.getCachedComplex(1/SQRT_2, 0);
+            Complex norm_sqrt = cn.getTempCachedComplex(1/SQRT_2, 0);
+            for(int i = 0; i < nqubits - 1; i++) {
+                cn.mul(norm, norm, norm_sqrt);
+            }
+
+            for (auto const& x : oldAmplitudes) {
+                int sign = 1;
+                for (int i = 0; i < nqubits; i++) {
+                    if(elements[i] == '2' && x.first[i] == '2') 
+                        sign *= -1;
+                }
+
+                cn.add(amp, amp, cn.getTempCachedComplex(sign * x.second.r, sign * x.second.i));
+            }
+            cn.div(amp, amp, norm);
+
+            Complex cl = cn.lookup(amp);
+            cn.releaseCached(amp);
+            cn.releaseCached(norm);
+
+            return {CN::val(cl.r), CN::val(cl.i)};
+        } else {
+            std::cout << "Conversion not yet supported" << std::endl;
+        }
+        return {0, 0};
+    }
+
+    void Package::convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements) {
+        if(idx < 0) {
+            amplitudes[elements] = convertAmplitude(nqubits, oldAmplitudes, from, to, elements);
+            return;
+        }
+
+        elements[idx] = '0';
+        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, idx - 1, elements);
+        elements[idx] = '2';
+        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, idx - 1, elements);
+        elements[idx] = '0';
+    }		
+
+    void Package::convertAmplitudes(Edge e, unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, Basis from, Basis to) {
+        std::map<std::string, ComplexValue> oldAmplitudes;
+        
+        std::string elements(nqubits, '0');
+        getAllAmplitudes(e, oldAmplitudes, nqubits - 1, elements);
+        
+        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, nqubits - 1, elements);
+    }
+
+    bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements) {
+        if(idx < 0) {
+            if(print) std::cout << elements << ": " << ref[elements] << " == " << amp[elements] << std::endl;
+            return ref[elements] == amp[elements];
+        }
+        bool success = true;
+        elements[idx] = '0';
+        success = success && compareAmplitudes(ref, amp, print, idx - 1, elements);
+        elements[idx] = '2';
+        success = success && compareAmplitudes(ref, amp, print, idx - 1, elements);
+        elements[idx] = '0';
+        return success;
+    }
+
+    bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print) {
+        int nqubits = ref.begin()->first.length();
+        std::cout << nqubits << std::endl;
+        std::string elements(nqubits, '0');
+        return compareAmplitudes(ref, amp, print, nqubits, elements);
+    }
+
 	void Package::printUniqueTable(unsigned short n) {
 		std::cout << "Unique Table: " << std::endl;
 		for (int i = n-1; i >=0; --i) {
