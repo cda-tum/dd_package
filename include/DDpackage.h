@@ -281,7 +281,7 @@ namespace dd {
 		void convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements);
 		void convertAmplitudes(Edge e, unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, Basis from, Basis to);
 		
-    	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements);
+    	// bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements);
     	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print = false);
 	    
 		

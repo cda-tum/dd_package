@@ -1787,6 +1787,7 @@ namespace dd {
         convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, nqubits - 1, elements);
     }
 
+    /*
     bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements) {
         if(idx < 0) {
             if(print) std::cout << elements << ": " << ref[elements] << " == " << amp[elements] << std::endl;
@@ -1800,12 +1801,18 @@ namespace dd {
         elements[idx] = '0';
         return success;
     }
+    */
 
     bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print) {
-        int nqubits = ref.begin()->first.length();
-        std::cout << nqubits << std::endl;
-        std::string elements(nqubits, '0');
-        return compareAmplitudes(ref, amp, print, nqubits, elements);
+        const fp TOLERANCE = 1e-10;
+        assert(amp.size() == ref.size());
+        bool success = true;
+        for (auto const& it : amp) {
+            if(print) std::cout << it.first << ": " << ref[it.first] << " == " << it.second << std::endl;
+            success = success && fabs(ref[it.first].r - it.second.r) < TOLERANCE && fabs(ref[it.first].i - it.second.i) < TOLERANCE;
+            if(!(fabs(ref[it.first].r - it.second.r) < TOLERANCE && fabs(ref[it.first].i - it.second.i) < TOLERANCE)) std::cout << it.first << ": " << ref[it.first] << " == " << it.second << std::endl;
+        }
+        return success;
     }
 
 	void Package::printUniqueTable(unsigned short n) {
