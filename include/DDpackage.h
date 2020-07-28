@@ -275,7 +275,7 @@ namespace dd {
 		/**
 		 * Convert dd from one bases to another (note that this dd has to represent a state)
 		 */
-		Edge convert(Edge e, Basis from, Basis to);
+		Edge convert(Edge e, Basis from, Basis to);  // only works for trivial cases
 		void getAllAmplitudes(Edge& e, std::map<std::string, ComplexValue>& amplitudes, int idx, std::string& elements);
     	ComplexValue convertAmplitude(unsigned short nqubits, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, std::string elements);		    
 		void convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements);
