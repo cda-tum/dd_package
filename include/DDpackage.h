@@ -120,8 +120,13 @@ namespace dd {
 	};
 
 	enum Mode {
-		Vector, Matrix
+		Vector, Matrix, ModeCount
 	};
+
+	template<class CTentry>
+	constexpr int at(std::array<CTentry, CTSLOTS> const& arr, Mode idx) {
+		return arr[static_cast<size_t>(idx)];
+	}
 
     class Package {
 
@@ -136,20 +141,13 @@ namespace dd {
 	    std::array<std::array<NodePtr, NBUCKET>, MAXN> Unique{ };
 	    // Three types since different possibilities for complex numbers  (caused by caching)
 	    // weights of operands and result are from complex table (e.g., transpose, conjugateTranspose)
-		std::map<Mode, std::array<CTentry1, CTSLOTS>> CTable1 = {  // TODO using map insertion causes segfault on windows
-			{Mode::Matrix, {}},
-			{Mode::Vector, {}}
-		};
+		std::array<std::array<CTentry1, CTSLOTS>, static_cast<int>(Mode::ModeCount)> CTable1; // TODO using map insertion causes segfault on windows
+
 	    // weights of operands are from complex table, weight of result from cache/ZERO (e.g., mult)
-		std::map<Mode, std::array<CTentry2, CTSLOTS>> CTable2 = {
-			{Mode::Matrix, {}},
-			{Mode::Vector, {}}
-		};
+		std::array<std::array<CTentry2, CTSLOTS>, static_cast<int>(Mode::ModeCount)> CTable2;
+
 	    // weights of operands and result are from cache/ZERO (e.g., add)
-		std::map<Mode, std::array<CTentry3, CTSLOTS>> CTable3 = {
-			{Mode::Matrix, {}},
-			{Mode::Vector, {}}
-		};
+		std::array<std::array<CTentry3, CTSLOTS>, static_cast<int>(Mode::ModeCount)> CTable3;
 
 	    // Toffoli gate table
 	    std::array<TTentry, TTSLOTS> TTable{ };
