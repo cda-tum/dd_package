@@ -136,7 +136,7 @@ namespace dd {
 	    std::array<std::array<NodePtr, NBUCKET>, MAXN> Unique{ };
 	    // Three types since different possibilities for complex numbers  (caused by caching)
 	    // weights of operands and result are from complex table (e.g., transpose, conjugateTranspose)
-		std::map<Mode, std::array<CTentry1, CTSLOTS>> CTable1 = {
+		std::map<Mode, std::array<CTentry1, CTSLOTS>> CTable1 = {  // TODO using map insertion causes segfault on windows
 			{Mode::Matrix, {}},
 			{Mode::Vector, {}}
 		};
