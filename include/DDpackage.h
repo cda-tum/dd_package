@@ -123,11 +123,6 @@ namespace dd {
 		Vector, Matrix, ModeCount
 	};
 
-	template<class CTentry>
-	constexpr int at(std::array<CTentry, CTSLOTS> const& arr, Mode idx) {
-		return arr[static_cast<size_t>(idx)];
-	}
-
     class Package {
 
     	static Node terminal;
