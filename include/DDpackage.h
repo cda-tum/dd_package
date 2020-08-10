@@ -119,10 +119,6 @@ namespace dd {
 		None, Sifting
 	};
 
-	enum Basis {
-		Computational, Hadamard
-	};
-
     class Package {
     	static Node terminal;
 	    constexpr static Node* terminalNode{&terminal};        // pointer to terminal node
@@ -272,19 +268,9 @@ namespace dd {
 	    /// \return the resulting decision diagram (and the changed variable map, which is returned as reference)
 	    Edge sifting(Edge in, std::map<unsigned short, unsigned short>& varMap);
 
-		/**
-		 * Convert dd from one bases to another (note that this dd has to represent a state)
-		 */
-		Edge convert(Edge e, Basis from, Basis to);  // only works for trivial cases
 		void getAllAmplitudes(Edge& e, std::map<std::string, ComplexValue>& amplitudes, int idx, std::string& elements);
-    	ComplexValue convertAmplitude(unsigned short nqubits, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, std::string elements);		    
-		void convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements);
-		void convertAmplitudes(Edge e, unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, Basis from, Basis to);
-		
-    	// bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements);
     	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print = false);
 	    
-		
 		unsigned int size(const Edge& e);
 
 		/**

@@ -1675,52 +1675,6 @@ namespace dd {
     	return in;
 	}
 
-    
-	Edge Package::convert(Edge e, Basis from, Basis to) {
-		if(isTerminal(e)) {
-			return e;
-		}
-        assert(e.p->e[1].p == DDzero.p && e.p->e[3].p == DDzero.p);
-
-        Edge n{ getNode(), CN::ONE};
-        n.p->v = e.p->v;       
-	    n.p->e[1] = n.p->e[3] = DDzero;
-        n.p->e[0] = convert(e.p->e[0], from, to);
-        n.p->e[2] = convert(e.p->e[2], from, to);
-
-        Complex w0 = n.p->e[0].w;
-        Complex w2 = n.p->e[2].w;
-        if(from == Basis::Computational && to == Basis::Hadamard) {
-            n.p->e[0].w = cn.addCached(w0, w2);
-            cn.div(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
-            n.p->e[2].w = cn.subCached(w0, w2);
-            cn.div(n.p->e[2].w, n.p->e[2].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
-        } else if(from == Basis::Hadamard && to == Basis::Computational) {
-            n.p->e[0].w = cn.addCached(w0, w2);
-            cn.mul(n.p->e[0].w, n.p->e[0].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
-            n.p->e[2].w = cn.subCached(w0, w2);
-            cn.mul(n.p->e[2].w, n.p->e[2].w, cn.getTempCachedComplex(dd::SQRT_2, 0));
-        } else {
-            return e;
-        }
-
-        if(!cn.equalsZero(n.p->e[0].w) && n.p->e[0].p == DDzero.p) {
-            n.p->e[0].p = n.p->e[2].p;
-        } 
-        
-        if(!cn.equalsZero(n.p->e[2].w) && n.p->e[2].p == DDzero.p) {
-            n.p->e[2].p = n.p->e[0].p;
-        } 
-        
-        n = normalize(n, true); // normalize it
-        n = UTlookup(n);  // look it up in the unique tables
-
-        Complex w = cn.mulCached(n.w, e.w);
-        n.w = cn.lookup(w);
-        cn.releaseCached(w);
-        return n;
-	}
-
     void Package::getAllAmplitudes(Edge& e, std::map<std::string, ComplexValue>& amplitudes, int idx, std::string& elements) {
         if(idx < 0) {
             amplitudes[elements] = getValueByPath(e, elements);
@@ -1732,76 +1686,7 @@ namespace dd {
         elements[idx] = '2';
         getAllAmplitudes(e, amplitudes, idx - 1, elements);
         elements[idx] = '0';
-    }		
-    
-    ComplexValue Package::convertAmplitude(unsigned short nqubits, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, std::string elements) {
-        if(from == Basis::Hadamard && to == Computational) {
-            Complex amp = cn.getCachedComplex(0, 0);
-            Complex norm = cn.getCachedComplex(1/SQRT_2, 0);
-            Complex norm_sqrt = cn.getTempCachedComplex(1/SQRT_2, 0);
-            for(int i = 0; i < nqubits - 1; i++) {
-                cn.mul(norm, norm, norm_sqrt);
-            }
-
-            for (auto const& x : oldAmplitudes) {
-                int sign = 1;
-                for (int i = 0; i < nqubits; i++) {
-                    if(elements[i] == '2' && x.first[i] == '2') 
-                        sign *= -1;
-                }
-
-                cn.add(amp, amp, cn.getTempCachedComplex(sign * x.second.r, sign * x.second.i));
-            }
-            cn.div(amp, amp, norm);
-
-            Complex cl = cn.lookup(amp);
-            cn.releaseCached(amp);
-            cn.releaseCached(norm);
-
-            return {CN::val(cl.r), CN::val(cl.i)};
-        } else {
-            std::cout << "Conversion not yet supported" << std::endl;
-        }
-        return {0, 0};
     }
-
-    void Package::convertAmplitudes(unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, std::map<std::string, ComplexValue>& oldAmplitudes, Basis from, Basis to, int idx, std::string& elements) {
-        if(idx < 0) {
-            amplitudes[elements] = convertAmplitude(nqubits, oldAmplitudes, from, to, elements);
-            return;
-        }
-
-        elements[idx] = '0';
-        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, idx - 1, elements);
-        elements[idx] = '2';
-        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, idx - 1, elements);
-        elements[idx] = '0';
-    }		
-
-    void Package::convertAmplitudes(Edge e, unsigned short nqubits, std::map<std::string, ComplexValue>& amplitudes, Basis from, Basis to) {
-        std::map<std::string, ComplexValue> oldAmplitudes;
-        
-        std::string elements(nqubits, '0');
-        getAllAmplitudes(e, oldAmplitudes, nqubits - 1, elements);
-        
-        convertAmplitudes(nqubits, amplitudes, oldAmplitudes, from, to, nqubits - 1, elements);
-    }
-
-    /*
-    bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print, int idx, std::string& elements) {
-        if(idx < 0) {
-            if(print) std::cout << elements << ": " << ref[elements] << " == " << amp[elements] << std::endl;
-            return ref[elements] == amp[elements];
-        }
-        bool success = true;
-        elements[idx] = '0';
-        success = success && compareAmplitudes(ref, amp, print, idx - 1, elements);
-        elements[idx] = '2';
-        success = success && compareAmplitudes(ref, amp, print, idx - 1, elements);
-        elements[idx] = '0';
-        return success;
-    }
-    */
 
     bool Package::compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print) {
         const fp TOLERANCE = 1e-10;
