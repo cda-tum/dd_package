@@ -65,14 +65,14 @@ jobs:
 
     - os: osx
       osx_image: xcode11.3
-      compiler: "gcc-9"
-      env: BUILD='Release' CC=gcc-9 CXX=g++-9 COVERAGE=0
+      compiler: "gcc-10"
+      env: BUILD='Release' CC=gcc-10 CXX=g++-10 COVERAGE=0
       addons:
         homebrew:
           packages:
             - cmake
             - ninja
-            - gcc@9
+            - gcc@10
           update: true
 
     - os: windows
