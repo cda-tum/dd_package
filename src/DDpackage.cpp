@@ -698,7 +698,7 @@ namespace dd {
         for(auto& p: visited) {
             if (p != terminalNode) {
                 for(auto& edge: p->e) {
-                    if(edge.p != nullptr) 
+                    if(!cn.equalsZero(edge.w)) 
                         nedges++;
                 }
             }
