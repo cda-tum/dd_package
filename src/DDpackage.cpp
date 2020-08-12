@@ -684,10 +684,26 @@ namespace dd {
         return sum;
     }
 
+	unsigned int Package::size(const Edge& e) {
+        unsigned int nedges;
+        return size(e, nedges);
+    }
+
+
     // counts number of unique nodes in a DD
-    unsigned int Package::size(const Edge& e) {
+    unsigned int Package::size(const Edge& e, unsigned int& nedges) {
         visited.clear();
-        return nodeCount(e, visited);
+        int size = nodeCount(e, visited);
+        nedges = 0;
+        for(auto& p: visited) {
+            if (p != terminalNode) {
+                for(auto& edge: p->e) {
+                    if(edge.p != nullptr) 
+                        nedges++;
+                }
+            }
+        }
+        return size;
     }
 
 	Edge Package::CTlookup(const Edge& a, const Edge& b, const CTkind which) {

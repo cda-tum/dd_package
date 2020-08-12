@@ -272,6 +272,7 @@ namespace dd {
     	bool compareAmplitudes(std::map<std::string, ComplexValue>& ref, std::map<std::string, ComplexValue>& amp, bool print = false);
 	    
 		unsigned int size(const Edge& e);
+		unsigned int size(const Edge& e, unsigned int& nedges);
 
 		/**
 		 * Get a single element of the vector or matrix represented by the dd with root edge e
