@@ -102,8 +102,6 @@ namespace dd {
         conjTransp,
         kron,
         renormalize,
-        noise,
-        noNoise,
         none
     };
 
