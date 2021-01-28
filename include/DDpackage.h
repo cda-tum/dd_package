@@ -89,12 +89,6 @@ namespace dd {
     // computed table definitions
     // compute table entry kinds
     enum CTkind {
-        I,
-        X,
-        Y,
-        Z,
-        ATrue,
-        AFalse,
         ad,
         mult,
         fid,
@@ -103,6 +97,15 @@ namespace dd {
         kron,
         renormalize,
         none
+    };
+
+    enum OperationTypes {
+        I,
+        X,
+        Y,
+        Z,
+        ATrue,
+        AFalse,
     };
 
     //computed table entry
