@@ -89,6 +89,12 @@ namespace dd {
     // computed table definitions
     // compute table entry kinds
     enum CTkind {
+        I,
+        X,
+        Y,
+        Z,
+        ATrue,
+        AFalse,
         ad,
         mult,
         fid,
@@ -96,16 +102,9 @@ namespace dd {
         conjTransp,
         kron,
         renormalize,
-        none
-    };
+        none,
+        ct_count //ct_count must be the final element
 
-    enum OperationTypes {
-        I,
-        X,
-        Y,
-        Z,
-        ATrue,
-        AFalse,
     };
 
     //computed table entry
@@ -193,8 +192,8 @@ namespace dd {
 	    unsigned long peaknodecount = 0;                   // records peak node count in unique table
         // mostly for debugging in reordering
 
-        std::array<unsigned long, 10> nOps{};              // operation counters
-	    std::array<unsigned long, 10> CTlook{}, CThit{};   // counters for gathering compute table hit stats
+        std::array<unsigned long, ct_count> nOps{};              // operation counters
+	    std::array<unsigned long, ct_count> CTlook{}, CThit{};   // counters for gathering compute table hit stats
 
 	    std::vector<ListElementPtr> allocated_list_chunks;
 	    std::vector<NodePtr> allocated_node_chunks;
