@@ -362,6 +362,10 @@ namespace dd {
                             cn.releaseCached(i.w);
                         }
                     }
+                } else if (&e.p != &DDzero.p){
+                    // If it is not a cached variable, I have to put it pack into the chain
+                    e.p->next = nodeAvail;
+                    nodeAvail = e.p;
                 }
                 return DDzero;
             }
@@ -655,13 +659,12 @@ namespace dd {
     // get memory space for a node
     NodePtr Package::getNode() {
         NodePtr r;
-
         if (nodeAvail != nullptr)    // get node from avail chain if possible
         {
             r = nodeAvail;
             nodeAvail = nodeAvail->next;
         } else {            // otherwise allocate new nodes
-            r = new Node[NODE_CHUNK_SIZE]{};
+            r = new Node[NODE_CHUNK_SIZE];
             node_allocations += NODE_CHUNK_SIZE;
             allocated_node_chunks.push_back(r);
             r->reuseCount = 0;
