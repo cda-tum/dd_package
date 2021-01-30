@@ -362,7 +362,7 @@ namespace dd {
                             cn.releaseCached(i.w);
                         }
                     }
-                } else if (&e.p != &DDzero.p){
+                } else if (&e.p != &DDzero.p) {
                     // If it is not a cached variable, I have to put it pack into the chain
                     e.p->next = nodeAvail;
                     nodeAvail = e.p;
@@ -432,6 +432,10 @@ namespace dd {
                         cn.releaseCached(i.w);
                     }
                 }
+            } else if (&e.p != &DDzero.p) {
+                // If it is not a cached variable, I have to put it pack into the chain
+                e.p->next = nodeAvail;
+                nodeAvail = e.p;
             }
             return DDzero;
         }
@@ -907,7 +911,7 @@ namespace dd {
             table[i].r = r.p;
             table[i].rw.r = r.w.r->val;
             table[i].rw.i = r.w.i->val;
-        } else if (which == ad ) {
+        } else if (which == ad) {
             std::array<CTentry3, CTSLOTS> &table = CTable3.at(mode);
             ComplexValue aw{a.w.r->val, a.w.i->val};
             ComplexValue bw{b.w.r->val, b.w.i->val};
@@ -988,7 +992,9 @@ namespace dd {
         assert(e.p->v == v);
         e = normalize(e, cached); // normalize it
         assert(e.p->v == v || isTerminal(e));
-        e = UTlookup(e, true);  // look it up in the unique tables
+//        e = UTlookup(e, true);  // why do you keep the node? This generates a memory leak!
+        e = UTlookup(e, false);  // look it up in the unique tables
+
         assert(e.p->v == v || isTerminal(e));
         return e;          // return result
     }
