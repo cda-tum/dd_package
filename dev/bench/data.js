@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616449275307,
+  "lastUpdate": 1616449801997,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -144,6 +144,78 @@ window.BENCHMARK_DATA = {
             "value": 13.03741036363652,
             "unit": "ms/iter",
             "extra": "iterations: 55\ncpu: 13.03238125454546 ms\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "committer": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "distinct": true,
+          "id": "34a74538d9ea7bb0fa636163ebb197db68db769b",
+          "message": "💚 Add CI config for benchmarking that also includes pull requests",
+          "timestamp": "2021-03-22T22:33:50+01:00",
+          "tree_id": "b9d6565515b2ca22853e9c2452e70f9ad4fa8beb",
+          "url": "https://github.com/iic-jku/dd_package/commit/34a74538d9ea7bb0fa636163ebb197db68db769b"
+        },
+        "date": 1616449799895,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_PackageCreation/1",
+            "value": 12.566341842105196,
+            "unit": "ms/iter",
+            "extra": "iterations: 57\ncpu: 12.556106842105265 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/2",
+            "value": 12.640744490908611,
+            "unit": "ms/iter",
+            "extra": "iterations: 55\ncpu: 12.635572109090912 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/4",
+            "value": 12.671416036363842,
+            "unit": "ms/iter",
+            "extra": "iterations: 55\ncpu: 12.670004781818184 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/8",
+            "value": 12.572498821428317,
+            "unit": "ms/iter",
+            "extra": "iterations: 56\ncpu: 12.568377642857135 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 12.593254473684286,
+            "unit": "ms/iter",
+            "extra": "iterations: 57\ncpu: 12.579196333333327 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 12.224596857142801,
+            "unit": "ms/iter",
+            "extra": "iterations: 56\ncpu: 12.212332607142859 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 12.382317448275797,
+            "unit": "ms/iter",
+            "extra": "iterations: 58\ncpu: 12.37537872413793 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 12.363949844827543,
+            "unit": "ms/iter",
+            "extra": "iterations: 58\ncpu: 12.357413551724134 ms\nthreads: 1"
           }
         ]
       }
