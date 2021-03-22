@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616453671168,
+  "lastUpdate": 1616453668557,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -25,30 +25,6 @@ window.BENCHMARK_DATA = {
         "date": 1616448284452,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_PackageCreation/1",
-            "value": 14.750347234042387,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 14.749809489361702 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 15.013630723404232,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 15.006730851063828 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 14.757749787233788,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 14.741948510638293 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 14.78522041666667,
-            "unit": "ms/iter",
-            "extra": "iterations: 48\ncpu: 14.768580958333333 ms\nthreads: 1"
-          },
           {
             "name": "BM_PackageCreation/16",
             "value": 14.802499212766435,
@@ -98,30 +74,6 @@ window.BENCHMARK_DATA = {
         "tool": "googlecpp",
         "benches": [
           {
-            "name": "BM_PackageCreation/1",
-            "value": 13.104220830188776,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.096939735849055 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 13.013149370370533,
-            "unit": "ms/iter",
-            "extra": "iterations: 54\ncpu: 13.01084196296296 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 13.177338962264603,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.168354056603771 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 13.32798805660379,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.324754094339617 ms\nthreads: 1"
-          },
-          {
             "name": "BM_PackageCreation/16",
             "value": 13.15348350980386,
             "unit": "ms/iter",
@@ -160,39 +112,63 @@ window.BENCHMARK_DATA = {
             "username": "burgholzer"
           },
           "distinct": true,
+          "id": "34a74538d9ea7bb0fa636163ebb197db68db769b",
+          "message": "💚 Add CI config for benchmarking that also includes pull requests",
+          "timestamp": "2021-03-22T22:33:50+01:00",
+          "tree_id": "b9d6565515b2ca22853e9c2452e70f9ad4fa8beb",
+          "url": "https://github.com/iic-jku/dd_package/commit/34a74538d9ea7bb0fa636163ebb197db68db769b"
+        },
+        "date": 1616449799895,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 12.593254473684286,
+            "unit": "ms/iter",
+            "extra": "iterations: 57\ncpu: 12.579196333333327 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 12.224596857142801,
+            "unit": "ms/iter",
+            "extra": "iterations: 56\ncpu: 12.212332607142859 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 12.382317448275797,
+            "unit": "ms/iter",
+            "extra": "iterations: 58\ncpu: 12.37537872413793 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 12.363949844827543,
+            "unit": "ms/iter",
+            "extra": "iterations: 58\ncpu: 12.357413551724134 ms\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "committer": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "distinct": true,
           "id": "6fb000e71d4a6ebf9ade4314f9a7769bb87c0611",
           "message": "💚 Add CI config for benchmarking that also includes pull requests",
           "timestamp": "2021-03-22T22:58:11+01:00",
           "tree_id": "685b9acfe5191dddc868c0859694e5271e8dd5f1",
           "url": "https://github.com/iic-jku/dd_package/commit/6fb000e71d4a6ebf9ade4314f9a7769bb87c0611"
         },
-        "date": 1616450696724,
+        "date": 1616450694243,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_PackageCreation/1",
-            "value": 14.817162408163238,
-            "unit": "ms/iter",
-            "extra": "iterations: 49\ncpu: 14.807689204081633 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 14.865251456522119,
-            "unit": "ms/iter",
-            "extra": "iterations: 46\ncpu: 14.682494086956524 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 14.752650652173726,
-            "unit": "ms/iter",
-            "extra": "iterations: 46\ncpu: 14.733818260869565 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 14.947430199999872,
-            "unit": "ms/iter",
-            "extra": "iterations: 50\ncpu: 14.93013028 ms\nthreads: 1"
-          },
           {
             "name": "BM_PackageCreation/16",
             "value": 13.695386957447274,
@@ -238,7 +214,7 @@ window.BENCHMARK_DATA = {
           "tree_id": "444b09ba3a42aa71b32356b8c4b4ab51308f5e57",
           "url": "https://github.com/iic-jku/dd_package/commit/3684fd89e4df81fae88129b4cdf5704a83748541"
         },
-        "date": 1616453670549,
+        "date": 1616453667575,
         "tool": "googlecpp",
         "benches": [
           {
