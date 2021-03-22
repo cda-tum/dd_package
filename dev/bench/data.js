@@ -26,30 +26,6 @@ window.BENCHMARK_DATA = {
         "tool": "googlecpp",
         "benches": [
           {
-            "name": "BM_PackageCreation/1",
-            "value": 14.750347234042387,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 14.749809489361702 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 15.013630723404232,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 15.006730851063828 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 14.757749787233788,
-            "unit": "ms/iter",
-            "extra": "iterations: 47\ncpu: 14.741948510638293 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 14.78522041666667,
-            "unit": "ms/iter",
-            "extra": "iterations: 48\ncpu: 14.768580958333333 ms\nthreads: 1"
-          },
-          {
             "name": "BM_PackageCreation/16",
             "value": 14.802499212766435,
             "unit": "ms/iter",
@@ -97,30 +73,6 @@ window.BENCHMARK_DATA = {
         "date": 1616449273510,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_PackageCreation/1",
-            "value": 13.104220830188776,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.096939735849055 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 13.013149370370533,
-            "unit": "ms/iter",
-            "extra": "iterations: 54\ncpu: 13.01084196296296 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 13.177338962264603,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.168354056603771 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 13.32798805660379,
-            "unit": "ms/iter",
-            "extra": "iterations: 53\ncpu: 13.324754094339617 ms\nthreads: 1"
-          },
           {
             "name": "BM_PackageCreation/16",
             "value": 13.15348350980386,
@@ -170,30 +122,6 @@ window.BENCHMARK_DATA = {
         "tool": "googlecpp",
         "benches": [
           {
-            "name": "BM_PackageCreation/1",
-            "value": 12.566341842105196,
-            "unit": "ms/iter",
-            "extra": "iterations: 57\ncpu: 12.556106842105265 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 12.640744490908611,
-            "unit": "ms/iter",
-            "extra": "iterations: 55\ncpu: 12.635572109090912 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 12.671416036363842,
-            "unit": "ms/iter",
-            "extra": "iterations: 55\ncpu: 12.670004781818184 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 12.572498821428317,
-            "unit": "ms/iter",
-            "extra": "iterations: 56\ncpu: 12.568377642857135 ms\nthreads: 1"
-          },
-          {
             "name": "BM_PackageCreation/16",
             "value": 12.593254473684286,
             "unit": "ms/iter",
@@ -241,30 +169,6 @@ window.BENCHMARK_DATA = {
         "date": 1616450694243,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_PackageCreation/1",
-            "value": 14.817162408163238,
-            "unit": "ms/iter",
-            "extra": "iterations: 49\ncpu: 14.807689204081633 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/2",
-            "value": 14.865251456522119,
-            "unit": "ms/iter",
-            "extra": "iterations: 46\ncpu: 14.682494086956524 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/4",
-            "value": 14.752650652173726,
-            "unit": "ms/iter",
-            "extra": "iterations: 46\ncpu: 14.733818260869565 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_PackageCreation/8",
-            "value": 14.947430199999872,
-            "unit": "ms/iter",
-            "extra": "iterations: 50\ncpu: 14.93013028 ms\nthreads: 1"
-          },
           {
             "name": "BM_PackageCreation/16",
             "value": 13.695386957447274,
