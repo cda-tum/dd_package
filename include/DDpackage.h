@@ -79,6 +79,10 @@ namespace dd {
 		controlType    type  = pos;
 
 		explicit Control(unsigned short qubit = 0, controlType type = pos): qubit(qubit), type(type) {};
+        
+        static bool compare(Control c1, Control c2) { 
+            return c1.qubit < c2.qubit; 
+        } 
 	};
 
     // computed table definitions
