@@ -12,15 +12,14 @@
 
 TEST(DDPackageTest, OperationLookupTest) {
     auto  dd      = std::make_unique<dd::Package>();
-    short line[2] = {2};
 
     // dd::ATrue is not the operation that is being stored, but for the test it doesn't matter
-    auto tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    auto tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
     EXPECT_TRUE(tmp_op.p == nullptr);
 
-    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, line);
-    dd->OperationInsert(dd::ATrue, line, x_gate, 1);
-    tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, 0);
+    dd->OperationInsert(dd::ATrue, x_gate, 1, 0);
+    tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
     EXPECT_TRUE(tmp_op.p == x_gate.p);
 
     tmp_op = dd->multiply(tmp_op, x_gate);
@@ -29,15 +28,15 @@ TEST(DDPackageTest, OperationLookupTest) {
     EXPECT_TRUE(tmp_op.p != nullptr);
 
     dd->garbageCollect(true);
-    tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
     EXPECT_TRUE(tmp_op.p == nullptr);
 }
 
 TEST(DDPackageTest, TrivialTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, {2});
-    dd::Edge h_gate = dd->makeGateDD(Hmat, 1, {2});
+    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, 0);
+    dd::Edge h_gate = dd->makeGateDD(Hmat, 1, 0);
 
     ASSERT_EQ(dd->getValueByPath(h_gate, "0"), (dd::ComplexValue{dd::SQRT_2, 0}));
 
@@ -53,8 +52,8 @@ TEST(DDPackageTest, TrivialTest) {
 TEST(DDPackageTest, BellState) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, 0, {dd::Control(1)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -128,8 +127,8 @@ TEST(DDPackageTest, StateGenerationManipulation) {
 TEST(DDPackageTest, VectorSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -146,8 +145,8 @@ TEST(DDPackageTest, VectorSerializationTest) {
 TEST(DDPackageTest, BellMatrix) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -197,8 +196,8 @@ TEST(DDPackageTest, BellMatrix) {
 TEST(DDPackageTest, MatrixSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -214,8 +213,8 @@ TEST(DDPackageTest, MatrixSerializationTest) {
 TEST(DDPackageTest, TestConsistency) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {2, -1});
-    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, {1, 2});
+    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
@@ -239,24 +238,24 @@ TEST(DDPackageTest, ToffoliTable) {
     auto dd = std::make_unique<dd::Package>();
 
     // try to search for a toffoli in an empty table
-    auto toffoli = dd->TTlookup(3, static_cast<unsigned short>(2), 2, {0, 1, 2});
+    auto toffoli = dd->TTlookup(3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
     EXPECT_EQ(toffoli.p, nullptr);
     if (toffoli.p == nullptr) {
-        toffoli = dd->makeGateDD(Xmat, 3, {0, 1, 2});
-        dd->TTinsert(3, static_cast<unsigned short>(2), 2, {0, 1, 2}, toffoli);
+        toffoli = dd->makeGateDD(Xmat, 3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
+        dd->TTinsert(3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)}, toffoli);
     }
 
     // try again with same toffoli
-    auto toffoliTableEntry = dd->TTlookup(3, static_cast<unsigned short>(2), 2, {0, 1, 2});
+    auto toffoliTableEntry = dd->TTlookup(3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
     EXPECT_NE(toffoliTableEntry.p, nullptr);
     EXPECT_TRUE(dd->equals(toffoli, toffoliTableEntry));
 
     // try again with different controlled toffoli
-    toffoliTableEntry = dd->TTlookup(3, static_cast<unsigned short>(2), 2, {1, 1, 2});
+    toffoliTableEntry = dd->TTlookup(3, 2, {dd::Control(0), dd::Control(1)});
     EXPECT_EQ(toffoliTableEntry.p, nullptr);
 
     // try again with different qubit toffoli
-    toffoliTableEntry = dd->TTlookup(4, static_cast<unsigned short>(3), 3, {1, 1, 1, 2});
+    toffoliTableEntry = dd->TTlookup(4, 3, {dd::Control(0), dd::Control(1), dd::Control(2)});
     EXPECT_EQ(toffoliTableEntry.p, nullptr);
 }
 
@@ -292,8 +291,8 @@ TEST(DDPackageTest, Identity) {
 TEST(DDPackageTest, TestLocalInconsistency) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {2, -1});
-    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, {1, 2});
+    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 0);
+    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -318,8 +317,8 @@ TEST(DDPackageTest, TestLocalInconsistency) {
 
 TEST(DDPackageTest, Ancillaries) {
     auto dd          = std::make_unique<dd::Package>();
-    auto h_gate      = dd->makeGateDD(Hmat, 2, {2, -1});
-    auto cx_gate     = dd->makeGateDD(Xmat, 2, {1, 2});
+    auto h_gate      = dd->makeGateDD(Hmat, 2, 0);
+    auto cx_gate     = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
     auto reduced_bell_matrix = dd->reduceAncillae(bell_matrix, {0b00});
@@ -351,8 +350,8 @@ TEST(DDPackageTest, Ancillaries) {
 
 TEST(DDPackageTest, Garbage) {
     auto dd          = std::make_unique<dd::Package>();
-    auto h_gate      = dd->makeGateDD(Hmat, 2, {2, -1});
-    auto cx_gate     = dd->makeGateDD(Xmat, 2, {1, 2});
+    auto h_gate      = dd->makeGateDD(Hmat, 2, 0);
+    auto cx_gate     = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
     auto reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {0b00});
