@@ -28,12 +28,67 @@ BENCHMARK(BM_PackageCreation)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)
 /// Test creation of identity matrix
 ///
 
-static void BM_MakeIdent(benchmark::State& state) {
-    [[maybe_unused]] unsigned short nqubits = state.range(0);
-    auto                            dd      = std::make_unique<dd::Package>();
+static void BM_MakeIdentCached(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
     for (auto _: state) {
-        dd->reset();
         benchmark::DoNotOptimize(dd->makeIdent(nqubits));
     }
 }
-BENCHMARK(BM_MakeIdent)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(16, 128);
+BENCHMARK(BM_MakeIdentCached)->Unit(benchmark::kNanosecond)->RangeMultiplier(2)->Range(16, 128);
+
+static void BM_MakeIdent(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Imat    = std::array<dd::ComplexValue, 4>{{{1., 0.}, {0., 0.}, {0., 0.}, {1., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(-1);
+        line[0] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Imat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeIdent)->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
+
+///
+/// Test makeGateDD
+///
+
+static void BM_MakeSingleQubitGateDD_TargetTop(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(-1);
+        line[nqubits - 1] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetTop)->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
+
+static void BM_MakeSingleQubitGateDD_TargetMiddle(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(-1);
+        line[nqubits / 2] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetMiddle)->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
+
+static void BM_MakeSingleQubitGateDD_TargetBottom(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(-1);
+        line[0] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetBottom)->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
