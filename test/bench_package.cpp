@@ -8,8 +8,8 @@
 #include <benchmark/benchmark.h>
 #include <memory>
 
-static void QubitRangeWithComplexity(benchmark::internal::Benchmark* b) {
-    b->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128)->Complexity();
+static void QubitRange(benchmark::internal::Benchmark* b) {
+    b->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
 }
 
 ///
@@ -50,10 +50,9 @@ static void BM_MakeIdent(benchmark::State& state) {
         line.fill(-1);
         line[0] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Imat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeIdent)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeIdent)->Apply(QubitRange);
 
 ///
 /// Test makeGateDD
@@ -68,10 +67,9 @@ static void BM_MakeSingleQubitGateDD_TargetTop(benchmark::State& state) {
         line.fill(-1);
         line[nqubits - 1] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeSingleQubitGateDD_TargetTop)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetTop)->Apply(QubitRange);
 
 static void BM_MakeSingleQubitGateDD_TargetMiddle(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -82,10 +80,9 @@ static void BM_MakeSingleQubitGateDD_TargetMiddle(benchmark::State& state) {
         line.fill(-1);
         line[nqubits / 2] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeSingleQubitGateDD_TargetMiddle)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetMiddle)->Apply(QubitRange);
 
 static void BM_MakeSingleQubitGateDD_TargetBottom(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -96,10 +93,9 @@ static void BM_MakeSingleQubitGateDD_TargetBottom(benchmark::State& state) {
         line.fill(-1);
         line[0] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeSingleQubitGateDD_TargetBottom)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeSingleQubitGateDD_TargetBottom)->Apply(QubitRange);
 
 static void BM_MakeControlledQubitGateDD_ControlBottom_TargetTop(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -111,10 +107,9 @@ static void BM_MakeControlledQubitGateDD_ControlBottom_TargetTop(benchmark::Stat
         line[0]           = 1;
         line[nqubits - 1] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetTop)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetTop)->Apply(QubitRange);
 
 static void BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -126,10 +121,9 @@ static void BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle(benchmark::S
         line[0]           = 1;
         line[nqubits / 2] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle)->Apply(QubitRange);
 
 static void BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -141,10 +135,9 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle(benchmark::Stat
         line[nqubits - 1] = 1;
         line[nqubits / 2] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle)->Apply(QubitRange);
 
 static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
@@ -156,7 +149,6 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::Stat
         line[nqubits - 1] = 1;
         line[0]           = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
-        state.SetComplexityN(nqubits);
     }
 }
-BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetBottom)->Apply(QubitRangeWithComplexity);
+BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetBottom)->Apply(QubitRange);
