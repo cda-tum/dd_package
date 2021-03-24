@@ -240,30 +240,6 @@ window.BENCHMARK_DATA = {
             "value": 15.868955363636417,
             "unit": "ms/iter",
             "extra": "iterations: 44\ncpu: 15.845253386363636 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 6.587000096153872,
-            "unit": "ms/iter",
-            "extra": "iterations: 104\ncpu: 6.58551360576923 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 6.3413406074765994,
-            "unit": "ms/iter",
-            "extra": "iterations: 107\ncpu: 6.341044485981309 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 6.201684487179521,
-            "unit": "ms/iter",
-            "extra": "iterations: 117\ncpu: 6.20154353846154 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 7.049266084745834,
-            "unit": "ms/iter",
-            "extra": "iterations: 118\ncpu: 7.048269457627119 ms\nthreads: 1"
           }
         ]
       },
@@ -312,30 +288,6 @@ window.BENCHMARK_DATA = {
             "value": 12.112114965517627,
             "unit": "ms/iter",
             "extra": "iterations: 58\ncpu: 12.105579051724142 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 6.560271422018432,
-            "unit": "ms/iter",
-            "extra": "iterations: 109\ncpu: 6.55948179816514 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 6.416325481481522,
-            "unit": "ms/iter",
-            "extra": "iterations: 108\ncpu: 6.415595555555548 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 7.150020157407379,
-            "unit": "ms/iter",
-            "extra": "iterations: 108\ncpu: 7.149791388888889 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 7.08249062637347,
-            "unit": "ms/iter",
-            "extra": "iterations: 91\ncpu: 7.081943186813189 ms\nthreads: 1"
           }
         ]
       },
@@ -384,30 +336,6 @@ window.BENCHMARK_DATA = {
             "value": 13.002588999999938,
             "unit": "ms/iter",
             "extra": "iterations: 56\ncpu: 12.999213357142855 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 5.525159280991693,
-            "unit": "ms/iter",
-            "extra": "iterations: 121\ncpu: 5.52480005785124 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 5.5580477666667365,
-            "unit": "ms/iter",
-            "extra": "iterations: 120\ncpu: 5.5572768333333356 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 5.922203586206879,
-            "unit": "ms/iter",
-            "extra": "iterations: 116\ncpu: 5.9029233362069 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 6.094964544642804,
-            "unit": "ms/iter",
-            "extra": "iterations: 112\ncpu: 6.094518714285711 ms\nthreads: 1"
           }
         ]
       },
@@ -456,30 +384,6 @@ window.BENCHMARK_DATA = {
             "value": 8.335963659340713,
             "unit": "ms/iter",
             "extra": "iterations: 91\ncpu: 8.332989098901097 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 2.0216206937172863,
-            "unit": "ms/iter",
-            "extra": "iterations: 382\ncpu: 2.0213908534031417 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 2.006753311977712,
-            "unit": "ms/iter",
-            "extra": "iterations: 359\ncpu: 2.0065034596100264 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 2.091210332439659,
-            "unit": "ms/iter",
-            "extra": "iterations: 373\ncpu: 2.091031780160857 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 2.4535795494505686,
-            "unit": "ms/iter",
-            "extra": "iterations: 273\ncpu: 2.4532340769230765 ms\nthreads: 1"
           }
         ]
       },
@@ -528,30 +432,6 @@ window.BENCHMARK_DATA = {
             "value": 14.035546979591938,
             "unit": "ms/iter",
             "extra": "iterations: 49\ncpu: 14.032675510204076 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 3.954134449074068,
-            "unit": "ms/iter",
-            "extra": "iterations: 216\ncpu: 3.953565537037037 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 4.3279356899224535,
-            "unit": "ms/iter",
-            "extra": "iterations: 129\ncpu: 4.327052658914732 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 5.1382431854839234,
-            "unit": "ms/iter",
-            "extra": "iterations: 124\ncpu: 5.137161798387101 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 4.269667130769178,
-            "unit": "ms/iter",
-            "extra": "iterations: 130\ncpu: 4.2694909230769245 ms\nthreads: 1"
           }
         ]
       },
@@ -600,30 +480,6 @@ window.BENCHMARK_DATA = {
             "value": 14.77825697872354,
             "unit": "ms/iter",
             "extra": "iterations: 47\ncpu: 14.770703510638292 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 5.244626251851514,
-            "unit": "ms/iter",
-            "extra": "iterations: 135\ncpu: 5.244242540740741 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 5.496102322834798,
-            "unit": "ms/iter",
-            "extra": "iterations: 127\ncpu: 5.495453433070865 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 5.462597206349164,
-            "unit": "ms/iter",
-            "extra": "iterations: 126\ncpu: 5.462198777777779 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 6.025269482142802,
-            "unit": "ms/iter",
-            "extra": "iterations: 112\ncpu: 6.0245472142857155 ms\nthreads: 1"
           }
         ]
       },
@@ -672,30 +528,6 @@ window.BENCHMARK_DATA = {
             "value": 15.450653565217774,
             "unit": "ms/iter",
             "extra": "iterations: 46\ncpu: 15.436686434782613 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 5.962494310345054,
-            "unit": "ms/iter",
-            "extra": "iterations: 116\ncpu: 5.962124560344828 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 6.030250939654843,
-            "unit": "ms/iter",
-            "extra": "iterations: 116\ncpu: 6.029813250000002 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 6.102958132742946,
-            "unit": "ms/iter",
-            "extra": "iterations: 113\ncpu: 6.102374557522121 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 6.570563509433964,
-            "unit": "ms/iter",
-            "extra": "iterations: 106\ncpu: 6.5701170094339645 ms\nthreads: 1"
           }
         ]
       },
@@ -744,30 +576,6 @@ window.BENCHMARK_DATA = {
             "value": 23.231572033333237,
             "unit": "ms/iter",
             "extra": "iterations: 30\ncpu: 23.194503900000004 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 10.764612515624883,
-            "unit": "ms/iter",
-            "extra": "iterations: 64\ncpu: 10.763077390625 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 10.833886230769325,
-            "unit": "ms/iter",
-            "extra": "iterations: 65\ncpu: 10.832480015384615 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 10.88442415384612,
-            "unit": "ms/iter",
-            "extra": "iterations: 65\ncpu: 10.883188923076924 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 11.547413344262445,
-            "unit": "ms/iter",
-            "extra": "iterations: 61\ncpu: 11.54608370491804 ms\nthreads: 1"
           }
         ]
       },
@@ -816,30 +624,6 @@ window.BENCHMARK_DATA = {
             "value": 18.55249179999987,
             "unit": "ms/iter",
             "extra": "iterations: 40\ncpu: 18.550409300000005 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 7.755310543478212,
-            "unit": "ms/iter",
-            "extra": "iterations: 92\ncpu: 7.75446923913043 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 7.821708172839534,
-            "unit": "ms/iter",
-            "extra": "iterations: 81\ncpu: 7.820792111111113 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 7.769926021052691,
-            "unit": "ms/iter",
-            "extra": "iterations: 95\ncpu: 7.768918652631582 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 8.478421517241385,
-            "unit": "ms/iter",
-            "extra": "iterations: 87\ncpu: 8.477849114942533 ms\nthreads: 1"
           }
         ]
       },
@@ -888,30 +672,6 @@ window.BENCHMARK_DATA = {
             "value": 18.362050527778074,
             "unit": "ms/iter",
             "extra": "iterations: 36\ncpu: 18.36186630555556 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 9.351217324675334,
-            "unit": "ms/iter",
-            "extra": "iterations: 77\ncpu: 9.349627688311692 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 9.900972463768198,
-            "unit": "ms/iter",
-            "extra": "iterations: 69\ncpu: 9.900027898550736 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 9.263501023255737,
-            "unit": "ms/iter",
-            "extra": "iterations: 86\ncpu: 9.262303104651156 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 9.565438805970215,
-            "unit": "ms/iter",
-            "extra": "iterations: 67\ncpu: 9.489263776119406 ms\nthreads: 1"
           }
         ]
       },
@@ -960,30 +720,6 @@ window.BENCHMARK_DATA = {
             "value": 11.348129507463108,
             "unit": "ms/iter",
             "extra": "iterations: 67\ncpu: 11.346745940298504 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 2.4818120944880633,
-            "unit": "ms/iter",
-            "extra": "iterations: 254\ncpu: 2.481679011811024 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 2.4471451786742886,
-            "unit": "ms/iter",
-            "extra": "iterations: 347\ncpu: 2.446881181556197 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 2.3207610411392596,
-            "unit": "ms/iter",
-            "extra": "iterations: 316\ncpu: 2.320552803797468 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 2.5327233205740285,
-            "unit": "ms/iter",
-            "extra": "iterations: 209\ncpu: 2.532361799043061 ms\nthreads: 1"
           }
         ]
       },
@@ -1032,30 +768,6 @@ window.BENCHMARK_DATA = {
             "value": 13.198827537037095,
             "unit": "ms/iter",
             "extra": "iterations: 54\ncpu: 13.1985875925926 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 4.762868836734702,
-            "unit": "ms/iter",
-            "extra": "iterations: 147\ncpu: 4.762422571428573 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 4.677858906040281,
-            "unit": "ms/iter",
-            "extra": "iterations: 149\ncpu: 4.67742024832215 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 5.10744769930068,
-            "unit": "ms/iter",
-            "extra": "iterations: 143\ncpu: 5.1070625384615385 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 5.353789171641814,
-            "unit": "ms/iter",
-            "extra": "iterations: 134\ncpu: 5.353124104477614 ms\nthreads: 1"
           }
         ]
       },
@@ -1104,30 +816,6 @@ window.BENCHMARK_DATA = {
             "value": 13.862720541666818,
             "unit": "ms/iter",
             "extra": "iterations: 48\ncpu: 13.820589333333329 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 6.189192810810769,
-            "unit": "ms/iter",
-            "extra": "iterations: 111\ncpu: 6.188413531531532 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 6.400241517543972,
-            "unit": "ms/iter",
-            "extra": "iterations: 114\ncpu: 6.399744140350872 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 6.504436279279055,
-            "unit": "ms/iter",
-            "extra": "iterations: 111\ncpu: 6.5042146486486505 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 6.821913552380736,
-            "unit": "ms/iter",
-            "extra": "iterations: 105\ncpu: 6.82076212380952 ms\nthreads: 1"
           }
         ]
       },
@@ -1176,30 +864,6 @@ window.BENCHMARK_DATA = {
             "value": 10.945545552238835,
             "unit": "ms/iter",
             "extra": "iterations: 67\ncpu: 10.939832835820898 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/16",
-            "value": 4.0061016235955105,
-            "unit": "ms/iter",
-            "extra": "iterations: 178\ncpu: 4.00447061235955 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/32",
-            "value": 4.065565583333274,
-            "unit": "ms/iter",
-            "extra": "iterations: 180\ncpu: 4.065302255555557 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/64",
-            "value": 4.080734600000012,
-            "unit": "ms/iter",
-            "extra": "iterations: 175\ncpu: 4.080403937142855 ms\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent/128",
-            "value": 4.716408149068286,
-            "unit": "ms/iter",
-            "extra": "iterations: 161\ncpu: 4.71592189440994 ms\nthreads: 1"
           }
         ]
       },
