@@ -1382,16 +1382,6 @@ window.BENCHMARK_DATA = {
             "extra": "iterations: 68427\ncpu: 10.213131293202986 us\nthreads: 1"
           },
           {
-            "name": "BM_MakeIdent_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeIdent_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
-          },
-          {
             "name": "BM_MakeSingleQubitGateDD_TargetTop/16",
             "value": 3.6626241572445704,
             "unit": "us/iter",
@@ -1414,16 +1404,6 @@ window.BENCHMARK_DATA = {
             "value": 30.086239944997907,
             "unit": "us/iter",
             "extra": "iterations: 23272\ncpu: 30.084553583705677 us\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeSingleQubitGateDD_TargetTop_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeSingleQubitGateDD_TargetTop_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
           },
           {
             "name": "BM_MakeSingleQubitGateDD_TargetMiddle/16",
@@ -1450,16 +1430,6 @@ window.BENCHMARK_DATA = {
             "extra": "iterations: 34410\ncpu: 20.326014908456784 us\nthreads: 1"
           },
           {
-            "name": "BM_MakeSingleQubitGateDD_TargetMiddle_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeSingleQubitGateDD_TargetMiddle_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
-          },
-          {
             "name": "BM_MakeSingleQubitGateDD_TargetBottom/16",
             "value": 1.3040298212999084,
             "unit": "us/iter",
@@ -1482,16 +1452,6 @@ window.BENCHMARK_DATA = {
             "value": 10.253688837045262,
             "unit": "us/iter",
             "extra": "iterations: 68154\ncpu: 10.253312806291648 us\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeSingleQubitGateDD_TargetBottom_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeSingleQubitGateDD_TargetBottom_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
           },
           {
             "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/16",
@@ -1518,16 +1478,6 @@ window.BENCHMARK_DATA = {
             "extra": "iterations: 17012\ncpu: 41.18887890900554 us\nthreads: 1"
           },
           {
-            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
-          },
-          {
             "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/16",
             "value": 3.280794178686769,
             "unit": "us/iter",
@@ -1550,16 +1500,6 @@ window.BENCHMARK_DATA = {
             "value": 26.055890644212106,
             "unit": "us/iter",
             "extra": "iterations: 26839\ncpu: 26.046070382652132 us\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
           },
           {
             "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/16",
@@ -1586,16 +1526,6 @@ window.BENCHMARK_DATA = {
             "extra": "iterations: 33343\ncpu: 20.932289655999867 us\nthreads: 1"
           },
           {
-            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
-          },
-          {
             "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/16",
             "value": 1.3225661997655098,
             "unit": "us/iter",
@@ -1618,16 +1548,6 @@ window.BENCHMARK_DATA = {
             "value": 10.302204162786039,
             "unit": "us/iter",
             "extra": "iterations: 67647\ncpu: 10.30130767070227 us\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom_BigO",
-            "unit": "ns/iter",
-            "extra": "iterations: undefined\ncpu: undefined ns\nthreads: 1"
-          },
-          {
-            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom_RMS",
-            "unit": "undefined/iter",
-            "extra": "iterations: undefined\ncpu: undefined undefined\nthreads: 1"
           }
         ]
       }
