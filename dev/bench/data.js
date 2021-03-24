@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616589384289,
+  "lastUpdate": 1616590546147,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -1128,6 +1128,78 @@ window.BENCHMARK_DATA = {
             "value": 6.821913552380736,
             "unit": "ms/iter",
             "extra": "iterations: 105\ncpu: 6.82076212380952 ms\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "committer": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "distinct": true,
+          "id": "46addbd772ac9a37e7bcb3044a5c710e616b06ee",
+          "message": "🐛 fix custom gate\n\nSigned-off-by: Lukas Burgholzer <lukas.burgholzer@jku.at>",
+          "timestamp": "2021-03-24T13:48:39+01:00",
+          "tree_id": "32bee45c27c4c75a674b805557fe85aaa201bc02",
+          "url": "https://github.com/iic-jku/dd_package/commit/46addbd772ac9a37e7bcb3044a5c710e616b06ee"
+        },
+        "date": 1616590545637,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 10.848442935483837,
+            "unit": "ms/iter",
+            "extra": "iterations: 62\ncpu: 10.848268580645161 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 10.861928630769258,
+            "unit": "ms/iter",
+            "extra": "iterations: 65\ncpu: 10.853872723076922 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 11.0675031076924,
+            "unit": "ms/iter",
+            "extra": "iterations: 65\ncpu: 11.066699092307692 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 10.945545552238835,
+            "unit": "ms/iter",
+            "extra": "iterations: 67\ncpu: 10.939832835820898 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/16",
+            "value": 4.0061016235955105,
+            "unit": "ms/iter",
+            "extra": "iterations: 178\ncpu: 4.00447061235955 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/32",
+            "value": 4.065565583333274,
+            "unit": "ms/iter",
+            "extra": "iterations: 180\ncpu: 4.065302255555557 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/64",
+            "value": 4.080734600000012,
+            "unit": "ms/iter",
+            "extra": "iterations: 175\ncpu: 4.080403937142855 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/128",
+            "value": 4.716408149068286,
+            "unit": "ms/iter",
+            "extra": "iterations: 161\ncpu: 4.71592189440994 ms\nthreads: 1"
           }
         ]
       }
