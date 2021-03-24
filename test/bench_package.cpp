@@ -100,7 +100,7 @@ static void BM_MakeControlledQubitGateDD_ControlBottom_TargetTop(benchmark::Stat
     auto           line    = std::array<short, dd::MAXN>{};
     for (auto _: state) {
         line.fill(-1);
-        line[0] = 1;
+        line[0]           = 1;
         line[nqubits - 1] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
     }
@@ -114,7 +114,7 @@ static void BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle(benchmark::S
     auto           line    = std::array<short, dd::MAXN>{};
     for (auto _: state) {
         line.fill(-1);
-        line[0] = 1;
+        line[0]           = 1;
         line[nqubits / 2] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
     }
@@ -143,7 +143,7 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::Stat
     for (auto _: state) {
         line.fill(-1);
         line[nqubits - 1] = 1;
-        line[0] = 2;
+        line[0]           = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
     }
 }
