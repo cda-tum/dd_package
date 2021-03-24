@@ -11,16 +11,15 @@
 #include <memory>
 
 TEST(DDPackageTest, OperationLookupTest) {
-    auto  dd      = std::make_unique<dd::Package>();
-    short line[2] = {2};
+    auto dd = std::make_unique<dd::Package>();
 
     // dd::ATrue is not the operation that is being stored, but for the test it doesn't matter
-    auto tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    auto tmp_op = dd->OperationLookup(dd::ATrue, {2}, 1);
     EXPECT_TRUE(tmp_op.p == nullptr);
 
-    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, line);
-    dd->OperationInsert(dd::ATrue, line, x_gate, 1);
-    tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, {2});
+    dd->OperationInsert(dd::ATrue, {2}, x_gate, 1);
+    tmp_op = dd->OperationLookup(dd::ATrue, {2}, 1);
     EXPECT_TRUE(tmp_op.p == x_gate.p);
 
     tmp_op = dd->multiply(tmp_op, x_gate);
@@ -29,7 +28,7 @@ TEST(DDPackageTest, OperationLookupTest) {
     EXPECT_TRUE(tmp_op.p != nullptr);
 
     dd->garbageCollect(true);
-    tmp_op = dd->OperationLookup(dd::ATrue, line, 1);
+    tmp_op = dd->OperationLookup(dd::ATrue, {2}, 1);
     EXPECT_TRUE(tmp_op.p == nullptr);
 }
 
@@ -54,7 +53,7 @@ TEST(DDPackageTest, BellState) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, {2, 1});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -129,7 +128,7 @@ TEST(DDPackageTest, VectorSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, {2, 1});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -147,7 +146,7 @@ TEST(DDPackageTest, BellMatrix) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge cx_gate = dd->makeGateDD(Xmat, 2, {2, 1});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -198,7 +197,7 @@ TEST(DDPackageTest, MatrixSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, {-1, 2});
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, {2, 1});
+    dd::Edge cx_gate = dd->makeGateDD(Xmat, 2, {2, 1});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -209,6 +208,41 @@ TEST(DDPackageTest, MatrixSerializationTest) {
     dd::serialize(bell_matrix, "bell_matrix_binary.dd", false, true);
     deserialized_bell_matrix = dd::deserialize(dd, "bell_matrix_binary.dd", false, true);
     EXPECT_TRUE(dd->equals(bell_matrix, deserialized_bell_matrix));
+}
+
+TEST(DDPackageTest, SerializationErrors) {
+    auto dd = std::make_unique<dd::Package>();
+
+    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, {-1, 2});
+    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, {2, 1});
+    dd::Edge zero_state = dd->makeZeroState(2);
+    dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+
+    // test non-existing file
+    dd::serialize(bell_state, "./path/that/does/not/exist/filename.dd");
+    auto e = dd::deserialize(dd, "./path/that/does/not/exist/filename.dd", true);
+    EXPECT_TRUE(dd::Package::equals(e, dd::Package::DDzero));
+
+    // test wrong version number
+    std::stringstream ss{};
+    ss << 2.0 << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss, false, false), std::runtime_error);
+    ss.str("");
+    fp version = 2.0;
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(fp));
+    EXPECT_THROW(dd::deserialize(dd, ss, false, true), std::runtime_error);
+
+    // test wrong format
+    ss.str("");
+    ss << "0.1" << std::endl;
+    ss << "not_complex" << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss), std::runtime_error);
+
+    ss.str("");
+    ss << "0.1" << std::endl;
+    ss << "1.0" << std::endl;
+    ss << "no_node_here" << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss), std::runtime_error);
 }
 
 TEST(DDPackageTest, TestConsistency) {
@@ -287,6 +321,8 @@ TEST(DDPackageTest, Identity) {
     EXPECT_TRUE(dd->equals(dd->makeIdent(2), id2));
     auto id4 = dd->makeIdent(0, 3); // should use id3 and extend it
     EXPECT_TRUE(dd->equals(dd->makeIdent(4), id4));
+    auto idCached = dd->makeIdent(0, 3);
+    EXPECT_TRUE(dd::Package::equals(id4, idCached));
 }
 
 TEST(DDPackageTest, TestLocalInconsistency) {
@@ -374,4 +410,17 @@ TEST(DDPackageTest, Garbage) {
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {0b10}, false);
     EXPECT_EQ(reduced_bell_matrix.p->e[1], dd::Package::DDzero);
     EXPECT_EQ(reduced_bell_matrix.p->e[3], dd::Package::DDzero);
+}
+
+TEST(DDPackageTest, InvalidMakeBasisState) {
+    auto dd         = std::make_unique<dd::Package>();
+    auto basisState = std::vector<dd::BasisStates>{dd::BasisStates::zero};
+    auto nqubits    = 2;
+    EXPECT_THROW(dd->makeBasisState(nqubits, basisState), std::invalid_argument);
+}
+
+TEST(DDPackageTest, InvalidDecRef) {
+    auto dd = std::make_unique<dd::Package>();
+    auto e  = dd->makeIdent(2);
+    EXPECT_THROW(dd->decRef(e), std::runtime_error);
 }

@@ -81,9 +81,7 @@ namespace dd {
 
     Edge Package::makeBasisState(unsigned short n, const std::vector<BasisStates>& state) {
         if (state.size() < n) {
-            std::cerr << "Insufficient qubit states provided. Requested " << n << ", but received " << state.size()
-                      << std::endl;
-            exit(1);
+            throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
         }
 
         Edge f = DDone;
@@ -586,7 +584,7 @@ namespace dd {
         return (node_pointer + weights + which) & CTMASK;
     }
 
-    Edge Package::OperationLookup(const unsigned int operationType, const short* line, const unsigned short nQubits) {
+    Edge Package::OperationLookup(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const unsigned short nQubits) {
         operationLook++;
         Edge                r{nullptr, {nullptr, nullptr}};
         const unsigned long i = OperationHash(operationType, line, nQubits);
@@ -594,7 +592,7 @@ namespace dd {
         if (OperationTable[i].operationType != operationType) return r;
         if (OperationTable[i].r->v != nQubits - 1) return r;
 
-        if (std::memcmp(OperationTable[i].line, line, (nQubits) * sizeof(short)) != 0) return r;
+        if (std::memcmp(OperationTable[i].line, line.data(), (nQubits) * sizeof(short)) != 0) return r;
 
         r.p = OperationTable[i].r;
         if (std::fabs(OperationTable[i].rw.r) < CN::TOLERANCE && std::fabs(OperationTable[i].rw.i) < CN::TOLERANCE) {
@@ -606,16 +604,16 @@ namespace dd {
         return r;
     }
 
-    void Package::OperationInsert(const unsigned int operationType, const short* line, const Edge& result, const unsigned short nQubits) {
+    void Package::OperationInsert(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, const unsigned short nQubits) {
         const unsigned long i = OperationHash(operationType, line, nQubits);
-        std::memcpy(OperationTable[i].line, line, (nQubits) * sizeof(short));
+        std::memcpy(OperationTable[i].line, line.data(), (nQubits) * sizeof(short));
         OperationTable[i].operationType = operationType;
         OperationTable[i].r             = result.p;
         OperationTable[i].rw.r          = CN::val(result.w.r);
         OperationTable[i].rw.i          = CN::val(result.w.i);
     }
 
-    unsigned long Package::OperationHash(const unsigned int operationType, const short* line, const unsigned short nQubits) {
+    unsigned long Package::OperationHash(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const unsigned short nQubits) {
         unsigned long i = operationType;
         for (unsigned short j = 0; j <= nQubits; j++) {
             //            i = (i << 5u) + (4 * j) + (line[j] * 4);
@@ -1142,99 +1140,6 @@ namespace dd {
     // -1 not connected
     // 0...1 indicates a control by that value
     // 2 indicates the line is the target
-    Edge Package::makeGateDD(const Matrix2x2& mat, unsigned short n, const short* line) {
-        Edge  em[NEDGE], fm[NEDGE];
-        short z = 0;
-
-        for (int i = 0; i < RADIX; i++) {
-            for (int j = 0; j < RADIX; j++) {
-                if (mat[i][j].r == 0.0 && mat[i][j].i == 0.0) {
-                    em[i * RADIX + j] = DDzero;
-                } else {
-                    em[i * RADIX + j] = makeTerminal(cn.lookup(mat[i][j]));
-                }
-            }
-        }
-
-        Edge e = DDone;
-        Edge f{};
-        for (z = 0; line[z] < RADIX; z++) { //process lines below target
-            if (line[z] >= 0) {             //  control line below target in DD
-                for (int i1 = 0; i1 < RADIX; i1++) {
-                    for (int i2 = 0; i2 < RADIX; i2++) {
-                        int i = i1 * RADIX + i2;
-                        if (i1 == i2) {
-                            f = e;
-                        } else {
-                            f = DDzero;
-                        }
-                        for (int k = 0; k < RADIX; k++) {
-                            for (int j = 0; j < RADIX; j++) {
-                                int t = k * RADIX + j;
-                                if (k == j) {
-                                    if (k == line[z]) {
-                                        fm[t] = em[i];
-                                    } else {
-                                        fm[t] = f;
-                                    }
-                                } else {
-                                    fm[t] = DDzero;
-                                }
-                            }
-                        }
-                        em[i] = makeNonterminal(z, fm);
-                    }
-                }
-            } else { // not connected
-                for (auto& edge: em) {
-                    for (int i1 = 0; i1 < RADIX; ++i1) {
-                        for (int i2 = 0; i2 < RADIX; ++i2) {
-                            if (i1 == i2) {
-                                fm[i1 + i2 * RADIX] = edge;
-                            } else {
-                                fm[i1 + i2 * RADIX] = DDzero;
-                            }
-                        }
-                    }
-                    edge = makeNonterminal(z, fm);
-                }
-            }
-            e = makeIdent(z + 1);
-        }
-        e = makeNonterminal(z, em); // target line
-        for (z++; z < n; z++) {     // go through lines above target
-            if (line[z] >= 0) {     //  control line above target in DD
-                Edge temp = makeIdent(z);
-                for (int i = 0; i < RADIX; i++) {
-                    for (int j = 0; j < RADIX; j++) {
-                        if (i == j) {
-                            if (i == line[z]) {
-                                em[i * RADIX + j] = e;
-                            } else {
-                                em[i * RADIX + j] = temp;
-                            }
-                        } else {
-                            em[i * RADIX + j] = DDzero;
-                        }
-                    }
-                }
-                e = makeNonterminal(z, em);
-            } else { // not connected
-                for (int i1 = 0; i1 < RADIX; i1++) {
-                    for (int i2 = 0; i2 < RADIX; i2++) {
-                        if (i1 == i2) {
-                            fm[i1 + i2 * RADIX] = e;
-                        } else {
-                            fm[i1 + i2 * RADIX] = DDzero;
-                        }
-                    }
-                }
-                e = makeNonterminal(z, fm);
-            }
-        }
-        return e;
-    }
-
     Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n,
                              const std::array<short, MAXN>& line) {
         std::array<Edge, NEDGE> em{};
@@ -1431,8 +1336,7 @@ namespace dd {
         // Base case
         if (v == -1) {
             if (isTerminal(a)) return a;
-            std::cerr << "Expected terminal node in trace." << std::endl;
-            exit(1);
+            throw std::runtime_error("Expected terminal node in trace.");
         }
 
         if (eliminate[v]) {
