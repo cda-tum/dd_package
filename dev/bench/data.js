@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616582495361,
+  "lastUpdate": 1616583656859,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -768,6 +768,78 @@ window.BENCHMARK_DATA = {
             "value": 11.547413344262445,
             "unit": "ms/iter",
             "extra": "iterations: 61\ncpu: 11.54608370491804 ms\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "committer": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "distinct": true,
+          "id": "de48deb920bc93229a200c46812ea56d1f32d89c",
+          "message": "💚 Changing coverage CI build to Release mode\n\nThis way assertions do not count towards coverage",
+          "timestamp": "2021-03-24T11:53:52+01:00",
+          "tree_id": "29ef3170fbd7c4f4ce2c130348e312eddc74d853",
+          "url": "https://github.com/iic-jku/dd_package/commit/de48deb920bc93229a200c46812ea56d1f32d89c"
+        },
+        "date": 1616583655916,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 18.01946863157866,
+            "unit": "ms/iter",
+            "extra": "iterations: 38\ncpu: 17.995742315789474 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 17.628951750000255,
+            "unit": "ms/iter",
+            "extra": "iterations: 40\ncpu: 17.594654275000003 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 17.455688189189335,
+            "unit": "ms/iter",
+            "extra": "iterations: 37\ncpu: 17.422080081081088 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 18.55249179999987,
+            "unit": "ms/iter",
+            "extra": "iterations: 40\ncpu: 18.550409300000005 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/16",
+            "value": 7.755310543478212,
+            "unit": "ms/iter",
+            "extra": "iterations: 92\ncpu: 7.75446923913043 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/32",
+            "value": 7.821708172839534,
+            "unit": "ms/iter",
+            "extra": "iterations: 81\ncpu: 7.820792111111113 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/64",
+            "value": 7.769926021052691,
+            "unit": "ms/iter",
+            "extra": "iterations: 95\ncpu: 7.768918652631582 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/128",
+            "value": 8.478421517241385,
+            "unit": "ms/iter",
+            "extra": "iterations: 87\ncpu: 8.477849114942533 ms\nthreads: 1"
           }
         ]
       }
