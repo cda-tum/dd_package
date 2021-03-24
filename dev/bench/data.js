@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616457873088,
+  "lastUpdate": 1616582495361,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -696,6 +696,78 @@ window.BENCHMARK_DATA = {
             "value": 6.570563509433964,
             "unit": "ms/iter",
             "extra": "iterations: 106\ncpu: 6.5701170094339645 ms\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "committer": {
+            "email": "lukas.burgholzer@jku.at",
+            "name": "Lukas Burgholzer",
+            "username": "burgholzer"
+          },
+          "distinct": true,
+          "id": "d8f3245ee3dd17e861052b9dbfe062ee374b9228",
+          "message": "♻️ Small improvements for ComplexNumbers\n\n♻️ replaced INIT_SIZE with appropriate CACHE_SIZE\n♻️ replaced error checks in `cacheSize` with assertions\n♻️ changed access modifier of some members and constants to public\n✅ added more tests to the ComplexNumbers class",
+          "timestamp": "2021-03-24T11:34:29+01:00",
+          "tree_id": "df2e565805ccc796ec2de80fe6a356687895129a",
+          "url": "https://github.com/iic-jku/dd_package/commit/d8f3245ee3dd17e861052b9dbfe062ee374b9228"
+        },
+        "date": 1616582494738,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 23.335710766666768,
+            "unit": "ms/iter",
+            "extra": "iterations: 30\ncpu: 23.3184707 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 23.190714533333317,
+            "unit": "ms/iter",
+            "extra": "iterations: 30\ncpu: 23.147185533333335 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 23.362677933333014,
+            "unit": "ms/iter",
+            "extra": "iterations: 30\ncpu: 23.316466433333332 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 23.231572033333237,
+            "unit": "ms/iter",
+            "extra": "iterations: 30\ncpu: 23.194503900000004 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/16",
+            "value": 10.764612515624883,
+            "unit": "ms/iter",
+            "extra": "iterations: 64\ncpu: 10.763077390625 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/32",
+            "value": 10.833886230769325,
+            "unit": "ms/iter",
+            "extra": "iterations: 65\ncpu: 10.832480015384615 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/64",
+            "value": 10.88442415384612,
+            "unit": "ms/iter",
+            "extra": "iterations: 65\ncpu: 10.883188923076924 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/128",
+            "value": 11.547413344262445,
+            "unit": "ms/iter",
+            "extra": "iterations: 61\ncpu: 11.54608370491804 ms\nthreads: 1"
           }
         ]
       }
