@@ -14,12 +14,30 @@ static void QubitRange(benchmark::internal::Benchmark* b) {
 }
 
 ///
-/// Test DD Package creation
+/// Test class creation
 ///
 /// At the moment packages are allocated with a fixed maximum number of qubits (=128)
 /// In the future, the maximum number of qubits can be set at construction time
 /// until then, each creation should take equally long
 ///
+
+static void BM_DDNodeCreation(benchmark::State& state) {
+    for (auto _: state) {
+        auto node = dd::Node{};
+        benchmark::DoNotOptimize(node);
+        benchmark::ClobberMemory();
+    }
+}
+BENCHMARK(BM_DDNodeCreation)->Unit(benchmark::kNanosecond);
+
+static void BM_ComplexNumbersCreation(benchmark::State& state) {
+    for (auto _: state) {
+        auto cn = dd::ComplexNumbers();
+        benchmark::DoNotOptimize(cn);
+        benchmark::ClobberMemory();
+    }
+}
+BENCHMARK(BM_ComplexNumbersCreation)->Unit(benchmark::kMicrosecond);
 
 static void BM_PackageCreation(benchmark::State& state) {
     [[maybe_unused]] unsigned short nqubits = state.range(0);
