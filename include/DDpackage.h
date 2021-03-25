@@ -32,9 +32,9 @@ namespace dd {
     constexpr unsigned short NEDGE                 = RADIX * RADIX; // max no. of edges = RADIX^2
 
     // General package configuration parameters
-    constexpr unsigned int   GCLIMIT1          = 250000;  // first garbage collection limit
-    constexpr unsigned int   GCLIMIT_INC       = 0;       // garbage collection limit increment
-    constexpr unsigned int   MAXREFCNT         = 4000000; // max reference count (saturates at this value)
+    constexpr unsigned int   GCLIMIT1          = 250000;                                   // first garbage collection limit
+    constexpr unsigned int   GCLIMIT_INC       = 0;                                        // garbage collection limit increment
+    constexpr unsigned int   MAXREFCNT         = std::numeric_limits<unsigned int>::max(); // max reference count (saturates at this value)
     constexpr unsigned int   NODECOUNT_BUCKETS = 200000;
     constexpr unsigned short NBUCKET           = 32768;       // no. of hash table buckets; must be a power of 2
     constexpr unsigned short HASHMASK          = NBUCKET - 1; // must be nbuckets-1
