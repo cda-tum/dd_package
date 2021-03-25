@@ -6,6 +6,7 @@
 #include "DDpackage.h"
 
 #include <benchmark/benchmark.h>
+#include <chrono>
 #include <memory>
 
 static void QubitRange(benchmark::internal::Benchmark* b) {
@@ -21,9 +22,11 @@ static void QubitRange(benchmark::internal::Benchmark* b) {
 ///
 
 static void BM_PackageCreation(benchmark::State& state) {
+    [[maybe_unused]] unsigned short nqubits = state.range(0);
     for (auto _: state) {
-        [[maybe_unused]] unsigned short nqubits = state.range(0);
-        auto                            dd      = std::make_unique<dd::Package>();
+        auto dd = std::make_unique<dd::Package>();
+        benchmark::DoNotOptimize(dd);
+        benchmark::ClobberMemory();
     }
 }
 BENCHMARK(BM_PackageCreation)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(16, 128);
@@ -152,3 +155,42 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::Stat
     }
 }
 BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetBottom)->Apply(QubitRange);
+
+static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(1);
+        line[nqubits - 1] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeFullControlledToffoliDD_TargetTop)->Apply(QubitRange);
+
+static void BM_MakeFullControlledToffoliDD_TargetMiddle(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(1);
+        line[nqubits / 2] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeFullControlledToffoliDD_TargetMiddle)->Apply(QubitRange);
+
+static void BM_MakeFullControlledToffoliDD_TargetBottom(benchmark::State& state) {
+    unsigned short nqubits = state.range(0);
+    auto           dd      = std::make_unique<dd::Package>();
+    auto           Xmat    = std::array<dd::ComplexValue, 4>{{{0., 0.}, {1., 0.}, {1., 0.}, {0., 0.}}};
+    auto           line    = std::array<short, dd::MAXN>{};
+    for (auto _: state) {
+        line.fill(1);
+        line[0] = 2;
+        benchmark::DoNotOptimize(dd->makeGateDD(Xmat, nqubits, line));
+    }
+}
+BENCHMARK(BM_MakeFullControlledToffoliDD_TargetBottom)->Apply(QubitRange);
