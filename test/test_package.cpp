@@ -313,14 +313,24 @@ TEST(DDPackageTest, Extend) {
 
 TEST(DDPackageTest, Identity) {
     auto dd = std::make_unique<dd::Package>();
+
     EXPECT_TRUE(dd->equals(dd->makeIdent(0), dd->DDone));
     EXPECT_TRUE(dd->equals(dd->makeIdent(0, -1), dd->DDone));
-    auto id3 = dd->makeIdent(0, 2);
-    EXPECT_TRUE(dd->equals(dd->makeIdent(3), id3));
+
+    auto id3 = dd->makeIdent(3);
+    EXPECT_TRUE(dd->equals(dd->makeIdent(0, 2), id3));
+    auto& table = dd->getIdentityTable();
+    EXPECT_NE(table[0].p, nullptr);
+    EXPECT_NE(table[1].p, nullptr);
+    EXPECT_NE(table[2].p, nullptr);
+
     auto id2 = dd->makeIdent(0, 1); // should be found in IdTable
     EXPECT_TRUE(dd->equals(dd->makeIdent(2), id2));
+
     auto id4 = dd->makeIdent(0, 3); // should use id3 and extend it
     EXPECT_TRUE(dd->equals(dd->makeIdent(4), id4));
+    EXPECT_NE(table[3].p, nullptr);
+
     auto idCached = dd->makeIdent(0, 3);
     EXPECT_TRUE(dd::Package::equals(id4, idCached));
 }
@@ -423,4 +433,42 @@ TEST(DDPackageTest, InvalidDecRef) {
     auto dd = std::make_unique<dd::Package>();
     auto e  = dd->makeIdent(2);
     EXPECT_THROW(dd->decRef(e), std::runtime_error);
+}
+
+TEST(DDPackageTest, PackageReset) {
+    auto dd = std::make_unique<dd::Package>();
+
+    // one node in unique table of variable 0
+    auto        i_gate = dd->makeIdent(1);
+    const auto& unique = dd->getUniqueTable();
+    const auto& table  = unique[0];
+    auto        ihash  = dd->UThash(i_gate.p);
+    const auto& bucket = table[ihash];
+    std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
+    // node should be the first in this unique table bucket
+    EXPECT_EQ(bucket, i_gate.p);
+    dd->reset();
+    // after clearing the tables, they should be empty
+    EXPECT_EQ(bucket, nullptr);
+    i_gate              = dd->makeIdent(1);
+    const auto& bucket2 = table[ihash];
+    // after recreating the DD, it should receive the same node
+    EXPECT_EQ(bucket2, bucket);
+
+    // two nodes in same unique table bucket of variable 0
+    auto zMat   = std::array<dd::ComplexValue, 4>{{{1, 0}, {0, 0}, {0, 0}, {-1, 0}}};
+    auto z_gate = dd->makeGateDD(zMat, 1, {2});
+    auto zhash  = dd->UThash(z_gate.p);
+    std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
+    // both nodes should reside in the same bucket
+    EXPECT_EQ(table[ihash], z_gate.p);
+    EXPECT_EQ(table[ihash]->next, i_gate.p);
+    dd->reset();
+    // after clearing the tables, they should be empty
+    EXPECT_EQ(table[ihash], nullptr);
+    auto z_gate2 = dd->makeGateDD(zMat, 1, {2});
+    auto i_gate2 = dd->makeIdent(1);
+    // recreating the decision diagrams in reverse order should use the same pointers as before
+    EXPECT_EQ(z_gate2.p, i_gate.p);
+    EXPECT_EQ(i_gate2.p, z_gate.p);
 }
