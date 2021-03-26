@@ -118,6 +118,11 @@
               for (const bench of benches) {
                   const result = {commit, date, tool, bench};
                   let [name, qubits] = bench.name.split('/');
+                  // set name in case this is a non-parametrised benchmark
+                  if (qubits === "") {
+                      qubits = "-";
+                  }
+
                   name = name.replace("BM_", "");
                   const arr = map.get(name);
                   if (arr === undefined) {

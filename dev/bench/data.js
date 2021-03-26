@@ -2682,12 +2682,6 @@ window.BENCHMARK_DATA = {
         "tool": "googlecpp",
         "benches": [
           {
-            "name": "BM_DDNodeCreation",
-            "value": 6.0773141885382485,
-            "unit": "ns/iter",
-            "extra": "iterations: 116122075\ncpu: 6.076826572380834 ns\nthreads: 1"
-          },
-          {
             "name": "BM_ComplexNumbersCreation",
             "value": 16.06604204664932,
             "unit": "us/iter",
@@ -3025,12 +3019,6 @@ window.BENCHMARK_DATA = {
         "date": 1616770588975,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_DDNodeCreation",
-            "value": 4.997008025226478,
-            "unit": "ns/iter",
-            "extra": "iterations: 131804253\ncpu: 4.996786446640686 ns\nthreads: 1"
-          },
           {
             "name": "BM_ComplexNumbersCreation",
             "value": 15.992377427422886,
@@ -3609,12 +3597,6 @@ window.BENCHMARK_DATA = {
         "date": 1616771989200,
         "tool": "googlecpp",
         "benches": [
-          {
-            "name": "BM_DDNodeCreation",
-            "value": 5.5302227608350245,
-            "unit": "ns/iter",
-            "extra": "iterations: 122897591\ncpu: 5.474572906803357 ns\nthreads: 1"
-          },
           {
             "name": "BM_ComplexNumbersCreation",
             "value": 24.218381405509618,
