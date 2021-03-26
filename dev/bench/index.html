@@ -119,7 +119,7 @@
                   const result = {commit, date, tool, bench};
                   let [name, qubits] = bench.name.split('/');
                   // set name in case this is a non-parametrised benchmark
-                  if (qubits === "") {
+                  if (qubits === undefined) {
                       qubits = "-";
                   }
 
