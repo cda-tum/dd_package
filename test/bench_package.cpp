@@ -10,7 +10,7 @@
 #include <memory>
 
 static void QubitRange(benchmark::internal::Benchmark* b) {
-    b->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(16, 128);
+    b->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(2, 128);
 }
 
 ///
@@ -21,14 +21,23 @@ static void QubitRange(benchmark::internal::Benchmark* b) {
 /// until then, each creation should take equally long
 ///
 
-static void BM_DDNodeCreation(benchmark::State& state) {
+static void BM_DDVectorNodeCreation(benchmark::State& state) {
     for (auto _: state) {
         auto node = dd::Node{};
         benchmark::DoNotOptimize(node);
         benchmark::ClobberMemory();
     }
 }
-BENCHMARK(BM_DDNodeCreation)->Unit(benchmark::kNanosecond);
+BENCHMARK(BM_DDVectorNodeCreation)->Unit(benchmark::kNanosecond);
+
+static void BM_DDMatrixNodeCreation(benchmark::State& state) {
+    for (auto _: state) {
+        auto node = dd::Node{};
+        benchmark::DoNotOptimize(node);
+        benchmark::ClobberMemory();
+    }
+}
+BENCHMARK(BM_DDMatrixNodeCreation)->Unit(benchmark::kNanosecond);
 
 static void BM_ComplexNumbersCreation(benchmark::State& state) {
     for (auto _: state) {
@@ -47,7 +56,7 @@ static void BM_PackageCreation(benchmark::State& state) {
         benchmark::ClobberMemory();
     }
 }
-BENCHMARK(BM_PackageCreation)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(16, 128);
+BENCHMARK(BM_PackageCreation)->Unit(benchmark::kMillisecond)->RangeMultiplier(2)->Range(2, 128);
 
 ///
 /// Test creation of identity matrix
@@ -60,7 +69,7 @@ static void BM_MakeIdentCached(benchmark::State& state) {
         benchmark::DoNotOptimize(dd->makeIdent(nqubits));
     }
 }
-BENCHMARK(BM_MakeIdentCached)->Unit(benchmark::kNanosecond)->RangeMultiplier(2)->Range(16, 128);
+BENCHMARK(BM_MakeIdentCached)->Unit(benchmark::kNanosecond)->RangeMultiplier(2)->Range(2, 128);
 
 static void BM_MakeIdent(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
