@@ -100,27 +100,27 @@ namespace dd {
                     break;
                 case BasisStates::plus:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(SQRT_2, 0);
+                    edges[2].w = cn.lookup(CN::SQRT_2, 0);
                     break;
                 case BasisStates::minus:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(-SQRT_2, 0);
+                    edges[2].w = cn.lookup(-CN::SQRT_2, 0);
                     break;
                 case BasisStates::right:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(0, SQRT_2);
+                    edges[2].w = cn.lookup(0, CN::SQRT_2);
                     break;
                 case BasisStates::left:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(0, -SQRT_2);
+                    edges[2].w = cn.lookup(0, -CN::SQRT_2);
                     break;
             }
 

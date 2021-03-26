@@ -48,8 +48,7 @@ namespace dd {
     constexpr unsigned int   LIST_CHUNK_SIZE   = 2000;
     constexpr unsigned short MAXN              = 128; // max no. of inputs
 
-    typedef std::array<ComplexValue, NEDGE> Matrix2x2;
-    typedef struct Node*                    NodePtr;
+    typedef struct Node* NodePtr;
 
     struct Edge {
         NodePtr p;
