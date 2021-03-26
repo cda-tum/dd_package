@@ -40,39 +40,39 @@ namespace dd {
     constexpr GateMatrix Vmat{complex_SQRT_2, complex_miSQRT_2, complex_miSQRT_2, complex_SQRT_2};
     constexpr GateMatrix Vdagmat{complex_SQRT_2, complex_iSQRT_2, complex_iSQRT_2, complex_SQRT_2};
 
-    constexpr GateMatrix U3mat(fp lambda, fp phi, fp theta) {
+    inline GateMatrix U3mat(fp lambda, fp phi, fp theta) {
         return GateMatrix{{{std::cos(theta / 2.), 0.},
                            {-std::cos(lambda) * std::sin(theta / 2.), -std::sin(lambda) * std::sin(theta / 2.)},
                            {std::cos(phi) * std::sin(theta / 2.), std::sin(phi) * std::sin(theta / 2.)},
                            {std::cos(lambda + phi) * std::cos(theta / 2.), std::sin(lambda + phi) * std::cos(theta / 2.)}}};
     }
 
-    constexpr GateMatrix U2mat(fp lambda, fp phi) {
+    inline GateMatrix U2mat(fp lambda, fp phi) {
         return GateMatrix{complex_SQRT_2,
                           {-std::cos(lambda) * SQRT_2, -std::sin(lambda) * SQRT_2},
                           {std::cos(phi) * SQRT_2, std::sin(phi) * SQRT_2},
                           {std::cos(lambda + phi) * SQRT_2, std::sin(lambda + phi) * SQRT_2}};
     }
 
-    constexpr GateMatrix Phasemat(fp lambda) {
+    inline GateMatrix Phasemat(fp lambda) {
         return GateMatrix{complex_one, complex_zero, complex_zero, {std::cos(lambda), std::sin(lambda)}};
     }
 
-    constexpr GateMatrix RXmat(fp lambda) {
+    inline GateMatrix RXmat(fp lambda) {
         return GateMatrix{ComplexValue{std::cos(lambda / 2.), 0.},
                           ComplexValue{0., -std::sin(lambda / 2.)},
                           ComplexValue{0., -std::sin(lambda / 2.)},
                           ComplexValue{std::cos(lambda / 2.), 0.}};
     }
 
-    constexpr GateMatrix RYmat(fp lambda) {
+    inline GateMatrix RYmat(fp lambda) {
         return GateMatrix{ComplexValue{std::cos(lambda / 2.), 0.},
                           ComplexValue{-std::sin(lambda / 2.), 0.},
                           ComplexValue{std::sin(lambda / 2.), 0.},
                           ComplexValue{std::cos(lambda / 2.), 0.}};
     }
 
-    constexpr GateMatrix RZmat(fp lambda) {
+    inline GateMatrix RZmat(fp lambda) {
         return GateMatrix{ComplexValue{-std::cos(lambda / 2.), -std::sin(lambda / 2.)}, complex_zero,
                           complex_zero, ComplexValue{std::cos(lambda / 2.), std::sin(lambda / 2.)}};
     }
