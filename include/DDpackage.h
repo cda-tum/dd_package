@@ -266,7 +266,9 @@ namespace dd {
         [[nodiscard]] const auto& getComputeTable3() const { return CTable3; }
 
         /// Identity table functions
-        void                      clearIdentityTable();
+        inline void clearIdentityTable() {
+            for (auto& entry: IdTable) entry.p = nullptr;
+        }
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
         /// Toffoli table functions
@@ -278,15 +280,19 @@ namespace dd {
         Edge TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::array<short, MAXN>& line) {
             return TTlookup(n, m, t, line.data());
         }
-        static unsigned short     TThash(unsigned short n, unsigned short t, const short line[MAXN]);
-        void                      clearToffoliTable();
+        static unsigned short TThash(unsigned short n, unsigned short t, const short line[MAXN]);
+        inline void           clearToffoliTable() {
+            for (auto& entry: TTable) entry.e.p = nullptr;
+        }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
 
         /// Operation table functions
-        Edge                      OperationLookup(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
-        void                      OperationInsert(unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, unsigned short nQubits);
-        static unsigned long      OperationHash(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
-        void                      clearOperationTable();
+        Edge                 OperationLookup(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
+        void                 OperationInsert(unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, unsigned short nQubits);
+        static unsigned long OperationHash(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
+        inline void          clearOperationTable() {
+            for (auto& entry: OperationTable) entry.r = nullptr;
+        }
         [[nodiscard]] const auto& getOperationTable() const { return OperationTable; }
 
         /// Operations on DDs

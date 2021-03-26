@@ -1675,24 +1675,6 @@ namespace dd {
         }
     }
 
-    void Package::clearToffoliTable() {
-        for (auto& entry: TTable) {
-            entry.e.p = nullptr;
-        }
-    }
-
-    void Package::clearIdentityTable() {
-        for (auto& entry: IdTable) {
-            entry.p = nullptr;
-        }
-    }
-
-    void Package::clearOperationTable() {
-        for (auto& entry: OperationTable) {
-            entry.r = nullptr;
-        }
-    }
-
     void Package::clearUniqueTable() {
         for (auto& table: Unique) {
             for (auto& bucket: table) {

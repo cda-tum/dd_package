@@ -59,22 +59,24 @@ namespace dd {
     }
 
     inline GateMatrix RXmat(fp lambda) {
-        return GateMatrix{ComplexValue{std::cos(lambda / 2.), 0.},
-                          ComplexValue{0., -std::sin(lambda / 2.)},
-                          ComplexValue{0., -std::sin(lambda / 2.)},
-                          ComplexValue{std::cos(lambda / 2.), 0.}};
+        return GateMatrix{{{std::cos(lambda / 2.), 0.},
+                           {0., -std::sin(lambda / 2.)},
+                           {0., -std::sin(lambda / 2.)},
+                           {std::cos(lambda / 2.), 0.}}};
     }
 
     inline GateMatrix RYmat(fp lambda) {
-        return GateMatrix{ComplexValue{std::cos(lambda / 2.), 0.},
-                          ComplexValue{-std::sin(lambda / 2.), 0.},
-                          ComplexValue{std::sin(lambda / 2.), 0.},
-                          ComplexValue{std::cos(lambda / 2.), 0.}};
+        return GateMatrix{{{std::cos(lambda / 2.), 0.},
+                           {-std::sin(lambda / 2.), 0.},
+                           {std::sin(lambda / 2.), 0.},
+                           {std::cos(lambda / 2.), 0.}}};
     }
 
     inline GateMatrix RZmat(fp lambda) {
-        return GateMatrix{ComplexValue{-std::cos(lambda / 2.), -std::sin(lambda / 2.)}, complex_zero,
-                          complex_zero, ComplexValue{std::cos(lambda / 2.), std::sin(lambda / 2.)}};
+        return GateMatrix{{{-std::cos(lambda / 2.), -std::sin(lambda / 2.)},
+                           complex_zero,
+                           complex_zero,
+                           {std::cos(lambda / 2.), std::sin(lambda / 2.)}}};
     }
 } // namespace dd
 #endif //DD_PACKAGE_GATEMATRIXDEFINITIONS_H
