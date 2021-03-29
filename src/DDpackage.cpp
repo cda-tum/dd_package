@@ -1303,12 +1303,14 @@ namespace dd {
                             em[i] = makeNonterminal(z, {(i1 == i2) ? makeIdent(z) : DDzero, DDzero, 
                                                         DDzero, em[i]});
                         } 
-                        control_idx += 1;
-                        next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
                     } else { // not connected
                         em[i] = makeNonterminal(z, {em[i], DDzero, DDzero, em[i]});
                     }
                 }
+            }
+            if(next_qubit == z) {
+                control_idx += 1;
+                next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
             }
         }
 
