@@ -453,8 +453,8 @@ namespace dd {
         currentNodeGCLimit += GCLIMIT_INC;
         nodecount = counta;
         cn.garbageCollect(); // NOTE: this cleans all complex values with ref-count 0
-        currentComplexGCLimit += ComplexNumbers::GCLIMIT_INC; 
-	// IMPORTANT reset tables
+        currentComplexGCLimit += ComplexNumbers::GCLIMIT_INC;
+        // IMPORTANT reset tables
         // TODO: should the unique table be relieved of entries no longer necessary?
         clearComputeTables();
         clearOperationTable();
@@ -596,13 +596,13 @@ namespace dd {
         if (OperationTable[i].r == nullptr) return r;
         if (OperationTable[i].operationType != operationType) return r;
         if (OperationTable[i].r->v != nQubits - 1) return r;
-        
+
         const auto& opcontrols = OperationTable[i].controls;
-        if(controls.size() != opcontrols.size()) {
+        if (controls.size() != opcontrols.size()) {
             return r;
         }
-        for(int j = 0; j < controls.size(); j++) {
-            if(controls[i].qubit != opcontrols[i].qubit || controls[i].type != opcontrols[i].type) {
+        for (int j = 0; j < controls.size(); j++) {
+            if (controls[i].qubit != opcontrols[i].qubit || controls[i].type != opcontrols[i].type) {
                 return r;
             }
         }
@@ -618,7 +618,7 @@ namespace dd {
         return r;
     }
 
-    void Package::OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls) { 
+    void Package::OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls) {
         const unsigned long i = OperationHash(operationType, nQubits, target, controls);
         // std::memcpy(OperationTable[i].line, line, (nQubits) * sizeof(short));
         OperationTable[i].operationType = operationType;
@@ -636,14 +636,14 @@ namespace dd {
         // }
 
         unsigned int control_idx = 0;
-        short next_qubit = controls.empty() ? -1 : controls[control_idx].qubit;
+        short        next_qubit  = controls.empty() ? -1 : controls[control_idx].qubit;
         for (unsigned short j = 0; j <= nQubits; j++) {
             int line = -1;
-            if(j == next_qubit) {
+            if (j == next_qubit) {
                 line = controls[control_idx].type == Control::pos ? 1 : 0;
                 control_idx++;
                 next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
-            } else if(j == target) {
+            } else if (j == target) {
                 line = 2;
             }
             i = (i << 3U) + i * j + line;
@@ -773,17 +773,16 @@ namespace dd {
 
     Edge Package::TTlookup(unsigned short n, unsigned short target, const std::vector<Control>& controls) {
         Edge r{};
-        r.p                    = nullptr;
-        const unsigned short i = TThash(n, target, controls);
-        auto& tcontrols        = TTable[i].controls;
+        r.p                            = nullptr;
+        const unsigned short i         = TThash(n, target, controls);
+        auto&                tcontrols = TTable[i].controls;
 
         if (TTable[i].e.p == nullptr || TTable[i].target != target || TTable[i].n != n || controls.size() != tcontrols.size()) {
             return r;
-
         }
 
-        for(int j = 0; j < controls.size(); j++) {
-            if(controls[j].qubit != tcontrols[j].qubit || controls[j].type != tcontrols[j].type) {
+        for (int j = 0; j < controls.size(); j++) {
+            if (controls[j].qubit != tcontrols[j].qubit || controls[j].type != tcontrols[j].type) {
                 return r;
             }
         }
@@ -1175,9 +1174,9 @@ namespace dd {
 
     Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned int target, const std::vector<Control>& controls) {
         std::array<Edge, NEDGE> em{};
-        short        z = 0;
-        unsigned int control_idx = 0;
-        int next_qubit = controls.empty() ? -1 : controls[control_idx].qubit;
+        short                   z           = 0;
+        unsigned int            control_idx = 0;
+        int                     next_qubit  = controls.empty() ? -1 : controls[control_idx].qubit;
 
         for (int i = 0; i < NEDGE; ++i) {
             if (mat[i].r == 0 && mat[i].i == 0) {
@@ -1192,20 +1191,20 @@ namespace dd {
             for (int i1 = 0; i1 < RADIX; i1++) {
                 for (int i2 = 0; i2 < RADIX; i2++) {
                     int i = i1 * RADIX + i2;
-                    if(next_qubit == z) {
+                    if (next_qubit == z) {
                         if (controls[control_idx].type == Control::neg) { // neg. control
-                            em[i] = makeNonterminal(z, {em[i], DDzero, 
+                            em[i] = makeNonterminal(z, {em[i], DDzero,
                                                         DDzero, (i1 == i2) ? makeIdent(z) : DDzero});
                         } else { // pos. control
-                            em[i] = makeNonterminal(z, {(i1 == i2) ? makeIdent(z) : DDzero, DDzero, 
+                            em[i] = makeNonterminal(z, {(i1 == i2) ? makeIdent(z) : DDzero, DDzero,
                                                         DDzero, em[i]});
-                        } 
+                        }
                     } else { // not connected
                         em[i] = makeNonterminal(z, {em[i], DDzero, DDzero, em[i]});
                     }
                 }
             }
-            if(next_qubit == z) {
+            if (next_qubit == z) {
                 control_idx += 1;
                 next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
             }
@@ -1216,7 +1215,7 @@ namespace dd {
 
         //process lines above target
         for (z++; z < n; z++) {
-            if(next_qubit == z) {
+            if (next_qubit == z) {
                 if (controls[control_idx].type == Control::neg) { // neg. control
                     e = makeNonterminal(z, {e, DDzero, DDzero, makeIdent(z)});
                 } else {

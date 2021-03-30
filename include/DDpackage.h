@@ -71,18 +71,20 @@ namespace dd {
         ListElementPtr next;
         int            w;
     };
-struct Control {
-		enum controlType: bool {pos = true, neg = false};
+    struct Control {
+        enum controlType : bool { pos = true,
+                                  neg = false };
 
-		unsigned short qubit = 0;
-		controlType    type  = pos;
+        unsigned short qubit = 0;
+        controlType    type  = pos;
 
-		explicit Control(unsigned short qubit = 0, controlType type = pos): qubit(qubit), type(type) {};
-        
-        static bool compare(Control c1, Control c2) { 
-            return c1.qubit < c2.qubit; 
-        } 
-	};
+        explicit Control(unsigned short qubit = 0, controlType type = pos):
+            qubit(qubit), type(type){};
+
+        static bool compare(Control c1, Control c2) {
+            return c1.qubit < c2.qubit;
+        }
+    };
 
     // computed table definitions
     // compute table entry kinds
@@ -134,10 +136,10 @@ struct Control {
     };
 
     struct OperationEntry {
-        NodePtr      r;
-        ComplexValue rw;
-        unsigned int operationType;
-        unsigned short target;
+        NodePtr              r;
+        ComplexValue         rw;
+        unsigned int         operationType;
+        unsigned short       target;
         std::vector<Control> controls;
     };
 
@@ -213,7 +215,7 @@ struct Control {
         Edge         kronecker2(const Edge& x, const Edge& y);
 
         void checkSpecialMatrices(NodePtr p);
-    
+
         unsigned int   nodeCount(const Edge& e, std::unordered_set<NodePtr>& v) const;
         ListElementPtr newListElement();
 
@@ -282,7 +284,6 @@ struct Control {
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
         /// Toffoli table functions
-        
 
         // Toffoli table insertion and lookup
         void TTinsert(unsigned short n, unsigned short target, const Edge& e) {
@@ -291,18 +292,18 @@ struct Control {
         void TTinsert(unsigned short n, unsigned short target, const std::vector<Control>& controls, const Edge& e);
         Edge TTlookup(unsigned short n, unsigned short target, const std::vector<Control>& controls = {});
 
-        inline unsigned short TThash(const unsigned short n, const unsigned short target, const std::vector<Control>& controls); 
+        inline unsigned short TThash(const unsigned short n, const unsigned short target, const std::vector<Control>& controls);
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
 
-        /// Operation table functions        
-        Edge OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
-        void OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
+        /// Operation table functions
+        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
+        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
         unsigned long OperationHash(unsigned int operationType, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
 
-        inline void          clearOperationTable() {
+        inline void clearOperationTable() {
             for (auto& entry: OperationTable) entry.r = nullptr;
         }
         [[nodiscard]] const auto& getOperationTable() const { return OperationTable; }

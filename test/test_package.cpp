@@ -11,7 +11,7 @@
 #include <memory>
 
 TEST(DDPackageTest, OperationLookupTest) {
-    auto  dd      = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>();
 
     // dd::ATrue is not the operation that is being stored, but for the test it doesn't matter
     auto tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
@@ -128,7 +128,7 @@ TEST(DDPackageTest, VectorSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
-    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 0, {dd::Control(1)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -146,7 +146,7 @@ TEST(DDPackageTest, BellMatrix) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, 1);
-    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, 0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -197,7 +197,7 @@ TEST(DDPackageTest, MatrixSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
     dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, 1);
-    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, 0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 

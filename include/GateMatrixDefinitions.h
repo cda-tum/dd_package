@@ -6,8 +6,8 @@
 #ifndef DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 #define DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 
-
 #include "DDcomplex.h"
+
 #include <array>
 
 namespace dd {
