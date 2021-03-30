@@ -5,7 +5,7 @@
 
 #include "DDexport.h"
 #include "DDpackage.h"
-#include "util.h"
+#include "GateMatrixDefinitions.h"
 
 #include <iostream>
 #include <memory>
@@ -17,10 +17,10 @@ dd::Edge BellCicuit1(std::unique_ptr<dd::Package>& dd) {
     //    0 neg. control
     //    1 pos. control
     //    2 target
-    dd::Edge h_gate = dd->makeGateDD(Hmat, 2, 0);
+    dd::Edge h_gate = dd->makeGateDD(dd::Hmat, 2, 0);
 
     /***** define cx gate with control q0 and target q1 *****/
-    dd::Edge cx_gate = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, 1, {dd::Control(0)});
 
     //Multiply matrices to get functionality of circuit
     return dd->multiply(cx_gate, h_gate);
@@ -28,13 +28,13 @@ dd::Edge BellCicuit1(std::unique_ptr<dd::Package>& dd) {
 
 dd::Edge BellCicuit2(std::unique_ptr<dd::Package>& dd) {
     /***** define Hadamard gate acting on q1 *****/
-    dd::Edge h_gate_q1 = dd->makeGateDD(Hmat, 2, 1);
+    dd::Edge h_gate_q1 = dd->makeGateDD(dd::Hmat, 2, 1);
 
     /***** define Hadamard gate acting on q0 *****/
-    dd::Edge h_gate_q0 = dd->makeGateDD(Hmat, 2, 0);
+    dd::Edge h_gate_q0 = dd->makeGateDD(dd::Hmat, 2, 0);
 
     /***** define cx gate with control q1 and target q0 *****/
-    dd::Edge cx_gate = dd->makeGateDD(Xmat, 2, 0, {dd::Control(1)});
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, 0, {dd::Control(1)});
 
     //Multiply matrices to get functionality of circuit
     return dd->multiply(dd->multiply(h_gate_q1, h_gate_q0), dd->multiply(cx_gate, h_gate_q1));
@@ -74,11 +74,11 @@ int main() {
 
     /***** Custom gates *****/
     // define, e.g., Pauli-Z matrix
-    dd::Matrix2x2 m;
-    m[0][0] = {1., 0.};
-    m[0][1] = {0., 0.};
-    m[1][0] = {0., 0.};
-    m[1][1] = {-1., 0.};
+    dd::GateMatrix m;
+    m[0] = {1., 0.};
+    m[1] = {0., 0.};
+    m[2] = {0., 0.};
+    m[3] = {-1., 0.};
 
     dd::Edge my_z_gate = dd->makeGateDD(m, 1, 0);
     std::cout << "DD of my gate has size " << dd->size(my_z_gate) << std::endl;

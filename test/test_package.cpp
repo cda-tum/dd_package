@@ -5,7 +5,7 @@
 
 #include "DDexport.h"
 #include "DDpackage.h"
-#include "util.h"
+#include "GateMatrixDefinitions.h"
 
 #include "gtest/gtest.h"
 #include <memory>
@@ -17,7 +17,7 @@ TEST(DDPackageTest, OperationLookupTest) {
     auto tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
     EXPECT_TRUE(tmp_op.p == nullptr);
 
-    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, 0);
+    dd::Edge x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
     dd->OperationInsert(dd::ATrue, x_gate, 1, 0);
     tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
     EXPECT_TRUE(tmp_op.p == x_gate.p);
@@ -35,8 +35,8 @@ TEST(DDPackageTest, OperationLookupTest) {
 TEST(DDPackageTest, TrivialTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge x_gate = dd->makeGateDD(Xmat, 1, 0);
-    dd::Edge h_gate = dd->makeGateDD(Hmat, 1, 0);
+    dd::Edge x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
+    dd::Edge h_gate = dd->makeGateDD(dd::Hmat, 1, 0);
 
     ASSERT_EQ(dd->getValueByPath(h_gate, "0"), (dd::ComplexValue{dd::SQRT_2, 0}));
 
@@ -52,8 +52,8 @@ TEST(DDPackageTest, TrivialTest) {
 TEST(DDPackageTest, BellState) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2, 0, {dd::Control(1)});
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 0, {dd::Control(1)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -127,8 +127,8 @@ TEST(DDPackageTest, StateGenerationManipulation) {
 TEST(DDPackageTest, VectorSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
-    dd::Edge cx_gate    = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -145,8 +145,8 @@ TEST(DDPackageTest, VectorSerializationTest) {
 TEST(DDPackageTest, BellMatrix) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, 1);
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
+    dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -196,8 +196,8 @@ TEST(DDPackageTest, BellMatrix) {
 TEST(DDPackageTest, MatrixSerializationTest) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate  = dd->makeGateDD(Hmat, 2, 1);
-    dd::Edge cx_gate = dd->makeGateDD({Xmat[0][0], Xmat[0][1], Xmat[1][0], Xmat[1][1]}, 2,  0, {dd::Control(1)});
+    dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2,  0, {dd::Control(1)});
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
 
@@ -210,11 +210,46 @@ TEST(DDPackageTest, MatrixSerializationTest) {
     EXPECT_TRUE(dd->equals(bell_matrix, deserialized_bell_matrix));
 }
 
+TEST(DDPackageTest, SerializationErrors) {
+    auto dd = std::make_unique<dd::Package>();
+
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 2);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1);
+    dd::Edge zero_state = dd->makeZeroState(2);
+    dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+
+    // test non-existing file
+    dd::serialize(bell_state, "./path/that/does/not/exist/filename.dd");
+    auto e = dd::deserialize(dd, "./path/that/does/not/exist/filename.dd", true);
+    EXPECT_TRUE(dd::Package::equals(e, dd::Package::DDzero));
+
+    // test wrong version number
+    std::stringstream ss{};
+    ss << 2.0 << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss, false, false), std::runtime_error);
+    ss.str("");
+    fp version = 2.0;
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(fp));
+    EXPECT_THROW(dd::deserialize(dd, ss, false, true), std::runtime_error);
+
+    // test wrong format
+    ss.str("");
+    ss << "0.1" << std::endl;
+    ss << "not_complex" << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss), std::runtime_error);
+
+    ss.str("");
+    ss << "0.1" << std::endl;
+    ss << "1.0" << std::endl;
+    ss << "no_node_here" << std::endl;
+    EXPECT_THROW(dd::deserialize(dd, ss), std::runtime_error);
+}
+
 TEST(DDPackageTest, TestConsistency) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 1);
-    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1, {dd::Control(0)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
@@ -241,7 +276,7 @@ TEST(DDPackageTest, ToffoliTable) {
     auto toffoli = dd->TTlookup(3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
     EXPECT_EQ(toffoli.p, nullptr);
     if (toffoli.p == nullptr) {
-        toffoli = dd->makeGateDD(Xmat, 3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
+        toffoli = dd->makeGateDD(dd::Xmat, 3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)});
         dd->TTinsert(3, 2, {dd::Control(0, dd::Control::neg), dd::Control(1)}, toffoli);
     }
 
@@ -280,19 +315,29 @@ TEST(DDPackageTest, Identity) {
     auto dd = std::make_unique<dd::Package>();
     EXPECT_TRUE(dd->equals(dd->makeIdent(0), dd->DDone));
     EXPECT_TRUE(dd->equals(dd->makeIdent(0, -1), dd->DDone));
-    auto id3 = dd->makeIdent(0, 2);
-    EXPECT_TRUE(dd->equals(dd->makeIdent(3), id3));
+
+    auto id3 = dd->makeIdent(3);
+    EXPECT_TRUE(dd->equals(dd->makeIdent(0, 2), id3));
+    auto& table = dd->getIdentityTable();
+    EXPECT_NE(table[0].p, nullptr);
+    EXPECT_NE(table[1].p, nullptr);
+    EXPECT_NE(table[2].p, nullptr);
+
     auto id2 = dd->makeIdent(0, 1); // should be found in IdTable
     EXPECT_TRUE(dd->equals(dd->makeIdent(2), id2));
     auto id4 = dd->makeIdent(0, 3); // should use id3 and extend it
     EXPECT_TRUE(dd->equals(dd->makeIdent(4), id4));
+    EXPECT_NE(table[3].p, nullptr);
+
+    auto idCached = dd->makeIdent(0, 3);
+    EXPECT_TRUE(dd::Package::equals(id4, idCached));
 }
 
 TEST(DDPackageTest, TestLocalInconsistency) {
     auto dd = std::make_unique<dd::Package>();
 
-    dd::Edge h_gate     = dd->makeGateDD(Hmat, 2, 0);
-    dd::Edge cx_gate    = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 0);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1, {dd::Control(0)});
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
@@ -317,8 +362,8 @@ TEST(DDPackageTest, TestLocalInconsistency) {
 
 TEST(DDPackageTest, Ancillaries) {
     auto dd          = std::make_unique<dd::Package>();
-    auto h_gate      = dd->makeGateDD(Hmat, 2, 0);
-    auto cx_gate     = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
+    auto h_gate      = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto cx_gate     = dd->makeGateDD(dd::Xmat, 2, 1, {dd::Control(0)});
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
     auto reduced_bell_matrix = dd->reduceAncillae(bell_matrix, {0b00});
@@ -350,8 +395,8 @@ TEST(DDPackageTest, Ancillaries) {
 
 TEST(DDPackageTest, Garbage) {
     auto dd          = std::make_unique<dd::Package>();
-    auto h_gate      = dd->makeGateDD(Hmat, 2, 0);
-    auto cx_gate     = dd->makeGateDD(Xmat, 2, 1, {dd::Control(0)});
+    auto h_gate      = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto cx_gate     = dd->makeGateDD(dd::Xmat, 2, 1, {dd::Control(0)});
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
     auto reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {0b00});

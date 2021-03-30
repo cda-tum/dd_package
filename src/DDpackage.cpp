@@ -81,9 +81,7 @@ namespace dd {
 
     Edge Package::makeBasisState(unsigned short n, const std::vector<BasisStates>& state) {
         if (state.size() < n) {
-            std::cerr << "Insufficient qubit states provided. Requested " << n << ", but received " << state.size()
-                      << std::endl;
-            exit(1);
+            throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
         }
 
         Edge f = DDone;
@@ -102,27 +100,27 @@ namespace dd {
                     break;
                 case BasisStates::plus:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(SQRT_2, 0);
+                    edges[2].w = cn.lookup(CN::SQRT_2, 0);
                     break;
                 case BasisStates::minus:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(-SQRT_2, 0);
+                    edges[2].w = cn.lookup(-CN::SQRT_2, 0);
                     break;
                 case BasisStates::right:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(0, SQRT_2);
+                    edges[2].w = cn.lookup(0, CN::SQRT_2);
                     break;
                 case BasisStates::left:
                     edges[0].p = f.p;
-                    edges[0].w = cn.lookup(SQRT_2, 0);
+                    edges[0].w = cn.lookup(CN::SQRT_2, 0);
                     edges[2].p = f.p;
-                    edges[2].w = cn.lookup(0, -SQRT_2);
+                    edges[2].w = cn.lookup(0, -CN::SQRT_2);
                     break;
             }
 
@@ -455,8 +453,13 @@ namespace dd {
         currentNodeGCLimit += GCLIMIT_INC;
         nodecount = counta;
         cn.garbageCollect(); // NOTE: this cleans all complex values with ref-count 0
-        currentComplexGCLimit += ComplexNumbers::GCLIMIT_INC;
-        initComputeTable(); // IMPORTANT sets compute table to empty after garbage collection
+        currentComplexGCLimit += ComplexNumbers::GCLIMIT_INC; 
+	// IMPORTANT reset tables
+        // TODO: should the unique table be relieved of entries no longer necessary?
+        clearComputeTables();
+        clearOperationTable();
+        clearToffoliTable();
+        clearIdentityTable();
     }
 
     // get memory space for a node
@@ -776,10 +779,11 @@ namespace dd {
 
         if (TTable[i].e.p == nullptr || TTable[i].target != target || TTable[i].n != n || controls.size() != tcontrols.size()) {
             return r;
+
         }
 
         for(int j = 0; j < controls.size(); j++) {
-            if(controls[i].qubit != tcontrols[i].qubit || controls[i].type != tcontrols[i].type) {
+            if(controls[j].qubit != tcontrols[j].qubit || controls[j].type != tcontrols[j].type) {
                 return r;
             }
         }
@@ -1169,113 +1173,6 @@ namespace dd {
         return IdTable[qidx];
     }
 
-    // build matrix representation for a single gate on a circuit with n lines
-    // line is the vector of connections
-    // -1 not connected
-    // 0...1 indicates a control by that value
-    // 2 indicates the line is the target
-    Edge Package::makeGateDD(const Matrix2x2& mat, unsigned short n, unsigned int target, const std::vector<Control>& controls) {
-        Edge  em[NEDGE], fm[NEDGE];
-        short        z = 0;
-        unsigned int control_idx = 0;
-        int next_qubit = controls.empty() ? -1 : controls[control_idx].qubit;
-
-        for (int i = 0; i < RADIX; i++) {
-            for (int j = 0; j < RADIX; j++) {
-                if (mat[i][j].r == 0.0 && mat[i][j].i == 0.0) {
-                    em[i * RADIX + j] = DDzero;
-                } else {
-                    em[i * RADIX + j] = makeTerminal(cn.lookup(mat[i][j]));
-                }
-            }
-        }
-
-        Edge e = DDone;
-        Edge f{};
-        for (z = 0; z < target; z++) { //process lines below target
-            if(next_qubit == z) {      //  control line below target in DD
-                for (int i1 = 0; i1 < RADIX; i1++) {
-                    for (int i2 = 0; i2 < RADIX; i2++) {
-                        int i = i1 * RADIX + i2;
-                        if (i1 == i2) {
-                            f = e;
-                        } else {
-                            f = DDzero;
-                        }
-                        for (int k = 0; k < RADIX; k++) {
-                            for (int j = 0; j < RADIX; j++) {
-                                int t = k * RADIX + j;
-                                if (k == j) {
-                                    if (k == 0 && controls[control_idx].type == Control::neg ||
-                                        k == 1 && controls[control_idx].type == Control::pos) {
-                                        fm[t] = em[i];
-                                    } else {
-                                        fm[t] = f;
-                                    }
-                                } else {
-                                    fm[t] = DDzero;
-                                }
-                            }
-                        }
-                        em[i] = makeNonterminal(z, fm);
-                    }
-                }
-                
-                control_idx += 1;
-                next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
-            } else { // not connected
-                for (auto& edge: em) {
-                    for (int i1 = 0; i1 < RADIX; ++i1) {
-                        for (int i2 = 0; i2 < RADIX; ++i2) {
-                            if (i1 == i2) {
-                                fm[i1 + i2 * RADIX] = edge;
-                            } else {
-                                fm[i1 + i2 * RADIX] = DDzero;
-                            }
-                        }
-                    }
-                    edge = makeNonterminal(z, fm);
-                }
-            }
-            e = makeIdent(z + 1);
-        }
-        e = makeNonterminal(z, em); // target line
-        for (z++; z < n; z++) {     // go through lines above target
-            if(next_qubit == z) {
-                Edge temp = makeIdent(z);
-                for (int i = 0; i < RADIX; i++) {
-                    for (int j = 0; j < RADIX; j++) {
-                        if (i == j) {
-                            if (i == 0 && controls[control_idx].type == Control::neg ||
-                                i == 1 && controls[control_idx].type == Control::pos) {
-                                em[i * RADIX + j] = e;
-                            } else {
-                                em[i * RADIX + j] = temp;
-                            }
-                        } else {
-                            em[i * RADIX + j] = DDzero;
-                        }
-                    }
-                }
-                e = makeNonterminal(z, em);
-                control_idx += 1;
-                next_qubit = control_idx < controls.size() ? controls[control_idx].qubit : -1;
-            } else { // not connected
-                for (int i1 = 0; i1 < RADIX; i1++) {
-                    for (int i2 = 0; i2 < RADIX; i2++) {
-                        if (i1 == i2) {
-                            fm[i1 + i2 * RADIX] = e;
-                        } else {
-                            fm[i1 + i2 * RADIX] = DDzero;
-                        }
-                    }
-                }
-                e = makeNonterminal(z, fm);
-            }
-        }
-        return e;
-    }
-
     Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned int target, const std::vector<Control>& controls) {
         std::array<Edge, NEDGE> em{};
         short        z = 0;
@@ -1483,8 +1380,7 @@ namespace dd {
         // Base case
         if (v == -1) {
             if (isTerminal(a)) return a;
-            std::cerr << "Expected terminal node in trace." << std::endl;
-            exit(1);
+            throw std::runtime_error("Expected terminal node in trace.");
         }
 
         if (eliminate[v]) {
@@ -1826,13 +1722,56 @@ namespace dd {
         p->ident = true;
     }
 
+    void Package::clearComputeTables() {
+        for (auto& table: CTable1) {
+            for (auto& entry: table) {
+                entry.r.p   = nullptr;
+                entry.which = none;
+            }
+        }
+        for (auto& table: CTable2) {
+            for (auto& entry: table) {
+                entry.r     = nullptr;
+                entry.which = none;
+            }
+        }
+        for (auto& table: CTable3) {
+            for (auto& entry: table) {
+                entry.r     = nullptr;
+                entry.which = none;
+            }
+        }
+    }
+
+    void Package::clearUniqueTable() {
+        for (auto& table: Unique) {
+            for (auto& bucket: table) {
+                // no node in bucket
+                if (bucket == nullptr)
+                    continue;
+
+                // successively return nodes to available space chain
+                auto current = bucket;
+                while (current != nullptr) {
+                    bucket        = current->next;
+                    current->next = nodeAvail;
+                    nodeAvail     = current;
+                    current       = bucket;
+                }
+            }
+        }
+    }
+
     void Package::reset() {
-        Unique          = {}; // TODO: Return nodes from Unique to NodeAvail
+        clearUniqueTable();
+        clearComputeTables();
+        clearOperationTable();
+        clearToffoliTable();
+        clearIdentityTable();
+
         activeNodeCount = 0;
         maxActive       = 0;
-        for (unsigned short q = 0; q < MAXN; ++q)
-            active[q] = 0;
-        initComputeTable();
+        active.fill(0);
     }
 
 } // namespace dd
