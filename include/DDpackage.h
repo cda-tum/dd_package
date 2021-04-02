@@ -196,7 +196,7 @@ namespace dd {
         Edge         add2(const Edge& x, const Edge& y);
         Edge         multiply2(const Edge& x, const Edge& y, unsigned short var);
         ComplexValue innerProduct(const Edge& x, const Edge& y, int var);
-        Edge         trace(const Edge& a, const std::bitset<MAXN>& eliminate, unsigned short alreadyEliminated = 0);
+        Edge         trace(const Edge& a, const std::vector<bool>& eliminate, unsigned short alreadyEliminated = 0);
         Edge         kronecker2(const Edge& x, const Edge& y);
 
         void checkSpecialMatrices(NodePtr p);
@@ -243,7 +243,7 @@ namespace dd {
 
         /// State DD generation
         Edge makeZeroState(unsigned short n);
-        Edge makeBasisState(unsigned short n, const std::bitset<MAXN>& state);
+        Edge makeBasisState(unsigned short n, const std::vector<bool>& state);
         Edge makeBasisState(unsigned short n, const std::vector<BasisStates>& state);
 
         /// Matrix DD generation
@@ -304,7 +304,7 @@ namespace dd {
         Edge         transpose(const Edge& a);
         Edge         conjugateTranspose(const Edge& a);
         Edge         normalize(const Edge& e, bool cached);
-        Edge         partialTrace(const Edge& a, const std::bitset<MAXN>& eliminate);
+        Edge         partialTrace(const Edge& a, const std::vector<bool>& eliminate);
         ComplexValue trace(const Edge& a);
         ComplexValue innerProduct(const Edge& x, const Edge& y);
         fp           fidelity(const Edge& x, const Edge& y);
@@ -312,11 +312,11 @@ namespace dd {
         Edge         extend(const Edge& e, unsigned short h = 0, unsigned short l = 0);
 
         /// Handling of ancillary and garbage qubits
-        dd::Edge reduceAncillae(dd::Edge& e, const std::bitset<dd::MAXN>& ancillary, bool regular = true);
-        dd::Edge reduceAncillaeRecursion(dd::Edge& e, const std::bitset<dd::MAXN>& ancillary, unsigned short lowerbound, bool regular = true);
+        dd::Edge reduceAncillae(dd::Edge& e, const std::vector<bool>& ancillary, bool regular = true);
+        dd::Edge reduceAncillaeRecursion(dd::Edge& e, const std::vector<bool>& ancillary, unsigned short lowerbound, bool regular = true);
         // Garbage reduction works for reversible circuits --- to be thoroughly tested for quantum circuits
-        dd::Edge reduceGarbage(dd::Edge& e, const std::bitset<dd::MAXN>& garbage, bool regular = true);
-        dd::Edge reduceGarbageRecursion(dd::Edge& e, const std::bitset<dd::MAXN>& garb, unsigned short lowerbound, bool regular = true);
+        dd::Edge reduceGarbage(dd::Edge& e, const std::vector<bool>& garbage, bool regular = true);
+        dd::Edge reduceGarbageRecursion(dd::Edge& e, const std::vector<bool>& garb, unsigned short lowerbound, bool regular = true);
 
         /// Reference counting and garbage collection
         void incRef(const Edge& e);

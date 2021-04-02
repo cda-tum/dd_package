@@ -61,7 +61,7 @@ namespace dd {
     }
 
     // create DD for basis state |q_n-1 q_n-2 ... q1 q0>
-    Edge Package::makeBasisState(unsigned short n, const std::bitset<MAXN>& state) {
+    Edge Package::makeBasisState(unsigned short n, const std::vector<bool>& state) {
         Edge f = DDone;
         Edge edges[4];
         edges[1] = edges[3] = DDzero;
@@ -761,7 +761,7 @@ namespace dd {
         return e; // return result
     }
 
-    Edge Package::partialTrace(const Edge& a, const std::bitset<MAXN>& eliminate) {
+    Edge Package::partialTrace(const Edge& a, const std::vector<bool>& eliminate) {
         [[maybe_unused]] const auto before = cn.cacheCount;
         const auto                  result = trace(a, eliminate);
         [[maybe_unused]] const auto after  = cn.cacheCount;
@@ -770,7 +770,7 @@ namespace dd {
     }
 
     ComplexValue Package::trace(const Edge& a) {
-        auto                        eliminate = std::bitset<MAXN>{}.set();
+        auto                        eliminate = std::vector<bool>{}.set();
         [[maybe_unused]] const auto before    = cn.cacheCount;
         Edge                        res       = partialTrace(a, eliminate);
         [[maybe_unused]] const auto after     = cn.cacheCount;
@@ -1304,7 +1304,7 @@ namespace dd {
         return g;
     }
 
-    Edge Package::trace(const Edge& a, const std::bitset<MAXN>& eliminate, unsigned short alreadyEliminated) {
+    Edge Package::trace(const Edge& a, const std::vector<bool>& eliminate, unsigned short alreadyEliminated) {
         short v = a.p->v;
 
         if (CN::equalsZero(a.w)) return DDzero;
@@ -1360,12 +1360,12 @@ namespace dd {
         }
     }
 
-    Edge Package::reduceAncillae(dd::Edge& e, const std::bitset<MAXN>& ancilary, bool regular) {
+    Edge Package::reduceAncillae(dd::Edge& e, const std::vector<bool>& ancilary, bool regular) {
         // return if no more garbage left
         if (!ancilary.any() || e.p == nullptr) return e;
         unsigned short lowerbound = 0;
         for (size_t i = 0; i < ancilary.size(); ++i) {
-            if (ancilary.test(i)) {
+            if (ancilary[i]) {
                 lowerbound = i;
                 break;
             }
@@ -1374,7 +1374,7 @@ namespace dd {
         return reduceAncillaeRecursion(e, ancilary, lowerbound, regular);
     }
 
-    Edge Package::reduceAncillaeRecursion(dd::Edge& e, const std::bitset<MAXN>& ancillary, unsigned short lowerbound, bool regular) {
+    Edge Package::reduceAncillaeRecursion(dd::Edge& e, const std::vector<bool>& ancillary, unsigned short lowerbound, bool regular) {
         if (e.p->v < lowerbound) return e;
 
         dd::Edge f = e;
@@ -1382,7 +1382,7 @@ namespace dd {
         std::array<dd::Edge, 4> edges{};
         std::bitset<4>          handled{};
         for (int i = 0; i < 4; ++i) {
-            if (!handled.test(i)) {
+            if (!handled[i]) {
                 if (isTerminal(e.p->e[i])) {
                     edges[i] = e.p->e[i];
                 } else {
@@ -1400,7 +1400,7 @@ namespace dd {
         f = makeNonterminal(f.p->v, edges);
 
         // something to reduce for this qubit
-        if (f.p->v >= 0 && ancillary.test(f.p->v)) {
+        if (f.p->v >= 0 && ancillary[f.p->v]) {
             if (regular) {
                 if (f.p->e[1].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
                     f = makeNonterminal(f.p->v, {f.p->e[0], dd::Package::DDzero, f.p->e[2], dd::Package::DDzero});
@@ -1421,12 +1421,12 @@ namespace dd {
         return f;
     }
 
-    Edge Package::reduceGarbage(dd::Edge& e, const std::bitset<MAXN>& garbage, bool regular) {
+    Edge Package::reduceGarbage(dd::Edge& e, const std::vector<bool>& garbage, bool regular) {
         // return if no more garbage left
         if (!garbage.any() || e.p == nullptr) return e;
         unsigned short lowerbound = 0;
         for (size_t i = 0; i < garbage.size(); ++i) {
-            if (garbage.test(i)) {
+            if (garbage[i]) {
                 lowerbound = i;
                 break;
             }
@@ -1435,7 +1435,7 @@ namespace dd {
         return reduceGarbageRecursion(e, garbage, lowerbound, regular);
     }
 
-    Edge Package::reduceGarbageRecursion(dd::Edge& e, const std::bitset<MAXN>& garbage, unsigned short lowerbound, bool regular) {
+    Edge Package::reduceGarbageRecursion(dd::Edge& e, const std::vector<bool>& garbage, unsigned short lowerbound, bool regular) {
         if (e.p->v < lowerbound) return e;
 
         dd::Edge f = e;
@@ -1443,7 +1443,7 @@ namespace dd {
         std::array<dd::Edge, 4> edges{};
         std::bitset<4>          handled{};
         for (int i = 0; i < 4; ++i) {
-            if (!handled.test(i)) {
+            if (!handled[i]) {
                 if (isTerminal(e.p->e[i])) {
                     edges[i] = e.p->e[i];
                 } else {
@@ -1461,7 +1461,7 @@ namespace dd {
         f = makeNonterminal(f.p->v, edges);
 
         // something to reduce for this qubit
-        if (f.p->v >= 0 && garbage.test(f.p->v)) {
+        if (f.p->v >= 0 && garbage[f.p->v]) {
             if (regular) {
                 if (f.p->e[2].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
                     dd::Edge g{};
