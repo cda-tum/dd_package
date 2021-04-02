@@ -9,7 +9,7 @@
 
 #include "gtest/gtest.h"
 #include <memory>
-/*
+
 TEST(DDPackageTest, OperationLookupTest) {
     auto dd = std::make_unique<dd::Package>();
 
@@ -31,7 +31,6 @@ TEST(DDPackageTest, OperationLookupTest) {
     tmp_op = dd->OperationLookup(dd::ATrue, {2}, 1);
     EXPECT_TRUE(tmp_op.p == nullptr);
 }
-*/
 
 TEST(DDPackageTest, TrivialTest) {
     auto dd = std::make_unique<dd::Package>(2);

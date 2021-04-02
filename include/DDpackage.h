@@ -46,7 +46,6 @@ namespace dd {
     constexpr unsigned short TTMASK            = TTSLOTS - 1; // must be TTSLOTS-1
     constexpr unsigned int   NODE_CHUNK_SIZE   = 2000;        // this parameter may be increased for larger benchmarks to minimize the number of allocations
     constexpr unsigned int   LIST_CHUNK_SIZE   = 2000;
-    constexpr unsigned short MAXN              = 128; // max no. of inputs
 
     typedef struct Node* NodePtr;
 
@@ -124,7 +123,7 @@ namespace dd {
         NodePtr      r;
         ComplexValue rw;
         unsigned int operationType;
-        short        line[MAXN];
+        std::vector<short> line;
     };
 
     enum Mode {
@@ -288,12 +287,11 @@ namespace dd {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
-        /*
+
         /// Operation table functions
-        Edge                 OperationLookup(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
-        void                 OperationInsert(unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, unsigned short nQubits);
-        static unsigned long OperationHash(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
-        */
+        Edge                 OperationLookup(unsigned int operationType, const std::vector<short>& line, unsigned short nQubits);
+        void                 OperationInsert(unsigned int operationType, const std::vector<short>& line, const Edge& result, unsigned short nQubits);
+        static unsigned long OperationHash(unsigned int operationType, const std::vector<short>& line, unsigned short nQubits);
         inline void          clearOperationTable() {
             for (auto& entry: OperationTable) entry.r = nullptr;
         }

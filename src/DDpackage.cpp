@@ -560,8 +560,7 @@ namespace dd {
         return (node_pointer + weights + which) & CTMASK;
     }
 
-    /*
-    Edge Package::OperationLookup(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const unsigned short nQubits) {
+    Edge Package::OperationLookup(const unsigned int operationType, const std::vector<short>& line, const unsigned short nQubits) {
         operationLook++;
         Edge                r{nullptr, {nullptr, nullptr}};
         const unsigned long i = OperationHash(operationType, line, nQubits);
@@ -569,7 +568,7 @@ namespace dd {
         if (OperationTable[i].operationType != operationType) return r;
         if (OperationTable[i].r->v != nQubits - 1) return r;
 
-        if (std::memcmp(OperationTable[i].line, line.data(), (nQubits) * sizeof(short)) != 0) return r;
+        if (OperationTable[i].line != line) return r;
 
         r.p = OperationTable[i].r;
         if (std::fabs(OperationTable[i].rw.r) < CN::TOLERANCE && std::fabs(OperationTable[i].rw.i) < CN::TOLERANCE) {
@@ -581,16 +580,16 @@ namespace dd {
         return r;
     }
 
-    void Package::OperationInsert(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, const unsigned short nQubits) {
+    void Package::OperationInsert(const unsigned int operationType, const std::vector<short>& line, const Edge& result, const unsigned short nQubits) {
         const unsigned long i = OperationHash(operationType, line, nQubits);
-        std::memcpy(OperationTable[i].line, line.data(), (nQubits) * sizeof(short));
+        OperationTable[i].line = line;
         OperationTable[i].operationType = operationType;
         OperationTable[i].r             = result.p;
         OperationTable[i].rw.r          = CN::val(result.w.r);
         OperationTable[i].rw.i          = CN::val(result.w.i);
     }
 
-    unsigned long Package::OperationHash(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const unsigned short nQubits) {
+    unsigned long Package::OperationHash(const unsigned int operationType, const std::vector<short>& line, const unsigned short nQubits) {
         unsigned long i = operationType;
         for (unsigned short j = 0; j <= nQubits; j++) {
             //            i = (i << 5u) + (4 * j) + (line[j] * 4);
@@ -598,7 +597,6 @@ namespace dd {
         }
         return i & OperationMASK;
     }
-    */
 
     Edge Package::CTlookup(const Edge& a, const Edge& b, const CTkind which) {
         // Lookup a computation in the compute table
