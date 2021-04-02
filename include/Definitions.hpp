@@ -23,7 +23,7 @@ namespace dd {
     // and
     //      `cq % 2 == 1` -> negative control
     // std::uint_fast8_t can encode pos./neg. controls for at least 128 qubits
-    using ControlQubit = std::uint_fast8_t;
+    using ControlQubit = std::make_unsigned<Qubit>::type;
 
     // floating point type to use
     using fp = double;
