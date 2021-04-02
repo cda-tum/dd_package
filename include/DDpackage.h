@@ -149,6 +149,8 @@ namespace dd {
         NodePtr        nodeAvail{}; // pointer to available space chain
         ListElementPtr listAvail{}; // pointer to available list elements for breadth first searches
 
+        unsigned short nqubits;
+
         // Unique Tables (one per input variable)
         std::array<std::array<NodePtr, NBUCKET>, MAXN> Unique{};
 
@@ -218,8 +220,8 @@ namespace dd {
         unsigned long      UTcol{}, UTmatch{}, UTlookups{}; // counter for collisions / matches in hash tables
         ComplexNumbers     cn;                              // instance of the complex number handler
 
-        Package():
-            cn(ComplexNumbers()){};
+        Package(unsigned short nqubits = 128):
+            nqubits(nqubits), cn(ComplexNumbers()) {};
         ~Package();
 
         /// Set normalization mode

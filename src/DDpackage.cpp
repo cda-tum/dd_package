@@ -770,7 +770,7 @@ namespace dd {
     }
 
     ComplexValue Package::trace(const Edge& a) {
-        auto                        eliminate = std::vector<bool>{}.set();
+        auto                        eliminate = std::vector<bool>(nqubits, true);
         [[maybe_unused]] const auto before    = cn.cacheCount;
         Edge                        res       = partialTrace(a, eliminate);
         [[maybe_unused]] const auto after     = cn.cacheCount;
@@ -1309,7 +1309,7 @@ namespace dd {
 
         if (CN::equalsZero(a.w)) return DDzero;
 
-        if (eliminate.none()) return a;
+        if (std::none_of(eliminate.begin(), eliminate.end(), [](bool v) { return v; })) return a;
 
         // Base case
         if (v == -1) {
@@ -1347,7 +1347,7 @@ namespace dd {
 
             return r;
         } else {
-            auto adjustedV = static_cast<short>(a.p->v - (eliminate.count() - alreadyEliminated));
+            auto adjustedV = static_cast<short>(a.p->v - (std::count(eliminate.begin(), eliminate.end(), true) - alreadyEliminated));
             Edge r         = makeNonterminal(adjustedV, {trace(a.p->e[0], eliminate, alreadyEliminated), trace(a.p->e[1], eliminate, alreadyEliminated), trace(a.p->e[2], eliminate, alreadyEliminated), trace(a.p->e[3], eliminate, alreadyEliminated)}, false);
             if (r.w == CN::ONE) {
                 r.w = a.w;
@@ -1362,7 +1362,7 @@ namespace dd {
 
     Edge Package::reduceAncillae(dd::Edge& e, const std::vector<bool>& ancilary, bool regular) {
         // return if no more garbage left
-        if (!ancilary.any() || e.p == nullptr) return e;
+        if (std::none_of(ancilary.begin(), ancilary.end(), [](bool v) { return v; }) || e.p == nullptr) return e;
         unsigned short lowerbound = 0;
         for (size_t i = 0; i < ancilary.size(); ++i) {
             if (ancilary[i]) {
@@ -1423,7 +1423,7 @@ namespace dd {
 
     Edge Package::reduceGarbage(dd::Edge& e, const std::vector<bool>& garbage, bool regular) {
         // return if no more garbage left
-        if (!garbage.any() || e.p == nullptr) return e;
+        if (std::none_of(garbage.begin(), garbage.end(), [](bool v) { return v; }) || e.p == nullptr) return e;
         unsigned short lowerbound = 0;
         for (size_t i = 0; i < garbage.size(); ++i) {
             if (garbage[i]) {
