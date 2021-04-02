@@ -1182,8 +1182,8 @@ namespace dd {
         }
 
         auto e = makeMatrixNode(leastSignificantQubit, {mOne, mZero, mZero, mOne});
-        for (auto k = std::make_unsigned_t<Qubit>(leastSignificantQubit + 1); k <= mostSignificantQubit; k++) {
-            e = makeMatrixNode(k, {e, mZero, mZero, e});
+        for (std::size_t k = leastSignificantQubit + 1; k <= std::make_unsigned_t<Qubit>(mostSignificantQubit); k++) {
+            e = makeMatrixNode(static_cast<Qubit>(k), {e, mZero, mZero, e});
         }
         if (leastSignificantQubit == 0)
             IdTable[mostSignificantQubit] = e;

@@ -323,8 +323,6 @@ TEST(DDPackageTest, Identity) {
     auto id3 = dd->makeIdent(2);
     EXPECT_EQ(dd->makeIdent(0, 2), id3);
     auto& table = dd->getIdentityTable();
-    EXPECT_NE(table[0].p, nullptr);
-    EXPECT_NE(table[1].p, nullptr);
     EXPECT_NE(table[2].p, nullptr);
 
     auto id2 = dd->makeIdent(0, 1); // should be found in IdTable
