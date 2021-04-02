@@ -269,7 +269,7 @@ TEST(DDPackageTest, TestConsistency) {
     EXPECT_TRUE(global);
     dd->debugnode(bell_state.p);
 }
-/*
+
 TEST(DDPackageTest, ToffoliTable) {
     auto dd = std::make_unique<dd::Package>();
 
@@ -294,7 +294,7 @@ TEST(DDPackageTest, ToffoliTable) {
     toffoliTableEntry = dd->TTlookup(4, static_cast<unsigned short>(3), 3, {1, 1, 1, 2});
     EXPECT_EQ(toffoliTableEntry.p, nullptr);
 }
-*/
+
 TEST(DDPackageTest, Extend) {
     auto dd = std::make_unique<dd::Package>(3);
 

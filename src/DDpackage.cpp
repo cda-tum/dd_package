@@ -706,8 +706,8 @@ namespace dd {
             throw std::runtime_error("Undefined kind in CTinsert: " + std::to_string(which));
         }
     }
-    /*
-    inline unsigned short Package::TThash(const unsigned short n, const unsigned short t, const short line[MAXN]) {
+
+    inline unsigned short Package::TThash(const unsigned short n, const unsigned short t, const std::vector<short>& line) {
         unsigned long i = t;
         for (unsigned short j = 0; j < n; j++) {
             if (line[j] == 1) {
@@ -717,7 +717,7 @@ namespace dd {
         return i & TTMASK;
     }
 
-    Edge Package::TTlookup(const unsigned short n, const unsigned short m, const unsigned short t, const short line[MAXN]) {
+    Edge Package::TTlookup(const unsigned short n, const unsigned short m, const unsigned short t, const std::vector<short>& line) {
         Edge r{};
         r.p                    = nullptr;
         const unsigned short i = TThash(n, t, line);
@@ -725,21 +725,21 @@ namespace dd {
         if (TTable[i].e.p == nullptr || TTable[i].t != t || TTable[i].m != m || TTable[i].n != n) {
             return r;
         }
-        if (0 == std::memcmp(TTable[i].line, line, n * sizeof(short))) {
+        if(TTable[i].line == line) {
             return TTable[i].e;
         }
         return r;
     }
 
-    void Package::TTinsert(unsigned short n, unsigned short m, unsigned short t, const short* line, const Edge& e) {
+    void Package::TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line, const Edge& e) {
         const unsigned short i = TThash(n, t, line);
         TTable[i].n            = n;
         TTable[i].m            = m;
         TTable[i].t            = t;
-        std::memcpy(TTable[i].line, line, n * sizeof(short));
+        TTable[i].line        = line;
         TTable[i].e = e;
     }
-    */
+
     // make a DD nonterminal node and return an edge pointing to it
     // node is not recreated if it already exists
     Edge Package::makeNonterminal(const short v, const Edge* edge, const bool cached) {

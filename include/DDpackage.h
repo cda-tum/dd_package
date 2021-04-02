@@ -116,7 +116,7 @@ namespace dd {
     struct TTentry // Toffoli table entry defn
     {
         unsigned short n, m, t;
-        short          line[MAXN];
+        std::vector<short> line;
         Edge           e;
     };
 
@@ -280,18 +280,10 @@ namespace dd {
         }
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
-        /*
         /// Toffoli table functions
-        void TTinsert(unsigned short n, unsigned short m, unsigned short t, const short line[MAXN], const Edge& e);
-        void TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::array<short, MAXN>& line, const Edge& e) {
-            TTinsert(n, m, t, line.data(), e);
-        }
-        Edge TTlookup(unsigned short n, unsigned short m, unsigned short t, const short line[MAXN]);
-        Edge TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::array<short, MAXN>& line) {
-            return TTlookup(n, m, t, line.data());
-        }
-        static unsigned short TThash(unsigned short n, unsigned short t, const short line[MAXN]);
-        */
+        void TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line, const Edge& e);
+        Edge TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line);
+        static unsigned short TThash(unsigned short n, unsigned short t, const std::vector<short>& line);
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
