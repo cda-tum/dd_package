@@ -6,10 +6,9 @@
 #ifndef DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 #define DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 
-namespace dd {
-    using GateMatrix           = std::array<ComplexValue, NEDGE>;
-    static constexpr fp SQRT_2 = 0.707106781186547524400844362104849039284835937688474036588L;
+#include "Definitions.hpp"
 
+namespace dd {
     // Complex constants
     constexpr ComplexValue complex_one       = {1., 0.};
     constexpr ComplexValue complex_mone      = {-1., 0.};

@@ -3,7 +3,7 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#include "DDcomplex.h"
+#include "DDcomplex.hpp"
 
 #include <iomanip>
 #include <sstream>
@@ -126,12 +126,12 @@ namespace dd {
         }
         std::cout << "\tComplex table has " << nentries << " entries\n";
         std::cout << "\tLargest number of entries in bucket: " << max << "\n";
-        std::cout << "\tCT Lookups (total): " << ct_calls << "\n";
-        std::cout << "\tCT Lookups (misses): " << ct_miss << "\n";
+        std::cout << "\tCT Lookups (total): " << ctCalls << "\n";
+        std::cout << "\tCT Lookups (misses): " << ctMiss << "\n";
     }
 
     ComplexTableEntry* ComplexNumbers::lookupVal(const fp& val) {
-        ct_calls++;
+        ctCalls++;
         assert(!std::isnan(val));
 
         const auto key = getKey(val);
@@ -169,7 +169,7 @@ namespace dd {
             }
         }
 
-        ct_miss++;
+        ctMiss++;
         auto* r           = getComplexTableEntry();
         r->val            = val;
         r->next           = ComplexTable[key];
@@ -379,16 +379,22 @@ namespace dd {
         }
     }
 
-    void ComplexNumbers::garbageCollect() {
+    std::size_t ComplexNumbers::garbageCollect(bool force) {
+        gcCalls++;
+        if (!force && count < gcLimit)
+            return 0;
+        gcRuns++;
+
         ComplexTableEntry* cur;
         ComplexTableEntry* prev;
         ComplexTableEntry* suc;
 
+        std::size_t remaining = 0;
+        std::size_t collected = 0;
         for (auto& i: ComplexTable) {
             prev = nullptr;
             cur  = i;
             while (cur != nullptr) {
-                assert(cur->ref >= 0);
                 if (cur->ref == 0) {
                     suc = cur->next;
                     if (prev == nullptr) {
@@ -400,13 +406,17 @@ namespace dd {
                     Avail     = cur;
 
                     cur = suc;
-                    count--;
+                    collected++;
                 } else {
                     prev = cur;
                     cur  = cur->next;
+                    remaining++;
                 }
             }
         }
+        count = remaining;
+        gcLimit += GCINCREMENT;
+        return collected;
     }
 
     int ComplexNumbers::cacheSize() const {
@@ -436,9 +446,17 @@ namespace dd {
             auto* ptr_r = getAlignedPointer(c.r);
             auto* ptr_i = getAlignedPointer(c.i);
             if (ptr_r != &oneEntry && ptr_r != &zeroEntry) {
+                if (ptr_r->ref == std::numeric_limits<decltype(ptr_r->ref)>::max()) {
+                    std::clog << "[WARN] MAXREFCNT reached for r=" << val(ptr_r) << ". Number will never be collected." << std::endl;
+                    return;
+                }
                 ptr_r->ref++;
             }
             if (ptr_i != &oneEntry && ptr_i != &zeroEntry) {
+                if (ptr_i->ref == std::numeric_limits<decltype(ptr_i->ref)>::max()) {
+                    std::clog << "[WARN] MAXREFCNT reached for i=" << val(ptr_i) << ". Number will never be collected." << std::endl;
+                    return;
+                }
                 ptr_i->ref++;
             }
         }

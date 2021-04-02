@@ -6,45 +6,33 @@
 #ifndef DDcomplex_H
 #define DDcomplex_H
 
+#include "Definitions.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <limits>
 
-using fp = double;
-
 namespace dd {
     struct ComplexTableEntry {
         fp                 val;
         ComplexTableEntry* next;
-        int                ref;
+        std::size_t        ref;
     };
 
     struct Complex {
         ComplexTableEntry* r;
         ComplexTableEntry* i;
+
+        bool operator==(const Complex& other) const {
+            return r == other.r && i == other.i;
+        }
+
+        bool operator!=(const Complex& other) const {
+            return !operator==(other);
+        }
     };
-
-    struct ComplexValue {
-        fp r, i;
-    };
-
-    inline bool operator==(const Complex& lhs, const Complex& rhs) {
-        return lhs.r == rhs.r && lhs.i == rhs.i;
-    }
-
-    inline bool operator==(const ComplexValue& lhs, const ComplexValue& rhs) {
-        return lhs.r == rhs.r && lhs.i == rhs.i;
-    }
-
-    inline bool operator!=(const Complex& lhs, const Complex& rhs) {
-        return lhs.r != rhs.r || lhs.i != rhs.i;
-    }
-
-    inline bool operator!=(const ComplexValue& lhs, const ComplexValue& rhs) {
-        return lhs.r != rhs.r || lhs.i != rhs.i;
-    }
 
     class ComplexNumbers {
         struct ComplexChunk {
@@ -68,23 +56,38 @@ namespace dd {
         static constexpr unsigned short CACHE_SIZE  = 1800;
         static constexpr unsigned short CHUNK_SIZE  = 2000;
         static constexpr unsigned short NBUCKET     = 32768;
-        static constexpr unsigned int   GCLIMIT1    = 100000;
-        static constexpr unsigned int   GCLIMIT_INC = 0;
+        static constexpr std::size_t    GCLIMIT     = 100000;
+        static constexpr std::size_t    GCINCREMENT = 0;
         static fp                       TOLERANCE;
 
-        ComplexTableEntry* ComplexTable[NBUCKET]{};
-        ComplexTableEntry* Avail                       = nullptr;
-        ComplexTableEntry* Cache_Avail                 = nullptr;
-        ComplexTableEntry* Cache_Avail_Initial_Pointer = nullptr;
-        ComplexChunk*      chunks                      = nullptr;
+        std::array<ComplexTableEntry*, NBUCKET> ComplexTable{};
+        ComplexTableEntry*                      Avail                       = nullptr;
+        ComplexTableEntry*                      Cache_Avail                 = nullptr;
+        ComplexTableEntry*                      Cache_Avail_Initial_Pointer = nullptr;
+        ComplexChunk*                           chunks                      = nullptr;
 
-        unsigned int  count      = 0;
-        long          cacheCount = CACHE_SIZE;
-        unsigned long ct_calls   = 0;
-        unsigned long ct_miss    = 0;
+        std::size_t count      = 0;
+        long        cacheCount = CACHE_SIZE;
+        std::size_t ctCalls    = 0;
+        std::size_t ctMiss     = 0;
+        std::size_t gcCalls    = 0;
+        std::size_t gcRuns     = 0;
+        std::size_t gcLimit    = GCLIMIT;
 
         ComplexNumbers();
         ~ComplexNumbers();
+
+        void clear() {
+            count      = 0;
+            cacheCount = CACHE_SIZE;
+
+            ctCalls = 0;
+            ctMiss  = 0;
+
+            gcCalls = 0;
+            gcRuns  = 0;
+            gcLimit = GCLIMIT;
+        }
 
         static void setTolerance(fp tol) {
             TOLERANCE = tol;
@@ -131,10 +134,17 @@ namespace dd {
         static inline bool equalsZero(const Complex& c) {
             return c == ZERO || (std::abs(val(c.r)) < TOLERANCE && std::abs(val(c.i)) < TOLERANCE);
         }
+        static inline bool equalsZero(const ComplexValue& c) {
+            return std::abs(c.r) < TOLERANCE && std::abs(c.i) < TOLERANCE;
+        }
 
         static inline bool equalsOne(const Complex& c) {
             return c == ONE || (std::abs(val(c.r) - 1) < TOLERANCE && std::abs(val(c.i)) < TOLERANCE);
         }
+        static inline bool equalsOne(const ComplexValue& c) {
+            return std::abs(c.r - 1) < TOLERANCE && std::abs(c.i) < TOLERANCE;
+        }
+
         static void add(Complex& r, const Complex& a, const Complex& b);
         static void sub(Complex& r, const Complex& a, const Complex& b);
         static void mul(Complex& r, const Complex& a, const Complex& b);
@@ -213,7 +223,7 @@ namespace dd {
         // reference counting and garbage collection
         static void incRef(const Complex& c);
         static void decRef(const Complex& c);
-        void        garbageCollect();
+        std::size_t garbageCollect(bool force = false);
 
         // provide (temporary) cached complex number
         inline Complex getTempCachedComplex() {
@@ -226,6 +236,10 @@ namespace dd {
             Cache_Avail->val       = r;
             Cache_Avail->next->val = i;
             return {Cache_Avail, Cache_Avail->next};
+        }
+
+        inline Complex getTempCachedComplex(const ComplexValue& c) {
+            return getTempCachedComplex(c.r, c.i);
         }
 
         inline Complex getCachedComplex() {
@@ -244,6 +258,10 @@ namespace dd {
             c.i->val    = i;
             Cache_Avail = Cache_Avail->next->next;
             return c;
+        }
+
+        inline Complex getCachedComplex(const ComplexValue& c) {
+            return getCachedComplex(c.r, c.i);
         }
 
         // printing

@@ -1,12 +1,17 @@
 # main project library
 add_library(${PROJECT_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}/DDpackage.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/DDdebug.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/DDcomplex.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/DDexport.cpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDpackage.h
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDcomplex.h
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDexport.h)
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/Definitions.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/GateMatrixDefinitions.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/UniqueTable.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/ComputeTable.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/ToffoliTable.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/OperationTable.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDcomplex.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDpackage.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/DDexport.hpp)
 
 # set include directories
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>)
