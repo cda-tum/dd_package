@@ -9,7 +9,7 @@
 
 #include "gtest/gtest.h"
 #include <memory>
-
+/*
 TEST(DDPackageTest, OperationLookupTest) {
     auto dd = std::make_unique<dd::Package>();
 
@@ -31,12 +31,13 @@ TEST(DDPackageTest, OperationLookupTest) {
     tmp_op = dd->OperationLookup(dd::ATrue, {2}, 1);
     EXPECT_TRUE(tmp_op.p == nullptr);
 }
+*/
 
 TEST(DDPackageTest, TrivialTest) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
-    dd::Edge x_gate = dd->makeGateDD(dd::Xmat, 1, {2});
-    dd::Edge h_gate = dd->makeGateDD(dd::Hmat, 1, {2});
+    dd::Edge x_gate = dd->makeGateDD(dd::Xmat, 1, {2, -1});
+    dd::Edge h_gate = dd->makeGateDD(dd::Hmat, 1, {2, -1});
 
     ASSERT_EQ(dd->getValueByPath(h_gate, "0"), (dd::ComplexValue{dd::SQRT_2, 0}));
 
@@ -50,7 +51,7 @@ TEST(DDPackageTest, TrivialTest) {
 }
 
 TEST(DDPackageTest, BellState) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {-1, 2});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {2, 1});
@@ -85,7 +86,7 @@ TEST(DDPackageTest, BellState) {
 }
 
 TEST(DDPackageTest, IdentityTrace) {
-    auto dd        = std::make_unique<dd::Package>();
+    auto dd        = std::make_unique<dd::Package>(4);
     auto fullTrace = dd->trace(dd->makeIdent(4));
 
     ASSERT_EQ(fullTrace, (dd::ComplexValue{16, 0}));
@@ -99,9 +100,8 @@ TEST(DDPackageTest, PartialIdentityTrace) {
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
-    auto dd = std::make_unique<dd::Package>(6);
-
-    auto b = std::vector<bool>(6, false);
+    auto dd = std::make_unique<dd::Package>(15);
+    auto b = std::vector<bool>(15, false);
     b[0] = b[1] = true;
     auto e = dd->makeBasisState(6, b);
     auto f = dd->makeBasisState(6, {dd::BasisStates::zero,
@@ -126,7 +126,7 @@ TEST(DDPackageTest, StateGenerationManipulation) {
 }
 
 TEST(DDPackageTest, VectorSerializationTest) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {-1, 2});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {2, 1});
@@ -144,7 +144,7 @@ TEST(DDPackageTest, VectorSerializationTest) {
 }
 
 TEST(DDPackageTest, BellMatrix) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, {-1, 2});
     dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, {2, 1});
@@ -195,7 +195,7 @@ TEST(DDPackageTest, BellMatrix) {
 }
 
 TEST(DDPackageTest, MatrixSerializationTest) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate  = dd->makeGateDD(dd::Hmat, 2, {-1, 2});
     dd::Edge cx_gate = dd->makeGateDD(dd::Xmat, 2, {2, 1});
@@ -212,7 +212,7 @@ TEST(DDPackageTest, MatrixSerializationTest) {
 }
 
 TEST(DDPackageTest, SerializationErrors) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {-1, 2});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {2, 1});
@@ -247,7 +247,7 @@ TEST(DDPackageTest, SerializationErrors) {
 }
 
 TEST(DDPackageTest, TestConsistency) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {2, -1});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {1, 2});
@@ -269,7 +269,7 @@ TEST(DDPackageTest, TestConsistency) {
     EXPECT_TRUE(global);
     dd->debugnode(bell_state.p);
 }
-
+/*
 TEST(DDPackageTest, ToffoliTable) {
     auto dd = std::make_unique<dd::Package>();
 
@@ -294,9 +294,9 @@ TEST(DDPackageTest, ToffoliTable) {
     toffoliTableEntry = dd->TTlookup(4, static_cast<unsigned short>(3), 3, {1, 1, 1, 2});
     EXPECT_EQ(toffoliTableEntry.p, nullptr);
 }
-
+*/
 TEST(DDPackageTest, Extend) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(3);
 
     auto id = dd->makeIdent(3);
     dd->printDD(id, 64);
@@ -313,7 +313,7 @@ TEST(DDPackageTest, Extend) {
 }
 
 TEST(DDPackageTest, Identity) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(4);
 
     EXPECT_TRUE(dd->equals(dd->makeIdent(0), dd->DDone));
     EXPECT_TRUE(dd->equals(dd->makeIdent(0, -1), dd->DDone));
@@ -337,7 +337,7 @@ TEST(DDPackageTest, Identity) {
 }
 
 TEST(DDPackageTest, TestLocalInconsistency) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(128);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {2, -1});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {1, 2});

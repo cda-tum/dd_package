@@ -152,7 +152,7 @@ namespace dd {
         unsigned short nqubits;
 
         // Unique Tables (one per input variable)
-        std::array<std::array<NodePtr, NBUCKET>, MAXN> Unique{};
+        std::vector<std::array<NodePtr, NBUCKET>> Unique{};
 
         static constexpr int modeCount = static_cast<int>(Mode::ModeCount);
         // Three types since different possibilities for complex numbers  (caused by caching)
@@ -171,14 +171,14 @@ namespace dd {
         // Toffoli gate table
         std::array<TTentry, TTSLOTS> TTable{};
         // Identity matrix table
-        std::array<Edge, MAXN> IdTable{};
+        std::vector<Edge> IdTable{};
 
         // Operation operations table
         std::array<OperationEntry, OperationSLOTS> OperationTable{};
 
         unsigned int                   currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
         unsigned int                   currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
-        std::array<unsigned int, MAXN> active{};                             // number of active nodes for each variable
+        std::vector<unsigned int>      active{};                             // number of active nodes for each variable
         unsigned long                  nodecount     = 0;                    // node count in unique table
         unsigned long                  peaknodecount = 0;                    // records peak node count in unique table
 
@@ -221,7 +221,11 @@ namespace dd {
         ComplexNumbers     cn;                              // instance of the complex number handler
 
         Package(unsigned short nqubits = 128):
-            nqubits(nqubits), cn(ComplexNumbers()) {};
+            nqubits(nqubits), cn(ComplexNumbers()) {
+                IdTable.resize(nqubits);
+                Unique.resize(nqubits);
+                active.resize(nqubits);
+            };
         ~Package();
 
         /// Set normalization mode
@@ -249,7 +253,7 @@ namespace dd {
         Edge makeBasisState(unsigned short n, const std::vector<BasisStates>& state);
 
         /// Matrix DD generation
-        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::array<short, MAXN>& line);
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::vector<short>& line);
         Edge makeIdent(unsigned short n);
         Edge makeIdent(short x, short y);
 
@@ -276,6 +280,7 @@ namespace dd {
         }
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
+        /*
         /// Toffoli table functions
         void TTinsert(unsigned short n, unsigned short m, unsigned short t, const short line[MAXN], const Edge& e);
         void TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::array<short, MAXN>& line, const Edge& e) {
@@ -286,15 +291,17 @@ namespace dd {
             return TTlookup(n, m, t, line.data());
         }
         static unsigned short TThash(unsigned short n, unsigned short t, const short line[MAXN]);
+        */
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
-
+        /*
         /// Operation table functions
         Edge                 OperationLookup(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
         void                 OperationInsert(unsigned int operationType, const std::array<short, dd::MAXN>& line, const Edge& result, unsigned short nQubits);
         static unsigned long OperationHash(unsigned int operationType, const std::array<short, dd::MAXN>& line, unsigned short nQubits);
+        */
         inline void          clearOperationTable() {
             for (auto& entry: OperationTable) entry.r = nullptr;
         }

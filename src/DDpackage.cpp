@@ -560,6 +560,7 @@ namespace dd {
         return (node_pointer + weights + which) & CTMASK;
     }
 
+    /*
     Edge Package::OperationLookup(const unsigned int operationType, const std::array<short, dd::MAXN>& line, const unsigned short nQubits) {
         operationLook++;
         Edge                r{nullptr, {nullptr, nullptr}};
@@ -597,6 +598,7 @@ namespace dd {
         }
         return i & OperationMASK;
     }
+    */
 
     Edge Package::CTlookup(const Edge& a, const Edge& b, const CTkind which) {
         // Lookup a computation in the compute table
@@ -704,7 +706,7 @@ namespace dd {
             throw std::runtime_error("Undefined kind in CTinsert: " + std::to_string(which));
         }
     }
-
+    /*
     inline unsigned short Package::TThash(const unsigned short n, const unsigned short t, const short line[MAXN]) {
         unsigned long i = t;
         for (unsigned short j = 0; j < n; j++) {
@@ -737,7 +739,7 @@ namespace dd {
         std::memcpy(TTable[i].line, line, n * sizeof(short));
         TTable[i].e = e;
     }
-
+    */
     // make a DD nonterminal node and return an edge pointing to it
     // node is not recreated if it already exists
     Edge Package::makeNonterminal(const short v, const Edge* edge, const bool cached) {
@@ -1119,7 +1121,8 @@ namespace dd {
     // 0...1 indicates a control by that value
     // 2 indicates the line is the target
     Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n,
-                             const std::array<short, MAXN>& line) {
+                             const std::vector<short>& line) {
+        assert(line.size() >= n);
         std::array<Edge, NEDGE> em{};
         short                   z = 0;
 
@@ -1710,7 +1713,7 @@ namespace dd {
 
         activeNodeCount = 0;
         maxActive       = 0;
-        active.fill(0);
+        std::fill(active.begin(), active.end(), 0);
     }
 
 } // namespace dd
