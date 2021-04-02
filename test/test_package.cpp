@@ -337,7 +337,7 @@ TEST(DDPackageTest, Identity) {
 }
 
 TEST(DDPackageTest, TestLocalInconsistency) {
-    auto dd = std::make_unique<dd::Package>(128);
+    auto dd = std::make_unique<dd::Package>(3);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, {2, -1});
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, {1, 2});
