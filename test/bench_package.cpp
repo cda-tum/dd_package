@@ -332,12 +332,10 @@ BENCHMARK(BM_MxM_Bell)->Apply(QubitRange);
 static void BM_MxM_GHZ(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
-    auto           line    = std::array<short, dd::MAXN>{};
 
     for (auto _: state) {
         auto func = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
         for (int i = nqubits - 2; i >= 0; --i) {
-            line[i] = 2;
             auto cx = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, i);
             func    = dd->multiply(cx, func);
         }
