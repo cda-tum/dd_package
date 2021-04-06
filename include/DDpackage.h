@@ -83,15 +83,15 @@ namespace dd {
             qubit(qubit), type(type){};
     };
 
-    inline bool operator< (const Control& lhs, const Control& rhs){ 
+    inline bool operator<(const Control& lhs, const Control& rhs) {
         return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
     }
 
-    inline bool operator== (const Control& lhs, const Control& rhs){ 
+    inline bool operator==(const Control& lhs, const Control& rhs) {
         return lhs.qubit == rhs.qubit && lhs.type == rhs.type;
     }
 
-    inline bool operator!= (const Control& lhs, const Control& rhs){ 
+    inline bool operator!=(const Control& lhs, const Control& rhs) {
         return !(lhs == rhs);
     }
 
@@ -139,16 +139,16 @@ namespace dd {
 
     struct TTentry // Toffoli table entry defn
     {
-        unsigned short       n, target;
+        unsigned short    n, target;
         std::set<Control> controls; // TODO alternatively the line can be kept for TTentry
-        Edge                 e;
+        Edge              e;
     };
 
     struct OperationEntry {
-        NodePtr              r;
-        ComplexValue         rw;
-        unsigned int         operationType;
-        unsigned short       target;
+        NodePtr           r;
+        ComplexValue      rw;
+        unsigned int      operationType;
+        unsigned short    target;
         std::set<Control> controls;
     };
 
@@ -317,11 +317,11 @@ namespace dd {
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
 
         /// Operation table functions
-        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target) {
+        Edge OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target) {
             return OperationLookup(operationType, nQubits, {}, target);
         }
-        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
-        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target) {
+        Edge OperationLookup(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+        void OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target) {
             OperationInsert(operationType, result, nQubits, {}, target);
         }
         void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);

@@ -601,7 +601,7 @@ namespace dd {
         if (controls.size() != opcontrols.size()) {
             return r;
         }
-        if(controls != opcontrols) {
+        if (controls != opcontrols) {
             return r;
         }
         // if (std::memcmp(OperationTable[i].line, line, (nQubits) * sizeof(short)) != 0) return r;
@@ -770,10 +770,10 @@ namespace dd {
             return r;
         }
 
-        if(controls != tcontrols) {
+        if (controls != tcontrols) {
             return r;
         }
-        
+
         return TTable[i].e;
     }
 
