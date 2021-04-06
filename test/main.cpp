@@ -43,7 +43,7 @@ dd::Edge BellCicuit2(std::unique_ptr<dd::Package>& dd) {
 int main() {
     //dd::Package::printInformation(); // uncomment to print various sizes of structs and arrays
     //Initialize package
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package>(5);
 
     // create Bell circuit 1
     dd::Edge bell_circuit1 = BellCicuit1(dd);
