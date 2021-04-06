@@ -71,20 +71,29 @@ namespace dd {
         ListElementPtr next;
         int            w;
     };
+
     struct Control {
-        enum controlType : bool { pos = true,
-                                  neg = false };
+        enum class Type : bool { pos = true,
+                                 neg = false };
 
         unsigned short qubit = 0;
-        controlType    type  = pos;
+        Type           type  = Control::Type::pos;
 
-        explicit Control(unsigned short qubit = 0, controlType type = pos):
+        explicit Control(unsigned short qubit, Type type = Control::Type::pos):
             qubit(qubit), type(type){};
-
-        static bool compare(Control c1, Control c2) {
-            return c1.qubit < c2.qubit;
-        }
     };
+
+    inline bool operator< (const Control& lhs, const Control& rhs){ 
+        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
+    }
+
+    inline bool operator== (const Control& lhs, const Control& rhs){ 
+        return lhs.qubit == rhs.qubit && lhs.type == rhs.type;
+    }
+
+    inline bool operator!= (const Control& lhs, const Control& rhs){ 
+        return !(lhs == rhs);
+    }
 
     // computed table definitions
     // compute table entry kinds
@@ -131,7 +140,7 @@ namespace dd {
     struct TTentry // Toffoli table entry defn
     {
         unsigned short       n, target;
-        std::vector<Control> controls; // TODO alternatively the line can be kept for TTentry
+        std::set<Control> controls; // TODO alternatively the line can be kept for TTentry
         Edge                 e;
     };
 
@@ -140,7 +149,7 @@ namespace dd {
         ComplexValue         rw;
         unsigned int         operationType;
         unsigned short       target;
-        std::vector<Control> controls;
+        std::set<Control> controls;
     };
 
     enum Mode {
@@ -258,7 +267,10 @@ namespace dd {
         Edge makeBasisState(unsigned short n, const std::vector<BasisStates>& state);
         Edge makeIdent(unsigned short n);
         Edge makeIdent(short x, short y);
-        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned int target, const std::vector<Control>& controls = {});
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned int target) {
+            return makeGateDD(mat, n, {}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned int target);
 
         /// Unique table functions
         Edge                      UTlookup(const Edge& e, bool keep_node = false);
@@ -287,21 +299,30 @@ namespace dd {
 
         // Toffoli table insertion and lookup
         void TTinsert(unsigned short n, unsigned short target, const Edge& e) {
-            TTinsert(n, target, {}, e);
+            TTinsert(n, {}, target, e);
         }
-        void TTinsert(unsigned short n, unsigned short target, const std::vector<Control>& controls, const Edge& e);
-        Edge TTlookup(unsigned short n, unsigned short target, const std::vector<Control>& controls = {});
+        void TTinsert(unsigned short n, const std::set<Control>& controls, unsigned short target, const Edge& e);
+        Edge TTlookup(unsigned short n, unsigned short target) {
+            return TTlookup(n, {}, target);
+        }
+        Edge TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target);
 
-        inline unsigned short TThash(const unsigned short n, const unsigned short target, const std::vector<Control>& controls);
+        inline unsigned short TThash(const unsigned short n, const std::set<Control>& controls, const unsigned short target);
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
 
         /// Operation table functions
-        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
-        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
-        unsigned long OperationHash(unsigned int operationType, unsigned short nQubits, unsigned short target, const std::vector<Control>& controls = {});
+        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target) {
+            return OperationLookup(operationType, nQubits, {}, target);
+        }
+        Edge          OperationLookup(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target) {
+            OperationInsert(operationType, result, nQubits, {}, target);
+        }
+        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+        unsigned long OperationHash(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
 
         inline void clearOperationTable() {
             for (auto& entry: OperationTable) entry.r = nullptr;
