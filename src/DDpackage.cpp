@@ -718,6 +718,7 @@ namespace dd {
             table[i].r     = r.p;
             table[i].rw.r  = r.w.r->val;
             table[i].rw.i  = r.w.i->val;
+            CT2count.at(mode)++;
         } else if (which == ad) {
             std::array<CTentry3, CTSLOTS>& table = CTable3.at(mode);
             ComplexValue                   aw{a.w.r->val, a.w.i->val};
@@ -734,7 +735,7 @@ namespace dd {
             table[i].rw.r  = r.w.r->val;
             table[i].rw.i  = r.w.i->val;
             table[i].which = which;
-
+            CT3count.at(mode)++;
         } else if (which == conjTransp || which == transp) {
             std::array<CTentry1, CTSLOTS>& table = CTable1.at(mode);
             const unsigned long            i     = CThash(a, b, which);
@@ -743,6 +744,7 @@ namespace dd {
             table[i].b     = b;
             table[i].which = which;
             table[i].r     = r;
+            CT1count.at(mode)++;
         } else {
             throw std::runtime_error("Undefined kind in CTinsert: " + std::to_string(which));
         }
@@ -1704,22 +1706,27 @@ namespace dd {
     }
 
     void Package::clearComputeTables() {
-        for (auto& table: CTable1) {
-            for (auto& entry: table) {
-                entry.r.p   = nullptr;
-                entry.which = none;
+        for (auto i = 0U; i < modeCount; ++i) {
+            if (CT1count.at(i) > 0) {
+                for (auto& entry: CTable1.at(i)) {
+                    entry.r.p   = nullptr;
+                    entry.which = none;
+                }
+                CT1count.at(i) = 0;
             }
-        }
-        for (auto& table: CTable2) {
-            for (auto& entry: table) {
-                entry.r     = nullptr;
-                entry.which = none;
+            if (CT2count.at(i) > 0) {
+                for (auto& entry: CTable2.at(i)) {
+                    entry.r     = nullptr;
+                    entry.which = none;
+                }
+                CT2count.at(i) = 0;
             }
-        }
-        for (auto& table: CTable3) {
-            for (auto& entry: table) {
-                entry.r     = nullptr;
-                entry.which = none;
+            if (CT3count.at(i) > 0) {
+                for (auto& entry: CTable3.at(i)) {
+                    entry.r     = nullptr;
+                    entry.which = none;
+                }
+                CT3count.at(i) = 0;
             }
         }
     }

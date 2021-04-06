@@ -191,6 +191,7 @@ static void BM_MakeSWAPDD(benchmark::State& state) {
     for (auto _: state) {
         auto sv = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, 0);
         sv      = dd->multiply(sv, dd->multiply(dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(0)}, nqubits - 1), sv));
+
         benchmark::DoNotOptimize(sv);
         dd->clearComputeTables();
     }
