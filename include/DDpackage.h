@@ -194,8 +194,8 @@ namespace dd {
         std::array<Edge, MAXN> IdTable{};
 
         // Operation operations table
-        // std::array<OperationEntry, OperationSLOTS> OperationTable{};
-        std::vector<OperationEntry> OperationTable{OperationSLOTS};
+        std::array<OperationEntry, OperationSLOTS> OperationTable{};
+        // std::vector<OperationEntry> OperationTable{OperationSLOTS};
 
         unsigned int                   currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
         unsigned int                   currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
