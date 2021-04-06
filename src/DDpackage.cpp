@@ -581,8 +581,8 @@ namespace dd {
     }
 
     void Package::OperationInsert(const unsigned int operationType, const std::vector<short>& line, const Edge& result, const unsigned short nQubits) {
-        const unsigned long i = OperationHash(operationType, line, nQubits);
-        OperationTable[i].line = line;
+        const unsigned long i           = OperationHash(operationType, line, nQubits);
+        OperationTable[i].line          = line;
         OperationTable[i].operationType = operationType;
         OperationTable[i].r             = result.p;
         OperationTable[i].rw.r          = CN::val(result.w.r);
@@ -723,7 +723,7 @@ namespace dd {
         if (TTable[i].e.p == nullptr || TTable[i].t != t || TTable[i].m != m || TTable[i].n != n) {
             return r;
         }
-        if(TTable[i].line == line) {
+        if (TTable[i].line == line) {
             return TTable[i].e;
         }
         return r;
@@ -734,8 +734,8 @@ namespace dd {
         TTable[i].n            = n;
         TTable[i].m            = m;
         TTable[i].t            = t;
-        TTable[i].line        = line;
-        TTable[i].e = e;
+        TTable[i].line         = line;
+        TTable[i].e            = e;
     }
 
     // make a DD nonterminal node and return an edge pointing to it

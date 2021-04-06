@@ -114,15 +114,15 @@ namespace dd {
 
     struct TTentry // Toffoli table entry defn
     {
-        unsigned short n, m, t;
+        unsigned short     n, m, t;
         std::vector<short> line;
-        Edge           e;
+        Edge               e;
     };
 
     struct OperationEntry {
-        NodePtr      r;
-        ComplexValue rw;
-        unsigned int operationType;
+        NodePtr            r;
+        ComplexValue       rw;
+        unsigned int       operationType;
         std::vector<short> line;
     };
 
@@ -175,11 +175,11 @@ namespace dd {
         // Operation operations table
         std::array<OperationEntry, OperationSLOTS> OperationTable{};
 
-        unsigned int                   currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
-        unsigned int                   currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
-        std::vector<unsigned int>      active{};                             // number of active nodes for each variable
-        unsigned long                  nodecount     = 0;                    // node count in unique table
-        unsigned long                  peaknodecount = 0;                    // records peak node count in unique table
+        unsigned int              currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
+        unsigned int              currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
+        std::vector<unsigned int> active{};                             // number of active nodes for each variable
+        unsigned long             nodecount     = 0;                    // node count in unique table
+        unsigned long             peaknodecount = 0;                    // records peak node count in unique table
 
         std::array<unsigned long, ct_count> nOps{};            // operation counters
         std::array<unsigned long, ct_count> CTlook{}, CThit{}; // counters for gathering compute table hit stats
@@ -221,10 +221,10 @@ namespace dd {
 
         Package(unsigned short nqubits = 128):
             nqubits(nqubits), cn(ComplexNumbers()) {
-                IdTable.resize(nqubits);
-                Unique.resize(nqubits);
-                active.resize(nqubits);
-            };
+            IdTable.resize(nqubits);
+            Unique.resize(nqubits);
+            active.resize(nqubits);
+        };
         ~Package();
 
         /// Set normalization mode
@@ -280,8 +280,8 @@ namespace dd {
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
         /// Toffoli table functions
-        void TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line, const Edge& e);
-        Edge TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line);
+        void                  TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line, const Edge& e);
+        Edge                  TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line);
         static unsigned short TThash(unsigned short n, unsigned short t, const std::vector<short>& line);
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;

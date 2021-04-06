@@ -180,7 +180,8 @@ static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
     auto           dd      = std::make_unique<dd::Package>();
     auto           line    = std::vector<short>(128);
     for (auto _: state) {
-        std::fill(line.begin(), line.end(), 1);;
+        std::fill(line.begin(), line.end(), 1);
+        ;
         line[nqubits - 1] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, line));
     }
@@ -192,7 +193,8 @@ static void BM_MakeFullControlledToffoliDD_TargetMiddle(benchmark::State& state)
     auto           dd      = std::make_unique<dd::Package>();
     auto           line    = std::vector<short>(128);
     for (auto _: state) {
-        std::fill(line.begin(), line.end(), 1);;
+        std::fill(line.begin(), line.end(), 1);
+        ;
         line[nqubits / 2] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, line));
     }
@@ -204,7 +206,8 @@ static void BM_MakeFullControlledToffoliDD_TargetBottom(benchmark::State& state)
     auto           dd      = std::make_unique<dd::Package>();
     auto           line    = std::vector<short>(128);
     for (auto _: state) {
-        std::fill(line.begin(), line.end(), 1);;
+        std::fill(line.begin(), line.end(), 1);
+        ;
         line[0] = 2;
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, line));
     }

@@ -100,10 +100,10 @@ TEST(DDPackageTest, PartialIdentityTrace) {
 
 TEST(DDPackageTest, StateGenerationManipulation) {
     auto dd = std::make_unique<dd::Package>(15);
-    auto b = std::vector<bool>(15, false);
+    auto b  = std::vector<bool>(15, false);
     b[0] = b[1] = true;
-    auto e = dd->makeBasisState(6, b);
-    auto f = dd->makeBasisState(6, {dd::BasisStates::zero,
+    auto e      = dd->makeBasisState(6, b);
+    auto f      = dd->makeBasisState(6, {dd::BasisStates::zero,
                                     dd::BasisStates::one,
                                     dd::BasisStates::plus,
                                     dd::BasisStates::minus,
