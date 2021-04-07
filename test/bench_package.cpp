@@ -207,11 +207,11 @@ BENCHMARK(BM_MakeSWAPDD)->Apply(QubitRange);
 static void BM_MxV_X(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           x       = dd->makeGateDD(dd::Xmat, nqubits, 0);
 
     for (auto _: state) {
-        auto zero = dd->makeZeroState(nqubits);
-        auto x    = dd->makeGateDD(dd::Xmat, nqubits, 0);
-        auto sim  = dd->multiply(x, zero);
+        auto sim = dd->multiply(x, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
         dd->clearComputeTables();
@@ -222,11 +222,11 @@ BENCHMARK(BM_MxV_X)->Apply(QubitRange);
 static void BM_MxV_H(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, 0);
 
     for (auto _: state) {
-        auto zero = dd->makeZeroState(nqubits);
-        auto h    = dd->makeGateDD(dd::Hmat, nqubits, 0);
-        auto sim  = dd->multiply(h, zero);
+        auto sim = dd->multiply(h, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
         dd->clearComputeTables();
@@ -237,11 +237,11 @@ BENCHMARK(BM_MxV_H)->Apply(QubitRange);
 static void BM_MxV_T(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           t       = dd->makeGateDD(dd::Tmat, nqubits, 0);
 
     for (auto _: state) {
-        auto zero = dd->makeZeroState(nqubits);
-        auto t    = dd->makeGateDD(dd::Tmat, nqubits, 0);
-        auto sim  = dd->multiply(t, zero);
+        auto sim = dd->multiply(t, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
         dd->clearComputeTables();
@@ -254,11 +254,11 @@ static void BM_MxV_CX_ControlTop_TargetBottom(benchmark::State& state) {
     auto           dd          = std::make_unique<dd::Package>();
     auto           basisStates = std::vector<dd::BasisStates>{nqubits, dd::BasisStates::zero};
     basisStates[nqubits - 1]   = dd::BasisStates::plus;
+    auto plus                  = dd->makeBasisState(nqubits, basisStates);
+    auto cx                    = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
 
     for (auto _: state) {
-        auto plus = dd->makeBasisState(nqubits, basisStates);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
-        auto sim  = dd->multiply(cx, plus);
+        auto sim = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
         dd->clearComputeTables();
@@ -271,11 +271,11 @@ static void BM_MxV_CX_ControlBottom_TargetTop(benchmark::State& state) {
     auto           dd          = std::make_unique<dd::Package>();
     auto           basisStates = std::vector<dd::BasisStates>{nqubits, dd::BasisStates::zero};
     basisStates[0]             = dd::BasisStates::plus;
+    auto plus                  = dd->makeBasisState(nqubits, basisStates);
+    auto cx                    = dd->makeGateDD(dd::Xmat, nqubits, 0, nqubits - 1);
 
     for (auto _: state) {
-        auto plus = dd->makeBasisState(nqubits, basisStates);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, 0, nqubits - 1);
-        auto sim  = dd->multiply(cx, plus);
+        auto sim = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
         dd->clearComputeTables();
@@ -286,9 +286,10 @@ BENCHMARK(BM_MxV_CX_ControlBottom_TargetTop)->Apply(QubitRange);
 static void BM_MxV_HadamardLayer(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           zero    = dd->makeZeroState(nqubits);
 
     for (auto _: state) {
-        auto sv = dd->makeZeroState(nqubits);
+        auto sv = zero;
         for (int i = 0; i < nqubits; ++i) {
             auto h = dd->makeGateDD(dd::Hmat, nqubits, i);
             sv     = dd->multiply(h, sv);
@@ -302,10 +303,11 @@ BENCHMARK(BM_MxV_HadamardLayer)->Apply(QubitRange);
 static void BM_MxV_GHZ(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
 
     for (auto _: state) {
-        auto sv = dd->makeZeroState(nqubits);
-        auto h  = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
+        auto sv = zero;
         sv      = dd->multiply(h, sv);
         for (int i = nqubits - 2; i >= 0; --i) {
             auto cx = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, i);
@@ -320,10 +322,10 @@ BENCHMARK(BM_MxV_GHZ)->Apply(QubitRange);
 static void BM_MxM_Bell(benchmark::State& state) {
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
+    auto           cx      = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
 
     for (auto _: state) {
-        auto h    = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
         auto bell = dd->multiply(cx, h);
         benchmark::DoNotOptimize(bell);
         // clear compute table so the next iteration does not find the result cached
