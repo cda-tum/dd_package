@@ -750,9 +750,9 @@ namespace dd {
         }
     }
 
-    inline unsigned short Package::TThash(const unsigned short n, const std::set<Control>& controls, const unsigned short target) {
+    inline unsigned short Package::TThash(const std::set<Control>& controls, const unsigned short target) {
         unsigned long i = target;
-        for (auto& control: controls) {
+        for (const auto& control: controls) {
             if (control.type == Control::Type::pos) {
                 i = i << (3U + control.qubit);
             }
@@ -762,9 +762,9 @@ namespace dd {
 
     Edge Package::TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target) {
         Edge r{};
-        r.p                            = nullptr;
-        const unsigned short i         = TThash(n, controls, target);
-        auto&                tcontrols = TTable[i].controls;
+        r.p                   = nullptr;
+        const auto  i         = TThash(controls, target);
+        const auto& tcontrols = TTable[i].controls;
 
         if (TTable[i].e.p == nullptr || TTable[i].target != target || TTable[i].n != n || controls.size() != tcontrols.size()) {
             return r;
@@ -778,7 +778,7 @@ namespace dd {
     }
 
     void Package::TTinsert(unsigned short n, const std::set<Control>& controls, unsigned short target, const Edge& e) {
-        const unsigned short i = TThash(n, controls, target);
+        const unsigned short i = TThash(controls, target);
         TTable[i].n            = n;
         TTable[i].target       = target;
         TTable[i].controls     = controls;
@@ -1160,7 +1160,7 @@ namespace dd {
         return IdTable[qidx];
     }
 
-    Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned int target) {
+    Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned short target) {
         std::array<Edge, NEDGE> em{};
         short                   z  = 0;
         auto                    it = controls.begin();
@@ -1173,7 +1173,7 @@ namespace dd {
         }
 
         //process lines below target
-        for (z = 0; z < target; z++) {
+        for (z = 0; static_cast<unsigned short>(z) < target; z++) {
             for (int i1 = 0; i1 < RADIX; i1++) {
                 for (int i2 = 0; i2 < RADIX; i2++) {
                     int i = i1 * RADIX + i2;
@@ -1762,4 +1762,8 @@ namespace dd {
         active.fill(0);
     }
 
+    inline namespace literals {
+        Control operator""_pc(unsigned long long int q) { return {static_cast<unsigned short>(q)}; }
+        Control operator""_nc(unsigned long long int q) { return {static_cast<unsigned short>(q), Control::Type::neg}; }
+    } // namespace literals
 } // namespace dd

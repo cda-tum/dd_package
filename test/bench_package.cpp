@@ -9,6 +9,8 @@
 #include <benchmark/benchmark.h>
 #include <memory>
 
+using namespace dd::literals;
+
 static void QubitRange(benchmark::internal::Benchmark* b) {
     b->Unit(benchmark::kMicrosecond)->RangeMultiplier(2)->Range(2, 128);
 }
@@ -124,7 +126,7 @@ static void BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle(benchmark::S
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
     for (auto _: state) {
-        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(0)}, nqubits / 2));
+        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, 0, nqubits / 2));
     }
 }
 BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle)->Apply(QubitRange);
@@ -133,7 +135,7 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle(benchmark::Stat
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
     for (auto _: state) {
-        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, nqubits / 2));
+        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, nqubits / 2));
     }
 }
 BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle)->Apply(QubitRange);
@@ -142,7 +144,7 @@ static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::Stat
     unsigned short nqubits = state.range(0);
     auto           dd      = std::make_unique<dd::Package>();
     for (auto _: state) {
-        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, 0));
+        benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0));
     }
 }
 BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetBottom)->Apply(QubitRange);
@@ -152,7 +154,7 @@ static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
     auto                  dd      = std::make_unique<dd::Package>();
     std::set<dd::Control> controls;
     for (unsigned short i = 0; i < nqubits - 1; i++)
-        controls.insert(dd::Control(i));
+        controls.insert({i});
     for (auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, nqubits - 1));
     }
@@ -165,7 +167,7 @@ static void BM_MakeFullControlledToffoliDD_TargetMiddle(benchmark::State& state)
     std::set<dd::Control> controls;
     for (unsigned short i = 0; i < nqubits; i++)
         if (i != nqubits / 2)
-            controls.insert(dd::Control(i));
+            controls.insert({i});
     for (auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, nqubits / 2));
     }
@@ -177,7 +179,7 @@ static void BM_MakeFullControlledToffoliDD_TargetBottom(benchmark::State& state)
     auto                  dd      = std::make_unique<dd::Package>();
     std::set<dd::Control> controls;
     for (unsigned short i = 1; i < nqubits; i++)
-        controls.insert(dd::Control(i));
+        controls.insert({i});
     for (auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, 0));
     }
@@ -189,8 +191,8 @@ static void BM_MakeSWAPDD(benchmark::State& state) {
     auto           dd      = std::make_unique<dd::Package>();
 
     for (auto _: state) {
-        auto sv = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, 0);
-        sv      = dd->multiply(sv, dd->multiply(dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(0)}, nqubits - 1), sv));
+        auto sv = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
+        sv      = dd->multiply(sv, dd->multiply(dd->makeGateDD(dd::Xmat, nqubits, 0, nqubits - 1), sv));
 
         benchmark::DoNotOptimize(sv);
         dd->clearComputeTables();
@@ -255,7 +257,7 @@ static void BM_MxV_CX_ControlTop_TargetBottom(benchmark::State& state) {
 
     for (auto _: state) {
         auto plus = dd->makeBasisState(nqubits, basisStates);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, 0);
+        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
         auto sim  = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -272,7 +274,7 @@ static void BM_MxV_CX_ControlBottom_TargetTop(benchmark::State& state) {
 
     for (auto _: state) {
         auto plus = dd->makeBasisState(nqubits, basisStates);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(0)}, nqubits - 1);
+        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, 0, nqubits - 1);
         auto sim  = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -306,7 +308,7 @@ static void BM_MxV_GHZ(benchmark::State& state) {
         auto h  = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
         sv      = dd->multiply(h, sv);
         for (int i = nqubits - 2; i >= 0; --i) {
-            auto cx = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, i);
+            auto cx = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, i);
             sv      = dd->multiply(cx, sv);
         }
         // clear compute table so the next iteration does not find the result cached
@@ -321,7 +323,7 @@ static void BM_MxM_Bell(benchmark::State& state) {
 
     for (auto _: state) {
         auto h    = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
-        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, 0);
+        auto cx   = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, 0);
         auto bell = dd->multiply(cx, h);
         benchmark::DoNotOptimize(bell);
         // clear compute table so the next iteration does not find the result cached
@@ -337,7 +339,7 @@ static void BM_MxM_GHZ(benchmark::State& state) {
     for (auto _: state) {
         auto func = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
         for (int i = nqubits - 2; i >= 0; --i) {
-            auto cx = dd->makeGateDD(dd::Xmat, nqubits, {dd::Control(nqubits - 1)}, i);
+            auto cx = dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1, i);
             func    = dd->multiply(cx, func);
         }
         // clear compute table so the next iteration does not find the result cached

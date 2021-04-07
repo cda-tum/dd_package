@@ -76,11 +76,8 @@ namespace dd {
         enum class Type : bool { pos = true,
                                  neg = false };
 
-        unsigned short qubit = 0;
-        Type           type  = Control::Type::pos;
-
-        explicit Control(unsigned short qubit, Type type = Control::Type::pos):
-            qubit(qubit), type(type){};
+        unsigned short qubit;
+        Type           type = Type::pos;
     };
 
     inline bool operator<(const Control& lhs, const Control& rhs) {
@@ -94,6 +91,11 @@ namespace dd {
     inline bool operator!=(const Control& lhs, const Control& rhs) {
         return !(lhs == rhs);
     }
+
+    inline namespace literals {
+        Control operator""_pc(unsigned long long q);
+        Control operator""_nc(unsigned long long q);
+    } // namespace literals
 
     // computed table definitions
     // compute table entry kinds
@@ -270,10 +272,16 @@ namespace dd {
         Edge makeBasisState(unsigned short n, const std::vector<BasisStates>& state);
         Edge makeIdent(unsigned short n);
         Edge makeIdent(short x, short y);
-        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned int target) {
-            return makeGateDD(mat, n, {}, target);
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned short target) {
+            return makeGateDD(mat, n, std::set<Control>{}, target);
         }
-        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned int target);
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const Control& control, unsigned short target) {
+            return makeGateDD(mat, n, std::set{control}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned short control, unsigned short target) {
+            return makeGateDD(mat, n, std::set<Control>{{control}}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned short target);
 
         /// Unique table functions
         Edge                      UTlookup(const Edge& e, bool keep_node = false);
@@ -310,7 +318,7 @@ namespace dd {
         }
         Edge TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target);
 
-        inline unsigned short TThash(const unsigned short n, const std::set<Control>& controls, const unsigned short target);
+        static inline unsigned short TThash(const std::set<Control>& controls, unsigned short target);
         inline void           clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
