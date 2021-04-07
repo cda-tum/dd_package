@@ -71,6 +71,31 @@ namespace dd {
         int            w;
     };
 
+    struct Control {
+        enum class Type : bool { pos = true,
+                                 neg = false };
+
+        unsigned short qubit;
+        Type           type = Type::pos;
+    };
+
+    inline bool operator<(const Control& lhs, const Control& rhs) {
+        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
+    }
+
+    inline bool operator==(const Control& lhs, const Control& rhs) {
+        return lhs.qubit == rhs.qubit && lhs.type == rhs.type;
+    }
+
+    inline bool operator!=(const Control& lhs, const Control& rhs) {
+        return !(lhs == rhs);
+    }
+
+    inline namespace literals {
+        Control operator""_pc(unsigned long long q);
+        Control operator""_nc(unsigned long long q);
+    } // namespace literals
+
     // computed table definitions
     // compute table entry kinds
     enum CTkind {
@@ -114,16 +139,17 @@ namespace dd {
 
     struct TTentry // Toffoli table entry defn
     {
-        unsigned short     n, m, t;
-        std::vector<short> line;
-        Edge               e;
+        unsigned short    n, target;
+        std::set<Control> controls;
+        Edge              e;
     };
 
     struct OperationEntry {
-        NodePtr            r;
-        ComplexValue       rw;
-        unsigned int       operationType;
-        std::vector<short> line;
+        NodePtr           r;
+        ComplexValue      rw;
+        unsigned int      operationType;
+        unsigned short    target;
+        std::set<Control> controls;
     };
 
     enum Mode {
@@ -168,12 +194,20 @@ namespace dd {
         std::array<std::size_t, modeCount>                   CT3count{};
 
         // Toffoli gate table
-        std::array<TTentry, TTSLOTS> TTable{};
+        //std::array<TTentry, TTSLOTS> TTable{};
+        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
+        /// std::vector shouldn't be any less efficient in our application scenario
+        /// TODO: revisit this in the future
+        std::vector<TTentry> TTable{TTSLOTS};
         // Identity matrix table
         std::vector<Edge> IdTable{};
 
         // Operation operations table
-        std::array<OperationEntry, OperationSLOTS> OperationTable{};
+        //std::array<OperationEntry, OperationSLOTS> OperationTable{};
+        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
+        /// std::vector shouldn't be any less efficient in our application scenario
+        /// TODO: revisit this in the future
+        std::vector<OperationEntry> OperationTable{OperationSLOTS};
 
         unsigned int              currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
         unsigned int              currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
@@ -252,9 +286,18 @@ namespace dd {
         Edge makeBasisState(unsigned short n, const std::vector<BasisStates>& state);
 
         /// Matrix DD generation
-        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::vector<short>& line);
         Edge makeIdent(unsigned short n);
         Edge makeIdent(short x, short y);
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned short target) {
+            return makeGateDD(mat, n, std::set<Control>{}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const Control& control, unsigned short target) {
+            return makeGateDD(mat, n, std::set{control}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, unsigned short control, unsigned short target) {
+            return makeGateDD(mat, n, std::set<Control>{{control}}, target);
+        }
+        Edge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned short target);
 
         /// Unique table functions
         Edge                      UTlookup(const Edge& e, bool keep_node = false);
@@ -280,19 +323,29 @@ namespace dd {
         [[nodiscard]] const auto& getIdentityTable() const { return IdTable; }
 
         /// Toffoli table functions
-        void                  TTinsert(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line, const Edge& e);
-        Edge                  TTlookup(unsigned short n, unsigned short m, unsigned short t, const std::vector<short>& line);
-        static unsigned short TThash(unsigned short n, unsigned short t, const std::vector<short>& line);
-        inline void           clearToffoliTable() {
+
+        // Toffoli table insertion and lookup
+        void TTinsert(unsigned short n, const std::set<Control>& controls, unsigned short target, const Edge& e);
+        Edge TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target);
+
+        static inline unsigned short TThash(const std::set<Control>& controls, unsigned short target);
+        inline void                  clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
 
         /// Operation table functions
-        Edge                 OperationLookup(unsigned int operationType, const std::vector<short>& line, unsigned short nQubits);
-        void                 OperationInsert(unsigned int operationType, const std::vector<short>& line, const Edge& result, unsigned short nQubits);
-        static unsigned long OperationHash(unsigned int operationType, const std::vector<short>& line, unsigned short nQubits);
-        inline void          clearOperationTable() {
+        Edge OperationLookup(unsigned int operationType, unsigned short nQubits, unsigned short target) {
+            return OperationLookup(operationType, nQubits, {}, target);
+        }
+        Edge OperationLookup(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+        void OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, unsigned short target) {
+            OperationInsert(operationType, result, nQubits, {}, target);
+        }
+        void          OperationInsert(unsigned int operationType, const Edge& result, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+        unsigned long OperationHash(unsigned int operationType, unsigned short nQubits, const std::set<Control>& controls, unsigned short target);
+
+        inline void clearOperationTable() {
             for (auto& entry: OperationTable) entry.r = nullptr;
         }
         [[nodiscard]] const auto& getOperationTable() const { return OperationTable; }
