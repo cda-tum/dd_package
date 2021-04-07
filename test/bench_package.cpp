@@ -91,7 +91,6 @@ static void BM_MakeSingleQubitGateDD_TargetTop(benchmark::State& state) {
     auto           dd      = std::make_unique<dd::Package>();
     for (auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, nqubits - 1));
-
     }
 }
 BENCHMARK(BM_MakeSingleQubitGateDD_TargetTop)->Apply(QubitRange);
@@ -289,7 +288,6 @@ static void BM_MxV_HadamardLayer(benchmark::State& state) {
     auto           dd      = std::make_unique<dd::Package>();
     auto           zero    = dd->makeZeroState(nqubits);
 
-    auto zero = dd->makeZeroState(nqubits);
     for (auto _: state) {
         auto sv = zero;
         for (int i = 0; i < nqubits; ++i) {
@@ -308,7 +306,6 @@ static void BM_MxV_GHZ(benchmark::State& state) {
     auto           zero    = dd->makeZeroState(nqubits);
     auto           h       = dd->makeGateDD(dd::Hmat, nqubits, nqubits - 1);
 
-    auto zero = dd->makeZeroState(nqubits);
     for (auto _: state) {
         auto sv = zero;
         sv      = dd->multiply(h, sv);
