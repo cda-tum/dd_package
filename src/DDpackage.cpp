@@ -663,7 +663,7 @@ namespace dd {
 
             if (table[i].which != which) return r;
             if (!equals(table[i].a, a)) return r;
-            if (!equals(table[i].b, b)) return r;
+            assert(equals(a, b));
 
             CThit[which]++;
             return table[i].r;

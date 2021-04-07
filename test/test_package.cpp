@@ -341,10 +341,10 @@ TEST(DDPackageTest, Identity) {
     auto id2 = dd->makeIdent(0, 1); // should be found in IdTable
     EXPECT_TRUE(dd->equals(dd->makeIdent(2), id2));
     auto id4 = dd->makeIdent(0, 3); // should use id3 and extend it
-    EXPECT_TRUE(dd->equals(dd->makeIdent(4), id4));
+    EXPECT_TRUE(dd->equals(dd->makeIdent(0, 3), id4));
     EXPECT_NE(table[3].p, nullptr);
 
-    auto idCached = dd->makeIdent(0, 3);
+    auto idCached = dd->makeIdent(4);
     EXPECT_TRUE(dd::Package::equals(id4, idCached));
 
     dd->printDD(idCached, 3);
@@ -486,4 +486,21 @@ TEST(DDPackageTest, PackageReset) {
     // recreating the decision diagrams in reverse order should use the same pointers as before
     EXPECT_EQ(z_gate2.p, i_gate.p);
     EXPECT_EQ(i_gate2.p, z_gate.p);
+}
+
+TEST(DDPackageTest, MaxRefCount) {
+    auto dd = std::make_unique<dd::Package>(1);
+    auto e  = dd->makeIdent(1);
+    // ref count saturates at this value
+    e.p->ref = std::numeric_limits<decltype(e.p->ref)>::max();
+    dd->incRef(e);
+    EXPECT_EQ(e.p->ref, std::numeric_limits<decltype(e.p->ref)>::max());
+}
+
+TEST(DDPackageTest, Inverse) {
+    auto dd   = std::make_unique<dd::Package>(1);
+    auto x    = dd->makeGateDD(dd::Xmat, 1, 0);
+    auto xdag = dd->conjugateTranspose(x);
+    EXPECT_TRUE(dd->equals(x, xdag));
+    dd->garbageCollect(true);
 }
