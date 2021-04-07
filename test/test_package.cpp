@@ -99,16 +99,17 @@ TEST(DDPackageTest, PartialIdentityTrace) {
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
-    auto dd = std::make_unique<dd::Package>(15);
-    auto b  = std::vector<bool>(15, false);
+    unsigned short nqubits = 12;
+    auto           dd      = std::make_unique<dd::Package>(nqubits);
+    auto           b       = std::vector<bool>(nqubits, false);
     b[0] = b[1] = true;
-    auto e      = dd->makeBasisState(6, b);
-    auto f      = dd->makeBasisState(6, {dd::BasisStates::zero,
-                                    dd::BasisStates::one,
-                                    dd::BasisStates::plus,
-                                    dd::BasisStates::minus,
-                                    dd::BasisStates::left,
-                                    dd::BasisStates::right});
+    auto e      = dd->makeBasisState(nqubits / 2, b);
+    auto f      = dd->makeBasisState(nqubits / 2, {dd::BasisStates::zero,
+                                              dd::BasisStates::one,
+                                              dd::BasisStates::plus,
+                                              dd::BasisStates::minus,
+                                              dd::BasisStates::left,
+                                              dd::BasisStates::right});
     dd->incRef(e);
     dd->incRef(f);
     dd->incRef(e);
@@ -119,8 +120,8 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     dd->decRef(f);
     auto j = dd->kronecker(h, i);
     dd->incRef(j);
-    dd->printActive(6);
-    dd->printUniqueTable(6);
+    dd->printActive(nqubits);
+    dd->printUniqueTable(nqubits);
     dd->printInformation();
 }
 
@@ -295,7 +296,7 @@ TEST(DDPackageTest, ToffoliTable) {
 }
 
 TEST(DDPackageTest, Extend) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package>(4);
 
     auto id = dd->makeIdent(3);
     dd->printDD(id, 64);

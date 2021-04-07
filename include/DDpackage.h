@@ -219,7 +219,7 @@ namespace dd {
         unsigned long      UTcol{}, UTmatch{}, UTlookups{}; // counter for collisions / matches in hash tables
         ComplexNumbers     cn;                              // instance of the complex number handler
 
-        Package(unsigned short nqubits = 128):
+        explicit Package(unsigned short nqubits = 128):
             nqubits(nqubits), cn(ComplexNumbers()) {
             IdTable.resize(nqubits);
             Unique.resize(nqubits);
