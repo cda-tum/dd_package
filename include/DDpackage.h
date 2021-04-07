@@ -142,7 +142,7 @@ namespace dd {
     struct TTentry // Toffoli table entry defn
     {
         unsigned short    n, target;
-        std::set<Control> controls; // TODO alternatively the line can be kept for TTentry
+        std::set<Control> controls;
         Edge              e;
     };
 
@@ -194,13 +194,20 @@ namespace dd {
         std::array<std::size_t, modeCount>                   CT3count{};
 
         // Toffoli gate table
-        std::array<TTentry, TTSLOTS> TTable{};
+        //std::array<TTentry, TTSLOTS> TTable{};
+        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
+        /// std::vector shouldn't be any less efficient in our application scenario
+        /// TODO: revisit this in the future
+        std::vector<TTentry> TTable{TTSLOTS};
         // Identity matrix table
         std::array<Edge, MAXN> IdTable{};
 
         // Operation operations table
-        std::array<OperationEntry, OperationSLOTS> OperationTable{};
-        // std::vector<OperationEntry> OperationTable{OperationSLOTS};
+        //std::array<OperationEntry, OperationSLOTS> OperationTable{};
+        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
+        /// std::vector shouldn't be any less efficient in our application scenario
+        /// TODO: revisit this in the future
+        std::vector<OperationEntry> OperationTable{OperationSLOTS};
 
         unsigned int                   currentNodeGCLimit    = GCLIMIT1;     // current garbage collection limit
         unsigned int                   currentComplexGCLimit = CN::GCLIMIT1; // current complex garbage collection limit
