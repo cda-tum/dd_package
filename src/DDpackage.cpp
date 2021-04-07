@@ -760,7 +760,7 @@ namespace dd {
         return i & TTMASK;
     }
 
-    Edge Package::TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target) {
+    Edge Package::TTlookup(const unsigned short n, const std::set<Control>& controls, const unsigned short target) {
         Edge r{};
         r.p                   = nullptr;
         const auto  i         = TThash(controls, target);
@@ -777,12 +777,12 @@ namespace dd {
         return TTable[i].e;
     }
 
-    void Package::TTinsert(unsigned short n, const std::set<Control>& controls, unsigned short target, const Edge& e) {
-        const unsigned short i = TThash(controls, target);
-        TTable[i].n            = n;
-        TTable[i].target       = target;
-        TTable[i].controls     = controls;
-        TTable[i].e            = e;
+    void Package::TTinsert(const unsigned short n, const std::set<Control>& controls, const unsigned short target, const Edge& e) {
+        const auto i       = TThash(controls, target);
+        TTable[i].n        = n;
+        TTable[i].target   = target;
+        TTable[i].controls = controls;
+        TTable[i].e        = e;
     }
 
     // make a DD nonterminal node and return an edge pointing to it

@@ -309,13 +309,7 @@ namespace dd {
         /// Toffoli table functions
 
         // Toffoli table insertion and lookup
-        void TTinsert(unsigned short n, unsigned short target, const Edge& e) {
-            TTinsert(n, {}, target, e);
-        }
         void TTinsert(unsigned short n, const std::set<Control>& controls, unsigned short target, const Edge& e);
-        Edge TTlookup(unsigned short n, unsigned short target) {
-            return TTlookup(n, {}, target);
-        }
         Edge TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target);
 
         static inline unsigned short TThash(const std::set<Control>& controls, unsigned short target);
