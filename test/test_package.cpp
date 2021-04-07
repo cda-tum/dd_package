@@ -13,7 +13,7 @@
 using namespace dd::literals;
 
 TEST(DDPackageTest, OperationLookupTest) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(1);
 
     // dd::ATrue is not the operation that is being stored, but for the test it doesn't matter
     auto tmp_op = dd->OperationLookup(dd::ATrue, 1, 0);
@@ -225,8 +225,8 @@ TEST(DDPackageTest, MatrixSerializationTest) {
 TEST(DDPackageTest, SerializationErrors) {
     auto dd = std::make_unique<dd::Package>(2);
 
-    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 2);
-    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1);
+    dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1, 0);
     dd::Edge zero_state = dd->makeZeroState(2);
     dd::Edge bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
 
@@ -261,7 +261,7 @@ TEST(DDPackageTest, TestConsistency) {
     auto dd = std::make_unique<dd::Package>(2);
 
     dd::Edge h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
-    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 0, 1);
+    dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1, 0);
     dd::Edge zero_state = dd->makeZeroState(2);
 
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
@@ -282,7 +282,7 @@ TEST(DDPackageTest, TestConsistency) {
 }
 
 TEST(DDPackageTest, ToffoliTable) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(4);
 
     // try to search for a toffoli in an empty table
     auto toffoli = dd->TTlookup(3, {0_nc, 1_pc}, 2);
@@ -434,20 +434,20 @@ TEST(DDPackageTest, Garbage) {
 }
 
 TEST(DDPackageTest, InvalidMakeBasisState) {
-    auto dd         = std::make_unique<dd::Package>();
-    auto basisState = std::vector<dd::BasisStates>{dd::BasisStates::zero};
     auto nqubits    = 2;
+    auto dd         = std::make_unique<dd::Package>(nqubits);
+    auto basisState = std::vector<dd::BasisStates>{dd::BasisStates::zero};
     EXPECT_THROW(dd->makeBasisState(nqubits, basisState), std::invalid_argument);
 }
 
 TEST(DDPackageTest, InvalidDecRef) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(2);
     auto e  = dd->makeIdent(2);
     EXPECT_THROW(dd->decRef(e), std::runtime_error);
 }
 
 TEST(DDPackageTest, PackageReset) {
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(1);
 
     // one node in unique table of variable 0
     auto        i_gate = dd->makeIdent(1);
