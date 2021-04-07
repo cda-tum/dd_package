@@ -724,7 +724,9 @@ namespace dd {
         unsigned long i = target;
         for (const auto& control: controls) {
             if (control.type == Control::Type::pos) {
-                i = i << (3U + control.qubit);
+                i *= 29u * control.qubit;
+            } else {
+                i *= 71u * control.qubit;
             }
         }
         return i & TTMASK;
