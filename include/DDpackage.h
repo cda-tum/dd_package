@@ -226,7 +226,6 @@ namespace dd {
         Mode mode{Mode::Vector};
 
         /// private helper routines
-        void    initComputeTable();
         NodePtr getNode();
 
         Edge         add2(const Edge& x, const Edge& y);

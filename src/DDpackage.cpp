@@ -383,36 +383,6 @@ namespace dd {
         return "not_found";
     }
 
-    // set compute table to empty and
-    // set toffoli gate table to empty and
-    // set identity table to empty
-    void Package::initComputeTable() {
-        for (unsigned int i = 0; i < CTSLOTS; i++) {
-            for (auto& table: CTable1) {
-                table[i].r.p   = nullptr;
-                table[i].which = none;
-            }
-            for (auto& table: CTable2) {
-                table[i].r     = nullptr;
-                table[i].which = none;
-            }
-            for (auto& table: CTable3) {
-                table[i].r     = nullptr;
-                table[i].which = none;
-            }
-        }
-        for (auto& table: OperationTable) {
-            table.r = nullptr;
-        }
-
-        for (auto& i: TTable) {
-            i.e.p = nullptr;
-        }
-        for (auto& i: IdTable) {
-            i.p = nullptr;
-        }
-    }
-
     // a simple garbage collector that removes nodes with 0 ref count from the unique
     // tables placing them on the available space chain
     void Package::garbageCollect(bool force) {
