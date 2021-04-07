@@ -319,7 +319,7 @@ namespace dd {
         Edge TTlookup(unsigned short n, const std::set<Control>& controls, unsigned short target);
 
         static inline unsigned short TThash(const std::set<Control>& controls, unsigned short target);
-        inline void           clearToffoliTable() {
+        inline void                  clearToffoliTable() {
             for (auto& entry: TTable) entry.e.p = nullptr;
         }
         [[nodiscard]] const auto& getToffoliTable() const { return TTable; }
