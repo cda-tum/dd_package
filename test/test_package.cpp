@@ -264,6 +264,8 @@ TEST(DDPackageTest, TestConsistency) {
     dd::Edge cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1, 0);
     dd::Edge zero_state = dd->makeZeroState(2);
 
+    dd->debugnode(dd::Package::DDzero.p);
+
     dd::Edge bell_matrix = dd->multiply(cx_gate, h_gate);
     dd->incRef(bell_matrix);
     auto local = dd->is_locally_consistent_dd(bell_matrix);
@@ -344,6 +346,8 @@ TEST(DDPackageTest, Identity) {
 
     auto idCached = dd->makeIdent(0, 3);
     EXPECT_TRUE(dd::Package::equals(id4, idCached));
+
+    dd->printDD(idCached, 3);
 }
 
 TEST(DDPackageTest, TestLocalInconsistency) {
