@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617873189237,
+  "lastUpdate": 1617874447755,
   "repoUrl": "https://github.com/iic-jku/dd_package",
   "entries": {
     "Benchmark": [
@@ -23112,6 +23112,1014 @@ window.BENCHMARK_DATA = {
             "value": 5064.005804347684,
             "unit": "us/iter",
             "extra": "iterations: 138\ncpu: 5063.378253623178 us\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "bauer.hartwig@gmx.at",
+            "name": "HartwigB",
+            "username": "HartwigB"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89322626d0c26118d8bfa2ffa5bf392fd7e04eec",
+          "message": "Allow dynamic setting of max package qubits (#9)\n\n📈 actually only allocate a package with the specified size\r\n✅ improving coverage\r\n\r\nCo-authored-by: Lukas Burgholzer <lukas.burgholzer@jku.at>",
+          "timestamp": "2021-04-08T11:25:00+02:00",
+          "tree_id": "2c6495acfcbdc8cb4c39d6f1a3eed0bb251855d7",
+          "url": "https://github.com/iic-jku/dd_package/commit/89322626d0c26118d8bfa2ffa5bf392fd7e04eec"
+        },
+        "date": 1617874446687,
+        "tool": "googlecpp",
+        "benches": [
+          {
+            "name": "BM_DDVectorNodeCreation",
+            "value": 9.485593276909423,
+            "unit": "ns/iter",
+            "extra": "iterations: 67801678\ncpu: 9.485233654541707 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_DDMatrixNodeCreation",
+            "value": 9.881742360575585,
+            "unit": "ns/iter",
+            "extra": "iterations: 72540117\ncpu: 9.881117906109804 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_ComplexNumbersCreation",
+            "value": 27.3497209881345,
+            "unit": "us/iter",
+            "extra": "iterations: 25705\ncpu: 27.341847383777484 us\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/2",
+            "value": 0.6786471631016056,
+            "unit": "ms/iter",
+            "extra": "iterations: 1122\ncpu: 0.6786211301247772 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/4",
+            "value": 0.6572000977516954,
+            "unit": "ms/iter",
+            "extra": "iterations: 1023\ncpu: 0.6571083098729223 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/8",
+            "value": 0.7371037199999996,
+            "unit": "ms/iter",
+            "extra": "iterations: 900\ncpu: 0.7370284011111118 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/16",
+            "value": 0.8919971844888321,
+            "unit": "ms/iter",
+            "extra": "iterations: 851\ncpu: 0.8919431410105761 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/32",
+            "value": 4.5895635302014055,
+            "unit": "ms/iter",
+            "extra": "iterations: 149\ncpu: 4.588656704697983 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/64",
+            "value": 1.749185022613038,
+            "unit": "ms/iter",
+            "extra": "iterations: 398\ncpu: 1.7489327713567842 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_PackageCreation/128",
+            "value": 9.668800233766193,
+            "unit": "ms/iter",
+            "extra": "iterations: 77\ncpu: 9.666891194805192 ms\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/2",
+            "value": 6.248686626056252,
+            "unit": "ns/iter",
+            "extra": "iterations: 108021406\ncpu: 6.248392295504835 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/4",
+            "value": 6.233140954168665,
+            "unit": "ns/iter",
+            "extra": "iterations: 107960929\ncpu: 6.232758621408303 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/8",
+            "value": 6.449011308434829,
+            "unit": "ns/iter",
+            "extra": "iterations: 115649869\ncpu: 6.448503715987787 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/16",
+            "value": 6.1206459598479315,
+            "unit": "ns/iter",
+            "extra": "iterations: 105543526\ncpu: 6.119761291658947 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/32",
+            "value": 6.342159801639659,
+            "unit": "ns/iter",
+            "extra": "iterations: 118680084\ncpu: 6.341454586432545 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/64",
+            "value": 6.393465310906677,
+            "unit": "ns/iter",
+            "extra": "iterations: 104378340\ncpu: 6.393331930743475 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdentCached/128",
+            "value": 6.332206334825841,
+            "unit": "ns/iter",
+            "extra": "iterations: 117950171\ncpu: 6.3259267084911635 ns\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/2",
+            "value": 0.1709936205453822,
+            "unit": "us/iter",
+            "extra": "iterations: 4197224\ncpu: 0.17098245507030357 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/4",
+            "value": 0.31829720002770295,
+            "unit": "us/iter",
+            "extra": "iterations: 2180343\ncpu: 0.3182663443320611 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/8",
+            "value": 0.6095866269385927,
+            "unit": "us/iter",
+            "extra": "iterations: 1023625\ncpu: 0.6095746225424336 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/16",
+            "value": 1.1543030077979806,
+            "unit": "us/iter",
+            "extra": "iterations: 573609\ncpu: 1.1541727657690157 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/32",
+            "value": 2.360707768283237,
+            "unit": "us/iter",
+            "extra": "iterations: 283087\ncpu: 2.3605207303761735 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/64",
+            "value": 4.707474438343259,
+            "unit": "us/iter",
+            "extra": "iterations: 151516\ncpu: 4.706976424932033 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeIdent/128",
+            "value": 9.444962095511096,
+            "unit": "us/iter",
+            "extra": "iterations: 76640\ncpu: 9.444540905532355 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/2",
+            "value": 0.31336657536470996,
+            "unit": "us/iter",
+            "extra": "iterations: 2217915\ncpu: 0.3133314252349604 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/4",
+            "value": 0.7112892727560651,
+            "unit": "us/iter",
+            "extra": "iterations: 1035196\ncpu: 0.7112396367451216 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/8",
+            "value": 1.5978570735811595,
+            "unit": "us/iter",
+            "extra": "iterations: 412429\ncpu: 1.5977036677828238 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/16",
+            "value": 3.1914623864404468,
+            "unit": "us/iter",
+            "extra": "iterations: 229505\ncpu: 3.1912062569442954 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/32",
+            "value": 6.97680077833748,
+            "unit": "us/iter",
+            "extra": "iterations: 109978\ncpu: 6.976678090163473 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/64",
+            "value": 12.806799349918846,
+            "unit": "us/iter",
+            "extra": "iterations: 55993\ncpu: 12.806054935438354 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetTop/128",
+            "value": 25.970068447781212,
+            "unit": "us/iter",
+            "extra": "iterations: 27174\ncpu: 25.968857326856604 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/2",
+            "value": 0.30681566337556226,
+            "unit": "us/iter",
+            "extra": "iterations: 2308353\ncpu: 0.3067726019373977 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/4",
+            "value": 0.5800734158842108,
+            "unit": "us/iter",
+            "extra": "iterations: 1264917\ncpu: 0.58006726133019 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/8",
+            "value": 1.258478267694306,
+            "unit": "us/iter",
+            "extra": "iterations: 566990\ncpu: 1.258122317853932 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/16",
+            "value": 2.260230661773371,
+            "unit": "us/iter",
+            "extra": "iterations: 295645\ncpu: 2.26018911532413 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/32",
+            "value": 4.6252947899758725,
+            "unit": "us/iter",
+            "extra": "iterations: 162648\ncpu: 4.624524402390451 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/64",
+            "value": 10.498262163102776,
+            "unit": "us/iter",
+            "extra": "iterations: 66081\ncpu: 10.497938847777723 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetMiddle/128",
+            "value": 20.453507715628792,
+            "unit": "us/iter",
+            "extra": "iterations: 32985\ncpu: 20.4503344247387 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/2",
+            "value": 0.1698192229490312,
+            "unit": "us/iter",
+            "extra": "iterations: 4385092\ncpu: 0.1698159429722339 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/4",
+            "value": 0.31960791619400003,
+            "unit": "us/iter",
+            "extra": "iterations: 2196788\ncpu: 0.3195770565935372 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/8",
+            "value": 0.6081467138365115,
+            "unit": "us/iter",
+            "extra": "iterations: 1186916\ncpu: 0.608136190766661 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/16",
+            "value": 1.255067718438211,
+            "unit": "us/iter",
+            "extra": "iterations: 606659\ncpu: 1.254971969425988 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/32",
+            "value": 2.529051709635862,
+            "unit": "us/iter",
+            "extra": "iterations: 286523\ncpu: 2.528897516080733 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/64",
+            "value": 5.106494709999652,
+            "unit": "us/iter",
+            "extra": "iterations: 100000\ncpu: 5.106426529999979 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSingleQubitGateDD_TargetBottom/128",
+            "value": 9.513598969321018,
+            "unit": "us/iter",
+            "extra": "iterations: 70633\ncpu: 9.512861353758215 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/2",
+            "value": 0.3131760640993041,
+            "unit": "us/iter",
+            "extra": "iterations: 2186732\ncpu: 0.3131648116916032 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/4",
+            "value": 0.7091957308105222,
+            "unit": "us/iter",
+            "extra": "iterations: 1056594\ncpu: 0.7091123903788963 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/8",
+            "value": 1.5351127757073382,
+            "unit": "us/iter",
+            "extra": "iterations: 446488\ncpu: 1.535085547651888 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/16",
+            "value": 3.4676626953203247,
+            "unit": "us/iter",
+            "extra": "iterations: 222007\ncpu: 3.4555712432491115 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/32",
+            "value": 6.856475095520562,
+            "unit": "us/iter",
+            "extra": "iterations: 101287\ncpu: 6.856278456267855 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/64",
+            "value": 14.093283955114632,
+            "unit": "us/iter",
+            "extra": "iterations: 54896\ncpu: 14.091349187554636 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetTop/128",
+            "value": 25.984721763806206,
+            "unit": "us/iter",
+            "extra": "iterations: 26783\ncpu: 25.98417294552498 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/2",
+            "value": 0.45704712378438134,
+            "unit": "us/iter",
+            "extra": "iterations: 1524538\ncpu: 0.4570102581896945 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/4",
+            "value": 0.8351345478182693,
+            "unit": "us/iter",
+            "extra": "iterations: 786122\ncpu: 0.8351190260544801 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/8",
+            "value": 1.6699291644962806,
+            "unit": "us/iter",
+            "extra": "iterations: 445384\ncpu: 1.66978525048048 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/16",
+            "value": 2.9829316043754077,
+            "unit": "us/iter",
+            "extra": "iterations: 239065\ncpu: 2.982839980758368 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/32",
+            "value": 6.041672835520428,
+            "unit": "us/iter",
+            "extra": "iterations: 105314\ncpu: 6.041335757828962 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/64",
+            "value": 11.592366292975758,
+            "unit": "us/iter",
+            "extra": "iterations: 61459\ncpu: 11.59094578499493 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle/128",
+            "value": 24.582272426194745,
+            "unit": "us/iter",
+            "extra": "iterations: 28081\ncpu: 24.580325095260182 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/2",
+            "value": 0.32816017371051326,
+            "unit": "us/iter",
+            "extra": "iterations: 2108105\ncpu: 0.32813076625689996 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/4",
+            "value": 0.6566530429964951,
+            "unit": "us/iter",
+            "extra": "iterations: 1191260\ncpu: 0.6566423920890482 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/8",
+            "value": 1.1603955962095003,
+            "unit": "us/iter",
+            "extra": "iterations: 586631\ncpu: 1.1602293844000817 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/16",
+            "value": 2.2163017201995565,
+            "unit": "us/iter",
+            "extra": "iterations: 308627\ncpu: 2.2112937591331954 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/32",
+            "value": 4.44387740053967,
+            "unit": "us/iter",
+            "extra": "iterations: 157048\ncpu: 4.443536829504389 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/64",
+            "value": 8.364782673303248,
+            "unit": "us/iter",
+            "extra": "iterations: 82774\ncpu: 8.364531362505153 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle/128",
+            "value": 18.36008767600932,
+            "unit": "us/iter",
+            "extra": "iterations: 37285\ncpu: 18.3586285637656 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/2",
+            "value": 0.20124350039929453,
+            "unit": "us/iter",
+            "extra": "iterations: 3084151\ncpu: 0.20123906838543057 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/4",
+            "value": 0.3584667773822387,
+            "unit": "us/iter",
+            "extra": "iterations: 1950945\ncpu: 0.35843146833970085 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/8",
+            "value": 0.6472732880009555,
+            "unit": "us/iter",
+            "extra": "iterations: 1163260\ncpu: 0.6472576457541731 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/16",
+            "value": 1.2245351034367873,
+            "unit": "us/iter",
+            "extra": "iterations: 587122\ncpu: 1.2243322324831964 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/32",
+            "value": 2.2750371057842895,
+            "unit": "us/iter",
+            "extra": "iterations: 282840\ncpu: 2.274892193466251 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/64",
+            "value": 4.686634383168525,
+            "unit": "us/iter",
+            "extra": "iterations: 156850\ncpu: 4.686285113165454 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeControlledQubitGateDD_ControlTop_TargetBottom/128",
+            "value": 9.736860471106947,
+            "unit": "us/iter",
+            "extra": "iterations: 69878\ncpu: 9.736667406050644 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/2",
+            "value": 0.42914933389042625,
+            "unit": "us/iter",
+            "extra": "iterations: 1675400\ncpu: 0.42909306016473875 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/4",
+            "value": 0.9932033176103906,
+            "unit": "us/iter",
+            "extra": "iterations: 721664\ncpu: 0.9931846205436351 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/8",
+            "value": 2.1542090502179754,
+            "unit": "us/iter",
+            "extra": "iterations: 307639\ncpu: 2.154043993121827 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/16",
+            "value": 4.617833482926604,
+            "unit": "us/iter",
+            "extra": "iterations: 151522\ncpu: 4.6177438589776 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/32",
+            "value": 9.332071453565964,
+            "unit": "us/iter",
+            "extra": "iterations: 71445\ncpu: 9.331552466932564 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/64",
+            "value": 20.658178160063116,
+            "unit": "us/iter",
+            "extra": "iterations: 33599\ncpu: 20.656660257745887 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetTop/128",
+            "value": 40.36720681428856,
+            "unit": "us/iter",
+            "extra": "iterations: 16348\ncpu: 40.36306043552757 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/2",
+            "value": 0.41212659843284666,
+            "unit": "us/iter",
+            "extra": "iterations: 1646300\ncpu: 0.412126786733888 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/4",
+            "value": 0.816490271461426,
+            "unit": "us/iter",
+            "extra": "iterations: 904401\ncpu: 0.8161152165908709 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/8",
+            "value": 1.5248531698506496,
+            "unit": "us/iter",
+            "extra": "iterations: 460069\ncpu: 1.5248270998480653 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/16",
+            "value": 2.9778537625050308,
+            "unit": "us/iter",
+            "extra": "iterations: 213714\ncpu: 2.9777298305211173 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/32",
+            "value": 6.293595852772307,
+            "unit": "us/iter",
+            "extra": "iterations: 118103\ncpu: 6.293182611788055 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/64",
+            "value": 13.321666474995757,
+            "unit": "us/iter",
+            "extra": "iterations: 53912\ncpu: 13.320880082356467 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetMiddle/128",
+            "value": 26.461532903127523,
+            "unit": "us/iter",
+            "extra": "iterations: 26654\ncpu: 26.460445223981235 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/2",
+            "value": 0.1804820541737713,
+            "unit": "us/iter",
+            "extra": "iterations: 4029182\ncpu: 0.18047304415635998 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/4",
+            "value": 0.3402286537817958,
+            "unit": "us/iter",
+            "extra": "iterations: 2022993\ncpu: 0.34020285932773464 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/8",
+            "value": 0.6569365733391732,
+            "unit": "us/iter",
+            "extra": "iterations: 1095533\ncpu: 0.6568723324628369 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/16",
+            "value": 1.3054061807959776,
+            "unit": "us/iter",
+            "extra": "iterations: 553165\ncpu: 1.3052698977701 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/32",
+            "value": 2.670801681941678,
+            "unit": "us/iter",
+            "extra": "iterations: 275396\ncpu: 2.67061505250617 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/64",
+            "value": 5.342980575446789,
+            "unit": "us/iter",
+            "extra": "iterations: 116605\ncpu: 5.342449774881035 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeFullControlledToffoliDD_TargetBottom/128",
+            "value": 10.929229068673548,
+            "unit": "us/iter",
+            "extra": "iterations: 61654\ncpu: 10.929017160281711 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/2",
+            "value": 64.01488967179533,
+            "unit": "us/iter",
+            "extra": "iterations: 10786\ncpu: 64.0089404783983 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/4",
+            "value": 65.73415210293958,
+            "unit": "us/iter",
+            "extra": "iterations: 10414\ncpu: 65.72651037065529 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/8",
+            "value": 71.31151265329933,
+            "unit": "us/iter",
+            "extra": "iterations: 10274\ncpu: 71.30987697099575 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/16",
+            "value": 84.98280342507594,
+            "unit": "us/iter",
+            "extra": "iterations: 8175\ncpu: 84.97671229357806 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/32",
+            "value": 111.1433218081196,
+            "unit": "us/iter",
+            "extra": "iterations: 6681\ncpu: 111.14088699296478 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/64",
+            "value": 148.09697098164378,
+            "unit": "us/iter",
+            "extra": "iterations: 4411\ncpu: 148.08850192700197 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MakeSWAPDD/128",
+            "value": 244.90091817216637,
+            "unit": "us/iter",
+            "extra": "iterations: 2823\ncpu: 244.87290860786234 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/2",
+            "value": 66.39687410586558,
+            "unit": "us/iter",
+            "extra": "iterations: 10485\ncpu: 66.39144005722501 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/4",
+            "value": 64.38581320980404,
+            "unit": "us/iter",
+            "extra": "iterations: 10038\ncpu: 64.38120920502104 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/8",
+            "value": 60.92683838988372,
+            "unit": "us/iter",
+            "extra": "iterations: 11701\ncpu: 60.92578027518983 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/16",
+            "value": 62.185068077279986,
+            "unit": "us/iter",
+            "extra": "iterations: 10870\ncpu: 62.17888840846367 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/32",
+            "value": 66.41837475693706,
+            "unit": "us/iter",
+            "extra": "iterations: 11314\ncpu: 66.41597975958987 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/64",
+            "value": 73.73500637379732,
+            "unit": "us/iter",
+            "extra": "iterations: 10198\ncpu: 73.7297701510104 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_X/128",
+            "value": 89.26730146304126,
+            "unit": "us/iter",
+            "extra": "iterations: 7792\ncpu: 89.2621907084182 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/2",
+            "value": 63.77984555706185,
+            "unit": "us/iter",
+            "extra": "iterations: 11085\ncpu: 63.77870049616599 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/4",
+            "value": 62.96756001482861,
+            "unit": "us/iter",
+            "extra": "iterations: 10789\ncpu: 62.96311159514328 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/8",
+            "value": 61.22549091681264,
+            "unit": "us/iter",
+            "extra": "iterations: 11780\ncpu: 61.22241740237742 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/16",
+            "value": 64.12443830766732,
+            "unit": "us/iter",
+            "extra": "iterations: 11298\ncpu: 64.12265923172212 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/32",
+            "value": 64.60644168881217,
+            "unit": "us/iter",
+            "extra": "iterations: 10161\ncpu: 64.59505462060788 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/64",
+            "value": 74.28271163016998,
+            "unit": "us/iter",
+            "extra": "iterations: 10275\ncpu: 74.27787289537683 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_H/128",
+            "value": 92.43889633214266,
+            "unit": "us/iter",
+            "extra": "iterations: 7852\ncpu: 91.70157972490993 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/2",
+            "value": 65.05883330147115,
+            "unit": "us/iter",
+            "extra": "iterations: 10462\ncpu: 65.0559752437393 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/4",
+            "value": 63.26595026857053,
+            "unit": "us/iter",
+            "extra": "iterations: 10798\ncpu: 63.262209853677035 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/8",
+            "value": 61.59718370810233,
+            "unit": "us/iter",
+            "extra": "iterations: 11785\ncpu: 61.59279796351243 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/16",
+            "value": 62.96723382465519,
+            "unit": "us/iter",
+            "extra": "iterations: 10448\ncpu: 62.96586705589543 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/32",
+            "value": 69.66028914364027,
+            "unit": "us/iter",
+            "extra": "iterations: 10206\ncpu: 69.6522166372733 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/64",
+            "value": 76.15719216972622,
+            "unit": "us/iter",
+            "extra": "iterations: 9757\ncpu: 76.14896341088573 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_T/128",
+            "value": 88.0000979543665,
+            "unit": "us/iter",
+            "extra": "iterations: 7626\ncpu: 87.99596905323862 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/2",
+            "value": 61.60182354984071,
+            "unit": "us/iter",
+            "extra": "iterations: 11516\ncpu: 61.5938622785693 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/4",
+            "value": 63.25863565370835,
+            "unit": "us/iter",
+            "extra": "iterations: 11909\ncpu: 63.258100260308254 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/8",
+            "value": 61.93289956634564,
+            "unit": "us/iter",
+            "extra": "iterations: 11530\ncpu: 61.928128881179276 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/16",
+            "value": 63.75141884953558,
+            "unit": "us/iter",
+            "extra": "iterations: 11491\ncpu: 63.74697458880783 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/32",
+            "value": 67.69268580812326,
+            "unit": "us/iter",
+            "extra": "iterations: 10048\ncpu: 67.68677498009524 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/64",
+            "value": 72.13383821147258,
+            "unit": "us/iter",
+            "extra": "iterations: 9259\ncpu: 72.12703412895588 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlTop_TargetBottom/128",
+            "value": 89.32620162381032,
+            "unit": "us/iter",
+            "extra": "iterations: 8129\ncpu: 89.3249943412476 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/2",
+            "value": 63.34217313517508,
+            "unit": "us/iter",
+            "extra": "iterations: 10564\ncpu: 63.33605821658417 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/4",
+            "value": 61.57044692134845,
+            "unit": "us/iter",
+            "extra": "iterations: 11125\ncpu: 61.567211235954126 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/8",
+            "value": 63.20225007312382,
+            "unit": "us/iter",
+            "extra": "iterations: 10257\ncpu: 63.19958828117483 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/16",
+            "value": 67.24716367303702,
+            "unit": "us/iter",
+            "extra": "iterations: 10411\ncpu: 67.2401135337625 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/32",
+            "value": 73.78303794620375,
+            "unit": "us/iter",
+            "extra": "iterations: 9777\ncpu: 73.78169827145433 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/64",
+            "value": 87.19929755552293,
+            "unit": "us/iter",
+            "extra": "iterations: 8059\ncpu: 87.19341829011047 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_CX_ControlBottom_TargetTop/128",
+            "value": 113.40283352639355,
+            "unit": "us/iter",
+            "extra": "iterations: 6043\ncpu: 113.397803574383 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/2",
+            "value": 62.38240023834061,
+            "unit": "us/iter",
+            "extra": "iterations: 11748\ncpu: 62.37912351038464 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/4",
+            "value": 68.4189252254232,
+            "unit": "us/iter",
+            "extra": "iterations: 9094\ncpu: 68.41094029030185 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/8",
+            "value": 79.83938920619649,
+            "unit": "us/iter",
+            "extra": "iterations: 8579\ncpu: 79.83774717333088 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/16",
+            "value": 138.92225952430752,
+            "unit": "us/iter",
+            "extra": "iterations: 4751\ncpu: 138.91154872658663 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/32",
+            "value": 372.4467048387027,
+            "unit": "us/iter",
+            "extra": "iterations: 1860\ncpu: 372.4386451612907 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/64",
+            "value": 1305.7574791667014,
+            "unit": "us/iter",
+            "extra": "iterations: 528\ncpu: 1305.6622746212015 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_HadamardLayer/128",
+            "value": 4899.630111111087,
+            "unit": "us/iter",
+            "extra": "iterations: 135\ncpu: 4899.1703481480845 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/2",
+            "value": 61.871507957918,
+            "unit": "us/iter",
+            "extra": "iterations: 11121\ncpu: 61.86871144681152 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/4",
+            "value": 66.7513507934973,
+            "unit": "us/iter",
+            "extra": "iterations: 10271\ncpu: 66.74183906143399 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/8",
+            "value": 78.46154826916418,
+            "unit": "us/iter",
+            "extra": "iterations: 8753\ncpu: 78.45986016222938 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/16",
+            "value": 126.15662749004328,
+            "unit": "us/iter",
+            "extra": "iterations: 5522\ncpu: 126.1506175298814 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/32",
+            "value": 311.107940658327,
+            "unit": "us/iter",
+            "extra": "iterations: 2157\ncpu: 311.0925141400047 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/64",
+            "value": 1096.568922671291,
+            "unit": "us/iter",
+            "extra": "iterations: 569\ncpu: 1096.483541300556 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxV_GHZ/128",
+            "value": 4313.924165644229,
+            "unit": "us/iter",
+            "extra": "iterations: 163\ncpu: 4313.585509202455 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/2",
+            "value": 61.22702844617413,
+            "unit": "us/iter",
+            "extra": "iterations: 10265\ncpu: 61.08378597174776 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/4",
+            "value": 62.05990353697462,
+            "unit": "us/iter",
+            "extra": "iterations: 11818\ncpu: 62.05342105263286 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/8",
+            "value": 57.72158059402571,
+            "unit": "us/iter",
+            "extra": "iterations: 11986\ncpu: 57.72188261305036 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/16",
+            "value": 63.021275986930775,
+            "unit": "us/iter",
+            "extra": "iterations: 11323\ncpu: 63.0163953899127 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/32",
+            "value": 61.8888175594056,
+            "unit": "us/iter",
+            "extra": "iterations: 12415\ncpu: 61.883003383002624 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/64",
+            "value": 61.922907104305864,
+            "unit": "us/iter",
+            "extra": "iterations: 11303\ncpu: 61.9165389719556 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_Bell/128",
+            "value": 60.64324034373552,
+            "unit": "us/iter",
+            "extra": "iterations: 11055\ncpu: 60.63659032111998 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/2",
+            "value": 61.68010157261834,
+            "unit": "us/iter",
+            "extra": "iterations: 10810\ncpu: 61.67881850138766 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/4",
+            "value": 67.1132155753158,
+            "unit": "us/iter",
+            "extra": "iterations: 11133\ncpu: 67.1078980508407 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/8",
+            "value": 80.31458552779456,
+            "unit": "us/iter",
+            "extra": "iterations: 8886\ncpu: 80.30910927301362 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/16",
+            "value": 137.67290604151142,
+            "unit": "us/iter",
+            "extra": "iterations: 5396\ncpu: 137.66297813194967 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/32",
+            "value": 340.37122109016826,
+            "unit": "us/iter",
+            "extra": "iterations: 1963\ncpu: 340.32574121242976 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/64",
+            "value": 1238.98367905405,
+            "unit": "us/iter",
+            "extra": "iterations: 592\ncpu: 1238.8928699324342 us\nthreads: 1"
+          },
+          {
+            "name": "BM_MxM_GHZ/128",
+            "value": 4700.630340000013,
+            "unit": "us/iter",
+            "extra": "iterations: 150\ncpu: 4700.236459999966 us\nthreads: 1"
           }
         ]
       }
