@@ -49,6 +49,8 @@ namespace dd {
     }
 
     Edge Package::makeZeroState(unsigned short n) {
+        assert(n <= nqubits);
+
         Edge f = DDone;
         Edge edges[4];
         edges[1] = edges[2] = edges[3] = DDzero;
@@ -62,6 +64,8 @@ namespace dd {
 
     // create DD for basis state |q_n-1 q_n-2 ... q1 q0>
     Edge Package::makeBasisState(unsigned short n, const std::vector<bool>& state) {
+        assert(n <= nqubits);
+
         Edge f = DDone;
         Edge edges[4];
         edges[1] = edges[3] = DDzero;
@@ -80,6 +84,8 @@ namespace dd {
     }
 
     Edge Package::makeBasisState(unsigned short n, const std::vector<BasisStates>& state) {
+        assert(n <= nqubits);
+
         if (state.size() < n) {
             throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
         }
@@ -1096,6 +1102,7 @@ namespace dd {
 
     // build a DD for the identity matrix for variables x to y (x<y)
     Edge Package::makeIdent(short x, short y) {
+        assert(y < nqubits);
         if (y < 0)
             return DDone;
 
@@ -1118,6 +1125,8 @@ namespace dd {
 
     // build a DD for the n-qubit identity matrix. makeIdent(n) === makeIdent(0, n-1)
     Edge Package::makeIdent(unsigned short n) {
+        assert(n <= nqubits);
+
         if (n == 0)
             return DDone;
 
@@ -1133,6 +1142,8 @@ namespace dd {
     }
 
     Edge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, unsigned short n, const std::set<Control>& controls, unsigned short target) {
+        assert(n <= nqubits);
+
         std::array<Edge, NEDGE> em{};
         short                   z  = 0;
         auto                    it = controls.begin();
