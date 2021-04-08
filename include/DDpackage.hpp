@@ -56,10 +56,28 @@ namespace dd {
         /// Construction, destruction, information and reset
         ///
     public:
-        Package()                       = default;
+        static constexpr auto maxPossibleQubits = std::numeric_limits<Qubit>::max() + 1;
+        static constexpr auto defaultQubits     = 128;
+        explicit Package(std::size_t nq = defaultQubits):
+            cn(ComplexNumbers()), nqubits(nq) {
+            resize(nq);
+        };
         ~Package()                      = default;
         Package(const Package& package) = delete;
         Package& operator=(const Package& package) = delete;
+
+        // resize the package instance
+        void resize(std::size_t nq) {
+            if (nq > maxPossibleQubits) {
+                throw std::invalid_argument("Requested too many qubits from package. Qubit datatype only allows up to " +
+                                            std::to_string(maxPossibleQubits) + " qubits, while " +
+                                            std::to_string(nq) + " were requested. Please recompile the package with a wider Qubit type!");
+            }
+            nqubits = nq;
+            vUniqueTable.resize(nqubits);
+            mUniqueTable.resize(nqubits);
+            IdTable.resize(nqubits);
+        }
 
         // print information on package and its members
         static void printInformation();
@@ -73,6 +91,12 @@ namespace dd {
             mUniqueTable.clear();
             clearComputeTables();
         }
+
+        // getter for qubits
+        [[nodiscard]] auto qubits() const { return nqubits; }
+
+    private:
+        std::size_t nqubits;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -126,12 +150,12 @@ namespace dd {
         static constexpr bool isZeroDD(const vEdge& e) { return e == vZero; }
         static constexpr bool isOneDD(const vEdge& e) { return e == vOne; }
 
-        // generate |0...0> with `mostSignificantQubit`+1 qubits
-        vEdge makeZeroState(Qubit mostSignificantQubit);
-        // generate computational basis state |i> with `mostSignificantQubit`+1 qubits
-        vEdge makeBasisState(Qubit mostSignificantQubit, const std::bitset<MAXN>& state);
-        // generate general basis state with `mostSignificantQubit`+1 qubits
-        vEdge makeBasisState(Qubit mostSignificantQubit, const std::vector<BasisStates>& state);
+        // generate |0...0> with n qubits
+        vEdge makeZeroState(QubitCount n);
+        // generate computational basis state |i> with n qubits
+        vEdge makeBasisState(QubitCount n, const std::vector<bool>& state);
+        // generate general basis state with n qubits
+        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state);
 
     private:
         static vNode vTerminal;
@@ -196,12 +220,17 @@ namespace dd {
         static constexpr bool isZeroDD(const mEdge& e) { return e == mZero; }
         static constexpr bool isOneDD(const mEdge& e) { return e == mOne; }
 
-        // build matrix representation for a single gate on a circuit with `mostSignificantQubit`+1 lines
-        // line is the vector of connections
-        // -1 not connected
-        // 0...1 indicates a control by that value
-        // 2 indicates the line is the target
-        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, Qubit mostSignificantQubit, const std::array<Qubit, MAXN>& line);
+        // build matrix representation for a single gate on an n-qubit circuit
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target) {
+            return makeGateDD(mat, n, std::set<Control>{}, target);
+        }
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target) {
+            return makeGateDD(mat, n, std::set{control}, target);
+        }
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit control, Qubit target) {
+            return makeGateDD(mat, n, std::set<Control>{{control}}, target);
+        }
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const std::set<Control>& controls, Qubit target);
 
     private:
         static mNode mTerminal;
@@ -229,12 +258,12 @@ namespace dd {
         static std::size_t hash(const mNode* p);
 
         // unique tables
-        UniqueTable<vNode, vEdge, hash, NBUCKET, ALLOCATION_SIZE> vUniqueTable{MAXN, GCLIMIT, GCINCREMENT};
+        UniqueTable<vNode, vEdge, hash, NBUCKET, ALLOCATION_SIZE> vUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
 
         void incRef(const vEdge& e) { vUniqueTable.incRef(e); }
         void decRef(const vEdge& e) { vUniqueTable.decRef(e); }
 
-        UniqueTable<mNode, mEdge, hash, NBUCKET, ALLOCATION_SIZE> mUniqueTable{MAXN, GCLIMIT, GCINCREMENT};
+        UniqueTable<mNode, mEdge, hash, NBUCKET, ALLOCATION_SIZE> mUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
 
         void incRef(const mEdge& e) { mUniqueTable.incRef(e); }
         void decRef(const mEdge& e) { mUniqueTable.decRef(e); }
@@ -353,8 +382,9 @@ namespace dd {
         ///
     public:
         ComputeTable<vEdge, vEdge, vCachedEdge, computeHash<vEdge, vEdge>, CTSLOTS> vectorInnerProduct{};
-        ComplexValue                                                                innerProduct(const vEdge& x, const vEdge& y);
-        fp                                                                          fidelity(const vEdge& x, const vEdge& y);
+
+        ComplexValue innerProduct(const vEdge& x, const vEdge& y);
+        fp           fidelity(const vEdge& x, const vEdge& y);
 
     private:
         ComplexValue innerProduct(const vEdge& x, const vEdge& y, Qubit var);
@@ -388,12 +418,12 @@ namespace dd {
         /// (Partial) trace
         ///
     public:
-        mEdge        partialTrace(const mEdge& a, const std::bitset<MAXN>& eliminate);
+        mEdge        partialTrace(const mEdge& a, const std::vector<bool>& eliminate);
         ComplexValue trace(const mEdge& a);
 
     private:
         /// TODO: introduce a compute table for the trace?
-        mEdge trace(const mEdge& a, const std::bitset<MAXN>& eliminate, std::size_t alreadyEliminated = 0);
+        mEdge trace(const mEdge& a, const std::vector<bool>& eliminate, std::size_t alreadyEliminated = 0);
 
         ///
         /// Toffoli gates
@@ -406,8 +436,8 @@ namespace dd {
         /// Identity matrices
         ///
     public:
-        // create n-qubit identity DD. makeIdent(n-1) === makeIdent(0, n-1)
-        mEdge makeIdent(Qubit mostSignificantQubit) { return makeIdent(0, mostSignificantQubit); }
+        // create n-qubit identity DD. makeIdent(n) === makeIdent(0, n-1)
+        mEdge makeIdent(QubitCount n) { return makeIdent(0, static_cast<Qubit>(n - 1)); }
         mEdge makeIdent(Qubit leastSignificantQubit, Qubit mostSignificantQubit);
 
         // identity table access and reset
@@ -418,7 +448,7 @@ namespace dd {
         }
 
     private:
-        std::array<mEdge, MAXN> IdTable{};
+        std::vector<mEdge> IdTable{};
 
         ///
         /// Operations (related to noise)
@@ -460,17 +490,17 @@ namespace dd {
         /// Ancillary and garbage reduction
         ///
     public:
-        mEdge reduceAncillae(mEdge& e, const std::bitset<dd::MAXN>& ancillary, bool regular = true);
+        mEdge reduceAncillae(mEdge& e, const std::vector<bool>& ancillary, bool regular = true);
 
         // Garbage reduction works for reversible circuits --- to be thoroughly tested for quantum circuits
-        vEdge reduceGarbage(vEdge& e, const std::bitset<dd::MAXN>& garbage);
-        mEdge reduceGarbage(mEdge& e, const std::bitset<dd::MAXN>& garbage, bool regular = true);
+        vEdge reduceGarbage(vEdge& e, const std::vector<bool>& garbage);
+        mEdge reduceGarbage(mEdge& e, const std::vector<bool>& garbage, bool regular = true);
 
     private:
-        mEdge reduceAncillaeRecursion(mEdge& e, const std::bitset<dd::MAXN>& ancillary, Qubit lowerbound, bool regular = true);
+        mEdge reduceAncillaeRecursion(mEdge& e, const std::vector<bool>& ancillary, Qubit lowerbound, bool regular = true);
 
-        vEdge reduceGarbageRecursion(vEdge& e, const std::bitset<dd::MAXN>& garbage, Qubit lowerbound);
-        mEdge reduceGarbageRecursion(mEdge& e, const std::bitset<dd::MAXN>& garbage, Qubit lowerbound, bool regular = true);
+        vEdge reduceGarbageRecursion(vEdge& e, const std::vector<bool>& garbage, Qubit lowerbound);
+        mEdge reduceGarbageRecursion(mEdge& e, const std::vector<bool>& garbage, Qubit lowerbound, bool regular = true);
 
         ///
         /// Vector and matrix extraction from DDs

@@ -10,34 +10,26 @@
 #include <iostream>
 #include <memory>
 
-using vectorDD = dd::Package::vEdge;
-using matrixDD = dd::Package::mEdge;
-
-matrixDD BellCicuit1(std::unique_ptr<dd::Package>& dd) {
+auto BellCicuit1(std::unique_ptr<dd::Package>& dd) {
     /***** define Hadamard gate acting on q0 *****/
-    // set control/target:
-    //    -1 don't care
-    //    0 neg. control
-    //    1 pos. control
-    //    2 target
-    auto h_gate = dd->makeGateDD(dd::Hmat, 1, {2, -1});
+    auto h_gate = dd->makeGateDD(dd::Hmat, 2, 0);
 
     /***** define cx gate with control q0 and target q1 *****/
-    auto cx_gate = dd->makeGateDD(dd::Xmat, 1, {1, 2});
+    auto cx_gate = dd->makeGateDD(dd::Xmat, 2, 0, 1);
 
     //Multiply matrices to get functionality of circuit
     return dd->multiply(cx_gate, h_gate);
 }
 
-matrixDD BellCicuit2(std::unique_ptr<dd::Package>& dd) {
+auto BellCicuit2(std::unique_ptr<dd::Package>& dd) {
     /***** define Hadamard gate acting on q1 *****/
-    auto h_gate_q1 = dd->makeGateDD(dd::Hmat, 1, {-1, 2});
+    auto h_gate_q1 = dd->makeGateDD(dd::Hmat, 2, 1);
 
     /***** define Hadamard gate acting on q0 *****/
-    auto h_gate_q0 = dd->makeGateDD(dd::Hmat, 1, {2, -1});
+    auto h_gate_q0 = dd->makeGateDD(dd::Hmat, 2, 0);
 
     /***** define cx gate with control q1 and target q0 *****/
-    auto cx_gate = dd->makeGateDD(dd::Xmat, 1, {2, 1});
+    auto cx_gate = dd->makeGateDD(dd::Xmat, 2, 1, 0);
 
     //Multiply matrices to get functionality of circuit
     return dd->multiply(dd->multiply(h_gate_q1, h_gate_q0), dd->multiply(cx_gate, h_gate_q1));
@@ -46,7 +38,7 @@ matrixDD BellCicuit2(std::unique_ptr<dd::Package>& dd) {
 int main() {
     dd::Package::printInformation(); // uncomment to print various sizes of structs and arrays
     //Initialize package
-    auto dd = std::make_unique<dd::Package>();
+    auto dd = std::make_unique<dd::Package>(4);
 
     // create Bell circuit 1
     auto bell_circuit1 = BellCicuit1(dd);
@@ -63,7 +55,7 @@ int main() {
 
     /***** Simulation *****/
     //Generate vector in basis state |00>
-    auto zero_state = dd->makeZeroState(1);
+    auto zero_state = dd->makeZeroState(2);
 
     //Simulate the bell_circuit with initial state |00>
     auto bell_state  = dd->multiply(bell_circuit1, zero_state);
@@ -83,12 +75,12 @@ int main() {
     m[2] = {0., 0.};
     m[3] = {-1., 0.};
 
-    auto my_z_gate = dd->makeGateDD(m, 0, {2});
+    auto my_z_gate = dd->makeGateDD(m, 1, 0);
     std::cout << "DD of my gate has size " << dd->size(my_z_gate) << std::endl;
 
     // compute (partial) traces
-    auto partTrace = dd->partialTrace(dd->makeIdent(1), std::bitset<dd::MAXN>(2));
-    auto fullTrace = dd->trace(dd->makeIdent(3));
+    auto partTrace = dd->partialTrace(dd->makeIdent(2), {true, true});
+    auto fullTrace = dd->trace(dd->makeIdent(4));
     std::cout << "Identity function for 4 qubits has trace: " << fullTrace << std::endl;
 
     /***** print DDs as SVG file *****/

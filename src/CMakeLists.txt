@@ -3,6 +3,7 @@ add_library(${PROJECT_NAME}
             ${CMAKE_CURRENT_SOURCE_DIR}/DDpackage.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/DDcomplex.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/DDexport.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/Definitions.cpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/Definitions.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/GateMatrixDefinitions.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/UniqueTable.hpp

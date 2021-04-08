@@ -11,6 +11,7 @@
 #include <array>
 #include <functional>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 namespace dd {
@@ -23,6 +24,14 @@ namespace dd {
 
         ~UniqueTable() {
             for (auto chunk: chunks) delete[] chunk;
+        }
+
+        void resize(std::size_t nq) {
+            nvars = nq;
+            tables.resize(nq);
+            // TODO: if the new size is smaller than the old one we might have to release the unique table entries for the superfluous variables
+            active.resize(nq);
+            activeNodeCount = std::accumulate(active.begin(), active.end(), 0UL);
         }
 
         // access functions
@@ -218,7 +227,7 @@ namespace dd {
             hits       = 0;
             lookups    = 0;
 
-            active.fill(0);
+            std::fill(active.begin(), active.end(), 0);
             activeNodeCount = 0;
             maxActive       = 0;
 
@@ -287,9 +296,9 @@ namespace dd {
 
         // (max) active nodes
         // number of active vector nodes for each variable
-        std::array<std::size_t, MAXN> active{};
-        std::size_t                   activeNodeCount = 0;
-        std::size_t                   maxActive       = 0;
+        std::vector<std::size_t> active{nvars};
+        std::size_t              activeNodeCount = 0;
+        std::size_t              maxActive       = 0;
 
         // garbage collection
         std::size_t gcCalls        = 0;

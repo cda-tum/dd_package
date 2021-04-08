@@ -18,10 +18,10 @@ namespace dd {
         ToffoliTable() = default;
 
         struct Entry {
-            Qubit                  mostSignificantQubit = 0;
-            std::set<ControlQubit> controls{};
-            Qubit                  target = 0;
-            Edge                   e;
+            QubitCount        n = 0;
+            std::set<Control> controls{};
+            Qubit             target = 0;
+            Edge              e;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -29,31 +29,33 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(Qubit mostSignificantQubit, Qubit target, const std::set<ControlQubit>& controls, const Edge& e) {
-            const auto key = hash(target, controls);
-            table[key]     = {.mostSignificantQubit = mostSignificantQubit, .controls = controls, .target = target, .e = e};
+        void insert(QubitCount n, const std::set<Control>& controls, Qubit target, const Edge& e) {
+            const auto key = hash(controls, target);
+            table[key]     = {.n = n, .controls = controls, .target = target, .e = e};
             ++count;
         }
 
-        Edge lookup(Qubit mostSignificantQubit, Qubit target, const std::set<ControlQubit>& controls) {
+        Edge lookup(QubitCount n, const std::set<Control>& controls, Qubit target) {
             lookups++;
             Edge        r{};
-            const auto  key   = hash(target, controls);
+            const auto  key   = hash(controls, target);
             const auto& entry = table[key];
             if (entry.e.p == nullptr) return r;
-            if (entry.mostSignificantQubit != mostSignificantQubit) return r;
+            if (entry.n != n) return r;
             if (entry.target != target) return r;
             if (entry.controls != controls) return r;
             hits++;
             return entry.e;
         }
 
-        // TODO: this hash does not consider negative controls
-        static size_t hash(Qubit target, const std::set<ControlQubit>& controls) {
+        static size_t hash(const std::set<Control>& controls, Qubit target) {
             auto key = static_cast<std::size_t>(std::make_unsigned<Qubit>::type(target));
             for (const auto& control: controls) {
-                auto qubit = static_cast<Qubit>(control / static_cast<Qubit>(2));
-                key <<= (3U + qubit);
+                if (control.type == dd::Control::Type::pos) {
+                    key *= 29u * control.qubit;
+                } else {
+                    key *= 71u * control.qubit;
+                }
             }
             return key & MASK;
         }

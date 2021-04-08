@@ -8,8 +8,8 @@
 
 #include "Definitions.hpp"
 
-#include <array>
 #include <cstdint>
+#include <set>
 
 namespace dd {
     // operation kinds (related to noise)
@@ -29,9 +29,11 @@ namespace dd {
         OperationTable() = default;
 
         struct Entry {
-            OperationKind               kind;
-            Edge                        r;
-            std::array<Qubit, dd::MAXN> line;
+            QubitCount        n    = 0;
+            OperationKind     kind = none;
+            std::set<Control> controls{}; // TODO: I suppose this is not necessary
+            Qubit             target = 0;
+            Edge              r{};
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -39,29 +41,40 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(Qubit mostSignificantQubit, OperationKind kind, const std::array<Qubit, dd::MAXN>& line, const Edge& r) {
-            const auto key = hash(mostSignificantQubit, kind, line);
-            table[key]     = {.kind = kind, .r = r, .line = line};
+        void insert(QubitCount n, OperationKind kind, Qubit target, const Edge& r) {
+            insert(n, kind, {}, target, r);
+        }
+        void insert(QubitCount n, OperationKind kind, const std::set<Control>& controls, Qubit target, const Edge& r) {
+            const auto key = hash(kind, controls, target);
+            table[key]     = {.n = n, .kind = kind, .r = r, .controls = controls, .target = target};
             ++count;
         }
 
-        Edge lookup(Qubit mostSignificantQubit, OperationKind kind, const std::array<Qubit, dd::MAXN>& line) {
+        Edge lookup(QubitCount n, OperationKind kind, Qubit target) {
+            return lookup(n, kind, {}, target);
+        }
+        Edge lookup(QubitCount n, OperationKind kind, const std::set<Control>& controls, Qubit target) {
             lookups++;
             Edge        r{};
-            const auto  key   = hash(mostSignificantQubit, kind, line);
+            const auto  key   = hash(kind, controls, target);
             const auto& entry = table[key];
             if (entry.r.p == nullptr) return r;
             if (entry.kind != kind) return r;
-            if (entry.r.p->v != mostSignificantQubit) return r;
-            if (entry.line != line) return r;
+            if (entry.n != n) return r;
+            if (entry.target != target) return r;
+            if (entry.controls != controls) return r;
             hits++;
             return entry.r;
         }
 
-        static size_t hash(Qubit mostSignificantQubit, OperationKind kind, const std::array<Qubit, dd::MAXN>& line) {
-            size_t key = kind;
-            for (auto i = 0; i <= mostSignificantQubit; ++i) {
-                key = (key << 3U) + key * i + line[i];
+        static size_t hash(OperationKind kind, const std::set<Control>& controls, Qubit target) {
+            std::size_t key = kind + (target << 3U);
+            for (const auto& control: controls) {
+                if (control.type == dd::Control::Type::pos) {
+                    key *= 29u * control.qubit;
+                } else {
+                    key *= 71u * control.qubit;
+                }
             }
             return key & MASK;
         }

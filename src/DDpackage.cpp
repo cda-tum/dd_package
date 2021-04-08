@@ -41,10 +41,9 @@ namespace dd {
                   << "\n  CT Vector Inner Product size: " << sizeof(decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(decltype(vectorInnerProduct)::Entry) << " bytes)"
                   << "\n  CT Vector Kronecker size: " << sizeof(decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(decltype(vectorKronecker)::Entry) << " bytes)"
                   << "\n  CT Matrix Kronecker size: " << sizeof(decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(decltype(matrixKronecker)::Entry) << " bytes)"
-                  << "\n  ToffolieTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
+                  << "\n  ToffoliTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
                   << "\n  OperationTable::Entry size: " << sizeof(OperationTable<mEdge>::Entry) << " bytes (aligned " << alignof(OperationTable<mEdge>::Entry) << " bytes)"
                   << "\n  Package size: " << sizeof(Package) << " bytes (aligned " << alignof(Package) << " bytes)"
-                  << "\n  max variables: " << MAXN
                   << "\n  UniqueTable buckets: " << NBUCKET
                   << "\n  ComputeTable slots: " << CTSLOTS
                   << "\n  ToffoliTable slots: " << TTSLOTS
@@ -187,17 +186,21 @@ namespace dd {
         return r;
     }
 
-    Package::vEdge Package::makeZeroState(Qubit mostSignificantQubit) {
+    Package::vEdge Package::makeZeroState(QubitCount n) {
+        assert(n <= nqubits);
+
         auto f = vOne;
-        for (std::size_t p = 0; p <= std::make_unsigned_t<Qubit>(mostSignificantQubit); p++) {
+        for (std::size_t p = 0; p < n; p++) {
             f = makeVectorNode(static_cast<Qubit>(p), {f, vZero});
         }
         return f;
     }
 
-    Package::vEdge Package::makeBasisState(Qubit mostSignificantQubit, const std::bitset<MAXN>& state) {
+    Package::vEdge Package::makeBasisState(QubitCount n, const std::vector<bool>& state) {
+        assert(n <= nqubits);
+
         auto f = vOne;
-        for (std::size_t p = 0; p <= std::make_unsigned_t<Qubit>(mostSignificantQubit); ++p) {
+        for (std::size_t p = 0; p <= n; ++p) {
             if (state[p] == 0) {
                 f = makeVectorNode(static_cast<Qubit>(p), {f, vZero});
             } else {
@@ -207,13 +210,15 @@ namespace dd {
         return f;
     }
 
-    Package::vEdge Package::makeBasisState(Qubit mostSignificantQubit, const std::vector<BasisStates>& state) {
-        if (state.size() < static_cast<std::size_t>(mostSignificantQubit + 1)) {
-            throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(mostSignificantQubit + 1) + ", but received " + std::to_string(state.size()));
+    Package::vEdge Package::makeBasisState(QubitCount n, const std::vector<BasisStates>& state) {
+        assert(n <= nqubits);
+
+        if (state.size() < n) {
+            throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
         }
 
         auto f = vOne;
-        for (std::size_t p = 0; p <= std::make_unsigned_t<Qubit>(mostSignificantQubit); ++p) {
+        for (std::size_t p = 0; p < n; ++p) {
             switch (state[p]) {
                 case BasisStates::zero:
                     f = makeVectorNode(static_cast<Qubit>(p), {f, vZero});
@@ -351,8 +356,11 @@ namespace dd {
         return r;
     }
 
-    Package::mEdge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, Qubit mostSignificantQubit, const std::array<Qubit, MAXN>& line) {
+    Package::mEdge Package::makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const std::set<Control>& controls, Qubit target) {
+        assert(n <= nqubits);
+
         std::array<mEdge, NEDGE> em{};
+        auto                     it = controls.begin();
         for (auto i = 0U; i < NEDGE; ++i) {
             if (mat[i].r == 0 && mat[i].i == 0) {
                 em[i] = mZero;
@@ -362,35 +370,42 @@ namespace dd {
         }
 
         //process lines below target
-        std::size_t z = 0;
-        for (; line[z] < RADIX; z++) {
+        Qubit z = 0;
+        for (; z < target; z++) {
             for (auto i1 = 0U; i1 < RADIX; i1++) {
                 for (auto i2 = 0U; i2 < RADIX; i2++) {
                     auto i = i1 * RADIX + i2;
-                    if (line[z] == 0) { // neg. control
-                        em[i] = makeMatrixNode(static_cast<Qubit>(z), {em[i], mZero, mZero,
-                                                                       (i1 == i2) ? makeIdent(static_cast<Qubit>(z - 1)) : mZero});
-                    } else if (line[z] == 1) { // pos. control
-                        em[i] = makeMatrixNode(static_cast<Qubit>(z),
-                                               {(i1 == i2) ? makeIdent(static_cast<Qubit>(z - 1)) : mZero, mZero, mZero, em[i]});
+                    if (it != controls.end() && it->qubit == z) {
+                        if (it->type == Control::Type::neg) { // neg. control
+                            em[i] = makeMatrixNode(z, {em[i], mZero, mZero, (i1 == i2) ? makeIdent(z) : mZero});
+                        } else { // pos. control
+                            em[i] = makeMatrixNode(z, {(i1 == i2) ? makeIdent(z) : mZero, mZero, mZero, em[i]});
+                        }
                     } else { // not connected
-                        em[i] = makeMatrixNode(static_cast<Qubit>(z), {em[i], mZero, mZero, em[i]});
+                        em[i] = makeMatrixNode(z, {em[i], mZero, mZero, em[i]});
                     }
                 }
+            }
+            if (it != controls.end() && it->qubit == z) {
+                ++it;
             }
         }
 
         // target line
-        auto e = makeMatrixNode(static_cast<Qubit>(z), em);
+        auto e = makeMatrixNode(z, em);
 
         //process lines above target
-        for (z++; z <= std::make_unsigned_t<Qubit>(mostSignificantQubit); z++) {
-            if (line[z] == 0) { //  neg. control
-                e = makeMatrixNode(static_cast<Qubit>(z), {e, mZero, mZero, makeIdent(static_cast<Qubit>(z - 1))});
-            } else if (line[z] == 1) { // pos. control
-                e = makeMatrixNode(static_cast<Qubit>(z), {makeIdent(static_cast<Qubit>(z - 1)), mZero, mZero, e});
+        for (; z < static_cast<Qubit>(n - 1); z++) {
+            auto q = static_cast<Qubit>(z + 1);
+            if (it != controls.end() && it->qubit == q) {
+                if (it->type == Control::Type::neg) { // neg. control
+                    e = makeMatrixNode(q, {e, mZero, mZero, makeIdent(q)});
+                } else { // pos. control
+                    e = makeMatrixNode(q, {makeIdent(q), mZero, mZero, e});
+                }
+                ++it;
             } else { // not connected
-                e = makeMatrixNode(static_cast<Qubit>(z), {e, mZero, mZero, e});
+                e = makeMatrixNode(q, {e, mZero, mZero, e});
             }
         }
         return e;
@@ -857,7 +872,7 @@ namespace dd {
         if (x.p->v == var && x.p->v == y.p->v) {
             if (x.p->ident) {
                 if (y.p->ident) {
-                    e = makeIdent(var);
+                    e = makeIdent(0, var);
                 } else {
                     e = yCopy;
                 }
@@ -1012,8 +1027,8 @@ namespace dd {
     }
 
     Package::mEdge Package::extend(const Package::mEdge& e, Qubit h, Qubit l) {
-        auto f = (l > 0) ? kronecker(e, makeIdent(static_cast<Qubit>(l - 1))) : e;
-        auto g = (h > 0) ? kronecker(makeIdent(static_cast<Qubit>(h - 1)), f) : f;
+        auto f = (l > 0) ? kronecker(e, makeIdent(l)) : e;
+        auto g = (h > 0) ? kronecker(makeIdent(h), f) : f;
         return g;
     }
 
@@ -1086,7 +1101,7 @@ namespace dd {
         return e;
     }
 
-    Package::mEdge Package::partialTrace(const Package::mEdge& a, const std::bitset<MAXN>& eliminate) {
+    Package::mEdge Package::partialTrace(const Package::mEdge& a, const std::vector<bool>& eliminate) {
         [[maybe_unused]] const auto before = cn.cacheCount;
         const auto                  result = trace(a, eliminate);
         [[maybe_unused]] const auto after  = cn.cacheCount;
@@ -1095,7 +1110,7 @@ namespace dd {
     }
 
     ComplexValue Package::trace(const Package::mEdge& a) {
-        auto                        eliminate = std::bitset<MAXN>{}.set();
+        auto                        eliminate = std::vector<bool>(nqubits, true);
         [[maybe_unused]] const auto before    = cn.cacheCount;
         const auto                  res       = partialTrace(a, eliminate);
         [[maybe_unused]] const auto after     = cn.cacheCount;
@@ -1103,12 +1118,12 @@ namespace dd {
         return {ComplexNumbers::val(res.w.r), ComplexNumbers::val(res.w.i)};
     }
 
-    Package::mEdge Package::trace(const Package::mEdge& a, const std::bitset<MAXN>& eliminate, std::size_t alreadyEliminated) {
+    Package::mEdge Package::trace(const Package::mEdge& a, const std::vector<bool>& eliminate, std::size_t alreadyEliminated) {
         auto v = a.p->v;
 
         if (CN::equalsZero(a.w)) return mZero;
 
-        if (eliminate.none()) return a;
+        if (std::none_of(eliminate.begin(), eliminate.end(), [](bool v) { return v; })) return a;
 
         // Base case
         if (v == -1) {
@@ -1146,7 +1161,7 @@ namespace dd {
 
             return r;
         } else {
-            auto                     adjustedV = static_cast<Qubit>(a.p->v - (eliminate.count() - alreadyEliminated));
+            auto                     adjustedV = static_cast<Qubit>(a.p->v - (std::count(eliminate.begin(), eliminate.end(), true) - alreadyEliminated));
             std::array<mEdge, NEDGE> edge{};
             std::transform(a.p->e.cbegin(),
                            a.p->e.cend(),
@@ -1190,12 +1205,12 @@ namespace dd {
         return e;
     }
 
-    Package::mEdge Package::reduceAncillae(Package::mEdge& e, const std::bitset<dd::MAXN>& ancillary, bool regular) {
+    Package::mEdge Package::reduceAncillae(Package::mEdge& e, const std::vector<bool>& ancillary, bool regular) {
         // return if no more garbage left
-        if (!ancillary.any() || e.p == nullptr) return e;
+        if (std::none_of(ancillary.begin(), ancillary.end(), [](bool v) { return v; }) || e.p == nullptr) return e;
         Qubit lowerbound = 0;
         for (auto i = 0U; i < ancillary.size(); ++i) {
-            if (ancillary.test(i)) {
+            if (ancillary[i]) {
                 lowerbound = static_cast<Qubit>(i);
                 break;
             }
@@ -1204,12 +1219,12 @@ namespace dd {
         return reduceAncillaeRecursion(e, ancillary, lowerbound, regular);
     }
 
-    Package::vEdge Package::reduceGarbage(Package::vEdge& e, const std::bitset<dd::MAXN>& garbage) {
+    Package::vEdge Package::reduceGarbage(Package::vEdge& e, const std::vector<bool>& garbage) {
         // return if no more garbage left
-        if (!garbage.any() || e.p == nullptr) return e;
+        if (std::none_of(garbage.begin(), garbage.end(), [](bool v) { return v; }) || e.p == nullptr) return e;
         Qubit lowerbound = 0;
         for (auto i = 0U; i < garbage.size(); ++i) {
-            if (garbage.test(i)) {
+            if (garbage[i]) {
                 lowerbound = static_cast<Qubit>(i);
                 break;
             }
@@ -1218,12 +1233,12 @@ namespace dd {
         return reduceGarbageRecursion(e, garbage, lowerbound);
     }
 
-    Package::mEdge Package::reduceGarbage(Package::mEdge& e, const std::bitset<dd::MAXN>& garbage, bool regular) {
+    Package::mEdge Package::reduceGarbage(Package::mEdge& e, const std::vector<bool>& garbage, bool regular) {
         // return if no more garbage left
-        if (!garbage.any() || e.p == nullptr) return e;
+        if (std::none_of(garbage.begin(), garbage.end(), [](bool v) { return v; }) || e.p == nullptr) return e;
         Qubit lowerbound = 0;
         for (auto i = 0U; i < garbage.size(); ++i) {
-            if (garbage.test(i)) {
+            if (garbage[i]) {
                 lowerbound = static_cast<Qubit>(i);
                 break;
             }
@@ -1232,7 +1247,7 @@ namespace dd {
         return reduceGarbageRecursion(e, garbage, lowerbound, regular);
     }
 
-    Package::mEdge Package::reduceAncillaeRecursion(Package::mEdge& e, const std::bitset<dd::MAXN>& ancillary, Qubit lowerbound, bool regular) {
+    Package::mEdge Package::reduceAncillaeRecursion(Package::mEdge& e, const std::vector<bool>& ancillary, Qubit lowerbound, bool regular) {
         if (e.p->v < lowerbound) return e;
 
         auto f = e;
@@ -1258,7 +1273,7 @@ namespace dd {
         f = makeMatrixNode(f.p->v, edges);
 
         // something to reduce for this qubit
-        if (f.p->v >= 0 && ancillary.test(f.p->v)) {
+        if (f.p->v >= 0 && ancillary[f.p->v]) {
             if (regular) {
                 if (f.p->e[1].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
                     f = makeMatrixNode(f.p->v, {f.p->e[0], mZero, f.p->e[2], mZero});
@@ -1279,7 +1294,7 @@ namespace dd {
         return f;
     }
 
-    Package::vEdge Package::reduceGarbageRecursion(Package::vEdge& e, const std::bitset<dd::MAXN>& garbage, Qubit lowerbound) {
+    Package::vEdge Package::reduceGarbageRecursion(Package::vEdge& e, const std::vector<bool>& garbage, Qubit lowerbound) {
         if (e.p->v < lowerbound) return e;
 
         auto f = e;
@@ -1305,7 +1320,7 @@ namespace dd {
         f = makeVectorNode(f.p->v, edges);
 
         // something to reduce for this qubit
-        if (f.p->v >= 0 && garbage.test(f.p->v)) {
+        if (f.p->v >= 0 && garbage[f.p->v]) {
             if (f.p->e[2].w != CN::ZERO) {
                 vEdge g{};
                 if (f.p->e[0].w == CN::ZERO && f.p->e[2].w != CN::ZERO) {
@@ -1332,7 +1347,7 @@ namespace dd {
         return f;
     }
 
-    Package::mEdge Package::reduceGarbageRecursion(Package::mEdge& e, const std::bitset<dd::MAXN>& garbage, Qubit lowerbound, bool regular) {
+    Package::mEdge Package::reduceGarbageRecursion(Package::mEdge& e, const std::vector<bool>& garbage, Qubit lowerbound, bool regular) {
         if (e.p->v < lowerbound) return e;
 
         auto f = e;
@@ -1358,7 +1373,7 @@ namespace dd {
         f = makeMatrixNode(f.p->v, edges);
 
         // something to reduce for this qubit
-        if (f.p->v >= 0 && garbage.test(f.p->v)) {
+        if (f.p->v >= 0 && garbage[f.p->v]) {
             if (regular) {
                 if (f.p->e[2].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
                     mEdge g{};

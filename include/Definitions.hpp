@@ -16,14 +16,33 @@ namespace dd {
     // std::int_fast8_t can at least address 128 qubits as [0, ..., 127]
     using Qubit = std::int_fast8_t;
 
-    // integer type used for specifying positive/negative controls
-    // currently takes the unsigned type corresponding to how qubits are represented
-    // controls are encoded so that
-    //      `cq % 2 == 0` -> positive control
-    // and
-    //      `cq % 2 == 1` -> negative control
-    // std::uint_fast8_t can encode pos./neg. controls for at least 128 qubits
-    using ControlQubit = std::make_unsigned<Qubit>::type;
+    // integer type used for specifying numbers of qubits
+    using QubitCount = std::make_unsigned<Qubit>::type;
+
+    struct Control {
+        enum class Type : bool { pos = true,
+                                 neg = false };
+
+        Qubit qubit{};
+        Type  type = Type::pos;
+    };
+
+    inline bool operator<(const Control& lhs, const Control& rhs) {
+        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
+    }
+
+    inline bool operator==(const Control& lhs, const Control& rhs) {
+        return lhs.qubit == rhs.qubit && lhs.type == rhs.type;
+    }
+
+    inline bool operator!=(const Control& lhs, const Control& rhs) {
+        return !(lhs == rhs);
+    }
+
+    inline namespace literals {
+        Control operator""_pc(unsigned long long int q);
+        Control operator""_nc(unsigned long long int q);
+    } // namespace literals
 
     // floating point type to use
     using fp = double;
@@ -43,8 +62,6 @@ namespace dd {
     static constexpr std::uint_fast8_t RADIX = 2;
     // max no. of edges = RADIX^2
     static constexpr std::uint_fast8_t NEDGE = RADIX * RADIX;
-
-    static constexpr size_t MAXN = 128; // max no. of inputs TODO: this will be removed in a future update
 
     using GateMatrix           = std::array<ComplexValue, NEDGE>;
     static constexpr fp SQRT_2 = 0.707106781186547524400844362104849039284835937688474036588L;
