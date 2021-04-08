@@ -77,7 +77,10 @@ namespace dd {
         }
 
     private:
-        std::array<Entry, NBUCKET> table{};
+        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
+        /// std::vector shouldn't be any less efficient in our application scenario
+        /// TODO: revisit this in the future
+        std::vector<Entry> table{NBUCKET};
 
         // compute table lookup statistics
         std::size_t hits    = 0;
