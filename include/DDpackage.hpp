@@ -223,10 +223,10 @@ namespace dd {
         /// Unique tables, Reference counting and garbage collection
         ///
     public:
-        static constexpr std::size_t NBUCKET         = 32768;       // number of hash table buckets; must be a power of 2
-        static constexpr std::size_t ALLOCATION_SIZE = 2000;        // may be increased for larger benchmarks to minimize the number of allocations
-        static constexpr std::size_t GCLIMIT         = 250000;      // initial garbage collection limit
-        static constexpr std::size_t GCINCREMENT     = 0;           // garbage collection limit increment
+        static constexpr std::size_t NBUCKET         = 32768;  // number of hash table buckets; must be a power of 2
+        static constexpr std::size_t ALLOCATION_SIZE = 2000;   // may be increased for larger benchmarks to minimize the number of allocations
+        static constexpr std::size_t GCLIMIT         = 250000; // initial garbage collection limit
+        static constexpr std::size_t GCINCREMENT     = 0;      // garbage collection limit increment
 
         // unique tables
         UniqueTable<vEdge, NBUCKET, ALLOCATION_SIZE> vUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
