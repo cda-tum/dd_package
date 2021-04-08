@@ -430,46 +430,6 @@ namespace dd {
         p->ident = true;
     }
 
-    std::size_t Package::hash(const Package::vNode* p) {
-        std::uintptr_t key = 0;
-        key += (reinterpret_cast<std::uintptr_t>(p->e[0].p) +
-                reinterpret_cast<std::uintptr_t>(p->e[0].w.r) +
-                (reinterpret_cast<std::uintptr_t>(p->e[0].w.i) >> 1)) &
-               HASHMASK;
-        key &= HASHMASK;
-        key += ((reinterpret_cast<std::uintptr_t>(p->e[1].p) >> 2) +
-                (reinterpret_cast<std::uintptr_t>(p->e[1].w.r) >> 2) +
-                (reinterpret_cast<std::uintptr_t>(p->e[1].w.i) >> 3)) &
-               HASHMASK;
-        key &= HASHMASK;
-        return key;
-    }
-
-    std::size_t Package::hash(const Package::mNode* p) {
-        std::uintptr_t key = 0;
-        key += ((reinterpret_cast<std::uintptr_t>(p->e[0].p)) +
-                (reinterpret_cast<std::uintptr_t>(p->e[0].w.r)) +
-                (reinterpret_cast<std::uintptr_t>(p->e[0].w.i) >> 1)) &
-               HASHMASK;
-        key &= HASHMASK;
-        key += ((reinterpret_cast<std::uintptr_t>(p->e[1].p) >> 1) +
-                (reinterpret_cast<std::uintptr_t>(p->e[1].w.r) >> 1) +
-                (reinterpret_cast<std::uintptr_t>(p->e[1].w.i) >> 2)) &
-               HASHMASK;
-        key &= HASHMASK;
-        key += ((reinterpret_cast<std::uintptr_t>(p->e[2].p) >> 2) +
-                (reinterpret_cast<std::uintptr_t>(p->e[2].w.r) >> 2) +
-                (reinterpret_cast<std::uintptr_t>(p->e[3].w.i) >> 3)) &
-               HASHMASK;
-        key &= HASHMASK;
-        key += ((reinterpret_cast<std::uintptr_t>(p->e[3].p) >> 3) +
-                (reinterpret_cast<std::uintptr_t>(p->e[3].w.r) >> 3) +
-                (reinterpret_cast<std::uintptr_t>(p->e[3].w.i) >> 4)) &
-               HASHMASK;
-        key &= HASHMASK;
-        return key;
-    }
-
     void Package::garbageCollect(bool force) {
         [[maybe_unused]] auto vCollect = vUniqueTable.garbageCollect(force);
         [[maybe_unused]] auto mCollect = mUniqueTable.garbageCollect(force);
@@ -681,7 +641,7 @@ namespace dd {
         }
 
         // check in compute table
-        auto r = matrixTranspose.lookup(a, a);
+        auto r = matrixTranspose.lookup(a);
         if (r.p != nullptr) {
             return r;
         }
@@ -701,7 +661,7 @@ namespace dd {
         r.w = cn.lookup(c);
 
         // put in compute table
-        matrixTranspose.insert(a, a, r);
+        matrixTranspose.insert(a, r);
         return r;
     }
 
@@ -715,7 +675,7 @@ namespace dd {
         }
 
         // check if in compute table
-        auto r = conjugateMatrixTranspose.lookup(a, a);
+        auto r = conjugateMatrixTranspose.lookup(a);
         if (r.p != nullptr) {
             return r;
         }
@@ -736,7 +696,7 @@ namespace dd {
         r.w = cn.lookup(c);
 
         // put it in the compute table
-        conjugateMatrixTranspose.insert(a, a, r);
+        conjugateMatrixTranspose.insert(a, r);
         return r;
     }
 

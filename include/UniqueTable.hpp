@@ -16,8 +16,10 @@
 
 namespace dd {
 
-    template<class Node, class Edge, std::size_t (*hash)(const Node*), std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 2000>
+    template<class Edge, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 2000>
     class UniqueTable {
+        using Node = std::remove_pointer_t<decltype(Edge::p)>;
+
     public:
         explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0):
             nvars(nvars), gcInitialLimit(gcLimit), gcLimit(gcLimit), gcIncrement(gcIncrement) {}
@@ -26,12 +28,26 @@ namespace dd {
             for (auto chunk: chunks) delete[] chunk;
         }
 
+        static constexpr size_t MASK = NBUCKET - 1;
+
         void resize(std::size_t nq) {
             nvars = nq;
             tables.resize(nq);
             // TODO: if the new size is smaller than the old one we might have to release the unique table entries for the superfluous variables
             active.resize(nq);
             activeNodeCount = std::accumulate(active.begin(), active.end(), 0UL);
+        }
+
+        static std::size_t hash(const Node* p) {
+            std::uintptr_t key = 0;
+            for (std::size_t i = 0; i < p->e.size(); ++i) {
+                key += ((reinterpret_cast<std::uintptr_t>(p->e[i].p) >> i) +
+                        (reinterpret_cast<std::uintptr_t>(p->e[i].w.r) >> i) +
+                        (reinterpret_cast<std::uintptr_t>(p->e[i].w.i) >> (i + 1))) &
+                       MASK;
+                key &= MASK;
+            }
+            return key;
         }
 
         // access functions
@@ -117,7 +133,6 @@ namespace dd {
         // increment reference counter for node e points to
         // and recursively increment reference counter for
         // each child if this is the first reference
-
         void incRef(const Edge& e) {
             dd::ComplexNumbers::incRef(e.w);
             if (isTerminal(e))

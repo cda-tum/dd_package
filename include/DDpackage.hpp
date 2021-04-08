@@ -11,6 +11,7 @@
 #include "Definitions.hpp"
 #include "OperationTable.hpp"
 #include "ToffoliTable.hpp"
+#include "UnaryComputeTable.hpp"
 #include "UniqueTable.hpp"
 
 #include <algorithm>
@@ -102,43 +103,48 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
     public:
-        struct vNode;
-        struct vEdge {
-            vNode*  p;
+        template<class Node>
+        struct Edge {
+            Node*   p;
             Complex w;
 
-            constexpr bool operator==(const vEdge& other) const {
+            constexpr bool operator==(const Edge& other) const {
                 return p == other.p && CN::equals(w, other.w);
             }
-            constexpr bool operator!=(const vEdge& other) const {
+            constexpr bool operator!=(const Edge& other) const {
                 return !operator==(other);
             }
         };
-        struct vNode {
-            vNode*                   next = nullptr; // link for unique table and available space chain
-            std::array<vEdge, RADIX> e{};            // edges out of this node
-            std::size_t              ref{};          // reference count
-            Qubit                    v{};            // variable index (nonterminal) value (-1 for terminal)
-        };
-        struct vCachedEdge {
-            vNode*       p{};
+
+        template<typename Node>
+        struct CachedEdge {
+            Node*        p{};
             ComplexValue w{};
 
-            vCachedEdge() = default;
-            vCachedEdge(vNode* p, const ComplexValue& w):
+            CachedEdge() = default;
+            CachedEdge(Node* p, const ComplexValue& w):
                 p(p), w(w) {}
-            vCachedEdge(vNode* p, const Complex& c):
+            CachedEdge(Node* p, const Complex& c):
                 p(p) {
                 w.r = CN::val(c.r);
                 w.i = CN::val(c.i);
             }
-            bool operator==(const vCachedEdge& other) const {
+            bool operator==(const CachedEdge& other) const {
                 return p == other.p && CN::equals(w, other.w);
             }
-            bool operator!=(const vCachedEdge& other) const {
+            bool operator!=(const CachedEdge& other) const {
                 return !operator==(other);
             }
         };
+
+        struct vNode {
+            vNode*                         next = nullptr; // link for unique table and available space chain
+            std::array<Edge<vNode>, RADIX> e{};            // edges out of this node
+            std::size_t                    ref{};          // reference count
+            Qubit                          v{};            // variable index (nonterminal) value (-1 for terminal)
+        };
+        using vEdge       = Edge<vNode>;
+        using vCachedEdge = CachedEdge<vNode>;
 
         static vEdge makeVectorTerminal(const Complex& w) { return {vTerminalNode, w}; }
         // make a vector DD node and return an edge pointing to it. The node is not recreated if it already exists.
@@ -169,46 +175,16 @@ namespace dd {
         /// Matrix nodes, edges and quantum gates
         ///
     public:
-        struct mNode;
-        struct mEdge {
-            mNode*  p;
-            Complex w;
-
-            constexpr bool operator==(const mEdge& other) const {
-                return p == other.p && CN::equals(w, other.w);
-            }
-            constexpr bool operator!=(const mEdge& other) const {
-                return !operator==(other);
-            }
-        };
-
         struct mNode {
-            mNode*                   next = nullptr; // link for unique table and available space chain
-            std::array<mEdge, NEDGE> e{};            // edges out of this node
-            std::size_t              ref{};          // reference count
-            Qubit                    v{};            // variable index (nonterminal) value (-1 for terminal)
-            bool                     symm  = false;  // node is symmetric
-            bool                     ident = false;  // node resembles identity
+            mNode*                         next = nullptr; // link for unique table and available space chain
+            std::array<Edge<mNode>, NEDGE> e{};            // edges out of this node
+            std::size_t                    ref{};          // reference count
+            Qubit                          v{};            // variable index (nonterminal) value (-1 for terminal)
+            bool                           symm  = false;  // node is symmetric
+            bool                           ident = false;  // node resembles identity
         };
-        struct mCachedEdge {
-            mNode*       p{};
-            ComplexValue w{};
-
-            mCachedEdge() = default;
-            mCachedEdge(mNode* p, const ComplexValue& w):
-                p(p), w(w) {}
-            mCachedEdge(mNode* p, const Complex& c):
-                p(p) {
-                w.r = CN::val(c.r);
-                w.i = CN::val(c.i);
-            }
-            bool operator==(const mCachedEdge& other) const {
-                return p == other.p && CN::equals(w, other.w);
-            }
-            bool operator!=(const mCachedEdge& other) const {
-                return !operator==(other);
-            }
-        };
+        using mEdge       = Edge<mNode>;
+        using mCachedEdge = CachedEdge<mNode>;
 
         static mEdge makeMatrixTerminal(const Complex& w) { return {mTerminalNode, w}; }
         // make a matrix DD node and return an edge pointing to it. The node is not recreated if it already exists.
@@ -248,22 +224,17 @@ namespace dd {
         ///
     public:
         static constexpr std::size_t NBUCKET         = 32768;       // number of hash table buckets; must be a power of 2
-        static constexpr std::size_t HASHMASK        = NBUCKET - 1; // must be nbuckets-1
         static constexpr std::size_t ALLOCATION_SIZE = 2000;        // may be increased for larger benchmarks to minimize the number of allocations
         static constexpr std::size_t GCLIMIT         = 250000;      // initial garbage collection limit
         static constexpr std::size_t GCINCREMENT     = 0;           // garbage collection limit increment
 
-        // hash functions
-        static std::size_t hash(const vNode* p);
-        static std::size_t hash(const mNode* p);
-
         // unique tables
-        UniqueTable<vNode, vEdge, hash, NBUCKET, ALLOCATION_SIZE> vUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
+        UniqueTable<vEdge, NBUCKET, ALLOCATION_SIZE> vUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
 
         void incRef(const vEdge& e) { vUniqueTable.incRef(e); }
         void decRef(const vEdge& e) { vUniqueTable.decRef(e); }
 
-        UniqueTable<mNode, mEdge, hash, NBUCKET, ALLOCATION_SIZE> mUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
+        UniqueTable<mEdge, NBUCKET, ALLOCATION_SIZE> mUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
 
         void incRef(const mEdge& e) { mUniqueTable.incRef(e); }
         void decRef(const mEdge& e) { mUniqueTable.decRef(e); }
@@ -336,8 +307,8 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        ComputeTable<mEdge, mEdge, mEdge, computeHash<mEdge, mEdge>, CTSLOTS> matrixTranspose{};
-        ComputeTable<mEdge, mEdge, mEdge, computeHash<mEdge, mEdge>, CTSLOTS> conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CTSLOTS> matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CTSLOTS> conjugateMatrixTranspose{};
 
         mEdge transpose(const mEdge& a);
         mEdge conjugateTranspose(const mEdge& a);
@@ -572,7 +543,7 @@ namespace dd {
             sst << "0x" << std::hex << reinterpret_cast<std::uintptr_t>(p) << std::dec
                 << "[v=" << static_cast<std::int_fast64_t>(p->v)
                 << " ref=" << p->ref
-                << " hash=" << hash(p)
+                //                << " hash=" << hash(p) TODO: reinclude this
                 << "]";
             return sst.str();
         }

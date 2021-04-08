@@ -454,7 +454,7 @@ TEST(DDPackageTest, PackageReset) {
     auto        i_gate = dd->makeIdent(1);
     const auto& unique = dd->mUniqueTable.getTables();
     const auto& table  = unique[0];
-    auto        ihash  = dd->hash(i_gate.p);
+    auto        ihash  = dd->mUniqueTable.hash(i_gate.p);
     const auto& bucket = table[ihash];
     std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
     // node should be the first in this unique table bucket
@@ -469,7 +469,7 @@ TEST(DDPackageTest, PackageReset) {
 
     // two nodes in same unique table bucket of variable 0
     auto z_gate = dd->makeGateDD(dd::Zmat, 1, 0);
-    auto zhash  = dd->hash(z_gate.p);
+    auto zhash  = dd->mUniqueTable.hash(z_gate.p);
     std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
     // both nodes should reside in the same bucket
     EXPECT_EQ(table[ihash], z_gate.p);
