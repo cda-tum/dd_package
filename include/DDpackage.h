@@ -261,6 +261,8 @@ namespace dd {
         };
         ~Package();
 
+        [[nodiscard]] unsigned short qubits() const { return nqubits; }
+
         /// Set normalization mode
         void setMode(const Mode m) {
             mode = m;

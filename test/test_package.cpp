@@ -36,6 +36,7 @@ TEST(DDPackageTest, OperationLookupTest) {
 
 TEST(DDPackageTest, TrivialTest) {
     auto dd = std::make_unique<dd::Package>(2);
+    EXPECT_EQ(dd->qubits(), 2);
 
     dd::Edge x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
     dd::Edge h_gate = dd->makeGateDD(dd::Hmat, 1, 0);
