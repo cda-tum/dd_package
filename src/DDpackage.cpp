@@ -200,7 +200,7 @@ namespace dd {
         assert(n <= nqubits);
 
         auto f = vOne;
-        for (std::size_t p = 0; p <= n; ++p) {
+        for (std::size_t p = 0; p < n; ++p) {
             if (state[p] == 0) {
                 f = makeVectorNode(static_cast<Qubit>(p), {f, vZero});
             } else {
