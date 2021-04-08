@@ -111,17 +111,17 @@ TEST(DDPackageTest, PartialIdentityTrace) {
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
-    unsigned short nqubits = 12;
+    unsigned short nqubits = 6;
     auto           dd      = std::make_unique<dd::Package>(nqubits);
     auto           b       = std::vector<bool>(nqubits, false);
     b[0] = b[1] = true;
-    auto e      = dd->makeBasisState(nqubits / 2, b);
-    auto f      = dd->makeBasisState(nqubits / 2, {dd::BasisStates::zero,
-                                              dd::BasisStates::one,
-                                              dd::BasisStates::plus,
-                                              dd::BasisStates::minus,
-                                              dd::BasisStates::left,
-                                              dd::BasisStates::right});
+    auto e      = dd->makeBasisState(nqubits, b);
+    auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero,
+                                          dd::BasisStates::one,
+                                          dd::BasisStates::plus,
+                                          dd::BasisStates::minus,
+                                          dd::BasisStates::left,
+                                          dd::BasisStates::right});
     dd->incRef(e);
     dd->incRef(f);
     dd->incRef(e);
@@ -130,6 +130,8 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     auto i = dd->conjugateTranspose(f);
     dd->decRef(e);
     dd->decRef(f);
+    nqubits = 12;
+    dd->resize(nqubits);
     auto j = dd->kronecker(h, i);
     dd->incRef(j);
     dd->printActive(nqubits);

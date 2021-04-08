@@ -262,6 +262,12 @@ namespace dd {
         ~Package();
 
         [[nodiscard]] unsigned short qubits() const { return nqubits; }
+        void                         resize(unsigned short nq) {
+            nqubits = nq;
+            IdTable.resize(nqubits);
+            Unique.resize(nqubits);
+            active.resize(nqubits);
+        }
 
         /// Set normalization mode
         void setMode(const Mode m) {
