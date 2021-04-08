@@ -46,7 +46,7 @@ namespace dd {
         }
         void insert(QubitCount n, OperationKind kind, const std::set<Control>& controls, Qubit target, const Edge& r) {
             const auto key = hash(kind, controls, target);
-            table[key]     = {.n = n, .kind = kind, .r = r, .controls = controls, .target = target};
+            table[key]     = {.n = n, .kind = kind, .controls = controls, .target = target, .r = r};
             ++count;
         }
 
