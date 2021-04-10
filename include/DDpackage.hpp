@@ -438,7 +438,7 @@ namespace dd {
         unsigned int nodeCount(const Edge& e, std::unordered_set<decltype(e.p)>& v) const {
             v.insert(e.p);
             unsigned int sum = 1;
-            if (!isTerminal(e)) {
+            if (!e.isTerminal()) {
                 for (const auto& edge: e.p->e) {
                     if (edge.p != nullptr && !v.count(edge.p)) {
                         sum += nodeCount(edge, v);
