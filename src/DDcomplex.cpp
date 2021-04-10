@@ -9,11 +9,6 @@
 #include <sstream>
 
 namespace dd {
-    ComplexTableEntry  ComplexNumbers::zeroEntry{0., nullptr, 1};
-    ComplexTableEntry  ComplexNumbers::oneEntry{1., nullptr, 1};
-    ComplexTableEntry* ComplexNumbers::moneEntryPointer{getNegativePointer(&oneEntry)};
-    fp                 ComplexNumbers::TOLERANCE = 1e-13;
-
     ComplexNumbers::ComplexNumbers() {
         Cache_Avail_Initial_Pointer = new ComplexTableEntry[CACHE_SIZE];
         Cache_Avail                 = Cache_Avail_Initial_Pointer;

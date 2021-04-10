@@ -8,6 +8,8 @@
 
 #include <array>
 #include <cstdint>
+#include <iostream>
+#include <string>
 #include <vector>
 
 namespace dd {
@@ -40,8 +42,8 @@ namespace dd {
     }
 
     inline namespace literals {
-        Control operator""_pc(unsigned long long int q);
-        Control operator""_nc(unsigned long long int q);
+        inline Control operator""_pc(unsigned long long int q) { return {static_cast<Qubit>(q)}; }
+        inline Control operator""_nc(unsigned long long int q) { return {static_cast<Qubit>(q), Control::Type::neg}; }
     } // namespace literals
 
     // floating point type to use
@@ -68,6 +70,8 @@ namespace dd {
 
     using CVec = std::vector<std::pair<float, float>>;
     using CMat = std::vector<CVec>;
+
+    static constexpr double SERIALIZATION_VERSION = 0.1;
 
 } // namespace dd
 #endif //DDpackage_DATATYPES_HPP

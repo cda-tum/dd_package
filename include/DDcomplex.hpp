@@ -40,9 +40,9 @@ namespace dd {
             ComplexChunk*      next;
         };
 
-        static ComplexTableEntry  zeroEntry;
-        static ComplexTableEntry  oneEntry;
-        static ComplexTableEntry* moneEntryPointer;
+        static inline ComplexTableEntry zeroEntry{0., nullptr, 1};
+        static inline ComplexTableEntry oneEntry{1., nullptr, 1};
+        static ComplexTableEntry*       moneEntryPointer;
 
         ComplexTableEntry* lookupVal(const fp& val);
         ComplexTableEntry* getComplexTableEntry();
@@ -58,7 +58,7 @@ namespace dd {
         static constexpr unsigned short NBUCKET     = 32768;
         static constexpr std::size_t    GCLIMIT     = 100000;
         static constexpr std::size_t    GCINCREMENT = 0;
-        static fp                       TOLERANCE;
+        static inline fp                TOLERANCE   = 1e-13;
 
         std::array<ComplexTableEntry*, NBUCKET> ComplexTable{};
         ComplexTableEntry*                      Avail                       = nullptr;
@@ -273,6 +273,8 @@ namespace dd {
 
         static std::string toString(const Complex& c, bool formatted = true, int precision = -1);
     };
+
+    inline ComplexTableEntry* ComplexNumbers::moneEntryPointer{getNegativePointer(&oneEntry)};
 
     std::ostream& operator<<(std::ostream& os, const Complex& c);
 
