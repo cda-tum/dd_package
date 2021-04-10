@@ -13,7 +13,6 @@
 #include <unordered_map>
 
 namespace dd {
-    static constexpr double SERIALIZATION_VERSION = 0.1;
 
     struct RGB {
         fp R = 0., G = 0., B = 0.;
