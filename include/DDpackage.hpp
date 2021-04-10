@@ -128,6 +128,35 @@ namespace dd {
             [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == CN::ONE; }
         };
 
+        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        template<class Node>
+        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
+            auto&      uniqueTable = getUniqueTable<Node>();
+            Edge<Node> e{uniqueTable.getNode(), CN::ONE};
+            e.p->v = var;
+            e.p->e = edges;
+
+            assert(e.p->ref == 0);
+            for ([[maybe_unused]] const auto& edge: edges)
+                assert(edge.p->v == var - 1 || edge.isTerminal());
+
+            // normalize it
+            e = normalize(e, cached);
+            assert(e.p->v == var || e.isTerminal());
+
+            // look it up in the unique tables
+            auto l = uniqueTable.lookup(e, false);
+            assert(l.p->v == var || l.isTerminal());
+
+            // set specific node properties for matrices
+            if constexpr (std::tuple_size_v<decltype(Node::e)> == NEDGE) {
+                if (l.p == e.p)
+                    checkSpecialMatrices(l.p);
+            }
+
+            return l;
+        }
+
     private:
         template<typename Node>
         struct CachedEdge {
@@ -167,8 +196,6 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
-        // make a vector DD node and return an edge pointing to it. The node is not recreated if it already exists.
-        vEdge makeNode(Qubit var, const std::array<vEdge, RADIX>& edge, bool cached = false);
         vEdge normalize(const vEdge& e, bool cached);
 
         // generate |0...0> with n qubits
@@ -197,8 +224,6 @@ namespace dd {
         using mEdge       = Edge<mNode>;
         using mCachedEdge = CachedEdge<mNode>;
 
-        // make a matrix DD node and return an edge pointing to it. The node is not recreated if it already exists.
-        mEdge makeNode(Qubit var, const std::array<mEdge, NEDGE>& edge, bool cached = false);
         mEdge normalize(const mEdge& e, bool cached);
 
         // build matrix representation for a single gate on an n-qubit circuit
@@ -222,6 +247,9 @@ namespace dd {
         ///
     public:
         // unique tables
+        template<class Node>
+        [[nodiscard]] UniqueTable<Edge<Node>>& getUniqueTable();
+
         UniqueTable<vEdge> vUniqueTable{nqubits};
 
         void incRef(const vEdge& e) { vUniqueTable.incRef(e); }
@@ -638,7 +666,7 @@ namespace dd {
                 }
             }
 
-            auto newedge = makeNode(v, edges);
+            auto newedge = makeDDNode(v, edges);
             nodes[index] = newedge.p;
 
             // reset
@@ -813,5 +841,11 @@ namespace dd {
             .v     = -1,
             .symm  = true,
             .ident = true};
+
+    template<>
+    [[nodiscard]] inline UniqueTable<Package::vEdge>& Package::getUniqueTable() { return vUniqueTable; }
+
+    template<>
+    [[nodiscard]] inline UniqueTable<Package::mEdge>& Package::getUniqueTable() { return mUniqueTable; }
 } // namespace dd
 #endif

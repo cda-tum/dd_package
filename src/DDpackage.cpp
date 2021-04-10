@@ -65,25 +65,6 @@ namespace dd {
         operations.printStatistics();
     }
 
-    Package::vEdge Package::makeNode(const Qubit var, const std::array<vEdge, RADIX>& edge, bool cached) {
-        vEdge e{vUniqueTable.getNode(), CN::ONE};
-        e.p->v = var;
-        e.p->e = edge;
-        assert(e.p->ref == 0);
-        assert(var - 1 == edge[0].p->v || edge[0].isTerminal());
-        assert(var - 1 == edge[1].p->v || edge[1].isTerminal());
-
-        // normalize it
-        e = normalize(e, cached);
-        assert(e.p->v == var || e.isTerminal());
-
-        // look it up in the unique tables
-        e = vUniqueTable.lookup(e, false);
-        assert(e.p->v == var || e.isTerminal());
-
-        return e;
-    }
-
     Package::vEdge Package::normalize(const Package::vEdge& e, bool cached) {
         auto argmax = -1;
 
@@ -172,7 +153,7 @@ namespace dd {
 
         auto f = vEdge::one;
         for (std::size_t p = 0; p < n; p++) {
-            f = makeNode(static_cast<Qubit>(p), {f, vEdge::zero});
+            f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
         }
         return f;
     }
@@ -183,9 +164,9 @@ namespace dd {
         auto f = vEdge::one;
         for (std::size_t p = 0; p < n; ++p) {
             if (state[p] == 0) {
-                f = makeNode(static_cast<Qubit>(p), {f, vEdge::zero});
+                f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
             } else {
-                f = makeNode(static_cast<Qubit>(p), {vEdge::zero, f});
+                f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
             }
         }
         return f;
@@ -202,51 +183,26 @@ namespace dd {
         for (std::size_t p = 0; p < n; ++p) {
             switch (state[p]) {
                 case BasisStates::zero:
-                    f = makeNode(static_cast<Qubit>(p), {f, vEdge::zero});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
                     break;
                 case BasisStates::one:
-                    f = makeNode(static_cast<Qubit>(p), {vEdge::zero, f});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
                     break;
                 case BasisStates::plus:
-                    f = makeNode(static_cast<Qubit>(p), {{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(CN::SQRT_2, 0)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(CN::SQRT_2, 0)}}});
                     break;
                 case BasisStates::minus:
-                    f = makeNode(static_cast<Qubit>(p), {{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(-CN::SQRT_2, 0)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(-CN::SQRT_2, 0)}}});
                     break;
                 case BasisStates::right:
-                    f = makeNode(static_cast<Qubit>(p), {{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, CN::SQRT_2)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, CN::SQRT_2)}}});
                     break;
                 case BasisStates::left:
-                    f = makeNode(static_cast<Qubit>(p), {{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, -CN::SQRT_2)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, -CN::SQRT_2)}}});
                     break;
             }
         }
         return f;
-    }
-
-    Package::mEdge Package::makeNode(const Qubit var, const std::array<mEdge, NEDGE>& edge, bool cached) {
-        mEdge e{mUniqueTable.getNode(), CN::ONE};
-        e.p->v = var;
-        e.p->e = edge;
-        assert(e.p->ref == 0);
-        assert(var - 1 == edge[0].p->v || edge[0].isTerminal());
-        assert(var - 1 == edge[1].p->v || edge[1].isTerminal());
-        assert(var - 1 == edge[2].p->v || edge[2].isTerminal());
-        assert(var - 1 == edge[3].p->v || edge[3].isTerminal());
-
-        // normalize it
-        e = normalize(e, cached);
-        assert(e.p->v == var || e.isTerminal());
-
-        // look it up in the unique tables
-        auto l = mUniqueTable.lookup(e, false);
-        assert(l.p->v == var || l.isTerminal());
-
-        // set specific node properties
-        if (l.p == e.p)
-            checkSpecialMatrices(l.p);
-
-        return l;
     }
 
     Package::mEdge Package::normalize(const Package::mEdge& e, bool cached) {
@@ -358,12 +314,12 @@ namespace dd {
                     auto i = i1 * RADIX + i2;
                     if (it != controls.end() && it->qubit == z) {
                         if (it->type == Control::Type::neg) { // neg. control
-                            em[i] = makeNode(z, {em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(z) : mEdge::zero});
+                            em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(z) : mEdge::zero});
                         } else { // pos. control
-                            em[i] = makeNode(z, {(i1 == i2) ? makeIdent(z) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
+                            em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(z) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
                         }
                     } else { // not connected
-                        em[i] = makeNode(z, {em[i], mEdge::zero, mEdge::zero, em[i]});
+                        em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, em[i]});
                     }
                 }
             }
@@ -373,20 +329,20 @@ namespace dd {
         }
 
         // target line
-        auto e = makeNode(z, em);
+        auto e = makeDDNode(z, em);
 
         //process lines above target
         for (; z < static_cast<Qubit>(n - 1); z++) {
             auto q = static_cast<Qubit>(z + 1);
             if (it != controls.end() && it->qubit == q) {
                 if (it->type == Control::Type::neg) { // neg. control
-                    e = makeNode(q, {e, mEdge::zero, mEdge::zero, makeIdent(q)});
+                    e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(q)});
                 } else { // pos. control
-                    e = makeNode(q, {makeIdent(q), mEdge::zero, mEdge::zero, e});
+                    e = makeDDNode(q, std::array{makeIdent(q), mEdge::zero, mEdge::zero, e});
                 }
                 ++it;
             } else { // not connected
-                e = makeNode(q, {e, mEdge::zero, mEdge::zero, e});
+                e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, e});
             }
         }
         return e;
@@ -522,7 +478,7 @@ namespace dd {
             }
         }
 
-        auto e = makeNode(w, edge, true);
+        auto e = makeDDNode(w, edge, true);
         vectorAdd.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w});
         return e;
     }
@@ -611,7 +567,7 @@ namespace dd {
             }
         }
 
-        auto e = makeNode(w, edge, true);
+        auto e = makeDDNode(w, edge, true);
         matrixAdd.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w});
         return e;
     }
@@ -635,7 +591,7 @@ namespace dd {
             }
         }
         // create new top node
-        r = makeNode(a.p->v, e);
+        r = makeDDNode(a.p->v, e);
         // adjust top weight
         auto c = cn.getTempCachedComplex();
         CN::mul(c, r.w, a.w);
@@ -669,7 +625,7 @@ namespace dd {
             }
         }
         // create new top node
-        r = makeNode(a.p->v, e);
+        r = makeDDNode(a.p->v, e);
 
         auto c = cn.getTempCachedComplex();
         // adjust top weight including conjugate
@@ -757,7 +713,7 @@ namespace dd {
                 }
             }
         }
-        e = makeNode(var, edge, true);
+        e = makeDDNode(var, edge, true);
 
         matrixVectorMultiplication.insert(xCopy, yCopy, {e.p, e.w});
 
@@ -868,7 +824,7 @@ namespace dd {
                 }
             }
         }
-        e = makeNode(var, edge, true);
+        e = makeDDNode(var, edge, true);
 
         matrixMultiplication.insert(xCopy, yCopy, {e.p, e.w});
 
@@ -994,7 +950,7 @@ namespace dd {
         auto e0 = kronecker2(x.p->e[0], y);
         auto e1 = kronecker2(x.p->e[1], y);
 
-        auto e = makeNode(static_cast<Qubit>(y.p->v + x.p->v + 1), {e0, e1}, true);
+        auto e = makeDDNode(static_cast<Qubit>(y.p->v + x.p->v + 1), std::array{e0, e1}, true);
         CN::mul(e.w, e.w, x.w);
         vectorKronecker.insert(x, y, {e.p, e.w});
         return e;
@@ -1020,9 +976,9 @@ namespace dd {
         }
 
         if (x.p->ident) {
-            auto e = makeNode(static_cast<Qubit>(y.p->v + 1), {y, mEdge::zero, mEdge::zero, y});
+            auto e = makeDDNode(static_cast<Qubit>(y.p->v + 1), std::array{y, mEdge::zero, mEdge::zero, y});
             for (auto i = 0; i < x.p->v; ++i) {
-                e = makeNode(static_cast<Qubit>(e.p->v + 1), {e, mEdge::zero, mEdge::zero, e});
+                e = makeDDNode(static_cast<Qubit>(e.p->v + 1), std::array{e, mEdge::zero, mEdge::zero, e});
             }
 
             e.w = cn.getCachedComplex(CN::val(y.w.r), CN::val(y.w.i));
@@ -1035,7 +991,7 @@ namespace dd {
         auto e2 = kronecker2(x.p->e[2], y);
         auto e3 = kronecker2(x.p->e[3], y);
 
-        auto e = makeNode(static_cast<Qubit>(y.p->v + x.p->v + 1), {e0, e1, e2, e3}, true);
+        auto e = makeDDNode(static_cast<Qubit>(y.p->v + x.p->v + 1), std::array{e0, e1, e2, e3}, true);
         CN::mul(e.w, e.w, x.w);
         matrixKronecker.insert(x, y, {e.p, e.w});
         return e;
@@ -1107,7 +1063,7 @@ namespace dd {
                            a.p->e.cend(),
                            edge.begin(),
                            [&](const mEdge& e) -> mEdge { return trace(e, eliminate, alreadyEliminated); });
-            auto r = makeNode(adjustedV, edge);
+            auto r = makeDDNode(adjustedV, edge);
 
             if (r.w == CN::ONE) {
                 r.w = a.w;
@@ -1128,17 +1084,17 @@ namespace dd {
             return IdTable[mostSignificantQubit];
         }
         if (mostSignificantQubit >= 1 && (IdTable[mostSignificantQubit - 1]).p != nullptr) {
-            IdTable[mostSignificantQubit] = makeNode(mostSignificantQubit,
-                                                     {IdTable[mostSignificantQubit - 1],
-                                                      mEdge::zero,
-                                                      mEdge::zero,
-                                                      IdTable[mostSignificantQubit - 1]});
+            IdTable[mostSignificantQubit] = makeDDNode(mostSignificantQubit,
+                                                       std::array{IdTable[mostSignificantQubit - 1],
+                                                                  mEdge::zero,
+                                                                  mEdge::zero,
+                                                                  IdTable[mostSignificantQubit - 1]});
             return IdTable[mostSignificantQubit];
         }
 
-        auto e = makeNode(leastSignificantQubit, {mEdge::one, mEdge::zero, mEdge::zero, mEdge::one});
+        auto e = makeDDNode(leastSignificantQubit, std::array{mEdge::one, mEdge::zero, mEdge::zero, mEdge::one});
         for (std::size_t k = leastSignificantQubit + 1; k <= std::make_unsigned_t<Qubit>(mostSignificantQubit); k++) {
-            e = makeNode(static_cast<Qubit>(k), {e, mEdge::zero, mEdge::zero, e});
+            e = makeDDNode(static_cast<Qubit>(k), std::array{e, mEdge::zero, mEdge::zero, e});
         }
         if (leastSignificantQubit == 0)
             IdTable[mostSignificantQubit] = e;
@@ -1210,17 +1166,17 @@ namespace dd {
                 handled.set(i);
             }
         }
-        f = makeNode(f.p->v, edges);
+        f = makeDDNode(f.p->v, edges);
 
         // something to reduce for this qubit
         if (f.p->v >= 0 && ancillary[f.p->v]) {
             if (regular) {
                 if (f.p->e[1].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
-                    f = makeNode(f.p->v, {f.p->e[0], mEdge::zero, f.p->e[2], mEdge::zero});
+                    f = makeDDNode(f.p->v, std::array{f.p->e[0], mEdge::zero, f.p->e[2], mEdge::zero});
                 }
             } else {
                 if (f.p->e[2].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
-                    f = makeNode(f.p->v, {f.p->e[0], f.p->e[1], mEdge::zero, mEdge::zero});
+                    f = makeDDNode(f.p->v, std::array{f.p->e[0], f.p->e[1], mEdge::zero, mEdge::zero});
                 }
             }
         }
@@ -1257,7 +1213,7 @@ namespace dd {
                 handled.set(i);
             }
         }
-        f = makeNode(f.p->v, edges);
+        f = makeDDNode(f.p->v, edges);
 
         // something to reduce for this qubit
         if (f.p->v >= 0 && garbage[f.p->v]) {
@@ -1270,7 +1226,7 @@ namespace dd {
                 } else {
                     g = f.p->e[0];
                 }
-                f = makeNode(e.p->v, {g, vEdge::zero});
+                f = makeDDNode(e.p->v, std::array{g, vEdge::zero});
             }
         }
 
@@ -1310,7 +1266,7 @@ namespace dd {
                 handled.set(i);
             }
         }
-        f = makeNode(f.p->v, edges);
+        f = makeDDNode(f.p->v, edges);
 
         // something to reduce for this qubit
         if (f.p->v >= 0 && garbage[f.p->v]) {
@@ -1332,7 +1288,7 @@ namespace dd {
                     } else {
                         h = f.p->e[1];
                     }
-                    f = makeNode(e.p->v, {g, h, mEdge::zero, mEdge::zero});
+                    f = makeDDNode(e.p->v, std::array{g, h, mEdge::zero, mEdge::zero});
                 }
             } else {
                 if (f.p->e[1].w != CN::ZERO || f.p->e[3].w != CN::ZERO) {
@@ -1352,7 +1308,7 @@ namespace dd {
                     } else {
                         h = f.p->e[2];
                     }
-                    f = makeNode(e.p->v, {g, mEdge::zero, h, mEdge::zero});
+                    f = makeDDNode(e.p->v, std::array{g, mEdge::zero, h, mEdge::zero});
                 }
             }
         }

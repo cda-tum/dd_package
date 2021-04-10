@@ -115,6 +115,8 @@ namespace dd {
             if (!available.empty()) {
                 auto p = available.top();
                 available.pop();
+                // returned nodes could have a ref count != 0
+                p->ref = 0;
                 return p;
             }
 
