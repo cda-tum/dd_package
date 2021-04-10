@@ -47,7 +47,7 @@ namespace dd {
         auto toplabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U;
         auto mag      = thicknessFromMagnitude(e.w);
         os << "root->";
-        if (dd::Package::isTerminal(e)) {
+        if (e.isTerminal()) {
             os << "t";
         } else {
             os << toplabel;
@@ -74,7 +74,7 @@ namespace dd {
         auto mag      = thicknessFromMagnitude(e.w);
         auto color    = colorFromPhase(e.w);
         os << "root->";
-        if (dd::Package::isTerminal(e)) {
+        if (e.isTerminal()) {
             os << "t";
         } else {
             os << toplabel;
@@ -121,7 +121,7 @@ namespace dd {
             q.pop();
 
             // base case
-            if (Package::isTerminal(*node))
+            if (node->isTerminal())
                 continue;
 
             // check if node has already been processed
@@ -173,7 +173,6 @@ namespace dd {
     }
 
     ComplexValue toComplexValue(const std::string& real_str, std::string imag_str);
-    ComplexValue readBinaryAmplitude(std::istream& is);
     void         writeBinaryAmplitude(std::ostream& os, const Complex& w);
 
     void serialize(const Package::vEdge& basic, std::ostream& os, bool writeBinary = false);
@@ -191,15 +190,6 @@ namespace dd {
 
         serialize(basic, ofs, writeBinary);
     }
-
-    Package::vEdge createDeserializedNode(std::unique_ptr<Package>& dd, std::int_fast64_t index, Qubit v, std::array<std::int_fast64_t, RADIX>& edge_idx, std::array<ComplexValue, RADIX>& edge_weight, std::unordered_map<std::int_fast64_t, Package::vNode*>& nodes);
-    Package::mEdge createDeserializedNode(std::unique_ptr<Package>& dd, std::int_fast64_t index, Qubit v, std::array<std::int_fast64_t, NEDGE>& edge_idx, std::array<ComplexValue, NEDGE>& edge_weight, std::unordered_map<std::int_fast64_t, Package::mNode*>& nodes);
-
-    // isVector only used if readBinary is true
-    Package::vEdge deserializeVector(std::unique_ptr<dd::Package>& dd, std::istream& is, bool readBinary = false);
-    Package::vEdge deserializeVector(std::unique_ptr<dd::Package>& dd, const std::string& inputFilename, bool readBinary = false);
-    Package::mEdge deserializeMatrix(std::unique_ptr<dd::Package>& dd, std::istream& is, bool readBinary = false);
-    Package::mEdge deserializeMatrix(std::unique_ptr<dd::Package>& dd, const std::string& inputFilename, bool readBinary = false);
 
 } // namespace dd
 

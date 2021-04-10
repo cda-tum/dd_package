@@ -9,24 +9,31 @@
 #include "Definitions.hpp"
 
 #include <array>
+#include <forward_list>
 #include <functional>
 #include <limits>
 #include <numeric>
+#include <stack>
 #include <vector>
 
 namespace dd {
 
-    template<class Edge, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 2000>
+    template<class Edge, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000>
     class UniqueTable {
         using Node = std::remove_pointer_t<decltype(Edge::p)>;
 
     public:
-        explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0):
-            nvars(nvars), gcInitialLimit(gcLimit), gcLimit(gcLimit), gcIncrement(gcIncrement) {}
-
-        ~UniqueTable() {
-            for (auto chunk: chunks) delete[] chunk;
+        explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0, float growthFactor = 1.5):
+            chunkID(0), growthFactor(growthFactor), nvars(nvars), gcInitialLimit(gcLimit), gcLimit(gcLimit), gcIncrement(gcIncrement) {
+            // allocate first chunk of nodes
+            allocationSize = INITIAL_ALLOCATION_SIZE;
+            chunks.emplace_back(allocationSize);
+            allocationSize *= growthFactor;
+            chunkIt    = chunks[0].begin();
+            chunkEndIt = chunks[0].end();
         }
+
+        ~UniqueTable() = default;
 
         static constexpr size_t MASK = NBUCKET - 1;
 
@@ -71,63 +78,62 @@ namespace dd {
             for ([[maybe_unused]] const auto& edge: e.p->e)
                 assert(edge.p->v == v - 1 || isTerminal(edge));
 
-            auto p = tables[v][key];
-            while (p != nullptr) {
-                if (e.p->e == p->e) {
+            auto& bucket = tables[v][key];
+            auto  it     = bucket.begin();
+            while (it != bucket.end()) {
+                if (e.p->e == (*it)->e) {
                     // Match found
-                    if (e.p != p && !keepNode) {
+                    if (e.p != (*it) && !keepNode) {
                         // put node pointed to by e.p on available chain
                         returnNode(e.p);
                     }
                     hits++;
 
                     // variables should stay the same
-                    assert(p->v == e.p->v);
+                    assert((*it)->v == e.p->v);
+
                     // successors of a node shall either have successive variable numbers or be terminals
                     for ([[maybe_unused]] const auto& edge: e.p->e)
                         assert(edge.p->v == v - 1 || isTerminal(edge));
 
-                    return {p, e.w};
+                    return {(*it), e.w};
                 }
                 collisions++;
-                p = p->next;
+                ++it;
             }
 
-            // node was not found -> add it to front of available space chain
-            e.p->next      = tables[v][key];
-            tables[v][key] = e.p;
+            // node was not found -> add it to front of unique table bucket
+            bucket.push_front(e.p);
             nodeCount++;
             peakNodeCount = std::max(peakNodeCount, nodeCount);
 
             return e;
         }
 
-        Node* getNode() {
-            Node* r;
-            if (available != nullptr) // get node from available chain if possible
-            {
-                r         = available;
-                available = available->next;
-            } else { // otherwise allocate new nodes
-                r = new Node[ALLOCATION_SIZE];
-                allocations += ALLOCATION_SIZE;
-                chunks.push_back(r);
-                Node* r2  = r + 1;
-                available = r2;
-                for (auto i = 0U; i < ALLOCATION_SIZE - 2; i++) {
-                    r2->next = r2 + 1;
-                    ++r2;
-                }
-                r2->next = nullptr;
+        [[nodiscard]] Node* getNode() {
+            // a node is available on the stack
+            if (!available.empty()) {
+                auto p = available.top();
+                available.pop();
+                return p;
             }
-            r->next = nullptr;
-            r->ref  = 0; // nodes in available space chain may have non-zero ref count
-            return r;
+
+            // new chunk has to be allocated
+            if (chunkIt == chunkEndIt) {
+                chunks.emplace_back(allocationSize);
+                allocationSize *= growthFactor;
+                chunkID++;
+                chunkIt    = chunks[chunkID].begin();
+                chunkEndIt = chunks[chunkID].end();
+            }
+
+            auto p = &(*chunkIt);
+            ++chunkIt;
+            return p;
         }
 
         void returnNode(Node* p) {
-            p->next   = available;
-            available = p;
+            available.push(p);
         }
 
         // increment reference counter for node e points to
@@ -192,24 +198,31 @@ namespace dd {
             std::size_t remaining = 0;
             for (auto& table: tables) {
                 for (auto& bucket: table) {
-                    Node* lastp = nullptr;
-                    Node* p     = bucket;
-                    while (p != nullptr) {
-                        if (p->ref == 0) {
-                            if (p->v == -1) {
+                    auto it     = bucket.begin();
+                    auto lastit = bucket.begin();
+                    while (it != bucket.end()) {
+                        if ((*it)->ref == 0) {
+                            if ((*it)->v == -1) {
                                 throw std::runtime_error("Tried to collect a terminal node.");
                             }
+
+                            // first entry shall be removed
+                            if (lastit == it) {
+                                auto node = bucket.front();
+                                bucket.pop_front();
+                                returnNode(node);
+                                it     = bucket.begin();
+                                lastit = bucket.begin();
+                            } else { // entry in middle of list shall be removed
+                                auto node = (*it);
+                                bucket.erase_after(lastit); // erases the element at `it`
+                                returnNode(node);
+                                it = ++lastit;
+                            }
                             collected++;
-                            auto nextp = p->next;
-                            if (lastp == nullptr)
-                                bucket = p->next;
-                            else
-                                lastp->next = p->next;
-                            returnNode(p);
-                            p = nextp;
                         } else {
-                            lastp = p;
-                            p     = p->next;
+                            ++it;
+                            ++lastit;
                             remaining++;
                         }
                     }
@@ -221,20 +234,26 @@ namespace dd {
         }
 
         void clear() {
+            // clear unique table buckets
             for (auto& table: tables) {
                 for (auto& bucket: table) {
-                    if (bucket == nullptr)
-                        continue;
-
-                    // successively return nodes to available space chain
-                    auto current = bucket;
-                    while (current != nullptr) {
-                        bucket = current->next;
-                        returnNode(current);
-                        current = bucket;
-                    }
+                    bucket.clear();
                 }
             }
+            // clear available stack
+            while (!available.empty())
+                available.pop();
+
+            // release memory of all but the first chunk TODO: it could be desirable to keep the memory
+            while (chunkID > 0) {
+                chunks.pop_back();
+                chunkID--;
+            }
+            // restore initial chunk setting
+            chunkIt        = chunks[0].begin();
+            chunkEndIt     = chunks[0].end();
+            allocationSize = INITIAL_ALLOCATION_SIZE * growthFactor;
+
             nodeCount     = 0;
             peakNodeCount = 0;
 
@@ -257,14 +276,14 @@ namespace dd {
                 auto& table = *it;
                 std::cout << "\t" << static_cast<std::size_t>(q) << ":" << std::endl;
                 for (size_t key = 0; key < table.size(); ++key) {
-                    auto p = table[key];
-                    if (p != nullptr)
+                    auto& bucket = table[key];
+                    if (!bucket.empty())
                         std::cout << key << ": ";
-                    while (p != nullptr) {
-                        std::cout << "\t\t" << reinterpret_cast<uintptr_t>(p) << " " << p->ref << "\t";
-                        p = p->next;
-                    }
-                    if (table[key] != nullptr)
+
+                    for (const auto& node: bucket)
+                        std::cout << "\t\t" << reinterpret_cast<uintptr_t>(node) << " " << node->ref << "\t";
+
+                    if (!bucket.empty())
                         std::cout << std::endl;
                 }
                 --q;
@@ -292,17 +311,24 @@ namespace dd {
         }
 
     private:
-        using NodeBucket = std::array<Node*, NBUCKET>;
+        std::stack<Node*>                    available{};
+        std::vector<std::vector<Node>>       chunks{};
+        std::size_t                          chunkID;
+        typename std::vector<Node>::iterator chunkIt;
+        typename std::vector<Node>::iterator chunkEndIt;
+        std::size_t                          allocationSize;
+        float                                growthFactor;
+
+        using NodeBucket = std::forward_list<Node*>;
+        using Table      = std::array<NodeBucket, NBUCKET>;
 
         // unique tables (one per input variable)
-        std::size_t             nvars = 0;
-        std::vector<NodeBucket> tables{nvars};
+        std::size_t        nvars = 0;
+        std::vector<Table> tables{nvars};
 
-        Node*              available{};
-        std::vector<Node*> chunks{};
-        std::size_t        allocations   = 0;
-        std::size_t        nodeCount     = 0;
-        std::size_t        peakNodeCount = 0;
+        std::size_t allocations   = 0;
+        std::size_t nodeCount     = 0;
+        std::size_t peakNodeCount = 0;
 
         // unique table lookup statistics
         std::size_t collisions = 0;

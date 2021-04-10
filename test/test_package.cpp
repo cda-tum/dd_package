@@ -138,11 +138,11 @@ TEST(DDPackageTest, VectorSerializationTest) {
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
 
     serialize(bell_state, "bell_state.dd", false);
-    auto deserialized_bell_state = deserializeVector(dd, "bell_state.dd", false);
+    auto deserialized_bell_state = dd->deserialize<dd::Package::vNode>("bell_state.dd", false);
     EXPECT_EQ(bell_state, deserialized_bell_state);
 
     serialize(bell_state, "bell_state_binary.dd", true);
-    deserialized_bell_state = deserializeVector(dd, "bell_state_binary.dd", true);
+    deserialized_bell_state = dd->deserialize<dd::Package::vNode>("bell_state_binary.dd", true);
     EXPECT_EQ(bell_state, deserialized_bell_state);
 }
 
@@ -205,11 +205,11 @@ TEST(DDPackageTest, MatrixSerializationTest) {
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
     serialize(bell_matrix, "bell_matrix.dd", false);
-    auto deserialized_bell_matrix = deserializeMatrix(dd, "bell_matrix.dd", false);
+    auto deserialized_bell_matrix = dd->deserialize<dd::Package::mNode>("bell_matrix.dd", false);
     EXPECT_EQ(bell_matrix, deserialized_bell_matrix);
 
     serialize(bell_matrix, "bell_matrix_binary.dd", true);
-    deserialized_bell_matrix = deserializeMatrix(dd, "bell_matrix_binary.dd", true);
+    deserialized_bell_matrix = dd->deserialize<dd::Package::mNode>("bell_matrix_binary.dd", true);
     EXPECT_EQ(bell_matrix, deserialized_bell_matrix);
 }
 
@@ -223,41 +223,41 @@ TEST(DDPackageTest, SerializationErrors) {
 
     // test non-existing file
     serialize(bell_state, "./path/that/does/not/exist/filename.dd");
-    auto e = deserializeVector(dd, "./path/that/does/not/exist/filename.dd", true);
-    EXPECT_TRUE(dd::Package::isZeroDD(e));
+    auto e = dd->deserialize<dd::Package::vNode>("./path/that/does/not/exist/filename.dd", true);
+    EXPECT_TRUE(e.isZeroTerminal());
 
     // test wrong version number
     std::stringstream ss{};
     ss << 2.0 << std::endl;
-    EXPECT_THROW(deserializeVector(dd, ss, false), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, false), std::runtime_error);
     ss << 2.0 << std::endl;
-    EXPECT_THROW(deserializeMatrix(dd, ss, false), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss, false), std::runtime_error);
 
     ss.str("");
     dd::fp version = 2.0;
     ss.write(reinterpret_cast<const char*>(&version), sizeof(dd::fp));
-    EXPECT_THROW(deserializeVector(dd, ss, true), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, true), std::runtime_error);
     ss.write(reinterpret_cast<const char*>(&version), sizeof(dd::fp));
-    EXPECT_THROW(deserializeMatrix(dd, ss, true), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss, true), std::runtime_error);
 
     // test wrong format
     ss.str("");
     ss << "0.1" << std::endl;
     ss << "not_complex" << std::endl;
-    EXPECT_THROW(deserializeVector(dd, ss), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
     ss << "0.1" << std::endl;
     ss << "not_complex" << std::endl;
-    EXPECT_THROW(deserializeMatrix(dd, ss), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
 
     ss.str("");
     ss << "0.1" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
-    EXPECT_THROW(deserializeVector(dd, ss), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
     ss << "0.1" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
-    EXPECT_THROW(deserializeMatrix(dd, ss), std::runtime_error);
+    EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
 }
 
 TEST(DDPackageTest, TestConsistency) {
@@ -328,8 +328,8 @@ TEST(DDPackageTest, Extend) {
 TEST(DDPackageTest, Identity) {
     auto dd = std::make_unique<dd::Package>(4);
 
-    EXPECT_TRUE(dd->isOneDD(dd->makeIdent(0)));
-    EXPECT_TRUE(dd->isOneDD(dd->makeIdent(0, -1)));
+    EXPECT_TRUE(dd->makeIdent(0).isOneTerminal());
+    EXPECT_TRUE(dd->makeIdent(0, -1).isOneTerminal());
 
     auto id3 = dd->makeIdent(3);
     EXPECT_EQ(dd->makeIdent(0, 2), id3);
@@ -387,24 +387,24 @@ TEST(DDPackageTest, Ancillaries) {
 
     auto extended_bell_matrix = dd->extend(bell_matrix, 2);
     reduced_bell_matrix       = dd->reduceAncillae(extended_bell_matrix, {false, false, true, true});
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[1]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[2]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[3]));
+    EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[2].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[3].isZeroTerminal());
 
     EXPECT_EQ(reduced_bell_matrix.p->e[0].p->e[0].p, bell_matrix.p);
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[1]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[2]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[3]));
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[1].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[2].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[3].isZeroTerminal());
 
     reduced_bell_matrix = dd->reduceAncillae(extended_bell_matrix, {false, false, true, true}, false);
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[1]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[2]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[3]));
+    EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[2].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[3].isZeroTerminal());
 
     EXPECT_EQ(reduced_bell_matrix.p->e[0].p->e[0].p, bell_matrix.p);
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[1]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[2]));
-    EXPECT_TRUE(dd->isZeroDD(reduced_bell_matrix.p->e[0].p->e[3]));
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[1].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[2].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[3].isZeroTerminal());
 }
 
 TEST(DDPackageTest, Garbage) {
@@ -430,8 +430,8 @@ TEST(DDPackageTest, Garbage) {
     EXPECT_EQ(mat[3], zero);
 
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {false, true, false, false}, false);
-    EXPECT_TRUE(dd::Package::isZeroDD(reduced_bell_matrix.p->e[1]));
-    EXPECT_TRUE(dd::Package::isZeroDD(reduced_bell_matrix.p->e[3]));
+    EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
+    EXPECT_TRUE(reduced_bell_matrix.p->e[3].isZeroTerminal());
 }
 
 TEST(DDPackageTest, InvalidMakeBasisState) {
@@ -455,28 +455,30 @@ TEST(DDPackageTest, PackageReset) {
     const auto& unique = dd->mUniqueTable.getTables();
     const auto& table  = unique[0];
     auto        ihash  = dd->mUniqueTable.hash(i_gate.p);
-    const auto& bucket = table[ihash];
+    const auto& node   = table[ihash].front();
     std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
     // node should be the first in this unique table bucket
-    EXPECT_EQ(bucket, i_gate.p);
+    EXPECT_EQ(node, i_gate.p);
     dd->reset();
     // after clearing the tables, they should be empty
-    EXPECT_EQ(bucket, nullptr);
-    i_gate              = dd->makeIdent(1);
-    const auto& bucket2 = table[ihash];
+    EXPECT_TRUE(table[ihash].empty());
+    i_gate            = dd->makeIdent(1);
+    const auto& node2 = table[ihash].front();
     // after recreating the DD, it should receive the same node
-    EXPECT_EQ(bucket2, bucket);
+    EXPECT_EQ(node2, node);
 
     // two nodes in same unique table bucket of variable 0
     auto z_gate = dd->makeGateDD(dd::Zmat, 1, 0);
     auto zhash  = dd->mUniqueTable.hash(z_gate.p);
     std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
     // both nodes should reside in the same bucket
-    EXPECT_EQ(table[ihash], z_gate.p);
-    EXPECT_EQ(table[ihash]->next, i_gate.p);
+    EXPECT_EQ(table[ihash].front(), z_gate.p);
+    auto it = table[ihash].begin();
+    std::advance(it, 1);
+    EXPECT_EQ(*it, i_gate.p);
     dd->reset();
     // after clearing the tables, they should be empty
-    EXPECT_EQ(table[ihash], nullptr);
+    EXPECT_TRUE(table[ihash].empty());
     auto z_gate2 = dd->makeGateDD(dd::Zmat, 1, 0);
     auto i_gate2 = dd->makeIdent(1);
     // recreating the decision diagrams in reverse order should use the same pointers as before

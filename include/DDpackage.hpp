@@ -24,10 +24,12 @@
 #include <map>
 #include <queue>
 #include <random>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -100,7 +102,7 @@ namespace dd {
         std::size_t nqubits;
 
         ///
-        /// Vector nodes, edges and quantum states
+        /// Generic Edges
         ///
     public:
         template<class Node>
@@ -114,8 +116,19 @@ namespace dd {
             constexpr bool operator!=(const Edge& other) const {
                 return !operator==(other);
             }
+
+            [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
+
+            // edges pointing to zero and one terminals
+            static inline Edge one{Node::terminal, CN::ONE};
+            static inline Edge zero{Node::terminal, CN::ZERO};
+
+            [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }
+            [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == CN::ZERO; }
+            [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == CN::ONE; }
         };
 
+    private:
         template<typename Node>
         struct CachedEdge {
             Node*        p{};
@@ -137,24 +150,26 @@ namespace dd {
             }
         };
 
+        ///
+        /// Vector nodes, edges and quantum states
+        ///
+    public:
         struct vNode {
-            vNode*                         next = nullptr; // link for unique table and available space chain
-            std::array<Edge<vNode>, RADIX> e{};            // edges out of this node
-            std::size_t                    ref{};          // reference count
-            Qubit                          v{};            // variable index (nonterminal) value (-1 for terminal)
+            std::array<Edge<vNode>, RADIX> e{};   // edges out of this node
+            std::size_t                    ref{}; // reference count
+            Qubit                          v{};   // variable index (nonterminal) value (-1 for terminal)
+
+            static vNode            terminalNode;
+            constexpr static vNode* terminal{&terminalNode};
+
+            static constexpr bool isTerminal(const vNode* p) { return p == terminal; }
         };
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
-        static vEdge makeVectorTerminal(const Complex& w) { return {vTerminalNode, w}; }
         // make a vector DD node and return an edge pointing to it. The node is not recreated if it already exists.
-        vEdge makeVectorNode(Qubit var, const std::array<vEdge, RADIX>& edge, bool cached = false);
+        vEdge makeNode(Qubit var, const std::array<vEdge, RADIX>& edge, bool cached = false);
         vEdge normalize(const vEdge& e, bool cached);
-
-        static constexpr bool isTerminal(const vNode* p) { return p == vTerminalNode; }
-        static constexpr bool isTerminal(const vEdge& e) { return isTerminal(e.p); }
-        static constexpr bool isZeroDD(const vEdge& e) { return e == vZero; }
-        static constexpr bool isOneDD(const vEdge& e) { return e == vOne; }
 
         // generate |0...0> with n qubits
         vEdge makeZeroState(QubitCount n);
@@ -163,38 +178,28 @@ namespace dd {
         // generate general basis state with n qubits
         vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state);
 
-    private:
-        static vNode vTerminal;
-        // pointer to vector terminal node
-        constexpr static vNode* vTerminalNode{&vTerminal};
-        // edges pointing to vector zero and one DD constants
-        constexpr static vEdge vOne{vTerminalNode, ComplexNumbers::ONE};
-        constexpr static vEdge vZero{vTerminalNode, ComplexNumbers::ZERO};
-
         ///
         /// Matrix nodes, edges and quantum gates
         ///
     public:
         struct mNode {
-            mNode*                         next = nullptr; // link for unique table and available space chain
-            std::array<Edge<mNode>, NEDGE> e{};            // edges out of this node
-            std::size_t                    ref{};          // reference count
-            Qubit                          v{};            // variable index (nonterminal) value (-1 for terminal)
-            bool                           symm  = false;  // node is symmetric
-            bool                           ident = false;  // node resembles identity
+            std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
+            std::size_t                    ref{};         // reference count
+            Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
+            bool                           symm  = false; // node is symmetric
+            bool                           ident = false; // node resembles identity
+
+            static mNode            terminalNode;
+            constexpr static mNode* terminal{&terminalNode};
+
+            static constexpr bool isTerminal(const mNode* p) { return p == terminal; }
         };
         using mEdge       = Edge<mNode>;
         using mCachedEdge = CachedEdge<mNode>;
 
-        static mEdge makeMatrixTerminal(const Complex& w) { return {mTerminalNode, w}; }
         // make a matrix DD node and return an edge pointing to it. The node is not recreated if it already exists.
-        mEdge makeMatrixNode(Qubit var, const std::array<mEdge, NEDGE>& edge, bool cached = false);
+        mEdge makeNode(Qubit var, const std::array<mEdge, NEDGE>& edge, bool cached = false);
         mEdge normalize(const mEdge& e, bool cached);
-
-        static constexpr bool isTerminal(const mNode* p) { return p == mTerminalNode; }
-        static constexpr bool isTerminal(const mEdge& e) { return isTerminal(e.p); }
-        static constexpr bool isZeroDD(const mEdge& e) { return e == mZero; }
-        static constexpr bool isOneDD(const mEdge& e) { return e == mOne; }
 
         // build matrix representation for a single gate on an n-qubit circuit
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target) {
@@ -209,13 +214,6 @@ namespace dd {
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const std::set<Control>& controls, Qubit target);
 
     private:
-        static mNode mTerminal;
-        // pointer to matrix terminal node
-        constexpr static mNode* mTerminalNode{&mTerminal};
-        // edges pointing to matrix zero and one DD constants
-        constexpr static mEdge mOne{mTerminalNode, ComplexNumbers::ONE};
-        constexpr static mEdge mZero{mTerminalNode, ComplexNumbers::ZERO};
-
         // check whether node represents a symmetric matrix or the identity
         void checkSpecialMatrices(mNode* p);
 
@@ -223,18 +221,13 @@ namespace dd {
         /// Unique tables, Reference counting and garbage collection
         ///
     public:
-        static constexpr std::size_t NBUCKET         = 32768;  // number of hash table buckets; must be a power of 2
-        static constexpr std::size_t ALLOCATION_SIZE = 2000;   // may be increased for larger benchmarks to minimize the number of allocations
-        static constexpr std::size_t GCLIMIT         = 250000; // initial garbage collection limit
-        static constexpr std::size_t GCINCREMENT     = 0;      // garbage collection limit increment
-
         // unique tables
-        UniqueTable<vEdge, NBUCKET, ALLOCATION_SIZE> vUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
+        UniqueTable<vEdge> vUniqueTable{nqubits};
 
         void incRef(const vEdge& e) { vUniqueTable.incRef(e); }
         void decRef(const vEdge& e) { vUniqueTable.decRef(e); }
 
-        UniqueTable<mEdge, NBUCKET, ALLOCATION_SIZE> mUniqueTable{nqubits, GCLIMIT, GCINCREMENT};
+        UniqueTable<mEdge> mUniqueTable{nqubits};
 
         void incRef(const mEdge& e) { mUniqueTable.incRef(e); }
         void decRef(const mEdge& e) { mUniqueTable.decRef(e); }
@@ -324,10 +317,10 @@ namespace dd {
             [[maybe_unused]] const auto before = cn.cacheCount;
 
             Qubit var = -1;
-            if (!isTerminal(x)) {
+            if (!x.isTerminal()) {
                 var = x.p->v;
             }
-            if (!isTerminal(y) && (y.p->v) > var) {
+            if (!y.isTerminal() && (y.p->v) > var) {
                 var = y.p->v;
             }
 
@@ -400,8 +393,7 @@ namespace dd {
         /// Toffoli gates
         ///
     public:
-        static constexpr std::size_t TTSLOTS = 2048;
-        ToffoliTable<mEdge, TTSLOTS> toffoliTable{};
+        ToffoliTable<mEdge> toffoliTable{};
 
         ///
         /// Identity matrices
@@ -425,8 +417,7 @@ namespace dd {
         /// Operations (related to noise)
         ///
     public:
-        static constexpr std::size_t          OperationSLOTS = 16384;
-        OperationTable<mEdge, OperationSLOTS> operations{};
+        OperationTable<mEdge> operations{};
 
     private:
         ///
@@ -486,7 +477,7 @@ namespace dd {
         /// \return the complex amplitude of the specified element
         template<class Edge>
         ComplexValue getValueByPath(const Edge& e, const std::string& elements) {
-            if (isTerminal(e)) {
+            if (e.isTerminal()) {
                 return {CN::val(e.w.r), CN::val(e.w.i)};
             }
 
@@ -497,7 +488,7 @@ namespace dd {
                 std::size_t tmp = elements.at(r.p->v) - '0';
                 assert(tmp <= r.p->e.size());
                 r = r.p->e.at(tmp);
-            } while (!isTerminal(r));
+            } while (!r.isTerminal());
             CN::mul(c, c, r.w);
 
             return {CN::val(c.r), CN::val(c.i)};
@@ -515,12 +506,154 @@ namespace dd {
         void getMatrix(const mEdge& e, const Complex& amp, size_t i, size_t j, CMat& mat);
 
         ///
+        /// Deserialization
+        ///
+    public:
+        template<class Node, class Edge = Edge<Node>, std::size_t N = std::tuple_size_v<decltype(Node::e)>>
+        Edge deserialize(std::istream& is, bool readBinary = false) {
+            auto         result = Edge::zero;
+            ComplexValue rootweight{};
+
+            std::unordered_map<std::int_fast64_t, Node*> nodes{};
+            std::int_fast64_t                            node_index;
+            Qubit                                        v;
+            std::array<ComplexValue, N>                  edge_weights{};
+            std::array<std::int_fast64_t, N>             edge_indices{};
+            edge_indices.fill(-2);
+
+            if (readBinary) {
+                double version;
+                is.read(reinterpret_cast<char*>(&version), sizeof(double));
+                if (version != SERIALIZATION_VERSION) {
+                    throw std::runtime_error("Wrong Version of serialization file version. version of file: " + std::to_string(version) + "; current version: " + std::to_string(SERIALIZATION_VERSION));
+                }
+
+                if (!is.eof()) {
+                    rootweight = ComplexValue::readBinary(is);
+                }
+
+                while (is.read(reinterpret_cast<char*>(&node_index), sizeof(std::int_fast64_t))) {
+                    is.read(reinterpret_cast<char*>(&v), sizeof(Qubit));
+                    for (auto i = 0U; i < N; i++) {
+                        is.read(reinterpret_cast<char*>(&edge_indices[i]), sizeof(std::int_fast64_t));
+                        edge_weights[i] = ComplexValue::readBinary(is);
+                    }
+                    result = deserializeNode(node_index, v, edge_indices, edge_weights, nodes);
+                }
+            } else {
+                std::string version;
+                std::getline(is, version);
+                if (std::stod(version) != SERIALIZATION_VERSION) {
+                    throw std::runtime_error("Wrong Version of serialization file version. version of file: " + version + "; current version: " + std::to_string(SERIALIZATION_VERSION));
+                }
+
+                std::string line;
+                std::string complex_real_regex = R"(([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?(?![ \d\.]*(?:[eE][+-])?\d*[iI]))?)";
+                std::string complex_imag_regex = R"(( ?[+-]? ?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)?[iI])?)";
+                std::string edge_regex         = " \\(((-?\\d+) (" + complex_real_regex + complex_imag_regex + "))?\\)";
+                std::regex  complex_weight_regex(complex_real_regex + complex_imag_regex);
+                std::string line_construct = "(\\d+) (\\d+)";
+                for (auto i = 0U; i < N; ++i) {
+                    line_construct += "(?:" + edge_regex + ")";
+                }
+                line_construct += " *(?:#.*)?";
+                std::regex  line_regex(line_construct);
+                std::smatch m;
+
+                if (std::getline(is, line)) {
+                    if (!std::regex_match(line, m, complex_weight_regex)) {
+                        throw std::runtime_error("Regex did not match second line: " + line);
+                    }
+                    rootweight = ComplexValue::from_string(m.str(1), m.str(2));
+                }
+
+                while (std::getline(is, line)) {
+                    if (line.empty() || line.size() == 1) continue;
+
+                    if (!std::regex_match(line, m, line_regex)) {
+                        throw std::runtime_error("Regex did not match line: " + line);
+                    }
+
+                    // match 1: node_idx
+                    // match 2: qubit_idx
+
+                    // repeats for every edge
+                    // match 3: edge content
+                    // match 4: edge_target_idx
+                    // match 5: real + imag (without i)
+                    // match 6: real
+                    // match 7: imag (without i)
+                    node_index = std::stoi(m.str(1));
+                    v          = static_cast<Qubit>(std::stoi(m.str(2)));
+
+                    for (auto edge_idx = 3U, i = 0U; i < N; i++, edge_idx += 5) {
+                        if (m.str(edge_idx).empty()) continue;
+
+                        edge_indices[i] = std::stoi(m.str(edge_idx + 1));
+                        edge_weights[i] = ComplexValue::from_string(m.str(edge_idx + 3), m.str(edge_idx + 4));
+                    }
+
+                    result = deserializeNode(node_index, v, edge_indices, edge_weights, nodes);
+                }
+            }
+
+            auto w = cn.getCachedComplex(rootweight.r, rootweight.i);
+            CN::mul(w, result.w, w);
+            result.w = cn.lookup(w);
+            cn.releaseCached(w);
+
+            return result;
+        }
+
+        template<class Node, class Edge = Edge<Node>>
+        Edge deserialize(const std::string& inputFilename, bool readBinary) {
+            auto ifs = std::ifstream(inputFilename);
+
+            if (!ifs.good()) {
+                std::cerr << "Cannot open serialized file: " << inputFilename << std::endl;
+                return Edge::zero;
+            }
+
+            return deserialize<Node>(ifs, readBinary);
+        }
+
+    private:
+        template<class Node, class Edge = Edge<Node>, std::size_t N = std::tuple_size_v<decltype(Node::e)>>
+        Edge deserializeNode(std::int_fast64_t index, Qubit v, std::array<std::int_fast64_t, N>& edge_idx, std::array<ComplexValue, N>& edge_weight, std::unordered_map<std::int_fast64_t, Node*>& nodes) {
+            if (index == -1) {
+                return Edge::zero;
+            }
+
+            std::array<Edge, N> edges{};
+            for (auto i = 0U; i < N; ++i) {
+                if (edge_idx[i] == -2) {
+                    edges[i] = Edge::zero;
+                } else {
+                    if (edge_idx[i] == -1) {
+                        edges[i] = Edge::one;
+                    } else {
+                        edges[i].p = nodes[edge_idx[i]];
+                    }
+                    edges[i].w = cn.lookup(edge_weight[i]);
+                }
+            }
+
+            auto newedge = makeNode(v, edges);
+            nodes[index] = newedge.p;
+
+            // reset
+            edge_idx.fill(-2);
+
+            return newedge;
+        }
+
+        ///
         /// Debugging
         ///
     public:
         template<class Node>
         void debugnode(const Node* p) const {
-            if (isTerminal(p)) {
+            if (Node::isTerminal(p)) {
                 std::clog << "terminal\n";
                 return;
             }
@@ -536,7 +669,7 @@ namespace dd {
 
         template<class Node>
         std::string debugnode_line(const Node* p) const {
-            if (isTerminal(p)) {
+            if (Node::isTerminal(p)) {
                 return "terminal";
             }
             std::stringstream sst;
@@ -583,23 +716,23 @@ namespace dd {
                 return false;
             }
 
-            if (isTerminal(e)) {
+            if (e.isTerminal()) {
                 return true;
             }
 
-            if (!isTerminal(e) && e.p->ref == 0) {
+            if (!e.isTerminal() && e.p->ref == 0) {
                 std::clog << "\nLOCAL INCONSISTENCY FOUND: RC==0\n";
                 debugnode(e.p);
                 return false;
             }
 
             for (const auto& child: e.p->e) {
-                if (child.p->v + 1 != e.p->v && !isTerminal(child)) {
+                if (child.p->v + 1 != e.p->v && !child.isTerminal()) {
                     std::clog << "\nLOCAL INCONSISTENCY FOUND: Wrong V\n";
                     debugnode(e.p);
                     return false;
                 }
-                if (!isTerminal(child) && child.p->ref == 0) {
+                if (!child.isTerminal() && child.p->ref == 0) {
                     std::clog << "\nLOCAL INCONSISTENCY FOUND: RC==0\n";
                     debugnode(e.p);
                     return false;
@@ -616,7 +749,7 @@ namespace dd {
             weight_map[CN::getAlignedPointer(edge.w.r)]++;
             weight_map[CN::getAlignedPointer(edge.w.i)]++;
 
-            if (isTerminal(edge)) {
+            if (edge.isTerminal()) {
                 return;
             }
             node_map[edge.p]++;
@@ -649,7 +782,7 @@ namespace dd {
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(i_ptr->val) + "(i): " + std::to_string(weight_map.at(i_ptr)) + " occurences in DD but Ref-Count is only " + std::to_string(i_ptr->ref));
             }
 
-            if (isTerminal(edge)) {
+            if (edge.isTerminal()) {
                 return;
             }
 
@@ -658,7 +791,7 @@ namespace dd {
                 throw std::runtime_error("Ref-Count mismatch for node: " + std::to_string(node_map.at(edge.p)) + " occurences in DD but Ref-Count is " + std::to_string(edge.p->ref));
             }
             for (auto child: edge.p->e) {
-                if (!isTerminal(child) && child.p->v != edge.p->v - 1) {
+                if (!child.isTerminal() && child.p->v != edge.p->v - 1) {
                     std::clog << "child.p->v == " << child.p->v << "\n";
                     std::clog << " edge.p->v == " << edge.p->v << "\n";
                     debugnode(child.p);
@@ -670,5 +803,15 @@ namespace dd {
         }
     };
 
+    inline Package::vNode Package::vNode::terminalNode{.e   = {{{nullptr, CN::ZERO}, {nullptr, CN::ZERO}}},
+                                                       .ref = 0,
+                                                       .v   = -1};
+
+    inline Package::mNode Package::mNode::terminalNode{
+            .e     = {{{nullptr, CN::ZERO}, {nullptr, CN::ZERO}, {nullptr, CN::ZERO}, {nullptr, CN::ZERO}}},
+            .ref   = 0,
+            .v     = -1,
+            .symm  = true,
+            .ident = true};
 } // namespace dd
 #endif

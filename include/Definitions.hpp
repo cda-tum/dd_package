@@ -6,6 +6,7 @@
 #ifndef DDpackage_DATATYPES_HPP
 #define DDpackage_DATATYPES_HPP
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <iostream>
@@ -50,6 +51,23 @@ namespace dd {
     using fp = double;
     struct ComplexValue {
         fp r, i;
+
+        static ComplexValue readBinary(std::istream& is) {
+            ComplexValue temp{};
+            is.read(reinterpret_cast<char*>(&temp.r), sizeof(fp));
+            is.read(reinterpret_cast<char*>(&temp.i), sizeof(fp));
+            return temp;
+        }
+
+        static ComplexValue from_string(const std::string& real_str, std::string imag_str) {
+            fp real = real_str.empty() ? 0. : std::stod(real_str);
+
+            imag_str.erase(remove(imag_str.begin(), imag_str.end(), ' '), imag_str.end());
+            imag_str.erase(remove(imag_str.begin(), imag_str.end(), 'i'), imag_str.end());
+            if (imag_str == "+" || imag_str == "-") imag_str = imag_str + "1";
+            fp imag = imag_str.empty() ? 0. : std::stod(imag_str);
+            return ComplexValue{real, imag};
+        }
 
         bool operator==(const ComplexValue& other) const {
             return r == other.r && i == other.i;
