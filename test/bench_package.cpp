@@ -349,3 +349,60 @@ static void BM_MxM_GHZ(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_MxM_GHZ)->Apply(QubitRange);
+
+static void BM_vUniqueTableGet(benchmark::State& state) {
+    auto allocs = state.range(0);
+    for (auto _: state) {
+        auto dd      = std::make_unique<dd::Package>(1);
+        for (int i=0; i<allocs; ++i) {
+            auto p = dd->vUniqueTable.getNode();
+            benchmark::DoNotOptimize(p);
+        }
+    }
+}
+BENCHMARK(BM_vUniqueTableGet)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)->Range(10, 10000000);
+
+static void BM_vUniqueTableGetAndReturn(benchmark::State& state) {
+    auto allocs = state.range(0);
+    for (auto _: state) {
+        auto dd      = std::make_unique<dd::Package>(1);
+        for (int i=0; i<allocs; ++i) {
+            auto p = dd->vUniqueTable.getNode();
+            benchmark::DoNotOptimize(p);
+            if (i%5==0) {
+                dd->vUniqueTable.returnNode(p);
+            }
+        }
+    }
+}
+BENCHMARK(BM_vUniqueTableGetAndReturn)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)->Range(10, 10000000);
+
+static void BM_mUniqueTableGet(benchmark::State& state) {
+    auto allocs = state.range(0);
+    for (auto _: state) {
+        auto dd      = std::make_unique<dd::Package>(1);
+        for (int i=0; i<allocs; ++i) {
+            auto p = dd->mUniqueTable.getNode();
+            benchmark::DoNotOptimize(p);
+            if (i%5==0) {
+                dd->mUniqueTable.returnNode(p);
+            }
+        }
+    }
+}
+BENCHMARK(BM_mUniqueTableGet)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)->Range(10, 10000000);
+
+static void BM_mUniqueTableGetAndReturn(benchmark::State& state) {
+    auto allocs = state.range(0);
+    for (auto _: state) {
+        auto dd      = std::make_unique<dd::Package>(1);
+        for (int i=0; i<allocs; ++i) {
+            auto p = dd->mUniqueTable.getNode();
+            benchmark::DoNotOptimize(p);
+            if (i%5==0) {
+                dd->mUniqueTable.returnNode(p);
+            }
+        }
+    }
+}
+BENCHMARK(BM_mUniqueTableGetAndReturn)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)->Range(10, 10000000);
