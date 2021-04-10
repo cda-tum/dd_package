@@ -22,6 +22,10 @@ namespace dd {
     // integer type used for specifying numbers of qubits
     using QubitCount = std::make_unsigned<Qubit>::type;
 
+    // integer type used for reference counting
+    // 32bit suffice for a max ref count of around 4 billion
+    using RefCount = std::uint_fast32_t;
+
     struct Control {
         enum class Type : bool { pos = true,
                                  neg = false };

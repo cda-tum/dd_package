@@ -185,7 +185,7 @@ namespace dd {
     public:
         struct vNode {
             std::array<Edge<vNode>, RADIX> e{};   // edges out of this node
-            std::size_t                    ref{}; // reference count
+            RefCount                       ref{}; // reference count
             Qubit                          v{};   // variable index (nonterminal) value (-1 for terminal)
 
             static vNode            terminalNode;
@@ -211,7 +211,7 @@ namespace dd {
     public:
         struct mNode {
             std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
-            std::size_t                    ref{};         // reference count
+            RefCount                       ref{};         // reference count
             Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
             bool                           symm  = false; // node is symmetric
             bool                           ident = false; // node resembles identity

@@ -18,7 +18,7 @@ namespace dd {
     struct ComplexTableEntry {
         fp                 val;
         ComplexTableEntry* next;
-        std::size_t        ref;
+        RefCount           ref;
     };
 
     struct Complex {
