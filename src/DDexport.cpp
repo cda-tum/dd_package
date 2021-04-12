@@ -145,33 +145,23 @@ namespace dd {
         return os;
     }
 
-    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels, bool classic) {
+    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels) {
         auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
-        if (classic) {
-            if (idx == 0)
-                os << "sw";
-            else if (idx == 1 || idx == 2)
-                os << "s";
-            else
-                os << "se";
-        } else {
-            if (idx == 0)
-                os << "sw";
-            else if (idx == 1)
-                os << "se";
-            else
-                os << 's';
-        }
+        if (idx == 0)
+            os << "sw";
+        else if (idx == 1 || idx == 2)
+            os << "s";
+        else
+            os << "se";
+
         os << "->";
         if (to.isTerminal()) {
             os << "t";
         } else {
             os << tolabel;
-            if (!classic)
-                os << ":n";
         }
 
         auto mag = thicknessFromMagnitude(to.w);
@@ -187,33 +177,22 @@ namespace dd {
         return os;
     }
 
-    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels, bool classic) {
+    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels) {
         auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
-        if (classic) {
-            if (idx == 0)
-                os << "sw";
-            else if (idx == 1 || idx == 2)
-                os << "s";
-            else
-                os << "se";
-        } else {
-            if (idx == 0)
-                os << "sw";
-            else if (idx == 1)
-                os << "se";
-            else
-                os << 's';
-        }
+        if (idx == 0)
+            os << "sw";
+        else if (idx == 1)
+            os << "se";
+        else
+            os << 's';
         os << "->";
         if (to.isTerminal()) {
             os << "t";
         } else {
-            os << tolabel;
-            if (!classic)
-                os << ":n";
+            os << tolabel << ":n";
         }
 
         auto mag   = thicknessFromMagnitude(to.w);

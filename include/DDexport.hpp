@@ -92,9 +92,9 @@ namespace dd {
     std::ostream& classicNode(const Package::mEdge& e, std::ostream& os);
     std::ostream& classicNode(const Package::vEdge& e, std::ostream& os);
 
-    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
+    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
     std::ostream& classicEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
-    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
+    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
     std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
 
     template<class Edge>
