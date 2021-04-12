@@ -210,7 +210,13 @@ namespace dd {
                             auto node = (*it);
                             bucket.erase_after(lastit); // erases the element at `it`
                             returnNode(node);
-                            it = ++lastit;
+                            if (lastit == bucket.before_begin()) {
+                                // first entry was removed
+                                it = bucket.begin();
+                            } else {
+                                // entry in middle of list was removed
+                                it = ++lastit;
+                            }
                             collected++;
                         } else {
                             ++it;
