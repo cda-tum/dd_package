@@ -589,12 +589,16 @@ TEST(DDPackageTest, MatrixTranspose) {
 }
 
 TEST(DDPackageTest, SpecialCaseTerminal) {
-    auto dd = std::make_unique<dd::Package>(1);
-    auto t  = dd::Package::vEdge::one;
-    dd::export2Dot(t, "oneColored.dot", true);
-    dd::export2Dot(t, "oneClassic.dot", false);
+    auto dd  = std::make_unique<dd::Package>(2);
+    auto one = dd::Package::vEdge::one;
+    dd::export2Dot(one, "oneColored.dot", true);
+    dd::export2Dot(one, "oneClassic.dot", false);
 
-    EXPECT_EQ(dd->vUniqueTable.lookup(t), t);
+    EXPECT_EQ(dd->vUniqueTable.lookup(one), one);
+
+    auto zero = dd::Package::vEdge::zero;
+    EXPECT_EQ(dd->kronecker(zero, one), zero);
+    EXPECT_EQ(dd->kronecker(one, one), one);
 }
 
 TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
@@ -624,4 +628,22 @@ TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
     auto it = table[Zhash].begin();
     ++it;
     EXPECT_EQ(it, table[Zhash].end());
+}
+
+TEST(DDPackageTest, KroneckerProduct) {
+    auto dd        = std::make_unique<dd::Package>(2);
+    auto X         = dd->makeGateDD(dd::Xmat, 1, 0);
+    auto kronecker = dd->kronecker(X, X);
+    EXPECT_EQ(kronecker.p->v, 1);
+    EXPECT_EQ(kronecker.p->e[0], dd::Package::mEdge::zero);
+    EXPECT_EQ(kronecker.p->e[0], kronecker.p->e[3]);
+    EXPECT_EQ(kronecker.p->e[1], kronecker.p->e[2]);
+    EXPECT_EQ(kronecker.p->e[1].p->v, 0);
+    EXPECT_EQ(kronecker.p->e[1].p->e[0], dd::Package::mEdge::zero);
+    EXPECT_EQ(kronecker.p->e[1].p->e[0], kronecker.p->e[1].p->e[3]);
+    EXPECT_EQ(kronecker.p->e[1].p->e[1], dd::Package::mEdge::one);
+    EXPECT_EQ(kronecker.p->e[1].p->e[1], kronecker.p->e[1].p->e[2]);
+
+    auto kronecker2 = dd->kronecker(X, X);
+    EXPECT_EQ(kronecker, kronecker2);
 }
