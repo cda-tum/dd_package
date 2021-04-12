@@ -67,6 +67,7 @@ namespace dd {
             nqubits = nq;
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
+            operationTable.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
@@ -502,7 +503,7 @@ namespace dd {
         /// Operations (related to noise)
         ///
     public:
-        OperationTable<mEdge> operations{};
+        OperationTable<mEdge> operationTable{nqubits};
 
     private:
         ///

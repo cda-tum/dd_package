@@ -20,69 +20,46 @@ namespace dd {
         Y,
         Z,
         ATrue,
-        AFalse
+        AFalse,
+        opCount
     };
 
-    template<class Edge, std::size_t NBUCKET = 32768>
+    template<class Edge>
     class OperationTable {
     public:
-        OperationTable() = default;
-
-        struct Entry {
-            QubitCount        n    = 0;
-            OperationKind     kind = none;
-            std::set<Control> controls{}; // TODO: I suppose this is not necessary
-            Qubit             target = 0;
-            Edge              r{};
-        };
-
-        static constexpr size_t MASK = NBUCKET - 1;
+        explicit OperationTable(std::size_t nvars):
+            nvars(nvars) { resize(nvars); };
 
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(QubitCount n, OperationKind kind, Qubit target, const Edge& r) {
-            insert(n, kind, {}, target, r);
+        void resize(std::size_t nq) {
+            nvars = nq;
+            table.resize(nvars);
         }
-        void insert(QubitCount n, OperationKind kind, const std::set<Control>& controls, Qubit target, const Edge& r) {
-            const auto key = hash(kind, controls, target);
-            table[key]     = {.n = n, .kind = kind, .controls = controls, .target = target, .r = r};
+
+        void insert(OperationKind kind, Qubit target, const Edge& r) {
+            table.at(target).at(kind) = r;
             ++count;
         }
 
         Edge lookup(QubitCount n, OperationKind kind, Qubit target) {
-            return lookup(n, kind, {}, target);
-        }
-        Edge lookup(QubitCount n, OperationKind kind, const std::set<Control>& controls, Qubit target) {
             lookups++;
-            Edge        r{};
-            const auto  key   = hash(kind, controls, target);
-            const auto& entry = table[key];
-            if (entry.r.p == nullptr) return r;
-            if (entry.kind != kind) return r;
-            if (entry.n != n) return r;
-            if (entry.target != target) return r;
-            if (entry.controls != controls) return r;
+            Edge  r{};
+            auto& entry = table.at(target).at(kind);
+            if (entry.p == nullptr) return r;
+            if (entry.p->v != static_cast<Qubit>(n - 1)) return r;
             hits++;
-            return entry.r;
-        }
-
-        static size_t hash(OperationKind kind, const std::set<Control>& controls, Qubit target) {
-            std::size_t key = kind + (target << 3U);
-            for (const auto& control: controls) {
-                if (control.type == dd::Control::Type::pos) {
-                    key *= 29u * control.qubit;
-                } else {
-                    key *= 71u * control.qubit;
-                }
-            }
-            return key & MASK;
+            return entry;
         }
 
         void clear() {
             if (count > 0) {
-                for (auto& entry: table)
-                    entry.r.p = nullptr;
+                for (auto& tableRow: table) {
+                    for (auto& entry: tableRow) {
+                        entry.p = nullptr;
+                    }
+                }
                 count = 0;
             }
             hits    = 0;
@@ -96,10 +73,9 @@ namespace dd {
         }
 
     private:
-        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
-        /// std::vector shouldn't be any less efficient in our application scenario
-        /// TODO: revisit this in the future
-        std::vector<Entry> table{NBUCKET};
+        std::size_t                            nvars;
+        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(OperationKind::opCount);
+        std::vector<std::array<Edge, opCount>> table;
 
         // operation table lookup statistics
         std::size_t hits    = 0;

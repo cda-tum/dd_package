@@ -28,7 +28,6 @@ namespace dd {
                   << "\n  CT Vector Kronecker size: " << sizeof(decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(decltype(vectorKronecker)::Entry) << " bytes)"
                   << "\n  CT Matrix Kronecker size: " << sizeof(decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(decltype(matrixKronecker)::Entry) << " bytes)"
                   << "\n  ToffoliTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
-                  << "\n  OperationTable::Entry size: " << sizeof(OperationTable<mEdge>::Entry) << " bytes (aligned " << alignof(OperationTable<mEdge>::Entry) << " bytes)"
                   << "\n  Package size: " << sizeof(Package) << " bytes (aligned " << alignof(Package) << " bytes)"
                   << "\n"
                   << std::flush;
@@ -61,7 +60,7 @@ namespace dd {
         std::cout << "[Toffoli Table] ";
         toffoliTable.printStatistics();
         std::cout << "[Operation Table] ";
-        operations.printStatistics();
+        operationTable.printStatistics();
     }
 
     Package::vEdge Package::normalize(const Package::vEdge& e, bool cached) {
@@ -390,7 +389,7 @@ namespace dd {
 
         clearIdentityTable();
 
-        operations.clear();
+        operationTable.clear();
     }
 
     Package::mEdge Package::transpose(const Package::mEdge& a) {

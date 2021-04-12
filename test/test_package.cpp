@@ -20,12 +20,12 @@ TEST(DDPackageTest, OperationLookupTest) {
     auto dd = std::make_unique<dd::Package>(1);
 
     // ATrue is not the operation that is being stored, but for the test it doesn't matter
-    auto tmp_op = dd->operations.lookup(1, dd::ATrue, 0);
+    auto tmp_op = dd->operationTable.lookup(1, dd::ATrue, 0);
     EXPECT_TRUE(tmp_op.p == nullptr);
 
     auto x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
-    dd->operations.insert(1, dd::ATrue, 0, x_gate);
-    tmp_op = dd->operations.lookup(1, dd::ATrue, 0);
+    dd->operationTable.insert(dd::ATrue, 0, x_gate);
+    tmp_op = dd->operationTable.lookup(1, dd::ATrue, 0);
     EXPECT_TRUE(tmp_op.p == x_gate.p);
 
     tmp_op = dd->multiply(tmp_op, x_gate);
@@ -34,7 +34,7 @@ TEST(DDPackageTest, OperationLookupTest) {
     EXPECT_TRUE(tmp_op.p != nullptr);
 
     dd->garbageCollect(true);
-    tmp_op = dd->operations.lookup(1, dd::ATrue, 0);
+    tmp_op = dd->operationTable.lookup(1, dd::ATrue, 0);
     EXPECT_TRUE(tmp_op.p == nullptr);
 }
 
