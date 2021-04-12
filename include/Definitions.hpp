@@ -35,7 +35,6 @@ namespace dd {
 
     struct ComplexValue;
     class ComplexNumbers;
-    using CN = dd::ComplexNumbers;
 
     // floating point type to use
     using fp = double;
@@ -63,4 +62,5 @@ namespace dd {
     static constexpr double SERIALIZATION_VERSION = 0.1;
 
 } // namespace dd
+using CN = dd::ComplexNumbers;
 #endif //DDpackage_DATATYPES_HPP
