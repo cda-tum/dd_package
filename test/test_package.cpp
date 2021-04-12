@@ -133,6 +133,8 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     dd->vUniqueTable.printActive();
     dd->vUniqueTable.print();
     dd->printInformation();
+    dd->decRef(e);
+    dd->decRef(f);
 }
 
 TEST(DDPackageTest, VectorSerializationTest) {
@@ -315,6 +317,11 @@ TEST(DDPackageTest, ToffoliTable) {
 
     // try again with different qubit toffoli
     toffoliTableEntry = dd->toffoliTable.lookup(4, {0_pc, 1_pc, 2_pc}, 3);
+    EXPECT_EQ(toffoliTableEntry.p, nullptr);
+
+    // clear the table
+    dd->toffoliTable.clear();
+    toffoliTableEntry = dd->toffoliTable.lookup(3, {0_nc, 1_pc}, 2);
     EXPECT_EQ(toffoliTableEntry.p, nullptr);
 }
 
@@ -537,4 +544,24 @@ TEST(DDPackageTest, Inverse) {
     auto xdag = dd->conjugateTranspose(x);
     EXPECT_EQ(x, xdag);
     dd->garbageCollect(true);
+}
+
+TEST(DDPackageTest, UniqueTableAllocation) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    auto allocs = dd->vUniqueTable.getAllocations();
+    std::cout << allocs << std::endl;
+    std::vector<dd::Package::vNode*> nodes{allocs};
+    // get all the nodes that are pre-allocated
+    for (auto i = 0U; i < allocs; ++i) {
+        nodes[i] = dd->vUniqueTable.getNode();
+    }
+
+    // trigger new allocation
+    [[maybe_unused]] auto node = dd->vUniqueTable.getNode();
+    EXPECT_EQ(dd->vUniqueTable.getAllocations(), (1. + dd->vUniqueTable.getGrowthFactor()) * allocs);
+
+    // clearing the unique table should reduce the allocated size to the original size
+    dd->vUniqueTable.clear();
+    EXPECT_EQ(dd->vUniqueTable.getAllocations(), allocs);
 }

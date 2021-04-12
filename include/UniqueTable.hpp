@@ -26,6 +26,7 @@ namespace dd {
             // allocate first chunk of nodes
             allocationSize = INITIAL_ALLOCATION_SIZE;
             chunks.emplace_back(allocationSize);
+            allocations += allocationSize;
             allocationSize *= growthFactor;
             chunkIt    = chunks[0].begin();
             chunkEndIt = chunks[0].end();
@@ -59,6 +60,7 @@ namespace dd {
         [[nodiscard]] auto        getNodeCount() const { return nodeCount; }
         [[nodiscard]] auto        getPeakNodeCount() const { return peakNodeCount; }
         [[nodiscard]] auto        getAllocations() const { return allocations; }
+        [[nodiscard]] auto        getGrowthFactor() const { return growthFactor; }
         [[nodiscard]] const auto& getTables() const { return tables; }
 
         // lookup a node in the unique table for the appropriate variable; insert it, if it has not been found
@@ -121,6 +123,7 @@ namespace dd {
             // new chunk has to be allocated
             if (chunkIt == chunkEndIt) {
                 chunks.emplace_back(allocationSize);
+                allocations += allocationSize;
                 allocationSize *= growthFactor;
                 chunkID++;
                 chunkIt    = chunks[chunkID].begin();
@@ -253,6 +256,7 @@ namespace dd {
             chunkIt        = chunks[0].begin();
             chunkEndIt     = chunks[0].end();
             allocationSize = INITIAL_ALLOCATION_SIZE * growthFactor;
+            allocations    = INITIAL_ALLOCATION_SIZE;
 
             nodeCount     = 0;
             peakNodeCount = 0;
