@@ -20,8 +20,6 @@ namespace dd {
 
     template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000>
     class UniqueTable {
-        using Edge = Edge<Node>;
-
     public:
         explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0, float growthFactor = 1.5):
             chunkID(0), growthFactor(growthFactor), nvars(nvars), gcInitialLimit(gcLimit), gcLimit(gcLimit), gcIncrement(gcIncrement) {
@@ -65,7 +63,7 @@ namespace dd {
 
         // lookup a node in the unique table for the appropriate variable; insert it, if it has not been found
         // NOTE: reference counting is to be adjusted by function invoking the table lookup and only normalized nodes shall be stored.
-        Edge lookup(const Edge& e, bool keepNode = false) {
+        Edge<Node> lookup(const Edge<Node>& e, bool keepNode = false) {
             // there are unique terminal nodes
             if (e.isTerminal())
                 return e;
@@ -141,7 +139,7 @@ namespace dd {
         // increment reference counter for node e points to
         // and recursively increment reference counter for
         // each child if this is the first reference
-        void incRef(const Edge& e) {
+        void incRef(const Edge<Node>& e) {
             dd::ComplexNumbers::incRef(e.w);
             if (e.isTerminal())
                 return;
@@ -168,7 +166,7 @@ namespace dd {
         // decrement reference counter for node e points to
         // and recursively decrement reference counter for
         // each child if this is the last reference
-        void decRef(const Edge& e) {
+        void decRef(const Edge<Node>& e) {
             dd::ComplexNumbers::decRef(e.w);
             if (e.isTerminal()) return;
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) return;
