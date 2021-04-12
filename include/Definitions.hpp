@@ -24,7 +24,7 @@ namespace dd {
 
     // integer type used for reference counting
     // 32bit suffice for a max ref count of around 4 billion
-    using RefCount = std::uint_least32_t;
+    using RefCount = std::uint_fast32_t;
 
     struct Control {
         enum class Type : bool { pos = true,
