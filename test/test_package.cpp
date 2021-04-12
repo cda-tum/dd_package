@@ -66,6 +66,10 @@ TEST(DDPackageTest, BellState) {
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
     dd->printVector(bell_state);
 
+    // repeated calculation is practically for free
+    auto bell_state2 = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+    EXPECT_EQ(bell_state, bell_state2);
+
     ASSERT_EQ(dd->getValueByPath(bell_state, "00"), (dd::ComplexValue{dd::SQRT_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, "01"), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, "10"), (dd::ComplexValue{0, 0}));
@@ -599,6 +603,10 @@ TEST(DDPackageTest, SpecialCaseTerminal) {
     auto zero = dd::Package::vEdge::zero;
     EXPECT_EQ(dd->kronecker(zero, one), zero);
     EXPECT_EQ(dd->kronecker(one, one), one);
+
+    dd->debugnode(one.p);
+    dd::ComplexValue cOne{1.0, 0.0};
+    EXPECT_EQ(dd->getValueByPath(one, ""), cOne);
 }
 
 TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
