@@ -9,12 +9,12 @@
 #include "Definitions.hpp"
 
 #include <array>
+#include <functional>
 #include <iostream>
-#include <tuple>
 
 namespace dd {
 
-    template<class A, class B, class R, std::size_t (*hash)(const A&, const B&), std::size_t NBUCKET = 32768>
+    template<class A, class B, class R, std::size_t NBUCKET = 16384>
     class ComputeTable {
     public:
         ComputeTable() = default;
@@ -24,6 +24,15 @@ namespace dd {
             B b;
             R r;
         };
+
+        static constexpr std::size_t MASK = NBUCKET - 1; // must be CTSLOTS-1
+
+        static std::size_t hash(const A& a, const B& b) {
+            const auto h1   = std::hash<A>{}(a);
+            const auto h2   = std::hash<B>{}(b);
+            const auto hash = h1 ^ (h2 << 1);
+            return hash & MASK;
+        }
 
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }

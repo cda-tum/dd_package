@@ -9,8 +9,8 @@
 #include "Definitions.hpp"
 
 #include <array>
+#include <functional>
 #include <iostream>
-#include <tuple>
 
 namespace dd {
 
@@ -30,9 +30,7 @@ namespace dd {
         [[nodiscard]] const auto& getTable() const { return table; }
 
         static std::size_t hash(const A& a) {
-            const auto node_pointer = reinterpret_cast<std::uintptr_t>(a.p) >> 3U;
-            const auto weights      = reinterpret_cast<std::uintptr_t>(a.w.i) + reinterpret_cast<std::uintptr_t>(a.w.r);
-            return (node_pointer + weights) & MASK;
+            return std::hash<A>{}(a)&MASK;
         }
 
         void insert(const A& a, const R& r) {

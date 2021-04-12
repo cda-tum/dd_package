@@ -18,9 +18,9 @@
 
 namespace dd {
 
-    template<class Edge, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000>
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000>
     class UniqueTable {
-        using Node = std::remove_pointer_t<decltype(Edge::p)>;
+        using Edge = Edge<Node>;
 
     public:
         explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0, float growthFactor = 1.5):

@@ -34,6 +34,35 @@ namespace dd {
         }
     };
 
+    struct ComplexValue {
+        fp r, i;
+
+        static ComplexValue readBinary(std::istream& is) {
+            ComplexValue temp{};
+            is.read(reinterpret_cast<char*>(&temp.r), sizeof(fp));
+            is.read(reinterpret_cast<char*>(&temp.i), sizeof(fp));
+            return temp;
+        }
+
+        static ComplexValue from_string(const std::string& real_str, std::string imag_str) {
+            fp real = real_str.empty() ? 0. : std::stod(real_str);
+
+            imag_str.erase(remove(imag_str.begin(), imag_str.end(), ' '), imag_str.end());
+            imag_str.erase(remove(imag_str.begin(), imag_str.end(), 'i'), imag_str.end());
+            if (imag_str == "+" || imag_str == "-") imag_str = imag_str + "1";
+            fp imag = imag_str.empty() ? 0. : std::stod(imag_str);
+            return ComplexValue{real, imag};
+        }
+
+        bool operator==(const ComplexValue& other) const {
+            return r == other.r && i == other.i;
+        }
+
+        bool operator!=(const ComplexValue& other) const {
+            return !operator==(other);
+        }
+    };
+
     class ComplexNumbers {
         struct ComplexChunk {
             ComplexTableEntry* entry;
@@ -77,6 +106,7 @@ namespace dd {
         ComplexNumbers();
         ~ComplexNumbers();
 
+        // TODO: this does not properly clear the whole complex table
         void clear() {
             count      = 0;
             cacheCount = CACHE_SIZE;
@@ -280,4 +310,24 @@ namespace dd {
 
     std::ostream& operator<<(std::ostream& os, const ComplexValue& c);
 } // namespace dd
+
+namespace std {
+    template<>
+    struct hash<dd::Complex> {
+        std::size_t operator()(dd::Complex const& c) const noexcept {
+            auto h1 = std::hash<dd::ComplexTableEntry*>{}(c.r);
+            auto h2 = std::hash<dd::ComplexTableEntry*>{}(c.i);
+            return h1 ^ (h2 << 1);
+        }
+    };
+
+    template<>
+    struct hash<dd::ComplexValue> {
+        std::size_t operator()(dd::ComplexValue const& c) const noexcept {
+            auto h1 = std::hash<dd::fp>{}(c.r);
+            auto h2 = std::hash<dd::fp>{}(c.i);
+            return h1 ^ (h2 << 1);
+        }
+    };
+} // namespace std
 #endif

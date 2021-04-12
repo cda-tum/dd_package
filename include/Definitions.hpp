@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -26,66 +27,32 @@ namespace dd {
     // 32bit suffice for a max ref count of around 4 billion
     using RefCount = std::uint_fast32_t;
 
-    struct Control {
-        enum class Type : bool { pos = true,
-                                 neg = false };
+    // forward declarations of important structs
+    template<class Node>
+    struct Edge;
+    template<typename Node>
+    struct CachedEdge;
 
-        Qubit qubit{};
-        Type  type = Type::pos;
-    };
-
-    inline bool operator<(const Control& lhs, const Control& rhs) {
-        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
-    }
-
-    inline bool operator==(const Control& lhs, const Control& rhs) {
-        return lhs.qubit == rhs.qubit && lhs.type == rhs.type;
-    }
-
-    inline bool operator!=(const Control& lhs, const Control& rhs) {
-        return !(lhs == rhs);
-    }
-
-    inline namespace literals {
-        inline Control operator""_pc(unsigned long long int q) { return {static_cast<Qubit>(q)}; }
-        inline Control operator""_nc(unsigned long long int q) { return {static_cast<Qubit>(q), Control::Type::neg}; }
-    } // namespace literals
+    struct ComplexValue;
+    class ComplexNumbers;
+    using CN = dd::ComplexNumbers;
 
     // floating point type to use
     using fp = double;
-    struct ComplexValue {
-        fp r, i;
-
-        static ComplexValue readBinary(std::istream& is) {
-            ComplexValue temp{};
-            is.read(reinterpret_cast<char*>(&temp.r), sizeof(fp));
-            is.read(reinterpret_cast<char*>(&temp.i), sizeof(fp));
-            return temp;
-        }
-
-        static ComplexValue from_string(const std::string& real_str, std::string imag_str) {
-            fp real = real_str.empty() ? 0. : std::stod(real_str);
-
-            imag_str.erase(remove(imag_str.begin(), imag_str.end(), ' '), imag_str.end());
-            imag_str.erase(remove(imag_str.begin(), imag_str.end(), 'i'), imag_str.end());
-            if (imag_str == "+" || imag_str == "-") imag_str = imag_str + "1";
-            fp imag = imag_str.empty() ? 0. : std::stod(imag_str);
-            return ComplexValue{real, imag};
-        }
-
-        bool operator==(const ComplexValue& other) const {
-            return r == other.r && i == other.i;
-        }
-
-        bool operator!=(const ComplexValue& other) const {
-            return !operator==(other);
-        }
-    };
 
     // logic radix
     static constexpr std::uint_fast8_t RADIX = 2;
     // max no. of edges = RADIX^2
     static constexpr std::uint_fast8_t NEDGE = RADIX * RADIX;
+
+    enum class BasisStates {
+        zero,
+        one,
+        plus,
+        minus,
+        right,
+        left
+    };
 
     using GateMatrix           = std::array<ComplexValue, NEDGE>;
     static constexpr fp SQRT_2 = 0.707106781186547524400844362104849039284835937688474036588L;

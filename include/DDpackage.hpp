@@ -7,8 +7,10 @@
 #define DDpackage_H
 
 #include "ComputeTable.hpp"
+#include "Control.hpp"
 #include "DDcomplex.hpp"
 #include "Definitions.hpp"
+#include "Edge.hpp"
 #include "OperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
@@ -33,27 +35,13 @@
 #include <unordered_set>
 #include <vector>
 
-using CN = dd::ComplexNumbers;
-
 namespace dd {
-
-    enum class BasisStates {
-        zero,
-        one,
-        plus,
-        minus,
-        right,
-        left
-    };
-
     class Package {
         ///
         /// Complex number handling
         ///
     public:
         ComplexNumbers cn{};
-        // change the tolerance used to decide the equivalence of numbers
-        static void setComplexNumberTolerance(const fp tol) { CN::setTolerance(tol); }
 
         ///
         /// Construction, destruction, information and reset
@@ -90,8 +78,7 @@ namespace dd {
 
         // reset package state
         void reset() {
-            vUniqueTable.clear();
-            mUniqueTable.clear();
+            clearUniqueTables();
             clearComputeTables();
         }
 
@@ -100,84 +87,6 @@ namespace dd {
 
     private:
         std::size_t nqubits;
-
-        ///
-        /// Generic Edges
-        ///
-    public:
-        template<class Node>
-        struct Edge {
-            Node*   p;
-            Complex w;
-
-            constexpr bool operator==(const Edge& other) const {
-                return p == other.p && CN::equals(w, other.w);
-            }
-            constexpr bool operator!=(const Edge& other) const {
-                return !operator==(other);
-            }
-
-            [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
-
-            // edges pointing to zero and one terminals
-            static inline Edge one{Node::terminal, CN::ONE};
-            static inline Edge zero{Node::terminal, CN::ZERO};
-
-            [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }
-            [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == CN::ZERO; }
-            [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == CN::ONE; }
-        };
-
-        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
-        template<class Node>
-        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
-            auto&      uniqueTable = getUniqueTable<Node>();
-            Edge<Node> e{uniqueTable.getNode(), CN::ONE};
-            e.p->v = var;
-            e.p->e = edges;
-
-            assert(e.p->ref == 0);
-            for ([[maybe_unused]] const auto& edge: edges)
-                assert(edge.p->v == var - 1 || edge.isTerminal());
-
-            // normalize it
-            e = normalize(e, cached);
-            assert(e.p->v == var || e.isTerminal());
-
-            // look it up in the unique tables
-            auto l = uniqueTable.lookup(e, false);
-            assert(l.p->v == var || l.isTerminal());
-
-            // set specific node properties for matrices
-            if constexpr (std::tuple_size_v<decltype(Node::e)> == NEDGE) {
-                if (l.p == e.p)
-                    checkSpecialMatrices(l.p);
-            }
-
-            return l;
-        }
-
-    private:
-        template<typename Node>
-        struct CachedEdge {
-            Node*        p{};
-            ComplexValue w{};
-
-            CachedEdge() = default;
-            CachedEdge(Node* p, const ComplexValue& w):
-                p(p), w(w) {}
-            CachedEdge(Node* p, const Complex& c):
-                p(p) {
-                w.r = CN::val(c.r);
-                w.i = CN::val(c.i);
-            }
-            bool operator==(const CachedEdge& other) const {
-                return p == other.p && CN::equals(w, other.w);
-            }
-            bool operator!=(const CachedEdge& other) const {
-                return !operator==(other);
-            }
-        };
 
         ///
         /// Vector nodes, edges and quantum states
@@ -248,61 +157,68 @@ namespace dd {
     public:
         // unique tables
         template<class Node>
-        [[nodiscard]] UniqueTable<Edge<Node>>& getUniqueTable();
+        [[nodiscard]] UniqueTable<Node>& getUniqueTable();
 
-        UniqueTable<vEdge> vUniqueTable{nqubits};
+        template<class Node>
+        void incRef(const Edge<Node>& e) {
+            getUniqueTable<Node>().incRef(e);
+        }
+        template<class Node>
+        void decRef(const Edge<Node>& e) {
+            getUniqueTable<Node>().decRef(e);
+        }
 
-        void incRef(const vEdge& e) { vUniqueTable.incRef(e); }
-        void decRef(const vEdge& e) { vUniqueTable.decRef(e); }
-
-        UniqueTable<mEdge> mUniqueTable{nqubits};
-
-        void incRef(const mEdge& e) { mUniqueTable.incRef(e); }
-        void decRef(const mEdge& e) { mUniqueTable.decRef(e); }
+        UniqueTable<vNode> vUniqueTable{nqubits};
+        UniqueTable<mNode> mUniqueTable{nqubits};
 
         void garbageCollect(bool force = false);
 
-    private:
+        void clearUniqueTables() {
+            vUniqueTable.clear();
+            mUniqueTable.clear();
+        }
+
+        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        template<class Node>
+        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
+            auto&      uniqueTable = getUniqueTable<Node>();
+            Edge<Node> e{uniqueTable.getNode(), CN::ONE};
+            e.p->v = var;
+            e.p->e = edges;
+
+            assert(e.p->ref == 0);
+            for ([[maybe_unused]] const auto& edge: edges)
+                assert(edge.p->v == var - 1 || edge.isTerminal());
+
+            // normalize it
+            e = normalize(e, cached);
+            assert(e.p->v == var || e.isTerminal());
+
+            // look it up in the unique tables
+            auto l = uniqueTable.lookup(e, false);
+            assert(l.p->v == var || l.isTerminal());
+
+            // set specific node properties for matrices
+            if constexpr (std::tuple_size_v<decltype(Node::e)> == NEDGE) {
+                if (l.p == e.p)
+                    checkSpecialMatrices(l.p);
+            }
+
+            return l;
+        }
+
         ///
         /// Compute table definitions
         ///
     public:
-        static constexpr std::size_t CTSLOTS = 16384;       // no. of computed table slots
-        static constexpr std::size_t CTMASK  = CTSLOTS - 1; // must be CTSLOTS-1
-
-        // hash functions
-        template<class A, class B>
-        static std::size_t computeHash(const A& a, const B& b) {
-            const auto node_pointer = (reinterpret_cast<std::uintptr_t>(a.p) +
-                                       reinterpret_cast<std::uintptr_t>(b.p)) >>
-                                      3U;
-            const auto weights = reinterpret_cast<std::uintptr_t>(a.w.i) +
-                                 reinterpret_cast<std::uintptr_t>(a.w.r) +
-                                 reinterpret_cast<std::uintptr_t>(b.w.i) +
-                                 reinterpret_cast<std::uintptr_t>(b.w.r);
-            return (node_pointer + weights) & CTMASK;
-        }
-
-        template<class A, class B>
-        static std::size_t computeCachedHash(const A& a, const B& b) {
-            const auto node_pointer = (reinterpret_cast<std::uintptr_t>(a.p) +
-                                       reinterpret_cast<std::uintptr_t>(b.p)) >>
-                                      3U;
-            const auto weights = static_cast<std::size_t>(a.w.r * 1000 +
-                                                          a.w.i * 2000 +
-                                                          b.w.r * 3000 +
-                                                          b.w.i * 4000);
-            return (node_pointer + weights) & CTMASK;
-        }
-
         void clearComputeTables();
 
         ///
         /// Addition
         ///
     public:
-        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, computeCachedHash<vCachedEdge, vCachedEdge>, CTSLOTS> vectorAdd{};
-        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, computeCachedHash<mCachedEdge, mCachedEdge>, CTSLOTS> matrixAdd{};
+        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge> vectorAdd{};
+        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge> matrixAdd{};
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
             [[maybe_unused]] const auto before = cn.cacheCount;
@@ -328,8 +244,8 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        UnaryComputeTable<mEdge, mEdge, CTSLOTS> matrixTranspose{};
-        UnaryComputeTable<mEdge, mEdge, CTSLOTS> conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge> matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge> conjugateMatrixTranspose{};
 
         mEdge transpose(const mEdge& a);
         mEdge conjugateTranspose(const mEdge& a);
@@ -338,8 +254,8 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTable<mEdge, vEdge, vCachedEdge, computeHash<mEdge, vEdge>, CTSLOTS> matrixVectorMultiplication{};
-        ComputeTable<mEdge, mEdge, mCachedEdge, computeHash<mEdge, mEdge>, CTSLOTS> matrixMultiplication{};
+        ComputeTable<mEdge, vEdge, vCachedEdge> matrixVectorMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge> matrixMultiplication{};
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y) {
             [[maybe_unused]] const auto before = cn.cacheCount;
@@ -373,7 +289,7 @@ namespace dd {
         /// Inner product and fidelity
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, computeHash<vEdge, vEdge>, CTSLOTS> vectorInnerProduct{};
+        ComputeTable<vEdge, vEdge, vCachedEdge> vectorInnerProduct{};
 
         ComplexValue innerProduct(const vEdge& x, const vEdge& y);
         fp           fidelity(const vEdge& x, const vEdge& y);
@@ -385,8 +301,8 @@ namespace dd {
         /// Kronecker/tensor product
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, computeHash<vEdge, vEdge>, CTSLOTS> vectorKronecker{};
-        ComputeTable<mEdge, mEdge, mCachedEdge, computeHash<mEdge, mEdge>, CTSLOTS> matrixKronecker{};
+        ComputeTable<vEdge, vEdge, vCachedEdge> vectorKronecker{};
+        ComputeTable<mEdge, mEdge, mCachedEdge> matrixKronecker{};
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y) {
             auto e = kronecker2(x, y);
@@ -843,9 +759,9 @@ namespace dd {
             .ident = true};
 
     template<>
-    [[nodiscard]] inline UniqueTable<Package::vEdge>& Package::getUniqueTable() { return vUniqueTable; }
+    [[nodiscard]] inline UniqueTable<Package::vNode>& Package::getUniqueTable() { return vUniqueTable; }
 
     template<>
-    [[nodiscard]] inline UniqueTable<Package::mEdge>& Package::getUniqueTable() { return mUniqueTable; }
+    [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
 } // namespace dd
 #endif
