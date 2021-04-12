@@ -81,14 +81,14 @@ TEST(DDPackageTest, BellState) {
 
     ASSERT_DOUBLE_EQ(dd->fidelity(zero_state, bell_state), 0.5);
 
-    export2Dot(bell_state, "bell_state_colored_labels.dot", true, true, false);
-    export2Dot(bell_state, "bell_state_colored_labels_classic.dot", true, true, true);
-    export2Dot(bell_state, "bell_state_mono_labels.dot", false, true, false);
-    export2Dot(bell_state, "bell_state_mono_labels_classic.dot", false, true, true);
-    export2Dot(bell_state, "bell_state_colored.dot", true, false, false);
-    export2Dot(bell_state, "bell_state_colored_classic.dot", true, false, true);
-    export2Dot(bell_state, "bell_state_mono.dot", false, false, false);
-    export2Dot(bell_state, "bell_state_mono_classic.dot", false, false, true);
+    export2Dot(bell_state, "bell_state_colored_labels.dot", true, true, false, false);
+    export2Dot(bell_state, "bell_state_colored_labels_classic.dot", true, true, true, false);
+    export2Dot(bell_state, "bell_state_mono_labels.dot", false, true, false, false);
+    export2Dot(bell_state, "bell_state_mono_labels_classic.dot", false, true, true, false);
+    export2Dot(bell_state, "bell_state_colored.dot", true, false, false, false);
+    export2Dot(bell_state, "bell_state_colored_classic.dot", true, false, true, false);
+    export2Dot(bell_state, "bell_state_mono.dot", false, false, false, false);
+    export2Dot(bell_state, "bell_state_mono_classic.dot", false, false, true, false);
 
     dd->statistics();
 }
@@ -195,14 +195,14 @@ TEST(DDPackageTest, BellMatrix) {
     auto goal_matrix = dd::CMat{goal_row_0, goal_row_1, goal_row_2, goal_row_3};
     ASSERT_EQ(dd->getMatrix(bell_matrix), goal_matrix);
 
-    export2Dot(bell_matrix, "bell_matrix_colored_labels.dot", true, true, false);
-    export2Dot(bell_matrix, "bell_matrix_colored_labels_classic.dot", true, true, true);
-    export2Dot(bell_matrix, "bell_matrix_mono_labels.dot", false, true, false);
-    export2Dot(bell_matrix, "bell_matrix_mono_labels_classic.dot", false, true, true);
-    export2Dot(bell_matrix, "bell_matrix_colored.dot", true, false, false);
-    export2Dot(bell_matrix, "bell_matrix_colored_classic.dot", true, false, true);
-    export2Dot(bell_matrix, "bell_matrix_mono.dot", false, false, false);
-    export2Dot(bell_matrix, "bell_matrix_mono_classic.dot", false, false, true);
+    export2Dot(bell_matrix, "bell_matrix_colored_labels.dot", true, true, false, false);
+    export2Dot(bell_matrix, "bell_matrix_colored_labels_classic.dot", true, true, true, false);
+    export2Dot(bell_matrix, "bell_matrix_mono_labels.dot", false, true, false, false);
+    export2Dot(bell_matrix, "bell_matrix_mono_labels_classic.dot", false, true, true, false);
+    export2Dot(bell_matrix, "bell_matrix_colored.dot", true, false, false, false);
+    export2Dot(bell_matrix, "bell_matrix_colored_classic.dot", true, false, true, false);
+    export2Dot(bell_matrix, "bell_matrix_mono.dot", false, false, false, false);
+    export2Dot(bell_matrix, "bell_matrix_mono_classic.dot", false, false, true, false);
 
     dd->statistics();
 }
@@ -586,4 +586,42 @@ TEST(DDPackageTest, MatrixTranspose) {
     // perform the same computation again -> trigger a compute table hit
     auto yAgain = dd->transpose(yTransposed);
     EXPECT_EQ(yAgain, y);
+}
+
+TEST(DDPackageTest, SpecialCaseTerminal) {
+    auto dd = std::make_unique<dd::Package>(1);
+    auto t  = dd::Package::vEdge::one;
+    dd::export2Dot(t, "oneColored.dot", true);
+    dd::export2Dot(t, "oneClassic.dot", false);
+
+    EXPECT_EQ(dd->vUniqueTable.lookup(t), t);
+}
+
+TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // one node in unique table of variable 0
+    const auto& unique = dd->mUniqueTable.getTables();
+    const auto& table  = unique[0];
+
+    auto I     = dd->makeIdent(1);
+    auto Ihash = dd->mUniqueTable.hash(I.p);
+
+    // two nodes in same unique table bucket of variable 0
+    auto Z     = dd->makeGateDD(dd::Zmat, 1, 0);
+    auto Zhash = dd->mUniqueTable.hash(Z.p);
+
+    // I and Z should be placed in the same bucket
+    EXPECT_EQ(Ihash, Zhash);
+
+    // increase the reference count of the Z gate, but not the I gate
+    dd->incRef(Z);
+
+    // garbage collection should only collect the I gate and leave the Z gate at the front of the bucket
+    dd->garbageCollect(true);
+
+    EXPECT_EQ(table[Zhash].front(), Z.p);
+    auto it = table[Zhash].begin();
+    ++it;
+    EXPECT_EQ(it, table[Zhash].end());
 }

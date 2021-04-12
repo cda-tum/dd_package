@@ -260,3 +260,13 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(ss.str().c_str(), "+0.1234i");
     ss.str("");
 }
+
+TEST(DDComplexTest, MaxRefCountReached) {
+    auto cn  = ComplexNumbers();
+    auto c   = cn.lookup(SQRT_2, SQRT_2);
+    auto max = std::numeric_limits<decltype(c.r->ref)>::max();
+    c.r->ref = max;
+    CN::incRef(c);
+    EXPECT_EQ(c.r->ref, max);
+    EXPECT_EQ(c.i->ref, max);
+}

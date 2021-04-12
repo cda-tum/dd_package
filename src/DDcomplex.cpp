@@ -443,16 +443,16 @@ namespace dd {
             if (ptr_r != &oneEntry && ptr_r != &zeroEntry) {
                 if (ptr_r->ref == std::numeric_limits<decltype(ptr_r->ref)>::max()) {
                     std::clog << "[WARN] MAXREFCNT reached for r=" << val(ptr_r) << ". Number will never be collected." << std::endl;
-                    return;
+                } else {
+                    ptr_r->ref++;
                 }
-                ptr_r->ref++;
             }
             if (ptr_i != &oneEntry && ptr_i != &zeroEntry) {
                 if (ptr_i->ref == std::numeric_limits<decltype(ptr_i->ref)>::max()) {
                     std::clog << "[WARN] MAXREFCNT reached for i=" << val(ptr_i) << ". Number will never be collected." << std::endl;
-                    return;
+                } else {
+                    ptr_i->ref++;
                 }
-                ptr_i->ref++;
             }
         }
     }

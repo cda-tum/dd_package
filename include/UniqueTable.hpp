@@ -202,26 +202,15 @@ namespace dd {
             for (auto& table: tables) {
                 for (auto& bucket: table) {
                     auto it     = bucket.begin();
-                    auto lastit = bucket.begin();
+                    auto lastit = bucket.before_begin();
                     while (it != bucket.end()) {
                         if ((*it)->ref == 0) {
-                            if (Node::isTerminal(*it)) {
-                                throw std::runtime_error("Tried to collect a terminal node.");
-                            }
+                            assert(!Node::isTerminal(*it));
 
-                            // first entry shall be removed
-                            if (lastit == it) {
-                                auto node = bucket.front();
-                                bucket.pop_front();
-                                returnNode(node);
-                                it     = bucket.begin();
-                                lastit = bucket.begin();
-                            } else { // entry in middle of list shall be removed
-                                auto node = (*it);
-                                bucket.erase_after(lastit); // erases the element at `it`
-                                returnNode(node);
-                                it = ++lastit;
-                            }
+                            auto node = (*it);
+                            bucket.erase_after(lastit); // erases the element at `it`
+                            returnNode(node);
+                            it = ++lastit;
                             collected++;
                         } else {
                             ++it;
