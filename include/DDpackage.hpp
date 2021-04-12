@@ -396,6 +396,10 @@ namespace dd {
     public:
         ComputeTable<vEdge, vEdge, vCachedEdge> vectorKronecker{};
         ComputeTable<mEdge, mEdge, mCachedEdge> matrixKronecker{};
+
+        template<class Node>
+        [[nodiscard]] ComputeTable<Edge<Node>, Edge<Node>, CachedEdge<Node>>& getKroneckerComputeTable();
+
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y) {
             auto e = kronecker2(x, y);
@@ -412,8 +416,52 @@ namespace dd {
         mEdge extend(const mEdge& e, Qubit h = 0, Qubit l = 0);
 
     private:
-        vEdge kronecker2(const vEdge& x, const vEdge& y);
-        mEdge kronecker2(const mEdge& x, const mEdge& y);
+        template<class Node>
+        Edge<Node> kronecker2(const Edge<Node>& x, const Edge<Node>& y) {
+            if (CN::equalsZero(x.w))
+                return Edge<Node>::zero;
+
+            if (x.isTerminal()) {
+                auto r = y;
+                r.w    = cn.mulCached(x.w, y.w);
+                return r;
+            }
+
+            auto& computeTable = getKroneckerComputeTable<Node>();
+            auto  r            = computeTable.lookup(x, y);
+            if (r.p != nullptr) {
+                if (CN::equalsZero(r.w)) {
+                    return Edge<Node>::zero;
+                } else {
+                    return {r.p, cn.getCachedComplex(r.w)};
+                }
+            }
+
+            constexpr std::size_t N = std::tuple_size_v<decltype(x.p->e)>;
+            // special case handling for matrices
+            if constexpr (N == NEDGE) {
+                if (x.p->ident) {
+                    auto e = makeDDNode(static_cast<Qubit>(y.p->v + 1), std::array{y, Edge<Node>::zero, Edge<Node>::zero, y});
+                    for (auto i = 0; i < x.p->v; ++i) {
+                        e = makeDDNode(static_cast<Qubit>(e.p->v + 1), std::array{e, Edge<Node>::zero, Edge<Node>::zero, e});
+                    }
+
+                    e.w = cn.getCachedComplex(CN::val(y.w.r), CN::val(y.w.i));
+                    computeTable.insert(x, y, {e.p, e.w});
+                    return e;
+                }
+            }
+
+            std::array<Edge<Node>, N> edge{};
+            for (auto i = 0U; i < N; ++i) {
+                edge[i] = kronecker2(x.p->e[i], y);
+            }
+
+            auto e = makeDDNode(static_cast<Qubit>(y.p->v + x.p->v + 1), edge, true);
+            CN::mul(e.w, e.w, x.w);
+            computeTable.insert(x, y, {e.p, e.w});
+            return e;
+        }
 
         ///
         /// (Partial) trace
@@ -862,5 +910,11 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge>& Package::getKroneckerComputeTable() { return vectorKronecker; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getKroneckerComputeTable() { return matrixKronecker; }
 } // namespace dd
 #endif
