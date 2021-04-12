@@ -219,6 +219,10 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge> matrixAdd{};
+
+        template<class Node>
+        [[nodiscard]] ComputeTable<CachedEdge<Node>, CachedEdge<Node>, CachedEdge<Node>>& getAddComputeTable();
+
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
             [[maybe_unused]] const auto before = cn.cacheCount;
@@ -237,8 +241,97 @@ namespace dd {
         }
 
     private:
-        vEdge add2(const vEdge& x, const vEdge& y);
-        mEdge add2(const mEdge& x, const mEdge& y);
+        template<class Node>
+        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y) {
+            if (x.p == nullptr) return y;
+            if (y.p == nullptr) return x;
+
+            if (x.w == CN::ZERO) {
+                if (y.w == CN::ZERO) return y;
+                auto r = y;
+                r.w    = cn.getCachedComplex(CN::val(y.w.r), CN::val(y.w.i));
+                return r;
+            }
+            if (y.w == CN::ZERO) {
+                auto r = x;
+                r.w    = cn.getCachedComplex(CN::val(x.w.r), CN::val(x.w.i));
+                return r;
+            }
+            if (x.p == y.p) {
+                auto r = y;
+                r.w    = cn.addCached(x.w, y.w);
+                if (CN::equalsZero(r.w)) {
+                    cn.releaseCached(r.w);
+                    return Edge<Node>::zero;
+                }
+                return r;
+            }
+
+            auto& computeTable = getAddComputeTable<Node>();
+            auto  r            = computeTable.lookup({x.p, x.w}, {y.p, y.w});
+            if (r.p != nullptr) {
+                if (CN::equalsZero(r.w)) {
+                    return Edge<Node>::zero;
+                } else {
+                    return {r.p, cn.getCachedComplex(r.w)};
+                }
+            }
+
+            Qubit w;
+            if (x.isTerminal()) {
+                w = y.p->v;
+            } else {
+                w = x.p->v;
+                if (!y.isTerminal() && y.p->v > w) {
+                    w = y.p->v;
+                }
+            }
+
+            constexpr std::size_t     N = std::tuple_size_v<decltype(x.p->e)>;
+            std::array<Edge<Node>, N> edge{};
+            for (auto i = 0U; i < N; i++) {
+                Edge<Node> e1{};
+                if (!x.isTerminal() && x.p->v == w) {
+                    e1 = x.p->e[i];
+
+                    if (e1.w != CN::ZERO) {
+                        e1.w = cn.mulCached(e1.w, x.w);
+                    }
+                } else {
+                    e1 = x;
+                    if (y.p->e[i].p == nullptr) {
+                        e1 = {nullptr, CN::ZERO};
+                    }
+                }
+                Edge<Node> e2{};
+                if (!y.isTerminal() && y.p->v == w) {
+                    e2 = y.p->e[i];
+
+                    if (e2.w != CN::ZERO) {
+                        e2.w = cn.mulCached(e2.w, y.w);
+                    }
+                } else {
+                    e2 = y;
+                    if (x.p->e[i].p == nullptr) {
+                        e2 = {nullptr, CN::ZERO};
+                    }
+                }
+
+                edge[i] = add2(e1, e2);
+
+                if (!x.isTerminal() && x.p->v == w && e1.w != CN::ZERO) {
+                    cn.releaseCached(e1.w);
+                }
+
+                if (!y.isTerminal() && y.p->v == w && e2.w != CN::ZERO) {
+                    cn.releaseCached(e2.w);
+                }
+            }
+
+            auto e = makeDDNode(w, edge, true);
+            computeTable.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w});
+            return e;
+        }
 
         ///
         /// Matrix (conjugate) transpose
@@ -763,5 +856,11 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
 } // namespace dd
 #endif
