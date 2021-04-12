@@ -12,6 +12,10 @@
 
 using namespace dd::literals;
 
+TEST(DDPackageTest, RequestInvalidPackageSize) {
+    EXPECT_THROW(auto dd = std::make_unique<dd::Package>(std::numeric_limits<dd::Qubit>::max() + 2), std::invalid_argument);
+}
+
 TEST(DDPackageTest, OperationLookupTest) {
     auto dd = std::make_unique<dd::Package>(1);
 
@@ -60,6 +64,7 @@ TEST(DDPackageTest, BellState) {
     auto zero_state = dd->makeZeroState(2);
 
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+    dd->printVector(bell_state);
 
     ASSERT_EQ(dd->getValueByPath(bell_state, "00"), (dd::ComplexValue{dd::SQRT_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, "01"), (dd::ComplexValue{0, 0}));
@@ -411,7 +416,34 @@ TEST(DDPackageTest, Ancillaries) {
     EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[3].isZeroTerminal());
 }
 
-TEST(DDPackageTest, Garbage) {
+TEST(DDPackageTest, GarbageVector) {
+    auto dd         = std::make_unique<dd::Package>(4);
+    auto h_gate     = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto cx_gate    = dd->makeGateDD(dd::Xmat, 2, 0, 1);
+    auto zero_state = dd->makeZeroState(2);
+    auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+    dd->printVector(bell_state);
+
+    auto reduced_bell_state = dd->reduceGarbage(bell_state, {false, false, false, false});
+    EXPECT_EQ(bell_state, reduced_bell_state);
+    reduced_bell_state = dd->reduceGarbage(bell_state, {false, false, true, false});
+    EXPECT_EQ(bell_state, reduced_bell_state);
+
+    reduced_bell_state = dd->reduceGarbage(bell_state, {false, true, false, false});
+    auto vec           = dd->getVector(reduced_bell_state);
+    dd->printVector(reduced_bell_state);
+    auto zero = std::pair{0.f, 0.f};
+    EXPECT_EQ(vec[2], zero);
+    EXPECT_EQ(vec[3], zero);
+
+    reduced_bell_state = dd->reduceGarbage(bell_state, {true, false, false, false});
+    dd->printVector(reduced_bell_state);
+    vec = dd->getVector(reduced_bell_state);
+    EXPECT_EQ(vec[1], zero);
+    EXPECT_EQ(vec[3], zero);
+}
+
+TEST(DDPackageTest, GarbageMatrix) {
     auto dd          = std::make_unique<dd::Package>(4);
     auto h_gate      = dd->makeGateDD(dd::Hmat, 2, 0);
     auto cx_gate     = dd->makeGateDD(dd::Xmat, 2, 0, 1);

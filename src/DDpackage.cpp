@@ -969,12 +969,12 @@ namespace dd {
 
         // something to reduce for this qubit
         if (f.p->v >= 0 && garbage[f.p->v]) {
-            if (f.p->e[2].w != CN::ZERO) {
+            if (f.p->e[1].w != CN::ZERO) {
                 vEdge g{};
-                if (f.p->e[0].w == CN::ZERO && f.p->e[2].w != CN::ZERO) {
-                    g = f.p->e[2];
-                } else if (f.p->e[2].w != CN::ZERO) {
-                    g = add(f.p->e[0], f.p->e[2]);
+                if (f.p->e[0].w == CN::ZERO && f.p->e[1].w != CN::ZERO) {
+                    g = f.p->e[1];
+                } else if (f.p->e[1].w != CN::ZERO) {
+                    g = add(f.p->e[0], f.p->e[1]);
                 } else {
                     g = f.p->e[0];
                 }
