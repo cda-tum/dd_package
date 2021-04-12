@@ -67,7 +67,7 @@ namespace dd {
         // NOTE: reference counting is to be adjusted by function invoking the table lookup and only normalized nodes shall be stored.
         Edge lookup(const Edge& e, bool keepNode = false) {
             // there are unique terminal nodes
-            if (e.p->v == -1)
+            if (e.isTerminal())
                 return e;
 
             lookups++;
@@ -76,7 +76,7 @@ namespace dd {
 
             // successors of a node shall either have successive variable numbers or be terminals
             for ([[maybe_unused]] const auto& edge: e.p->e)
-                assert(edge.p->v == v - 1 || isTerminal(edge));
+                assert(edge.p->v == v - 1 || edge.isTerminal());
 
             auto& bucket = tables[v][key];
             auto  it     = bucket.begin();
@@ -94,7 +94,7 @@ namespace dd {
 
                     // successors of a node shall either have successive variable numbers or be terminals
                     for ([[maybe_unused]] const auto& edge: e.p->e)
-                        assert(edge.p->v == v - 1 || isTerminal(edge));
+                        assert(edge.p->v == v - 1 || edge.isTerminal());
 
                     return {(*it), e.w};
                 }
@@ -143,7 +143,7 @@ namespace dd {
         // each child if this is the first reference
         void incRef(const Edge& e) {
             dd::ComplexNumbers::incRef(e.w);
-            if (isTerminal(e))
+            if (e.isTerminal())
                 return;
 
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) {
@@ -170,7 +170,7 @@ namespace dd {
         // each child if this is the last reference
         void decRef(const Edge& e) {
             dd::ComplexNumbers::decRef(e.w);
-            if (isTerminal(e)) return;
+            if (e.isTerminal()) return;
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) return;
 
             if (e.p->ref == 0) {
@@ -204,7 +204,7 @@ namespace dd {
                     auto lastit = bucket.begin();
                     while (it != bucket.end()) {
                         if ((*it)->ref == 0) {
-                            if ((*it)->v == -1) {
+                            if (Node::isTerminal(*it)) {
                                 throw std::runtime_error("Tried to collect a terminal node.");
                             }
 
@@ -349,8 +349,6 @@ namespace dd {
         std::size_t gcInitialLimit = 250000;
         std::size_t gcLimit        = 250000;
         std::size_t gcIncrement    = 0;
-
-        [[nodiscard]] static bool isTerminal(const Edge& e) { return e.p->v == -1; }
     };
 
 } // namespace dd
