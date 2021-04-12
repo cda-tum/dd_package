@@ -30,7 +30,6 @@ namespace dd {
                   << "\n  ToffoliTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
                   << "\n  OperationTable::Entry size: " << sizeof(OperationTable<mEdge>::Entry) << " bytes (aligned " << alignof(OperationTable<mEdge>::Entry) << " bytes)"
                   << "\n  Package size: " << sizeof(Package) << " bytes (aligned " << alignof(Package) << " bytes)"
-                  << "\n  ComputeTable slots: " << CTSLOTS
                   << "\n"
                   << std::flush;
     }
