@@ -69,6 +69,7 @@ namespace dd {
         auto zero = std::array{CN::equalsZero(e.p->e[0].w), CN::equalsZero(e.p->e[1].w)};
 
         for (auto i = 0U; i < RADIX; i++) {
+            // make sure to release cached numbers approximately zero, but not exactly zero
             if (zero[i] && e.p->e[i].w != CN::ZERO) {
                 cn.releaseCached(e.p->e[i].w);
                 e.p->e[i] = vEdge::zero;
@@ -91,15 +92,10 @@ namespace dd {
             }
         }
 
+        // all equal to zero
         if (argmax == -1) {
-            if (cached) {
-                for (auto& i: e.p->e) {
-                    if (i.p == nullptr && i.w != CN::ZERO) {
-                        cn.releaseCached(i.w);
-                    }
-                }
-            } else if (!e.isTerminal()) {
-                // If it is not a cached variable, it has to be put back into the chain
+            if (!cached && !e.isTerminal()) {
+                // If it is not a cached computation, the node has to be put back into the chain
                 vUniqueTable.returnNode(e.p);
             }
             return vEdge::zero;
@@ -212,6 +208,7 @@ namespace dd {
                                CN::equalsZero(e.p->e[3].w)};
 
         for (auto i = 0U; i < NEDGE; i++) {
+            // make sure to release cached numbers approximately zero, but not exactly zero
             if (zero[i] && e.p->e[i].w != CN::ZERO) {
                 cn.releaseCached(e.p->e[i].w);
                 e.p->e[i] = mEdge::zero;
@@ -237,16 +234,10 @@ namespace dd {
             }
         }
 
-        // all equal to zero - make sure to release cached numbers approximately zero, but not exactly zero
+        // all equal to zero
         if (argmax == -1) {
-            if (cached) {
-                for (auto const& i: e.p->e) {
-                    if (i.w != CN::ZERO) {
-                        cn.releaseCached(i.w);
-                    }
-                }
-            } else if (!e.isTerminal()) {
-                // If it is not a cached variable, I have to put it pack into the chain
+            if (!cached && !e.isTerminal()) {
+                // If it is not a cached computation, the node has to be put back into the chain
                 mUniqueTable.returnNode(e.p);
             }
             return mEdge::zero;

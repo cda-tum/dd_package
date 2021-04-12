@@ -655,3 +655,51 @@ TEST(DDPackageTest, KroneckerProduct) {
     auto kronecker2 = dd->kronecker(X, X);
     EXPECT_EQ(kronecker, kronecker2);
 }
+
+TEST(DDPackageTest, NearZeroNormalize) {
+    auto               dd       = std::make_unique<dd::Package>(2);
+    dd::fp             nearZero = CN::TOLERANCE / 10;
+    dd::Package::vEdge ve{};
+    ve.p    = dd->vUniqueTable.getNode();
+    ve.p->v = 1;
+    ve.w    = CN::ONE;
+    for (auto& edge: ve.p->e) {
+        edge.p    = dd->vUniqueTable.getNode();
+        edge.p->v = 0;
+        edge.w    = dd->cn.getCachedComplex(nearZero, 0.);
+        edge.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    }
+    auto veNormalizedCached = dd->normalize(ve, true);
+    EXPECT_EQ(veNormalizedCached, dd::Package::vEdge::zero);
+
+    for (auto& edge: ve.p->e) {
+        edge.p    = dd->vUniqueTable.getNode();
+        edge.p->v = 0;
+        edge.w    = dd->cn.lookup(nearZero, 0.);
+        edge.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    }
+    auto veNormalized = dd->normalize(ve, false);
+    EXPECT_EQ(veNormalized, dd::Package::vEdge::zero);
+
+    dd::Package::mEdge me{};
+    me.p    = dd->mUniqueTable.getNode();
+    me.p->v = 1;
+    me.w    = CN::ONE;
+    for (auto& edge: me.p->e) {
+        edge.p    = dd->mUniqueTable.getNode();
+        edge.p->v = 0;
+        edge.w    = dd->cn.getCachedComplex(nearZero, 0.);
+        edge.p->e = {dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one};
+    }
+    auto meNormalizedCached = dd->normalize(me, true);
+    EXPECT_EQ(meNormalizedCached, dd::Package::mEdge::zero);
+
+    for (auto& edge: me.p->e) {
+        edge.p    = dd->mUniqueTable.getNode();
+        edge.p->v = 0;
+        edge.w    = dd->cn.lookup(nearZero, 0.);
+        edge.p->e = {dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one};
+    }
+    auto meNormalized = dd->normalize(me, false);
+    EXPECT_EQ(meNormalized, dd::Package::mEdge::zero);
+}
