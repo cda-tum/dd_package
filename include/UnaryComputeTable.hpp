@@ -14,14 +14,18 @@
 
 namespace dd {
 
-    template<class A, class R, std::size_t NBUCKET = 32768>
+    /// Data structure for caching computed results of unary operations
+    /// \tparam OperandType type of the operation's operand
+    /// \tparam ResultType type of the operation's result
+    /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
+    template<class OperandType, class ResultType, std::size_t NBUCKET = 32768>
     class UnaryComputeTable {
     public:
         UnaryComputeTable() = default;
 
         struct Entry {
-            A a;
-            R r;
+            OperandType operand;
+            ResultType  result;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -29,32 +33,32 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        static std::size_t hash(const A& a) {
-            return std::hash<A>{}(a)&MASK;
+        static std::size_t hash(const OperandType& a) {
+            return std::hash<OperandType>{}(a)&MASK;
         }
 
-        void insert(const A& a, const R& r) {
-            const auto key = hash(a);
-            table[key]     = {.a = a, .r = r};
+        void insert(const OperandType& operand, const ResultType& result) {
+            const auto key = hash(operand);
+            table[key]     = {operand, result};
             ++count;
         }
 
-        R lookup(const A& a) {
-            R r{};
+        ResultType lookup(const OperandType& operand) {
+            ResultType result{};
             lookups++;
-            const auto key   = hash(a);
+            const auto key   = hash(operand);
             auto&      entry = table[key];
-            if (entry.r.p == nullptr) return r;
-            if (entry.a != a) return r;
+            if (entry.result.p == nullptr) return result;
+            if (entry.operand != operand) return result;
 
             hits++;
-            return entry.r;
+            return entry.result;
         }
 
         void clear() {
             if (count > 0) {
                 for (auto& entry: table)
-                    entry.r.p = nullptr;
+                    entry.result.p = nullptr;
                 count = 0;
             }
             hits    = 0;
