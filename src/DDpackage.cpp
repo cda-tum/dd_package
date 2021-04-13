@@ -183,16 +183,16 @@ namespace dd {
                     f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
                     break;
                 case BasisStates::plus:
-                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(CN::SQRT_2, 0)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(dd::SQRT2_2, 0)}}});
                     break;
                 case BasisStates::minus:
-                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(-CN::SQRT_2, 0)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(-dd::SQRT2_2, 0)}}});
                     break;
                 case BasisStates::right:
-                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, CN::SQRT_2)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, dd::SQRT2_2)}}});
                     break;
                 case BasisStates::left:
-                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(CN::SQRT_2, 0)}, {f.p, cn.lookup(0, -CN::SQRT_2)}}});
+                    f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, -dd::SQRT2_2)}}});
                     break;
             }
         }

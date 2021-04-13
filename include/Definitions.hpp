@@ -53,8 +53,9 @@ namespace dd {
         left
     };
 
-    using GateMatrix           = std::array<ComplexValue, NEDGE>;
-    static constexpr fp SQRT_2 = 0.707106781186547524400844362104849039284835937688474036588L;
+    using GateMatrix            = std::array<ComplexValue, NEDGE>;
+    static constexpr fp SQRT2_2 = 0.707106781186547524400844362104849039284835937688474036588L;
+    static constexpr fp PI      = 3.141592653589793238462643383279502884197169399375105820974L;
 
     using CVec = std::vector<std::pair<float, float>>;
     using CMat = std::vector<CVec>;

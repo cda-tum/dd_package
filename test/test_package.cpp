@@ -45,7 +45,7 @@ TEST(DDPackageTest, TrivialTest) {
     auto x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
     auto h_gate = dd->makeGateDD(dd::Hmat, 1, 0);
 
-    ASSERT_EQ(dd->getValueByPath(h_gate, "0"), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(h_gate, "0"), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
     auto zero_state = dd->makeZeroState(1);
     auto h_state    = dd->multiply(h_gate, zero_state);
@@ -70,17 +70,17 @@ TEST(DDPackageTest, BellState) {
     auto bell_state2 = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
     EXPECT_EQ(bell_state, bell_state2);
 
-    ASSERT_EQ(dd->getValueByPath(bell_state, "00"), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_state, "00"), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, "01"), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, "10"), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_state, "11"), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_state, "11"), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
-    ASSERT_EQ(dd->getValueByPath(bell_state, 0), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_state, 0), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, 1), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, 2), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_state, 3), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_state, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
-    auto goal_state = std::vector<std::pair<float, float>>{{dd::SQRT_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT_2, 0.}};
+    auto goal_state = std::vector<std::pair<float, float>>{{dd::SQRT2_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
     ASSERT_EQ(dd->getVector(bell_state), goal_state);
 
     ASSERT_DOUBLE_EQ(dd->fidelity(zero_state, bell_state), 0.5);
@@ -167,35 +167,35 @@ TEST(DDPackageTest, BellMatrix) {
 
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, "00"), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, "00"), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, "02"), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, "20"), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, "22"), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, "22"), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 0), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 0), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 0), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 0), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 0), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 0), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 1), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 1), (dd::ComplexValue{dd::SQRT_2, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 1), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 1), (dd::ComplexValue{dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 1), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 1), (dd::ComplexValue{0, 0}));
 
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 2), (dd::ComplexValue{dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 2), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 2), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 2), (dd::ComplexValue{-dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 2), (dd::ComplexValue{-dd::SQRT2_2, 0}));
 
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 3), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 3), (dd::ComplexValue{dd::SQRT_2, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 3), (dd::ComplexValue{-dd::SQRT_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 3), (dd::ComplexValue{-dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 3), (dd::ComplexValue{0, 0}));
 
-    auto goal_row_0  = dd::CVec{{dd::SQRT_2, 0.}, {0., 0.}, {dd::SQRT_2, 0.}, {0., 0.}};
-    auto goal_row_1  = dd::CVec{{0., 0.}, {dd::SQRT_2, 0.}, {0., 0.}, {dd::SQRT_2, 0.}};
-    auto goal_row_2  = dd::CVec{{0., 0.}, {dd::SQRT_2, 0.}, {0., 0.}, {-dd::SQRT_2, 0.}};
-    auto goal_row_3  = dd::CVec{{dd::SQRT_2, 0.}, {0., 0.}, {-dd::SQRT_2, 0.}, {0., 0.}};
+    auto goal_row_0  = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}};
+    auto goal_row_1  = dd::CVec{{0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
+    auto goal_row_2  = dd::CVec{{0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}, {-dd::SQRT2_2, 0.}};
+    auto goal_row_3  = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {-dd::SQRT2_2, 0.}, {0., 0.}};
     auto goal_matrix = dd::CMat{goal_row_0, goal_row_1, goal_row_2, goal_row_3};
     ASSERT_EQ(dd->getMatrix(bell_matrix), goal_matrix);
 

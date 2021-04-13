@@ -30,7 +30,7 @@ namespace dd {
         count                     = 2;
 
         lookupVal(0.5L)->ref++;
-        lookupVal(SQRT_2)->ref++;
+        lookupVal(SQRT2_2)->ref++;
     }
 
     ComplexNumbers::~ComplexNumbers() {
@@ -482,7 +482,7 @@ namespace dd {
             return;
         }
         auto n = std::log2(std::abs(r));
-        auto m = std::log2(std::abs(r) / SQRT_2);
+        auto m = std::log2(std::abs(r) / SQRT2_2);
         auto o = std::log2(std::abs(r) / PI);
 
         if (n == 0) { // +-1

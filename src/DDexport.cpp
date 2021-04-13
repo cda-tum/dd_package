@@ -12,7 +12,7 @@ namespace dd {
 
     std::string colorFromPhase(const Complex& a) {
         auto phase = CN::arg(a);
-        auto twopi = 2 * CN::PI;
+        auto twopi = 2 * dd::PI;
         phase      = (phase) / twopi;
         std::ostringstream oss{};
         oss << std::fixed << std::setprecision(3) << phase << " " << 0.667 << " " << 0.75;
