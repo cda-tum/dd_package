@@ -18,23 +18,30 @@
 
 namespace dd {
 
-    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000>
+    /// Data structure for providing and uniquely storing DD nodes
+    /// \tparam Node class of nodes to provide/store
+    /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
+    /// \tparam INITIAL_ALLOCATION_SIZE number if nodes initially allocated
+    /// \tparam GROWTH_PERCENTAGE percentage that the allocations' size shall grow over time
+    /// \tparam INITIAL_GC_LIMIT number of nodes initially used as garbage collection threshold
+    /// \tparam GC_INCREMENT absolute number of nodes to increase the garbage collection threshold after garbage collection has been performed
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000, std::size_t GROWTH_PERCENTAGE = 150, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
     class UniqueTable {
     public:
-        explicit UniqueTable(std::size_t nvars, std::size_t gcLimit = 250000, std::size_t gcIncrement = 0, float growthFactor = 1.5):
-            chunkID(0), growthFactor(growthFactor), nvars(nvars), gcInitialLimit(gcLimit), gcLimit(gcLimit), gcIncrement(gcIncrement) {
+        explicit UniqueTable(std::size_t nvars):
+            nvars(nvars), chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
             // allocate first chunk of nodes
-            allocationSize = INITIAL_ALLOCATION_SIZE;
             chunks.emplace_back(allocationSize);
             allocations += allocationSize;
-            allocationSize *= growthFactor;
+            allocationSize *= GROWTH_FACTOR;
             chunkIt    = chunks[0].begin();
             chunkEndIt = chunks[0].end();
         }
 
         ~UniqueTable() = default;
 
-        static constexpr size_t MASK = NBUCKET - 1;
+        static constexpr size_t MASK          = NBUCKET - 1;
+        static constexpr float  GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
 
         void resize(std::size_t nq) {
             nvars = nq;
@@ -57,10 +64,10 @@ namespace dd {
         }
 
         // access functions
-        [[nodiscard]] auto        getNodeCount() const { return nodeCount; }
-        [[nodiscard]] auto        getPeakNodeCount() const { return peakNodeCount; }
-        [[nodiscard]] auto        getAllocations() const { return allocations; }
-        [[nodiscard]] auto        getGrowthFactor() const { return growthFactor; }
+        [[nodiscard]] std::size_t getNodeCount() const { return nodeCount; }
+        [[nodiscard]] std::size_t getPeakNodeCount() const { return peakNodeCount; }
+        [[nodiscard]] std::size_t getAllocations() const { return allocations; }
+        [[nodiscard]] float       getGrowthFactor() const { return GROWTH_FACTOR; }
         [[nodiscard]] const auto& getTables() const { return tables; }
 
         // lookup a node in the unique table for the appropriate variable; insert it, if it has not been found
@@ -124,7 +131,7 @@ namespace dd {
             if (chunkIt == chunkEndIt) {
                 chunks.emplace_back(allocationSize);
                 allocations += allocationSize;
-                allocationSize *= growthFactor;
+                allocationSize *= GROWTH_FACTOR;
                 chunkID++;
                 chunkIt    = chunks[chunkID].begin();
                 chunkEndIt = chunks[chunkID].end();
@@ -226,7 +233,7 @@ namespace dd {
                     }
                 }
             }
-            gcLimit += gcIncrement;
+            gcLimit += GC_INCREMENT;
             nodeCount = remaining;
             return collected;
         }
@@ -250,7 +257,7 @@ namespace dd {
             // restore initial chunk setting
             chunkIt        = chunks[0].begin();
             chunkEndIt     = chunks[0].end();
-            allocationSize = INITIAL_ALLOCATION_SIZE * growthFactor;
+            allocationSize = INITIAL_ALLOCATION_SIZE * GROWTH_FACTOR;
             allocations    = INITIAL_ALLOCATION_SIZE;
 
             nodeCount     = 0;
@@ -266,14 +273,15 @@ namespace dd {
 
             gcCalls = 0;
             gcRuns  = 0;
-            gcLimit = gcInitialLimit;
+            gcLimit = INITIAL_GC_LIMIT;
         };
 
         void print() {
             Qubit q = nvars - 1;
             for (auto it = tables.rbegin(); it != tables.rend(); ++it) {
                 auto& table = *it;
-                std::cout << "\t" << static_cast<std::size_t>(q) << ":" << std::endl;
+                std::cout << "\t" << static_cast<std::size_t>(q) << ":"
+                          << "\n";
                 for (size_t key = 0; key < table.size(); ++key) {
                     auto& bucket = table[key];
                     if (!bucket.empty())
@@ -283,7 +291,7 @@ namespace dd {
                         std::cout << "\t\t" << reinterpret_cast<uintptr_t>(node) << " " << node->ref << "\t";
 
                     if (!bucket.empty())
-                        std::cout << std::endl;
+                        std::cout << "\n";
                 }
                 --q;
             }
@@ -293,37 +301,36 @@ namespace dd {
             std::cout << "#printActive: " << activeNodeCount << ", ";
             for (const auto& a: active)
                 std::cout << a << " ";
-            std::cout << std::endl;
+            std::cout << "\n";
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
         [[nodiscard]] fp colRatio() const { return static_cast<fp>(collisions) / lookups; }
 
-        [[nodiscard]] auto getActiveNodeCount() const {
+        [[nodiscard]] std::size_t getActiveNodeCount() const {
             return activeNodeCount;
         }
-        [[nodiscard]] auto getActiveNodeCount(Qubit var) { return active.at(var); }
+        [[nodiscard]] std::size_t getActiveNodeCount(Qubit var) { return active.at(var); }
 
         std::ostream& printStatistics(std::ostream& os = std::cout) {
-            os << "hits: " << hits << ", collisions: " << collisions << ", looks: " << lookups << ", hitRatio: " << hitRatio() << ", colRatio: " << colRatio() << ", gc calls: " << gcCalls << ", gc runs: " << gcRuns << std::endl;
+            os << "hits: " << hits << ", collisions: " << collisions << ", looks: " << lookups << ", hitRatio: " << hitRatio() << ", colRatio: " << colRatio() << ", gc calls: " << gcCalls << ", gc runs: " << gcRuns << "\n";
             return os;
         }
 
     private:
-        std::stack<Node*>                    available{};
-        std::vector<std::vector<Node>>       chunks{};
-        std::size_t                          chunkID;
-        typename std::vector<Node>::iterator chunkIt;
-        typename std::vector<Node>::iterator chunkEndIt;
-        std::size_t                          allocationSize;
-        float                                growthFactor;
-
         using NodeBucket = std::forward_list<Node*>;
         using Table      = std::array<NodeBucket, NBUCKET>;
 
         // unique tables (one per input variable)
         std::size_t        nvars = 0;
         std::vector<Table> tables{nvars};
+
+        std::stack<Node*>                    available{};
+        std::vector<std::vector<Node>>       chunks{};
+        std::size_t                          chunkID;
+        typename std::vector<Node>::iterator chunkIt;
+        typename std::vector<Node>::iterator chunkEndIt;
+        std::size_t                          allocationSize;
 
         std::size_t allocations   = 0;
         std::size_t nodeCount     = 0;
@@ -341,11 +348,9 @@ namespace dd {
         std::size_t              maxActive       = 0;
 
         // garbage collection
-        std::size_t gcCalls        = 0;
-        std::size_t gcRuns         = 0;
-        std::size_t gcInitialLimit = 250000;
-        std::size_t gcLimit        = 250000;
-        std::size_t gcIncrement    = 0;
+        std::size_t gcCalls = 0;
+        std::size_t gcRuns  = 0;
+        std::size_t gcLimit = 250000;
     };
 
 } // namespace dd

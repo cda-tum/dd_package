@@ -153,7 +153,7 @@ static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
     unsigned short        nqubits = state.range(0);
     auto                  dd      = std::make_unique<dd::Package>(nqubits);
     std::set<dd::Control> controls;
-    for (std::size_t i = 0; i < nqubits - 1; i++)
+    for (std::size_t i = 0; i < static_cast<std::size_t>(nqubits - 1); i++)
         controls.insert({static_cast<dd::Qubit>(i)});
     for (auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, static_cast<dd::Qubit>(nqubits - 1)));
