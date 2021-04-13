@@ -11,7 +11,7 @@
 #include "DDcomplex.hpp"
 #include "Definitions.hpp"
 #include "Edge.hpp"
-#include "OperationTable.hpp"
+#include "NoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
 #include "UniqueTable.hpp"
@@ -67,7 +67,7 @@ namespace dd {
             nqubits = nq;
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
-            operationTable.resize(nqubits);
+            noiseOperationTable.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
@@ -500,12 +500,11 @@ namespace dd {
         std::vector<mEdge> IdTable{};
 
         ///
-        /// Operations (related to noise)
+        /// Noise Operations
         ///
     public:
-        OperationTable<mEdge> operationTable{nqubits};
+        NoiseOperationTable<mEdge> noiseOperationTable{nqubits};
 
-    private:
         ///
         /// Decision diagram size
         ///

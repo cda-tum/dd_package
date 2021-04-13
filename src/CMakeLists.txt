@@ -10,7 +10,7 @@ add_library(${PROJECT_NAME}
             ${${PROJECT_NAME}_SOURCE_DIR}/include/UniqueTable.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/ComputeTable.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/ToffoliTable.hpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/OperationTable.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/NoiseOperationTable.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/DDcomplex.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/DDpackage.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/DDexport.hpp)

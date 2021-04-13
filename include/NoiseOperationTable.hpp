@@ -3,8 +3,8 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#ifndef DDpackage_OPERATIONTABLE_HPP
-#define DDpackage_OPERATIONTABLE_HPP
+#ifndef DDpackage_NOISEOPERATIONTABLE_HPP
+#define DDpackage_NOISEOPERATIONTABLE_HPP
 
 #include "Definitions.hpp"
 
@@ -12,8 +12,8 @@
 #include <set>
 
 namespace dd {
-    // operation kinds (related to noise)
-    enum OperationKind : std::uint_fast8_t {
+    // noise operation kinds
+    enum NoiseOperationKind : std::uint_fast8_t {
         none,
         I,
         X,
@@ -25,9 +25,9 @@ namespace dd {
     };
 
     template<class Edge>
-    class OperationTable {
+    class NoiseOperationTable {
     public:
-        explicit OperationTable(std::size_t nvars):
+        explicit NoiseOperationTable(std::size_t nvars):
             nvars(nvars) { resize(nvars); };
 
         // access functions
@@ -38,12 +38,12 @@ namespace dd {
             table.resize(nvars);
         }
 
-        void insert(OperationKind kind, Qubit target, const Edge& r) {
+        void insert(NoiseOperationKind kind, Qubit target, const Edge& r) {
             table.at(target).at(kind) = r;
             ++count;
         }
 
-        Edge lookup(QubitCount n, OperationKind kind, Qubit target) {
+        Edge lookup(QubitCount n, NoiseOperationKind kind, Qubit target) {
             lookups++;
             Edge  r{};
             auto& entry = table.at(target).at(kind);
@@ -74,7 +74,7 @@ namespace dd {
 
     private:
         std::size_t                            nvars;
-        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(OperationKind::opCount);
+        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(NoiseOperationKind::opCount);
         std::vector<std::array<Edge, opCount>> table;
 
         // operation table lookup statistics
@@ -84,4 +84,4 @@ namespace dd {
     };
 } // namespace dd
 
-#endif //DDpackage_OPERATIONTABLE_HPP
+#endif //DDpackage_NOISEOPERATIONTABLE_HPP

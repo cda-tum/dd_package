@@ -60,7 +60,7 @@ namespace dd {
         std::cout << "[Toffoli Table] ";
         toffoliTable.printStatistics();
         std::cout << "[Operation Table] ";
-        operationTable.printStatistics();
+        noiseOperationTable.printStatistics();
     }
 
     Package::vEdge Package::normalize(const Package::vEdge& e, bool cached) {
@@ -380,7 +380,7 @@ namespace dd {
 
         clearIdentityTable();
 
-        operationTable.clear();
+        noiseOperationTable.clear();
     }
 
     Package::mEdge Package::transpose(const Package::mEdge& a) {
