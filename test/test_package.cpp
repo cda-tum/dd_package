@@ -243,33 +243,33 @@ TEST(DDPackageTest, SerializationErrors) {
 
     // test wrong version number
     std::stringstream ss{};
-    ss << 2.0 << std::endl;
+    ss << 2 << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, false), std::runtime_error);
-    ss << 2.0 << std::endl;
+    ss << 2 << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss, false), std::runtime_error);
 
     ss.str("");
-    dd::fp version = 2.0;
-    ss.write(reinterpret_cast<const char*>(&version), sizeof(dd::fp));
+    std::remove_const_t<decltype(dd::SERIALIZATION_VERSION)> version = 2;
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, true), std::runtime_error);
-    ss.write(reinterpret_cast<const char*>(&version), sizeof(dd::fp));
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss, true), std::runtime_error);
 
     // test wrong format
     ss.str("");
-    ss << "0.1" << std::endl;
+    ss << "1" << std::endl;
     ss << "not_complex" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
-    ss << "0.1" << std::endl;
+    ss << "1" << std::endl;
     ss << "not_complex" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
 
     ss.str("");
-    ss << "0.1" << std::endl;
+    ss << "1" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
-    ss << "0.1" << std::endl;
+    ss << "1" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);

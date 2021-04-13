@@ -59,7 +59,7 @@ namespace dd {
     using CVec = std::vector<std::pair<float, float>>;
     using CMat = std::vector<CVec>;
 
-    static constexpr double SERIALIZATION_VERSION = 0.1;
+    static constexpr std::uint_fast16_t SERIALIZATION_VERSION = 1;
 
 } // namespace dd
 using CN = dd::ComplexNumbers;

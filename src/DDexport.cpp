@@ -260,13 +260,13 @@ namespace dd {
             }
 
             if (writeBinary) {
-                os.write(reinterpret_cast<const char*>(&node_index[basic.p]), sizeof(std::int_fast64_t));
-                os.write(reinterpret_cast<const char*>(&basic.p->v), sizeof(Qubit));
+                os.write(reinterpret_cast<const char*>(&node_index[basic.p]), sizeof(decltype(node_index[basic.p])));
+                os.write(reinterpret_cast<const char*>(&basic.p->v), sizeof(decltype(basic.p->v)));
 
                 // iterate over edges in reverse to guarantee correct processing order
                 for (auto& edge: basic.p->e) {
                     std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
-                    os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(std::int_fast64_t));
+                    os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(decltype(edge_idx)));
                     writeBinaryAmplitude(os, edge.w);
                 }
             } else {
@@ -288,7 +288,7 @@ namespace dd {
 
     void serialize(const Package::vEdge& basic, std::ostream& os, bool writeBinary) {
         if (writeBinary) {
-            os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(fp));
+            os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(decltype(SERIALIZATION_VERSION)));
             writeBinaryAmplitude(os, basic.w);
         } else {
             os << SERIALIZATION_VERSION << "\n";
@@ -342,14 +342,14 @@ namespace dd {
                     next_index++;
 
                     if (writeBinary) {
-                        os.write(reinterpret_cast<const char*>(&node_index[node->p]), sizeof(std::int_fast64_t));
-                        os.write(reinterpret_cast<const char*>(&node->p->v), sizeof(Qubit));
+                        os.write(reinterpret_cast<const char*>(&node_index[node->p]), sizeof(decltype(node_index[node->p])));
+                        os.write(reinterpret_cast<const char*>(&node->p->v), sizeof(decltype(node->p->v)));
 
                         // iterate over edges in reverse to guarantee correct processing order
                         for (auto i = 0U; i < RADIX; ++i) {
                             auto&             edge     = node->p->e[i];
                             std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
-                            os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(std::int_fast64_t));
+                            os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(decltype(edge_idx)));
                             writeBinaryAmplitude(os, edge.w);
                         }
                     } else {
@@ -375,7 +375,7 @@ namespace dd {
 
     void serialize(const Package::mEdge& basic, std::ostream& os, bool writeBinary) {
         if (writeBinary) {
-            os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(fp));
+            os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(decltype(SERIALIZATION_VERSION)));
             writeBinaryAmplitude(os, basic.w);
         } else {
             os << SERIALIZATION_VERSION << "\n";

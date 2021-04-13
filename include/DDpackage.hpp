@@ -608,8 +608,8 @@ namespace dd {
             edge_indices.fill(-2);
 
             if (readBinary) {
-                double version;
-                is.read(reinterpret_cast<char*>(&version), sizeof(double));
+                std::remove_const_t<decltype(SERIALIZATION_VERSION)> version;
+                is.read(reinterpret_cast<char*>(&version), sizeof(decltype(SERIALIZATION_VERSION)));
                 if (version != SERIALIZATION_VERSION) {
                     throw std::runtime_error("Wrong Version of serialization file version. version of file: " + std::to_string(version) + "; current version: " + std::to_string(SERIALIZATION_VERSION));
                 }
@@ -618,10 +618,10 @@ namespace dd {
                     rootweight = ComplexValue::readBinary(is);
                 }
 
-                while (is.read(reinterpret_cast<char*>(&node_index), sizeof(std::int_fast64_t))) {
-                    is.read(reinterpret_cast<char*>(&v), sizeof(Qubit));
+                while (is.read(reinterpret_cast<char*>(&node_index), sizeof(decltype(node_index)))) {
+                    is.read(reinterpret_cast<char*>(&v), sizeof(decltype(v)));
                     for (auto i = 0U; i < N; i++) {
-                        is.read(reinterpret_cast<char*>(&edge_indices[i]), sizeof(std::int_fast64_t));
+                        is.read(reinterpret_cast<char*>(&edge_indices[i]), sizeof(decltype(edge_indices[i])));
                         edge_weights[i] = ComplexValue::readBinary(is);
                     }
                     result = deserializeNode(node_index, v, edge_indices, edge_weights, nodes);
@@ -629,7 +629,7 @@ namespace dd {
             } else {
                 std::string version;
                 std::getline(is, version);
-                if (std::stod(version) != SERIALIZATION_VERSION) {
+                if (std::stoi(version) != SERIALIZATION_VERSION) {
                     throw std::runtime_error("Wrong Version of serialization file version. version of file: " + version + "; current version: " + std::to_string(SERIALIZATION_VERSION));
                 }
 
