@@ -579,17 +579,17 @@ namespace dd {
 
             return {CN::val(c.r), CN::val(c.i)};
         }
-        ComplexValue getValueByPath(const vEdge& e, size_t i);
-        ComplexValue getValueByPath(const vEdge& e, const Complex& amp, size_t i);
-        ComplexValue getValueByPath(const mEdge& e, size_t i, size_t j);
-        ComplexValue getValueByPath(const mEdge& e, const Complex& amp, size_t i, size_t j);
+        ComplexValue getValueByPath(const vEdge& e, std::size_t i);
+        ComplexValue getValueByPath(const vEdge& e, const Complex& amp, std::size_t i);
+        ComplexValue getValueByPath(const mEdge& e, std::size_t i, std::size_t j);
+        ComplexValue getValueByPath(const mEdge& e, const Complex& amp, std::size_t i, std::size_t j);
 
         CVec getVector(const vEdge& e);
-        void getVector(const vEdge& e, const Complex& amp, size_t i, CVec& vec);
+        void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec);
         void printVector(const vEdge& e);
 
         CMat getMatrix(const mEdge& e);
-        void getMatrix(const mEdge& e, const Complex& amp, size_t i, size_t j, CMat& mat);
+        void getMatrix(const mEdge& e, const Complex& amp, std::size_t i, std::size_t j, CMat& mat);
 
         ///
         /// Deserialization

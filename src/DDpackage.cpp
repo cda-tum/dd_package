@@ -665,7 +665,7 @@ namespace dd {
         if (y.p->v > w) {
             w = y.p->v;
         }
-        const auto ip = innerProduct(x, y, static_cast<Qubit>(w + 1));
+        const ComplexValue ip = innerProduct(x, y, static_cast<Qubit>(w + 1));
 
         [[maybe_unused]] const auto after = cn.cacheCount;
         assert(after == before);
@@ -1068,14 +1068,14 @@ namespace dd {
         return f;
     }
 
-    ComplexValue Package::getValueByPath(const Package::vEdge& e, size_t i) {
+    ComplexValue Package::getValueByPath(const Package::vEdge& e, std::size_t i) {
         if (e.isTerminal()) {
             return {CN::val(e.w.r), CN::val(e.w.i)};
         }
         return getValueByPath(e, CN::ONE, i);
     }
 
-    ComplexValue Package::getValueByPath(const Package::vEdge& e, const Complex& amp, size_t i) {
+    ComplexValue Package::getValueByPath(const Package::vEdge& e, const Complex& amp, std::size_t i) {
         auto c = cn.mulCached(e.w, amp);
 
         if (e.isTerminal()) {
@@ -1094,13 +1094,13 @@ namespace dd {
         cn.releaseCached(c);
         return r;
     }
-    ComplexValue Package::getValueByPath(const Package::mEdge& e, size_t i, size_t j) {
+    ComplexValue Package::getValueByPath(const Package::mEdge& e, std::size_t i, std::size_t j) {
         if (e.isTerminal()) {
             return {CN::val(e.w.r), CN::val(e.w.i)};
         }
         return getValueByPath(e, CN::ONE, i, j);
     }
-    ComplexValue Package::getValueByPath(const Package::mEdge& e, const Complex& amp, size_t i, size_t j) {
+    ComplexValue Package::getValueByPath(const Package::mEdge& e, const Complex& amp, std::size_t i, std::size_t j) {
         auto c = cn.mulCached(e.w, amp);
 
         if (e.isTerminal()) {
@@ -1126,14 +1126,14 @@ namespace dd {
     }
 
     CVec Package::getVector(const Package::vEdge& e) {
-        size_t dim = 1 << (e.p->v + 1);
+        std::size_t dim = 1 << (e.p->v + 1);
         // allocate resulting vector
         auto vec = CVec(dim, {0.0, 0.0});
         getVector(e, CN::ONE, 0, vec);
         return vec;
     }
 
-    void Package::getVector(const Package::vEdge& e, const Complex& amp, size_t i, CVec& vec) {
+    void Package::getVector(const Package::vEdge& e, const Complex& amp, std::size_t i, CVec& vec) {
         // calculate new accumulated amplitude
         auto c = cn.mulCached(e.w, amp);
 
@@ -1144,7 +1144,7 @@ namespace dd {
             return;
         }
 
-        size_t x = i | (1 << e.p->v);
+        std::size_t x = i | (1 << e.p->v);
 
         // recursive case
         if (!CN::equalsZero(e.p->e[0].w))
@@ -1167,14 +1167,14 @@ namespace dd {
     }
 
     CMat Package::getMatrix(const Package::mEdge& e) {
-        size_t dim = 1 << (e.p->v + 1);
+        std::size_t dim = 1 << (e.p->v + 1);
         // allocate resulting matrix
         auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
         getMatrix(e, CN::ONE, 0, 0, mat);
         return mat;
     }
 
-    void Package::getMatrix(const Package::mEdge& e, const Complex& amp, size_t i, size_t j, CMat& mat) {
+    void Package::getMatrix(const Package::mEdge& e, const Complex& amp, std::size_t i, std::size_t j, CMat& mat) {
         // calculate new accumulated amplitude
         auto c = cn.mulCached(e.w, amp);
 
@@ -1185,8 +1185,8 @@ namespace dd {
             return;
         }
 
-        size_t x = i | (1 << e.p->v);
-        size_t y = j | (1 << e.p->v);
+        std::size_t x = i | (1 << e.p->v);
+        std::size_t y = j | (1 << e.p->v);
 
         // recursive case
         if (!CN::equalsZero(e.p->e[0].w))
