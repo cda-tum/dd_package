@@ -14,22 +14,27 @@
 
 namespace dd {
 
-    template<class A, class B, class R, std::size_t NBUCKET = 16384>
+    /// Data structure for caching computed results
+    /// \tparam LeftOperandType type of the operation's left operand
+    /// \tparam RightOperandType type of the operation's right operand
+    /// \tparam ResultType type of the operation's result
+    /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
+    template<class LeftOperandType, class RightOperandType, class ResultType, std::size_t NBUCKET = 16384>
     class ComputeTable {
     public:
         ComputeTable() = default;
 
         struct Entry {
-            A a;
-            B b;
-            R r;
+            LeftOperandType  leftOperand;
+            RightOperandType rightOperand;
+            ResultType       result;
         };
 
-        static constexpr std::size_t MASK = NBUCKET - 1; // must be CTSLOTS-1
+        static constexpr std::size_t MASK = NBUCKET - 1;
 
-        static std::size_t hash(const A& a, const B& b) {
-            const auto h1   = std::hash<A>{}(a);
-            const auto h2   = std::hash<B>{}(b);
+        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& b) {
+            const auto h1   = std::hash<LeftOperandType>{}(leftOperand);
+            const auto h2   = std::hash<RightOperandType>{}(b);
             const auto hash = h1 ^ (h2 << 1);
             return hash & MASK;
         }
@@ -37,29 +42,29 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const A& a, const B& b, const R& r) {
-            const auto key = hash(a, b);
-            table[key]     = {.a = a, .b = b, .r = r};
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
+            const auto key = hash(leftOperand, rightOperand);
+            table[key]     = {leftOperand, rightOperand, result};
             ++count;
         }
 
-        R lookup(const A& a, const B& b) {
-            R r{};
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
+            ResultType result{};
             lookups++;
-            const auto key   = hash(a, b);
+            const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
-            if (entry.r.p == nullptr) return r;
-            if (entry.a != a) return r;
-            if (entry.b != b) return r;
+            if (entry.result.p == nullptr) return result;
+            if (entry.leftOperand != leftOperand) return result;
+            if (entry.rightOperand != rightOperand) return result;
 
             hits++;
-            return entry.r;
+            return entry.result;
         }
 
         void clear() {
             if (count > 0) {
                 for (auto& entry: table)
-                    entry.r.p = nullptr;
+                    entry.result.p = nullptr;
                 count = 0;
             }
             hits    = 0;
