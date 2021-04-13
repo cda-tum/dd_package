@@ -31,7 +31,7 @@ namespace dd {
 
         void insert(QubitCount n, const std::set<Control>& controls, Qubit target, const Edge& e) {
             const auto key = hash(controls, target);
-            table[key]     = {.n = n, .controls = controls, .target = target, .e = e};
+            table[key]     = {n, controls, target, e};
             ++count;
         }
 
