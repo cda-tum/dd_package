@@ -18,7 +18,7 @@ namespace dd {
     };
 
     inline bool operator<(const Control& lhs, const Control& rhs) {
-        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type == Control::Type::neg);
+        return lhs.qubit < rhs.qubit || (lhs.qubit == rhs.qubit && lhs.type < rhs.type);
     }
 
     inline bool operator==(const Control& lhs, const Control& rhs) {
