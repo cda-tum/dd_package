@@ -10,38 +10,13 @@
 
 namespace dd {
 
-    RGB hlsToRGB(const fp& h, const fp& l, const fp& s) {
-        if (s == 0.0) {
-            return {l, l, l};
-        }
-        fp m2;
-        if (l <= 0.5) {
-            m2 = l * (1 + s);
-        } else {
-            m2 = l + s - (l * s);
-        }
-        auto m1 = 2 * l - m2;
-
-        auto v = [](const fp& m1, const fp& m2, fp hue) -> fp {
-            while (hue < 0) hue += 1.0;
-            while (hue > 1) hue -= 1.0;
-            if (hue < 1. / 6)
-                return m1 + (m2 - m1) * hue * 6.0;
-            if (hue < 0.5)
-                return m2;
-            if (hue < 2. / 3)
-                return m1 + (m2 - m1) * (2. / 3 - hue) * 6.0;
-            return m1;
-        };
-
-        return {v(m1, m2, h + 1. / 3), v(m1, m2, h), v(m1, m2, h - 1. / 3)};
-    }
-
-    RGB colorFromPhase(const Complex& a) {
+    std::string colorFromPhase(const Complex& a) {
         auto phase = CN::arg(a);
         auto twopi = 2 * CN::PI;
         phase      = (phase) / twopi;
-        return hlsToRGB(phase, 0.5, 0.5);
+        std::ostringstream oss{};
+        oss << std::fixed << std::setprecision(3) << phase << " " << 0.667 << " " << 0.75;
+        return oss.str();
     }
 
     fp thicknessFromMagnitude(const Complex& a) {
@@ -56,7 +31,7 @@ namespace dd {
     }
 
     std::ostream& modernNode(const Package::mEdge& e, std::ostream& os) {
-        auto nodelabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
+        auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[label=<";
         os << R"(<font point-size="10"><table border="1" cellspacing="0" cellpadding="2" style="rounded">)";
         os << R"(<tr><td colspan="2" rowspan="2" port="0" href="javascript:;" border="0" tooltip=")" << e.p->e[0].w << "\">" << (CN::equalsZero(e.p->e[0].w) ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>")
@@ -73,7 +48,7 @@ namespace dd {
         return os;
     }
     std::ostream& classicNode(const Package::mEdge& e, std::ostream& os) {
-        auto nodelabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
+        auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[shape=circle, width=0.53, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
         os << R"(<tr><td colspan="4"><font point-size="18">q<sub><font point-size="10">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
@@ -112,7 +87,7 @@ namespace dd {
     }
 
     std::ostream& modernNode(const Package::vEdge& e, std::ostream& os) {
-        auto nodelabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
+        auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[label=<";
         os << R"(<font point-size="8"><table border="1" cellspacing="0" cellpadding="0" style="rounded">)";
         os << R"(<tr><td colspan="2" border="0" cellpadding="1"><font point-size="20">q<sub><font point-size="12">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
@@ -123,7 +98,7 @@ namespace dd {
     }
 
     std::ostream& classicNode(const Package::vEdge& e, std::ostream& os) {
-        auto nodelabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
+        auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[shape=circle, width=0.46, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
         os << R"(<tr><td colspan="2"><font point-size="18">q<sub><font point-size="10">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
@@ -145,23 +120,31 @@ namespace dd {
         return os;
     }
 
-    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels) {
-        auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
-        auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
+    std::ostream& bwEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels, bool classic) {
+        auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
+        auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
-        if (idx == 0)
-            os << "sw";
-        else if (idx == 1 || idx == 2)
-            os << "s";
-        else
-            os << "se";
-
+        if (classic) {
+            if (idx == 0)
+                os << "sw";
+            else if (idx == 1 || idx == 2)
+                os << "s";
+            else
+                os << "se";
+        } else {
+            if (idx == 0)
+                os << "sw";
+            else if (idx == 1)
+                os << "se";
+            else
+                os << 's';
+        }
         os << "->";
         if (to.isTerminal()) {
             os << "t";
         } else {
-            os << tolabel;
+            os << tolabel << ":n";
         }
 
         auto mag = thicknessFromMagnitude(to.w);
@@ -177,17 +160,26 @@ namespace dd {
         return os;
     }
 
-    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels) {
-        auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
-        auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
+    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels, bool classic) {
+        auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
+        auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
-        if (idx == 0)
-            os << "sw";
-        else if (idx == 1)
-            os << "se";
-        else
-            os << 's';
+        if (classic) {
+            if (idx == 0)
+                os << "sw";
+            else if (idx == 1 || idx == 2)
+                os << "s";
+            else
+                os << "se";
+        } else {
+            if (idx == 0)
+                os << "sw";
+            else if (idx == 1)
+                os << "se";
+            else
+                os << 's';
+        }
         os << "->";
         if (to.isTerminal()) {
             os << "t";
@@ -197,7 +189,7 @@ namespace dd {
 
         auto mag   = thicknessFromMagnitude(to.w);
         auto color = colorFromPhase(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"#" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"" << color << "\"";
         if (edgeLabels) {
             os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
         }
@@ -206,9 +198,9 @@ namespace dd {
         return os;
     }
 
-    std::ostream& classicEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels) {
-        auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
-        auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
+    std::ostream& bwEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels, [[maybe_unused]] bool classic) {
+        auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
+        auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
         os << (idx == 0 ? "sw" : "se") << "->";
@@ -231,9 +223,9 @@ namespace dd {
         return os;
     }
 
-    std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels) {
-        auto fromlabel = (reinterpret_cast<uintptr_t>(from.p) & 0x001fffffU) >> 1U;
-        auto tolabel   = (reinterpret_cast<uintptr_t>(to.p) & 0x001fffffU) >> 1U;
+    std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels, [[maybe_unused]] bool classic) {
+        auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
+        auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
         os << fromlabel << ":" << idx << ":";
         os << (idx == 0 ? "sw" : "se") << "->";
@@ -245,7 +237,7 @@ namespace dd {
 
         auto mag   = thicknessFromMagnitude(to.w);
         auto color = colorFromPhase(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"#" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"" << color << "\"";
         if (edgeLabels) {
             os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
         }

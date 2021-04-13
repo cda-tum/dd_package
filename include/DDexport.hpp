@@ -14,37 +14,15 @@
 
 namespace dd {
 
-    struct RGB {
-        fp R = 0., G = 0., B = 0.;
-        RGB(fp R, fp G, fp B):
-            R(R), G(G), B(B){};
-
-        std::ostream& printHex(std::ostream& os) const {
-            std::ostringstream oss{};
-            oss.flags(std::ios_base::hex);
-            oss.fill('0');
-            oss << std::setw(2) << static_cast<short>(R * 255.) << std::setw(2) << static_cast<short>(G * 255.) << std::setw(2) << static_cast<short>(B * 255.);
-            os << oss.str();
-            return os;
-        }
-
-        friend std::ostream& operator<<(std::ostream& os, const RGB& rgb) {
-            return rgb.printHex(os);
-        }
-    };
-
-    fp  hueToRGB(fp hue);
-    RGB hlsToRGB(const fp& h, const fp& l, const fp& s);
-
-    RGB colorFromPhase(const Complex& a);
-    fp  thicknessFromMagnitude(const Complex& a);
+    std::string colorFromPhase(const Complex& a);
+    fp          thicknessFromMagnitude(const Complex& a);
 
     template<class Edge>
     std::ostream& header(const Edge& e, std::ostream& os, bool edgeLabels) {
         os << "digraph \"DD\" {graph[];node[shape=plain];edge[arrowhead=none]\n";
         os << "root [label=\"\",shape=point,style=invis]\n";
         os << "t [label=<<font point-size=\"20\">1</font>>,shape=box,tooltip=\"1\",width=0.3,height=0.3]\n";
-        auto toplabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U;
+        auto toplabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U;
         auto mag      = thicknessFromMagnitude(e.w);
         os << "root->";
         if (e.isTerminal()) {
@@ -70,7 +48,7 @@ namespace dd {
         os << "root [label=\"\",shape=point,style=invis]\n";
         os << "t [label=<<font point-size=\"20\">1</font>>,shape=box,tooltip=\"1\",width=0.3,height=0.3]\n";
 
-        auto toplabel = (reinterpret_cast<uintptr_t>(e.p) & 0x001fffffU) >> 1U;
+        auto toplabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U;
         auto mag      = thicknessFromMagnitude(e.w);
         auto color    = colorFromPhase(e.w);
         os << "root->";
@@ -79,7 +57,7 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << e.w << "\",color=\"#" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << e.w << "\",color=\"" << color << "\"";
         if (edgeLabels) {
             os << ",label=<<font point-size=\"8\">&nbsp;" << e.w << "</font>>";
         }
@@ -92,10 +70,10 @@ namespace dd {
     std::ostream& classicNode(const Package::mEdge& e, std::ostream& os);
     std::ostream& classicNode(const Package::vEdge& e, std::ostream& os);
 
-    std::ostream& classicEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
-    std::ostream& classicEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
-    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
-    std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false);
+    std::ostream& bwEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
+    std::ostream& bwEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
+    std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
+    std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false);
 
     template<class Edge>
     void toDot(const Edge& e, std::ostream& os, bool colored = true, bool edgeLabels = false, bool classic = false) {
@@ -147,9 +125,9 @@ namespace dd {
                 q.push(&edge);
 
                 if (colored) {
-                    coloredEdge(*node, edge, i, oss, edgeLabels);
+                    coloredEdge(*node, edge, i, oss, edgeLabels, classic);
                 } else {
-                    classicEdge(*node, edge, i, oss, edgeLabels);
+                    bwEdge(*node, edge, i, oss, edgeLabels, classic);
                 }
             }
         }
