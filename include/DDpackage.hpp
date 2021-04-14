@@ -21,6 +21,7 @@
 #include "UniqueTable.hpp"
 
 #include <array>
+#include <bitset>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
