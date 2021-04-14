@@ -271,3 +271,54 @@ TEST(DDComplexTest, MaxRefCountReached) {
     EXPECT_EQ(c.r->refCount, max);
     EXPECT_EQ(c.i->refCount, max);
 }
+
+TEST(DDComplexTest, ComplexTableAllocation) {
+    auto cn     = ComplexNumbers();
+    auto allocs = cn.complexTable.getAllocations();
+    std::cout << allocs << std::endl;
+    std::vector<ComplexTable<>::Entry*> nums{allocs};
+    // get all the numbers that are pre-allocated
+    for (auto i = 0U; i < allocs; ++i) {
+        nums[i] = cn.complexTable.getEntry();
+    }
+
+    // trigger new allocation
+    [[maybe_unused]] auto num = cn.complexTable.getEntry();
+    EXPECT_EQ(cn.complexTable.getAllocations(), (1. + cn.complexTable.GROWTH_FACTOR) * allocs);
+
+    // clearing the complex table should reduce the allocated size to the original size
+    cn.complexTable.clear();
+    EXPECT_EQ(cn.complexTable.getAllocations(), allocs);
+}
+
+TEST(DDComplexTest, ComplexCacheAllocation) {
+    auto cn     = ComplexNumbers();
+    auto allocs = cn.complexCache.getAllocations();
+    std::cout << allocs << std::endl;
+    std::vector<Complex> cnums{allocs};
+    // get all the cached complex numbers that are pre-allocated
+    for (auto i = 0U; i < allocs; i += 2) {
+        cnums[i % 2] = cn.getCached();
+    }
+
+    // trigger new allocation for obtaining a complex from cache
+    [[maybe_unused]] auto cnum = cn.getCached();
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.GROWTH_FACTOR) * allocs);
+
+    // clearing the cache should reduce the allocated size to the original size
+    cn.complexCache.clear();
+    EXPECT_EQ(cn.complexCache.getAllocations(), allocs);
+
+    // get all the cached complex numbers again
+    for (auto i = 0U; i < allocs; i += 2) {
+        cnums[i % 2] = cn.getCached();
+    }
+
+    // trigger new allocation for obtaining a temporary from cache
+    [[maybe_unused]] auto cnumtmp = cn.getTemporary();
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.GROWTH_FACTOR) * allocs);
+
+    // clearing the unique table should reduce the allocated size to the original size
+    cn.complexCache.clear();
+    EXPECT_EQ(cn.complexCache.getAllocations(), allocs);
+}

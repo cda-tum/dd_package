@@ -61,7 +61,7 @@ add_custom_command(TARGET ${PROJECT_NAME}_test
 add_test(NAME ${PROJECT_NAME}_example COMMAND ${CMAKE_CURRENT_BINARY_DIR}/dd_package_example)
 
 # add benchmark executable
-add_executable(${PROJECT_NAME}_bench ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.cpp)
+add_executable(${PROJECT_NAME}_bench EXCLUDE_FROM_ALL ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.cpp)
 # link the Google benchmark infrastructure and a default main fuction to the benchmark executable.
 target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} benchmark::benchmark_main Threads::Threads)
 set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests)

@@ -81,12 +81,12 @@ jobs:
 
     - name: Build
       shell: bash
-      run: cmake --build "${{github.workspace}}/build" --config Release
+      run: cmake --build "${{github.workspace}}/build" --config Release --target dd_package_test
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{github.workspace}}/build/test
       shell: bash
-      run: ctest -C Debug
+      run: ./dd_package_test
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
