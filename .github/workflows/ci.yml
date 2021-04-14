@@ -81,7 +81,7 @@ jobs:
 
     - name: Build
       shell: bash
-      run: cmake --build "${{github.workspace}}/build" --config Release --target dd_package_test
+      run: cmake --build "${{github.workspace}}/build" --config Release --target DDPackage_test
 
     - name: Test
       working-directory: ${{github.workspace}}/build/test
@@ -124,7 +124,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run: cmake --build "${{github.workspace}}/build" --config Release --target dd_package_bench
+        run: cmake --build "${{github.workspace}}/build" --config Release --target DDPackage_bench
 
       - name: Run Benchmarks
         working-directory: ${{github.workspace}}/build
