@@ -86,7 +86,7 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build/test
       shell: bash
-      run: ./dd_package_test
+      run: ./DDPackage_test
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
@@ -129,7 +129,7 @@ jobs:
       - name: Run Benchmarks
         working-directory: ${{github.workspace}}/build
         shell: bash
-        run: ./dd_package_bench --benchmark_format=json | tee benchmark_result.json
+        run: ./DDPackage_bench --benchmark_format=json | tee benchmark_result.json
 
       - name: Store benchmark result # for pushes
         uses: rhysd/github-action-benchmark@v1
