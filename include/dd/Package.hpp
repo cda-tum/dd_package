@@ -51,8 +51,8 @@ namespace dd {
         /// Construction, destruction, information and reset
         ///
     public:
-        static constexpr auto maxPossibleQubits = std::numeric_limits<Qubit>::max() + 1;
-        static constexpr auto defaultQubits     = 128;
+        static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
+        static constexpr std::size_t defaultQubits     = 128;
         explicit Package(std::size_t nq = defaultQubits):
             cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
@@ -501,7 +501,7 @@ namespace dd {
             matrixAdd.clear();
             matrixTranspose.clear();
             conjugateMatrixTranspose.clear();
-            matrixMultiplication.clear();
+            matrixMatrixMultiplication.clear();
             matrixVectorMultiplication.clear();
             vectorInnerProduct.clear();
             vectorKronecker.clear();
@@ -710,7 +710,11 @@ namespace dd {
         ///
     public:
         ComputeTable<mEdge, vEdge, vCachedEdge> matrixVectorMultiplication{};
-        ComputeTable<mEdge, mEdge, mCachedEdge> matrixMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge> matrixMatrixMultiplication{};
+
+        template<class LeftOperandNode, class RightOperandNode>
+        [[nodiscard]] ComputeTable<Edge<LeftOperandNode>, Edge<RightOperandNode>, CachedEdge<RightOperandNode>>& getMultiplicationComputeTable();
+
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y) {
             [[maybe_unused]] const auto before = cn.cacheCount();
@@ -737,16 +741,21 @@ namespace dd {
         }
 
     private:
-        vEdge multiply2(const mEdge& x, const vEdge& y, Qubit var) {
+        template<class LeftOperandNode, class RightOperandNode>
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var) {
+            using LEdge      = Edge<LeftOperandNode>;
+            using REdge      = Edge<RightOperandNode>;
+            using ResultEdge = Edge<RightOperandNode>;
+
             if (x.p == nullptr) return {nullptr, Complex::zero};
             if (y.p == nullptr) return y;
 
             if (x.w == Complex::zero || y.w == Complex::zero) {
-                return vEdge::zero;
+                return ResultEdge::zero;
             }
 
             if (var == -1) {
-                return vEdge::terminal(cn.mulCached(x.w, y.w));
+                return ResultEdge::terminal(cn.mulCached(x.w, y.w));
             }
 
             auto xCopy = x;
@@ -754,169 +763,93 @@ namespace dd {
             auto yCopy = y;
             yCopy.w    = Complex::one;
 
-            auto r = matrixVectorMultiplication.lookup(xCopy, yCopy);
+            auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
+            auto  r            = computeTable.lookup(xCopy, yCopy);
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
-                    return vEdge::zero;
+                    return ResultEdge::zero;
                 } else {
-                    auto e = vEdge{r.p, cn.getCached(r.w)};
+                    auto e = ResultEdge{r.p, cn.getCached(r.w)};
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
-                        return vEdge::zero;
+                        return ResultEdge::zero;
                     }
                     return e;
                 }
             }
 
-            vEdge e{};
+            constexpr std::size_t N = std::tuple_size_v<decltype(y.p->e)>;
+
+            ResultEdge e{};
             if (x.p->v == var && x.p->v == y.p->v) {
                 if (x.p->ident) {
-                    e = yCopy;
-                    matrixVectorMultiplication.insert(xCopy, yCopy, {e.p, e.w});
-                    e.w = cn.mulCached(x.w, y.w);
-                    if (e.w.approximatelyZero()) {
-                        cn.returnToCache(e.w);
-                        return vEdge::zero;
-                    }
-                    return e;
-                }
-            }
-
-            std::array<vEdge, RADIX> edge{};
-            for (auto i = 0U; i < RADIX; i++) {
-                edge[i] = vEdge::zero;
-                for (auto k = 0U; k < RADIX; k++) {
-                    mEdge e1{};
-                    if (!x.isTerminal() && x.p->v == var) {
-                        e1 = x.p->e[RADIX * i + k];
-                    } else {
-                        e1 = xCopy;
-                    }
-                    vEdge e2{};
-                    if (!y.isTerminal() && y.p->v == var) {
-                        e2 = y.p->e[k];
-                    } else {
-                        e2 = yCopy;
-                    }
-
-                    auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1));
-
-                    if (k == 0 || edge[i].w == Complex::zero) {
-                        edge[i] = m;
-                    } else if (m.w != Complex::zero) {
-                        auto old_e = edge[i];
-                        edge[i]    = add2(edge[i], m);
-                        cn.returnToCache(old_e.w);
-                        cn.returnToCache(m.w);
-                    }
-                }
-            }
-            e = makeDDNode(var, edge, true);
-
-            matrixVectorMultiplication.insert(xCopy, yCopy, {e.p, e.w});
-
-            if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
-                if (e.w == Complex::one) {
-                    e.w = cn.mulCached(x.w, y.w);
-                } else {
-                    ComplexNumbers::mul(e.w, e.w, x.w);
-                    ComplexNumbers::mul(e.w, e.w, y.w);
-                }
-                if (e.w.approximatelyZero()) {
-                    cn.returnToCache(e.w);
-                    return vEdge::zero;
-                }
-            }
-            return e;
-        }
-        mEdge multiply2(const mEdge& x, const mEdge& y, Qubit var) {
-            if (x.p == nullptr) return x;
-            if (y.p == nullptr) return y;
-
-            if (x.w == Complex::zero || y.w == Complex::zero) {
-                return mEdge::zero;
-            }
-
-            if (var == -1) {
-                return mEdge::terminal(cn.mulCached(x.w, y.w));
-            }
-
-            auto xCopy = x;
-            xCopy.w    = Complex::one;
-            auto yCopy = y;
-            yCopy.w    = Complex::one;
-
-            auto r = matrixMultiplication.lookup(xCopy, yCopy);
-            if (r.p != nullptr) {
-                if (r.w.approximatelyZero()) {
-                    return mEdge::zero;
-                } else {
-                    auto e = mEdge{r.p, cn.getCached(r.w)};
-                    ComplexNumbers::mul(e.w, e.w, x.w);
-                    ComplexNumbers::mul(e.w, e.w, y.w);
-                    if (e.w.approximatelyZero()) {
-                        cn.returnToCache(e.w);
-                        return mEdge::zero;
-                    }
-                    return e;
-                }
-            }
-
-            mEdge e{};
-            if (x.p->v == var && x.p->v == y.p->v) {
-                if (x.p->ident) {
-                    if (y.p->ident) {
-                        e = makeIdent(0, var);
+                    if constexpr (N == NEDGE) {
+                        // additionally check if y is the identity in case of matrix multiplication
+                        if (y.p->ident) {
+                            e = makeIdent(0, var);
+                        } else {
+                            e = yCopy;
+                        }
                     } else {
                         e = yCopy;
                     }
-                    matrixMultiplication.insert(xCopy, yCopy, {e.p, e.w});
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w});
                     e.w = cn.mulCached(x.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
-                        return mEdge::zero;
+                        return ResultEdge::zero;
                     }
                     return e;
                 }
-                if (y.p->ident) {
-                    e = xCopy;
-                    matrixMultiplication.insert(xCopy, yCopy, {e.p, e.w});
-                    e.w = cn.mulCached(x.w, y.w);
 
-                    if (e.w.approximatelyZero()) {
-                        cn.returnToCache(e.w);
-                        return mEdge::zero;
+                if constexpr (N == NEDGE) {
+                    // additionally check if y is the identity in case of matrix multiplication
+                    if (y.p->ident) {
+                        e = xCopy;
+                        computeTable.insert(xCopy, yCopy, {e.p, e.w});
+                        e.w = cn.mulCached(x.w, y.w);
+
+                        if (e.w.approximatelyZero()) {
+                            cn.returnToCache(e.w);
+                            return ResultEdge::zero;
+                        }
+                        return e;
                     }
-                    return e;
                 }
             }
 
-            std::array<mEdge, NEDGE> edge{};
-            mEdge                    e1{}, e2{};
-            for (auto i = 0U; i < NEDGE; i += RADIX) {
-                for (auto j = 0U; j < RADIX; j++) {
-                    edge[i + j] = mEdge::zero;
-                    for (auto k = 0U; k < RADIX; k++) {
+            constexpr std::size_t ROWS = RADIX;
+            constexpr std::size_t COLS = N == NEDGE ? RADIX : 1U;
+
+            std::array<ResultEdge, N> edge{};
+            for (auto i = 0U; i < ROWS; i++) {
+                for (auto j = 0U; j < COLS; j++) {
+                    auto idx  = COLS * i + j;
+                    edge[idx] = ResultEdge::zero;
+                    for (auto k = 0U; k < ROWS; k++) {
+                        LEdge e1{};
                         if (!x.isTerminal() && x.p->v == var) {
-                            e1 = x.p->e[i + k];
+                            e1 = x.p->e[ROWS * i + k];
                         } else {
                             e1 = xCopy;
                         }
+
+                        REdge e2{};
                         if (!y.isTerminal() && y.p->v == var) {
-                            e2 = y.p->e[j + RADIX * k];
+                            e2 = y.p->e[j + COLS * k];
                         } else {
                             e2 = yCopy;
                         }
 
                         auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1));
 
-                        if (k == 0 || edge[i + j].w == Complex::zero) {
-                            edge[i + j] = m;
+                        if (k == 0 || edge[idx].w == Complex::zero) {
+                            edge[idx] = m;
                         } else if (m.w != Complex::zero) {
-                            auto old_e  = edge[i + j];
-                            edge[i + j] = add2(edge[i + j], m);
+                            auto old_e = edge[idx];
+                            edge[idx]  = add2(edge[idx], m);
                             cn.returnToCache(old_e.w);
                             cn.returnToCache(m.w);
                         }
@@ -925,7 +858,7 @@ namespace dd {
             }
             e = makeDDNode(var, edge, true);
 
-            matrixMultiplication.insert(xCopy, yCopy, {e.p, e.w});
+            computeTable.insert(xCopy, yCopy, {e.p, e.w});
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {
@@ -936,7 +869,7 @@ namespace dd {
                 }
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
-                    return mEdge::zero;
+                    return ResultEdge::zero;
                 }
             }
             return e;
@@ -1050,7 +983,7 @@ namespace dd {
         }
 
         // extent the DD pointed to by `e` with `h` identities on top and `l` identities at the bottom
-        mEdge extend(const mEdge& e, Qubit h = 0, Qubit l = 0) {
+        mEdge extend(const mEdge& e, Qubit h, Qubit l = 0) {
             auto f = (l > 0) ? kronecker(e, makeIdent(l)) : e;
             auto g = (h > 0) ? kronecker(makeIdent(h), f) : f;
             return g;
@@ -1657,6 +1590,7 @@ namespace dd {
 
         ///
         /// Deserialization
+        /// Note: do not rely on the binary format being portable across different architectures/platforms
         ///
     public:
         template<class Node, class Edge = Edge<Node>, std::size_t N = std::tuple_size_v<decltype(Node::e)>>
@@ -1664,11 +1598,11 @@ namespace dd {
             auto         result = Edge::zero;
             ComplexValue rootweight{};
 
-            std::unordered_map<std::int_fast64_t, Node*> nodes{};
-            std::int_fast64_t                            node_index;
-            Qubit                                        v;
-            std::array<ComplexValue, N>                  edge_weights{};
-            std::array<std::int_fast64_t, N>             edge_indices{};
+            std::unordered_map<std::int_least64_t, Node*> nodes{};
+            std::int_least64_t                            node_index;
+            Qubit                                         v;
+            std::array<ComplexValue, N>                   edge_weights{};
+            std::array<std::int_least64_t, N>             edge_indices{};
             edge_indices.fill(-2);
 
             if (readBinary) {
@@ -1760,8 +1694,7 @@ namespace dd {
             auto ifs = std::ifstream(inputFilename);
 
             if (!ifs.good()) {
-                std::cerr << "Cannot open serialized file: " << inputFilename << std::endl;
-                return Edge::zero;
+                throw std::invalid_argument("Cannot open serialized file: " + inputFilename);
             }
 
             return deserialize<Node>(ifs, readBinary);
@@ -1769,7 +1702,7 @@ namespace dd {
 
     private:
         template<class Node, class Edge = Edge<Node>, std::size_t N = std::tuple_size_v<decltype(Node::e)>>
-        Edge deserializeNode(std::int_fast64_t index, Qubit v, std::array<std::int_fast64_t, N>& edge_idx, std::array<ComplexValue, N>& edge_weight, std::unordered_map<std::int_fast64_t, Node*>& nodes) {
+        Edge deserializeNode(std::int_least64_t index, Qubit v, std::array<std::int_least64_t, N>& edge_idx, std::array<ComplexValue, N>& edge_weight, std::unordered_map<std::int_least64_t, Node*>& nodes) {
             if (index == -1) {
                 return Edge::zero;
             }
@@ -1826,7 +1759,7 @@ namespace dd {
             sst << "0x" << std::hex << reinterpret_cast<std::uintptr_t>(p) << std::dec
                 << "[v=" << static_cast<std::int_fast64_t>(p->v)
                 << " ref=" << p->ref
-                //                << " hash=" << hash(p) TODO: reinclude this
+                << " hash=" << UniqueTable<Node>::hash(p)
                 << "]";
             return sst.str();
         }
@@ -1970,7 +1903,7 @@ namespace dd {
                       << "\n  CT Matrix Add size: " << sizeof(decltype(matrixAdd)::Entry) << " bytes (aligned " << alignof(decltype(matrixAdd)::Entry) << " bytes)"
                       << "\n  CT Matrix Transpose size: " << sizeof(decltype(matrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(matrixTranspose)::Entry) << " bytes)"
                       << "\n  CT Conjugate Matrix Transpose size: " << sizeof(decltype(conjugateMatrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(conjugateMatrixTranspose)::Entry) << " bytes)"
-                      << "\n  CT Matrix Multiplication size: " << sizeof(decltype(matrixMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixMultiplication)::Entry) << " bytes)"
+                      << "\n  CT Matrix Multiplication size: " << sizeof(decltype(matrixMatrixMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixMatrixMultiplication)::Entry) << " bytes)"
                       << "\n  CT Matrix Vector Multiplication size: " << sizeof(decltype(matrixVectorMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixVectorMultiplication)::Entry) << " bytes)"
                       << "\n  CT Vector Inner Product size: " << sizeof(decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(decltype(vectorInnerProduct)::Entry) << " bytes)"
                       << "\n  CT Vector Kronecker size: " << sizeof(decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(decltype(vectorKronecker)::Entry) << " bytes)"
@@ -1997,7 +1930,7 @@ namespace dd {
             std::cout << "[CT Conjugate Matrix Transpose] ";
             conjugateMatrixTranspose.printStatistics();
             std::cout << "[CT Matrix Multiplication] ";
-            matrixMultiplication.printStatistics();
+            matrixMatrixMultiplication.printStatistics();
             std::cout << "[CT Matrix Vector Multiplication] ";
             matrixVectorMultiplication.printStatistics();
             std::cout << "[CT Inner Product] ";
@@ -2015,16 +1948,16 @@ namespace dd {
         }
     };
 
-    inline Package::vNode Package::vNode::terminalNode{.e   = {{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
-                                                       .ref = 0,
-                                                       .v   = -1};
+    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+                                                       0,
+                                                       -1};
 
     inline Package::mNode Package::mNode::terminalNode{
-            .e     = {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
-            .ref   = 0,
-            .v     = -1,
-            .symm  = true,
-            .ident = true};
+            {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+            0,
+            -1,
+            true,
+            true};
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::vNode>& Package::getUniqueTable() { return vUniqueTable; }
@@ -2037,6 +1970,12 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::vEdge, Package::vCachedEdge>& Package::getMultiplicationComputeTable() { return matrixVectorMultiplication; }
+
+    template<>
+    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getMultiplicationComputeTable() { return matrixMatrixMultiplication; }
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge>& Package::getKroneckerComputeTable() { return vectorKronecker; }

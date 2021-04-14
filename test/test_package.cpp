@@ -3,9 +3,9 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#include "DDexport.hpp"
-#include "DDpackage.hpp"
-#include "GateMatrixDefinitions.hpp"
+#include "dd/Export.hpp"
+#include "dd/GateMatrixDefinitions.hpp"
+#include "dd/Package.hpp"
 
 #include "gtest/gtest.h"
 #include <memory>
@@ -237,9 +237,8 @@ TEST(DDPackageTest, SerializationErrors) {
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
 
     // test non-existing file
-    serialize(bell_state, "./path/that/does/not/exist/filename.dd");
-    auto e = dd->deserialize<dd::Package::vNode>("./path/that/does/not/exist/filename.dd", true);
-    EXPECT_TRUE(e.isZeroTerminal());
+    EXPECT_THROW(serialize(bell_state, "./path/that/does/not/exist/filename.dd"), std::invalid_argument);
+    EXPECT_THROW(dd->deserialize<dd::Package::vNode>("./path/that/does/not/exist/filename.dd", true), std::invalid_argument);
 
     // test wrong version number
     std::stringstream ss{};

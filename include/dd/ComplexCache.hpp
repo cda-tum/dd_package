@@ -16,7 +16,7 @@
 
 namespace dd {
 
-    template<std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_PERCENTAGE = 150>
+    template<std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2>
     class ComplexCache {
         using Entry = ComplexTable<>::Entry;
 
@@ -33,12 +33,11 @@ namespace dd {
 
         ~ComplexCache() = default;
 
-        static constexpr float GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
-
         // access functions
         [[nodiscard]] std::size_t getCount() const { return count; }
         [[nodiscard]] std::size_t getPeakCount() const { return peakCount; }
         [[nodiscard]] std::size_t getAllocations() const { return allocations; }
+        [[nodiscard]] std::size_t getGrowthFactor() const { return GROWTH_FACTOR; }
 
         [[nodiscard]] Complex getCachedComplex() {
             // an entry is available on the stack

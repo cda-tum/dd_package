@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_PERCENTAGE = 150, std::size_t INITIAL_GC_LIMIT = 100000, std::size_t GC_INCREMENT = 0>
+    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 100000, std::size_t GC_INCREMENT = 0>
     class ComplexTable {
     public:
         struct Entry {
@@ -110,8 +110,7 @@ namespace dd {
             TOLERANCE = tol;
         }
 
-        static constexpr std::size_t MASK          = NBUCKET - 1;
-        static constexpr float       GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
+        static constexpr std::size_t MASK = NBUCKET - 1;
 
         // linear (clipped) hash function
         static std::size_t hash(const fp val) {
@@ -124,7 +123,7 @@ namespace dd {
         [[nodiscard]] std::size_t getCount() const { return count; }
         [[nodiscard]] std::size_t getPeakCount() const { return peakCount; }
         [[nodiscard]] std::size_t getAllocations() const { return allocations; }
-        [[nodiscard]] float       getGrowthFactor() const { return GROWTH_FACTOR; }
+        [[nodiscard]] std::size_t getGrowthFactor() const { return GROWTH_FACTOR; }
         [[nodiscard]] const auto& getTable() const { return table; }
 
         Entry* lookup(const fp& val) {

@@ -3,8 +3,8 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#include "DDpackage.hpp"
-#include "GateMatrixDefinitions.hpp"
+#include "dd/GateMatrixDefinitions.hpp"
+#include "dd/Package.hpp"
 
 #include <benchmark/benchmark.h>
 #include <memory>

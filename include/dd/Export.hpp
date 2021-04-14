@@ -8,9 +8,9 @@
 
 #include "Complex.hpp"
 #include "ComplexNumbers.hpp"
-#include "DDpackage.hpp"
 #include "Definitions.hpp"
 #include "Edge.hpp"
+#include "Package.hpp"
 
 #include <algorithm>
 #include <array>
@@ -373,6 +373,11 @@ namespace dd {
         }
     }
 
+    ///
+    /// Serialization
+    /// Note: do not rely on the binary format being portable across different architectures/platforms
+    ///
+
     void serialize(const Package::vEdge& basic, std::ostream& os, bool writeBinary = false) {
         if (writeBinary) {
             os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(decltype(SERIALIZATION_VERSION)));
@@ -381,8 +386,8 @@ namespace dd {
             os << SERIALIZATION_VERSION << "\n";
             os << basic.w.toString(false, 16) << "\n";
         }
-        std::int_fast64_t                                      next_index = 0;
-        std::unordered_map<Package::vNode*, std::int_fast64_t> node_index{};
+        std::int_least64_t                                      next_index = 0;
+        std::unordered_map<Package::vNode*, std::int_least64_t> node_index{};
 
         // POST ORDER TRAVERSAL USING ONE STACK   https://www.geeksforgeeks.org/iterative-postorder-traversal-using-stack/
         std::stack<const Package::vEdge*> stack{};
@@ -434,8 +439,8 @@ namespace dd {
 
                         // iterate over edges in reverse to guarantee correct processing order
                         for (auto i = 0U; i < RADIX; ++i) {
-                            auto&             edge     = node->p->e[i];
-                            std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
+                            auto&              edge     = node->p->e[i];
+                            std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
                             os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(decltype(edge_idx)));
                             edge.w.writeBinary(os);
                         }
@@ -447,7 +452,7 @@ namespace dd {
                             os << " (";
                             auto& edge = node->p->e[i];
                             if (!edge.w.approximatelyZero()) {
-                                std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
+                                std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
                                 os << edge_idx << " " << edge.w.toString(false, 16);
                             }
                             os << ")";
@@ -459,7 +464,7 @@ namespace dd {
             } while (!stack.empty());
         }
     }
-    void serializeMatrix(const Package::mEdge& basic, std::int_fast64_t& idx, std::unordered_map<Package::mNode*, std::int_fast64_t>& node_index, std::unordered_set<Package::mNode*>& visited, std::ostream& os, bool writeBinary = false) {
+    void serializeMatrix(const Package::mEdge& basic, std::int_least64_t& idx, std::unordered_map<Package::mNode*, std::int_least64_t>& node_index, std::unordered_set<Package::mNode*>& visited, std::ostream& os, bool writeBinary = false) {
         if (!basic.isTerminal()) {
             for (auto& e: basic.p->e) {
                 if (auto [iter, success] = visited.insert(e.p); success) {
@@ -478,7 +483,7 @@ namespace dd {
 
                 // iterate over edges in reverse to guarantee correct processing order
                 for (auto& edge: basic.p->e) {
-                    std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
+                    std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
                     os.write(reinterpret_cast<const char*>(&edge_idx), sizeof(decltype(edge_idx)));
                     edge.w.writeBinary(os);
                 }
@@ -489,7 +494,7 @@ namespace dd {
                 for (auto& edge: basic.p->e) {
                     os << " (";
                     if (!edge.w.approximatelyZero()) {
-                        std::int_fast64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
+                        std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
                         os << edge_idx << " " << edge.w.toString(false, 16);
                     }
                     os << ")";
@@ -506,9 +511,9 @@ namespace dd {
             os << SERIALIZATION_VERSION << "\n";
             os << basic.w.toString(false, 16) << "\n";
         }
-        std::int_fast64_t                                      idx = 0;
-        std::unordered_map<Package::mNode*, std::int_fast64_t> node_index{};
-        std::unordered_set<Package::mNode*>                    visited{};
+        std::int_least64_t                                      idx = 0;
+        std::unordered_map<Package::mNode*, std::int_least64_t> node_index{};
+        std::unordered_set<Package::mNode*>                     visited{};
         serializeMatrix(basic, idx, node_index, visited, os, writeBinary);
     }
     template<class Edge>
@@ -516,8 +521,7 @@ namespace dd {
         std::ofstream ofs(outputFilename);
 
         if (!ofs.good()) {
-            std::cerr << "Cannot open file: " << outputFilename << std::endl;
-            return;
+            throw std::invalid_argument("Cannot open file: " + outputFilename);
         }
 
         serialize(basic, ofs, writeBinary);

@@ -16,6 +16,7 @@ namespace dd {
     // needs to be a signed type to encode -1 as the index for the terminal
     // std::int_fast8_t can at least address 128 qubits as [0, ..., 127]
     using Qubit = std::int_fast8_t;
+    static_assert(std::is_signed_v<Qubit>, "Type Qubit must be signed.");
 
     // integer type used for specifying numbers of qubits
     using QubitCount = std::make_unsigned<Qubit>::type;
@@ -23,9 +24,11 @@ namespace dd {
     // integer type used for reference counting
     // 32bit suffice for a max ref count of around 4 billion
     using RefCount = std::uint_fast32_t;
+    static_assert(std::is_unsigned_v<RefCount>, "RefCount should be unsigned.");
 
     // floating point type to use
     using fp = double;
+    static_assert(std::is_floating_point_v<fp>, "fp should be a floating point type (float, *double*, long double)");
 
     // logic radix
     static constexpr std::uint_fast8_t RADIX = 2;
@@ -47,7 +50,7 @@ namespace dd {
     using CVec = std::vector<std::pair<float, float>>;
     using CMat = std::vector<CVec>;
 
-    static constexpr std::uint_fast16_t SERIALIZATION_VERSION = 1;
+    static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
 
 } // namespace dd
 #endif //DDpackage_DATATYPES_HPP

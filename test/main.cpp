@@ -3,9 +3,9 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#include "DDexport.hpp"
-#include "DDpackage.hpp"
-#include "GateMatrixDefinitions.hpp"
+#include "dd/Export.hpp"
+#include "dd/GateMatrixDefinitions.hpp"
+#include "dd/Package.hpp"
 
 #include <iostream>
 #include <memory>

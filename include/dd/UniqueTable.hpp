@@ -32,7 +32,7 @@ namespace dd {
     /// \tparam GROWTH_PERCENTAGE percentage that the allocations' size shall grow over time
     /// \tparam INITIAL_GC_LIMIT number of nodes initially used as garbage collection threshold
     /// \tparam GC_INCREMENT absolute number of nodes to increase the garbage collection threshold after garbage collection has been performed
-    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_PERCENTAGE = 150, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
     class UniqueTable {
     public:
         explicit UniqueTable(std::size_t nvars):
@@ -47,8 +47,7 @@ namespace dd {
 
         ~UniqueTable() = default;
 
-        static constexpr std::size_t MASK          = NBUCKET - 1;
-        static constexpr float       GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
+        static constexpr std::size_t MASK = NBUCKET - 1;
 
         void resize(std::size_t nq) {
             nvars = nq;

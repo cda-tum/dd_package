@@ -3,7 +3,7 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
  */
 
-#include "ComplexNumbers.hpp"
+#include "dd/ComplexNumbers.hpp"
 
 #include "gtest/gtest.h"
 #include <memory>
@@ -284,7 +284,7 @@ TEST(DDComplexTest, ComplexTableAllocation) {
 
     // trigger new allocation
     [[maybe_unused]] auto num = cn.complexTable.getEntry();
-    EXPECT_EQ(cn.complexTable.getAllocations(), (1. + cn.complexTable.GROWTH_FACTOR) * allocs);
+    EXPECT_EQ(cn.complexTable.getAllocations(), (1. + cn.complexTable.getGrowthFactor()) * allocs);
 
     // clearing the complex table should reduce the allocated size to the original size
     cn.complexTable.clear();
@@ -303,7 +303,7 @@ TEST(DDComplexTest, ComplexCacheAllocation) {
 
     // trigger new allocation for obtaining a complex from cache
     [[maybe_unused]] auto cnum = cn.getCached();
-    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.GROWTH_FACTOR) * allocs);
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.getGrowthFactor()) * allocs);
 
     // clearing the cache should reduce the allocated size to the original size
     cn.complexCache.clear();
@@ -316,7 +316,7 @@ TEST(DDComplexTest, ComplexCacheAllocation) {
 
     // trigger new allocation for obtaining a temporary from cache
     [[maybe_unused]] auto cnumtmp = cn.getTemporary();
-    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.GROWTH_FACTOR) * allocs);
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.getGrowthFactor()) * allocs);
 
     // clearing the unique table should reduce the allocated size to the original size
     cn.complexCache.clear();
