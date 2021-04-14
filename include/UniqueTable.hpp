@@ -6,14 +6,21 @@
 #ifndef DDpackage_UNIQUETABLE_HPP
 #define DDpackage_UNIQUETABLE_HPP
 
+#include "ComplexNumbers.hpp"
 #include "Definitions.hpp"
+#include "Edge.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <forward_list>
-#include <functional>
+#include <iostream>
 #include <limits>
 #include <numeric>
 #include <stack>
+#include <stdexcept>
 #include <vector>
 
 namespace dd {
@@ -25,7 +32,7 @@ namespace dd {
     /// \tparam GROWTH_PERCENTAGE percentage that the allocations' size shall grow over time
     /// \tparam INITIAL_GC_LIMIT number of nodes initially used as garbage collection threshold
     /// \tparam GC_INCREMENT absolute number of nodes to increase the garbage collection threshold after garbage collection has been performed
-    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2000, std::size_t GROWTH_PERCENTAGE = 150, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_PERCENTAGE = 150, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
     class UniqueTable {
     public:
         explicit UniqueTable(std::size_t nvars):
@@ -40,8 +47,8 @@ namespace dd {
 
         ~UniqueTable() = default;
 
-        static constexpr size_t MASK          = NBUCKET - 1;
-        static constexpr float  GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
+        static constexpr std::size_t MASK          = NBUCKET - 1;
+        static constexpr float       GROWTH_FACTOR = GROWTH_PERCENTAGE / 100.;
 
         void resize(std::size_t nq) {
             nvars = nq;
@@ -78,8 +85,8 @@ namespace dd {
                 return e;
 
             lookups++;
-            auto key = hash(e.p);
-            auto v   = e.p->v;
+            const auto key = hash(e.p);
+            const auto v   = e.p->v;
 
             // successors of a node shall either have successive variable numbers or be terminals
             for ([[maybe_unused]] const auto& edge: e.p->e)
@@ -155,7 +162,7 @@ namespace dd {
                 return;
 
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) {
-                std::clog << "[WARN] MAXREFCNT reached for p=" << reinterpret_cast<uintptr_t>(e.p) << ". Node will never be collected." << std::endl;
+                std::clog << "[WARN] MAXREFCNT reached for p=" << reinterpret_cast<std::uintptr_t>(e.p) << ". Node will never be collected." << std::endl;
                 return;
             }
 
@@ -282,13 +289,13 @@ namespace dd {
                 auto& table = *it;
                 std::cout << "\t" << static_cast<std::size_t>(q) << ":"
                           << "\n";
-                for (size_t key = 0; key < table.size(); ++key) {
+                for (std::size_t key = 0; key < table.size(); ++key) {
                     auto& bucket = table[key];
                     if (!bucket.empty())
                         std::cout << key << ": ";
 
                     for (const auto& node: bucket)
-                        std::cout << "\t\t" << reinterpret_cast<uintptr_t>(node) << " " << node->ref << "\t";
+                        std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(node) << " " << node->ref << "\t";
 
                     if (!bucket.empty())
                         std::cout << "\n";

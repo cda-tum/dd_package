@@ -8,8 +8,11 @@
 
 #include "Definitions.hpp"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
-#include <set>
+#include <iostream>
+#include <vector>
 
 namespace dd {
     // noise operation kinds

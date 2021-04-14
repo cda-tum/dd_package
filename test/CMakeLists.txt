@@ -38,6 +38,14 @@ macro(package_add_test TESTNAME)
 	# discover tests
 	gtest_discover_tests(${TESTNAME} WORKING_DIRECTORY ${PROJECT_DIR} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}")
 	set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
+
+	# enable interprocedural optimization if it is supported
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT ipo_supported)
+	if (ipo_supported)
+		set_target_properties(${TESTNAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+	endif ()
+
 endmacro()
 
 # add unit tests
@@ -57,6 +65,13 @@ add_executable(${PROJECT_NAME}_bench ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.c
 # link the Google benchmark infrastructure and a default main fuction to the benchmark executable.
 target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} benchmark::benchmark_main Threads::Threads)
 set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests)
+
+# enable interprocedural optimization if it is supported
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported)
+if (ipo_supported)
+	set_target_properties(${PROJECT_NAME}_bench PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif ()
 
 add_custom_command(TARGET ${PROJECT_NAME}_bench
                    POST_BUILD

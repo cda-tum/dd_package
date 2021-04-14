@@ -6,7 +6,11 @@
 #ifndef DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 #define DD_PACKAGE_GATEMATRIXDEFINITIONS_H
 
+#include "ComplexValue.hpp"
 #include "Definitions.hpp"
+
+#include <array>
+#include <cmath>
 
 namespace dd {
     // Complex constants
@@ -25,6 +29,7 @@ namespace dd {
     constexpr ComplexValue complex_1minusi_2 = {0.5, -0.5};
 
     // Gate matrices
+    using GateMatrix = std::array<ComplexValue, NEDGE>;
     constexpr GateMatrix Imat{complex_one, complex_zero, complex_zero, complex_one};
     constexpr GateMatrix Hmat{complex_SQRT2_2, complex_SQRT2_2, complex_SQRT2_2, complex_mSQRT2_2};
     constexpr GateMatrix Xmat{complex_zero, complex_one, complex_one, complex_zero};

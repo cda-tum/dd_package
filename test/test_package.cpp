@@ -52,8 +52,8 @@ TEST(DDPackageTest, TrivialTest) {
     auto one_state  = dd->multiply(x_gate, zero_state);
 
     ASSERT_EQ(dd->fidelity(zero_state, one_state), 0.0);
-    ASSERT_NEAR(dd->fidelity(zero_state, h_state), 0.5, dd::ComplexNumbers::TOLERANCE);
-    ASSERT_NEAR(dd->fidelity(one_state, h_state), 0.5, dd::ComplexNumbers::TOLERANCE);
+    ASSERT_NEAR(dd->fidelity(zero_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
+    ASSERT_NEAR(dd->fidelity(one_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
 }
 
 TEST(DDPackageTest, BellState) {
@@ -117,7 +117,7 @@ TEST(DDPackageTest, PartialIdentityTrace) {
     auto dd  = std::make_unique<dd::Package>(2);
     auto tr  = dd->partialTrace(dd->makeIdent(2), {false, true});
     auto mul = dd->multiply(tr, tr);
-    EXPECT_EQ(CN::val(mul.w.r), 4.0);
+    EXPECT_EQ(mul.w.r->val(), 4.0);
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
@@ -388,10 +388,10 @@ TEST(DDPackageTest, TestLocalInconsistency) {
     EXPECT_FALSE(local);
     bell_state.p->v = 1;
 
-    bell_state.p->e[0].w.r->ref = 0;
-    local                       = dd->isLocallyConsistent(bell_state);
+    bell_state.p->e[0].w.r->refCount = 0;
+    local                            = dd->isLocallyConsistent(bell_state);
     EXPECT_FALSE(local);
-    bell_state.p->e[0].w.r->ref = 1;
+    bell_state.p->e[0].w.r->refCount = 1;
 }
 
 TEST(DDPackageTest, Ancillaries) {
@@ -658,15 +658,15 @@ TEST(DDPackageTest, KroneckerProduct) {
 
 TEST(DDPackageTest, NearZeroNormalize) {
     auto               dd       = std::make_unique<dd::Package>(2);
-    dd::fp             nearZero = CN::TOLERANCE / 10;
+    dd::fp             nearZero = dd::ComplexTable<>::tolerance() / 10;
     dd::Package::vEdge ve{};
     ve.p    = dd->vUniqueTable.getNode();
     ve.p->v = 1;
-    ve.w    = CN::ONE;
+    ve.w    = dd::Complex::one;
     for (auto& edge: ve.p->e) {
         edge.p    = dd->vUniqueTable.getNode();
         edge.p->v = 0;
-        edge.w    = dd->cn.getCachedComplex(nearZero, 0.);
+        edge.w    = dd->cn.getCached(nearZero, 0.);
         edge.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
     }
     auto veNormalizedCached = dd->normalize(ve, true);
@@ -684,11 +684,11 @@ TEST(DDPackageTest, NearZeroNormalize) {
     dd::Package::mEdge me{};
     me.p    = dd->mUniqueTable.getNode();
     me.p->v = 1;
-    me.w    = CN::ONE;
+    me.w    = dd::Complex::one;
     for (auto& edge: me.p->e) {
         edge.p    = dd->mUniqueTable.getNode();
         edge.p->v = 0;
-        edge.w    = dd->cn.getCachedComplex(nearZero, 0.);
+        edge.w    = dd->cn.getCached(nearZero, 0.);
         edge.p->e = {dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::one};
     }
     auto meNormalizedCached = dd->normalize(me, true);

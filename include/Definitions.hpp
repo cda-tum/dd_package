@@ -6,12 +6,9 @@
 #ifndef DDpackage_DATATYPES_HPP
 #define DDpackage_DATATYPES_HPP
 
-#include <algorithm>
-#include <array>
 #include <cstdint>
-#include <functional>
-#include <iostream>
-#include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace dd {
@@ -26,15 +23,6 @@ namespace dd {
     // integer type used for reference counting
     // 32bit suffice for a max ref count of around 4 billion
     using RefCount = std::uint_fast32_t;
-
-    // forward declarations of important structs
-    template<class Node>
-    struct Edge;
-    template<typename Node>
-    struct CachedEdge;
-
-    struct ComplexValue;
-    class ComplexNumbers;
 
     // floating point type to use
     using fp = double;
@@ -53,7 +41,6 @@ namespace dd {
         left
     };
 
-    using GateMatrix            = std::array<ComplexValue, NEDGE>;
     static constexpr fp SQRT2_2 = 0.707106781186547524400844362104849039284835937688474036588L;
     static constexpr fp PI      = 3.141592653589793238462643383279502884197169399375105820974L;
 
@@ -63,5 +50,4 @@ namespace dd {
     static constexpr std::uint_fast16_t SERIALIZATION_VERSION = 1;
 
 } // namespace dd
-using CN = dd::ComplexNumbers;
 #endif //DDpackage_DATATYPES_HPP

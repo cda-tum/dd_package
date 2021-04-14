@@ -6,8 +6,12 @@
 #ifndef DD_PACKAGE_EDGE_HPP
 #define DD_PACKAGE_EDGE_HPP
 
-#include "DDcomplex.hpp"
-#include "Definitions.hpp"
+#include "Complex.hpp"
+#include "ComplexTable.hpp"
+#include "ComplexValue.hpp"
+
+#include <cstddef>
+#include <utility>
 
 namespace dd {
     template<class Node>
@@ -16,7 +20,7 @@ namespace dd {
         Complex w;
 
         constexpr bool operator==(const Edge& other) const {
-            return p == other.p && CN::equals(w, other.w);
+            return p == other.p && w.approximatelyEquals(other.w);
         }
         constexpr bool operator!=(const Edge& other) const {
             return !operator==(other);
@@ -25,12 +29,12 @@ namespace dd {
         [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
 
         // edges pointing to zero and one terminals
-        static inline Edge one{Node::terminal, CN::ONE};
-        static inline Edge zero{Node::terminal, CN::ZERO};
+        static inline Edge one{Node::terminal, Complex::one};
+        static inline Edge zero{Node::terminal, Complex::zero};
 
         [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }
-        [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == CN::ZERO; }
-        [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == CN::ONE; }
+        [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == Complex::zero; }
+        [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == Complex::one; }
     };
 
     template<typename Node>
@@ -43,11 +47,11 @@ namespace dd {
             p(p), w(w) {}
         CachedEdge(Node* p, const Complex& c):
             p(p) {
-            w.r = CN::val(c.r);
-            w.i = CN::val(c.i);
+            w.r = c.r->val();
+            w.i = c.i->val();
         }
         bool operator==(const CachedEdge& other) const {
-            return p == other.p && CN::equals(w, other.w);
+            return p == other.p && w.approximatelyEquals(other.w);
         }
         bool operator!=(const CachedEdge& other) const {
             return !operator==(other);

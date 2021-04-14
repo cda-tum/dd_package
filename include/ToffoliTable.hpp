@@ -6,10 +6,14 @@
 #ifndef DDpackage_TOFFOLITABLE_HPP
 #define DDpackage_TOFFOLITABLE_HPP
 
+#include "Control.hpp"
 #include "Definitions.hpp"
 
-#include <array>
+#include <cstddef>
+#include <iostream>
 #include <set>
+#include <type_traits>
+#include <vector>
 
 namespace dd {
     template<class Edge, std::size_t NBUCKET = 2048>
@@ -24,7 +28,7 @@ namespace dd {
             Edge              e;
         };
 
-        static constexpr size_t MASK = NBUCKET - 1;
+        static constexpr std::size_t MASK = NBUCKET - 1;
 
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
@@ -48,7 +52,7 @@ namespace dd {
             return entry.e;
         }
 
-        static size_t hash(const std::set<Control>& controls, Qubit target) {
+        static std::size_t hash(const std::set<Control>& controls, Qubit target) {
             auto key = static_cast<std::size_t>(std::make_unsigned<Qubit>::type(target));
             for (const auto& control: controls) {
                 if (control.type == dd::Control::Type::pos) {
