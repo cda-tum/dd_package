@@ -157,7 +157,7 @@ namespace dd {
         // each child if this is the first reference
         void incRef(const Edge<Node>& e) {
             dd::ComplexNumbers::incRef(e.w);
-            if (e.isTerminal())
+            if (e.p == nullptr || e.isTerminal())
                 return;
 
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) {
@@ -184,7 +184,7 @@ namespace dd {
         // each child if this is the last reference
         void decRef(const Edge<Node>& e) {
             dd::ComplexNumbers::decRef(e.w);
-            if (e.isTerminal()) return;
+            if (e.p == nullptr || e.isTerminal()) return;
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) return;
 
             if (e.p->ref == 0) {

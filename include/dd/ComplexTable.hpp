@@ -208,6 +208,9 @@ namespace dd {
 
         // increment reference count for corresponding entry
         static void incRef(Entry* entry) {
+            if (entry == nullptr)
+                return;
+
             // get valid pointer
             auto entryPtr = entry->getAlignedPointer();
 
@@ -225,6 +228,9 @@ namespace dd {
 
         // decrement reference count for corresponding entry
         static void decRef(Entry* entry) {
+            if (entry == nullptr)
+                return;
+
             // get valid pointer
             auto entryPtr = entry->getAlignedPointer();
 
