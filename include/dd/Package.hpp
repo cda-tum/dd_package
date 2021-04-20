@@ -15,6 +15,7 @@
 #include "Control.hpp"
 #include "Definitions.hpp"
 #include "Edge.hpp"
+#include "GateMatrixDefinitions.hpp"
 #include "NoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
@@ -405,6 +406,60 @@ namespace dd {
                     e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, e});
                 }
             }
+            return e;
+        }
+
+        mEdge makeSWAPDD(QubitCount n, const Controls& controls, Qubit target0, Qubit target1) {
+            auto c = controls;
+            c.insert(Control{target0});
+            mEdge e = makeGateDD(Xmat, n, c, target1);
+            c.erase(Control{target0});
+            c.insert(Control{target1});
+            e = multiply(e, multiply(makeGateDD(Xmat, n, c, target0), e));
+            return e;
+        }
+
+        mEdge makePeresDD(QubitCount n, const Controls& controls, Qubit target0, Qubit target1) {
+            auto c = controls;
+            c.insert(Control{target1});
+            mEdge e = makeGateDD(Xmat, n, c, target0);
+            e       = multiply(makeGateDD(Xmat, n, controls, target1), e);
+            return e;
+        }
+
+        mEdge makePeresdagDD(QubitCount n, const Controls& controls, Qubit target0, Qubit target1) {
+            mEdge e = makeGateDD(Xmat, n, controls, target1);
+            auto  c = controls;
+            c.insert(Control{target1});
+            e = multiply(makeGateDD(Xmat, n, c, target0), e);
+            return e;
+        }
+
+        mEdge makeiSWAPDD(QubitCount n, const Controls& controls, Qubit target0, Qubit target1) {
+            mEdge e = makeGateDD(Smat, n, controls, target1);              // S q[1]
+            e       = multiply(e, makeGateDD(Smat, n, controls, target0)); // S q[0]
+            e       = multiply(e, makeGateDD(Hmat, n, controls, target0)); // H q[0]
+            auto c  = controls;
+            c.insert(Control{target0});
+            e = multiply(e, makeGateDD(Xmat, n, c, target1)); // CX q[0], q[1]
+            c.erase(Control{target0});
+            c.insert(Control{target1});
+            e = multiply(e, makeGateDD(Xmat, n, c, target0));        // CX q[1], q[0]
+            e = multiply(e, makeGateDD(Hmat, n, controls, target1)); // H q[1]
+            return e;
+        }
+
+        mEdge makeiSWAPinvDD(QubitCount n, const Controls& controls, Qubit target0, Qubit target1) {
+            mEdge e = makeGateDD(Hmat, n, controls, target1); // H q[1]
+            auto  c = controls;
+            c.insert(Control{target1});
+            e = multiply(e, makeGateDD(Xmat, n, c, target0)); // CX q[1], q[0]
+            c.erase(Control{target1});
+            c.insert(Control{target0});
+            e = multiply(e, makeGateDD(Xmat, n, c, target1));           // CX q[0], q[1]
+            e = multiply(e, makeGateDD(Hmat, n, controls, target0));    // H q[0]
+            e = multiply(e, makeGateDD(Sdagmat, n, controls, target0)); // Sdag q[0]
+            e = multiply(e, makeGateDD(Sdagmat, n, controls, target1)); // Sdag q[1]
             return e;
         }
 
