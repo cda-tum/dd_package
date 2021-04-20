@@ -221,7 +221,7 @@ namespace dd {
                             assert(!Node::isTerminal(*it));
 
                             auto node = (*it);
-                            it = bucket.erase_after(lastit); // erases the element at `it`
+                            it        = bucket.erase_after(lastit); // erases the element at `it`
                             returnNode(node);
                             collected++;
                         } else {

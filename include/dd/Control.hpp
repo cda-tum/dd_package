@@ -46,7 +46,6 @@ namespace dd {
         inline bool operator()(const Control& lhs, Qubit rhs) const {
             return lhs.qubit < rhs;
         }
-
     };
     using Controls = std::set<Control, CompareControl>;
 

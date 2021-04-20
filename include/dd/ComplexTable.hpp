@@ -257,7 +257,7 @@ namespace dd {
                 while (it != bucket.end()) {
                     if ((*it)->refCount == 0) {
                         auto entry = (*it);
-                        it = bucket.erase_after(lastit); // erases the element at `it`
+                        it         = bucket.erase_after(lastit); // erases the element at `it`
                         returnEntry(entry);
                         collected++;
                     } else {
