@@ -49,45 +49,7 @@ namespace dd {
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
-            std::ostringstream ss{};
-
-            if (precision >= 0) ss << std::setprecision(precision);
-
-            auto real = r->val();
-            auto imag = i->val();
-
-            if (real != 0.) {
-                if (formatted) {
-                    ComplexValue::printFormatted(ss, real);
-                } else {
-                    ss << real;
-                }
-            }
-            if (imag != 0.) {
-                if (formatted) {
-                    if (real == imag) {
-                        ss << "(1+i)";
-                        return ss.str();
-                    } else if (imag == -real) {
-                        ss << "(1-i)";
-                        return ss.str();
-                    }
-                    ComplexValue::printFormatted(ss, imag, true);
-                } else {
-                    if (real == 0.) {
-                        ss << imag;
-                    } else {
-                        if (imag > 0.) {
-                            ss << "+";
-                        }
-                        ss << imag;
-                    }
-                    ss << "i";
-                }
-            }
-            if (real == 0. && imag == 0.) return "0";
-
-            return ss.str();
+            return ComplexValue::toString(r->val(), i->val(), formatted, precision);
         }
 
         void writeBinary(std::ostream& os) const {

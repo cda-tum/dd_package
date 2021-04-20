@@ -13,7 +13,9 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -152,6 +154,45 @@ namespace dd {
                 os << (std::signbit(r) ? "" : "+") << r << "i";
             } else
                 os << r;
+        }
+
+        static std::string toString(const fp& real, const fp& imag, bool formatted = true, int precision = -1) {
+            std::ostringstream ss{};
+
+            if (precision >= 0) ss << std::setprecision(precision);
+
+            if (real != 0.) {
+                if (formatted) {
+                    printFormatted(ss, real);
+                } else {
+                    ss << real;
+                }
+            }
+            if (imag != 0.) {
+                if (formatted) {
+                    if (real == imag) {
+                        ss << "(1+i)";
+                        return ss.str();
+                    } else if (imag == -real) {
+                        ss << "(1-i)";
+                        return ss.str();
+                    }
+                    printFormatted(ss, imag, true);
+                } else {
+                    if (real == 0.) {
+                        ss << imag;
+                    } else {
+                        if (imag > 0.) {
+                            ss << "+";
+                        }
+                        ss << imag;
+                    }
+                    ss << "i";
+                }
+            }
+            if (real == 0. && imag == 0.) return "0";
+
+            return ss.str();
         }
     };
 
