@@ -152,7 +152,7 @@ BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetBottom)->Apply(QubitRang
 static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
     unsigned short        nqubits = state.range(0);
     auto                  dd      = std::make_unique<dd::Package>(nqubits);
-    std::set<dd::Control> controls;
+    dd::Controls controls;
     for (std::size_t i = 0; i < static_cast<std::size_t>(nqubits - 1); i++)
         controls.insert({static_cast<dd::Qubit>(i)});
     for (auto _: state) {
@@ -164,7 +164,7 @@ BENCHMARK(BM_MakeFullControlledToffoliDD_TargetTop)->Apply(QubitRange);
 static void BM_MakeFullControlledToffoliDD_TargetMiddle(benchmark::State& state) {
     unsigned short        nqubits = state.range(0);
     auto                  dd      = std::make_unique<dd::Package>(nqubits);
-    std::set<dd::Control> controls;
+    dd::Controls controls;
     for (std::size_t i = 0; i < nqubits; i++)
         if (i != nqubits / 2)
             controls.insert({static_cast<dd::Qubit>(i)});
@@ -177,7 +177,7 @@ BENCHMARK(BM_MakeFullControlledToffoliDD_TargetMiddle)->Apply(QubitRange);
 static void BM_MakeFullControlledToffoliDD_TargetBottom(benchmark::State& state) {
     unsigned short        nqubits = state.range(0);
     auto                  dd      = std::make_unique<dd::Package>(nqubits);
-    std::set<dd::Control> controls;
+    dd::Controls controls;
     for (std::size_t i = 1; i < nqubits; i++)
         controls.insert({static_cast<dd::Qubit>(i)});
     for (auto _: state) {

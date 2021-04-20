@@ -345,15 +345,15 @@ namespace dd {
 
         // build matrix representation for a single gate on an n-qubit circuit
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target) {
-            return makeGateDD(mat, n, std::set<Control>{}, target);
+            return makeGateDD(mat, n, Controls{}, target);
         }
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target) {
-            return makeGateDD(mat, n, std::set{control}, target);
+            return makeGateDD(mat, n, Controls{control}, target);
         }
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit control, Qubit target) {
-            return makeGateDD(mat, n, std::set<Control>{{control}}, target);
+            return makeGateDD(mat, n, Controls{{control}}, target);
         }
-        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const std::set<Control>& controls, Qubit target) {
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Controls& controls, Qubit target) {
             assert(n <= nqubits);
 
             std::array<mEdge, NEDGE> em{};
