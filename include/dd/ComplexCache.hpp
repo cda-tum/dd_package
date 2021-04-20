@@ -42,7 +42,7 @@ namespace dd {
         [[nodiscard]] Complex getCachedComplex() {
             // an entry is available on the stack
             if (!available.empty()) {
-                auto entry = available.top();
+                auto& entry = available.top();
                 available.pop();
                 count += 2;
                 return entry;
@@ -95,7 +95,7 @@ namespace dd {
             assert(c != Complex::one);
             assert(c.r->refCount == 0);
             assert(c.i->refCount == 0);
-            available.push(c);
+            available.emplace(c);
             count -= 2;
         }
 

@@ -126,7 +126,7 @@ namespace dd {
         [[nodiscard]] Node* getNode() {
             // a node is available on the stack
             if (!available.empty()) {
-                auto p = available.top();
+                auto& p = available.top();
                 available.pop();
                 // returned nodes could have a ref count != 0
                 p->ref = 0;
@@ -149,7 +149,7 @@ namespace dd {
         }
 
         void returnNode(Node* p) {
-            available.push(p);
+            available.emplace(p);
         }
 
         // increment reference counter for node e points to

@@ -180,7 +180,7 @@ namespace dd {
         [[nodiscard]] Entry* getEntry() {
             // an entry is available on the stack
             if (!available.empty()) {
-                auto entry = available.top();
+                auto& entry = available.top();
                 available.pop();
                 // returned entries could have a ref count != 0
                 entry->refCount = 0;
@@ -203,7 +203,7 @@ namespace dd {
         }
 
         void returnEntry(Entry* entry) {
-            available.push(entry);
+            available.emplace(entry);
         }
 
         // increment reference count for corresponding entry
