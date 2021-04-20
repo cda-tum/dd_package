@@ -1605,7 +1605,27 @@ namespace dd {
                 for (Qubit j = e.p->v; j >= 0; j--) {
                     std::cout << ((i >> j) & 1u);
                 }
-                std::cout << ": " << amplitude << "\n";
+                constexpr auto precision = 3;
+                // set fixed width to maximum of a printed number
+                // (-) 0.precision plus/minus 0.precision i
+                constexpr auto width = 1 + 2 + precision + 1 + 2 + precision + 1;
+                std::cout << ": " << std::setw (width) << ComplexValue::toString(amplitude.r, amplitude.i, false, precision) << "\n";
+            }
+            std::cout << std::flush;
+        }
+
+        void printMatrix(const mEdge& e) {
+            unsigned long long element = 2u << e.p->v;
+            for (unsigned long long i = 0; i < element; i++) {
+                for (unsigned long long j = 0; j < element; j++) {
+                    auto amplitude = getValueByPath(e, i, j);
+                    constexpr auto precision = 3;
+                    // set fixed width to maximum of a printed number
+                    // (-) 0.precision plus/minus 0.precision i
+                    constexpr auto width = 1 + 2 + precision + 1 + 2 + precision + 1;
+                    std::cout << std::setw (width) << ComplexValue::toString(amplitude.r, amplitude.i, false, precision) << " ";
+                }
+                std::cout << "\n";
             }
             std::cout << std::flush;
         }
