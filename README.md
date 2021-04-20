@@ -9,11 +9,6 @@
 
 A DD package tailored to quantum computing by the [Institute for Integrated Circuits](http://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at). This package is part of the [JKQ toolset](https://github.com/iic-jku/jkq).
 
-Developers: Alwin Zulehner, Stefan Hillmich, Lukas Burgholzer, and Robert Wille
-
-With code from the QMDD implementation provided by Michael Miller (University of Victoria, Canada)
-and Philipp Niemann (University of Bremen, Germany).
-
 For more information, please visit [iic.jku.at/eda/research/quantum_dd](http://iic.jku.at/eda/research/quantum_dd).
 
 If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/iic-jku/dd_package/issues).
