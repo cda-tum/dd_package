@@ -31,6 +31,8 @@ namespace dd {
         auto phase = dd::ComplexNumbers::arg(a);
         auto twopi = 2 * dd::PI;
         phase      = (phase) / twopi;
+        if (phase < 0)
+            phase += 1.;
         std::ostringstream oss{};
         oss << std::fixed << std::setprecision(3) << phase << " " << 0.667 << " " << 0.75;
         return oss.str();
