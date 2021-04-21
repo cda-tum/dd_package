@@ -29,6 +29,7 @@ endif()
 
 add_executable(${PROJECT_NAME}_example ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME}_example PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 macro(package_add_test TESTNAME)
 	# create an exectuable in which the tests will be stored
@@ -37,7 +38,7 @@ macro(package_add_test TESTNAME)
 	target_link_libraries(${TESTNAME} PRIVATE ${PROJECT_NAME} gtest_main)
 	# discover tests
 	gtest_discover_tests(${TESTNAME} WORKING_DIRECTORY ${PROJECT_DIR} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}")
-	set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
+	set_target_properties(${TESTNAME} PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 	# enable interprocedural optimization if it is supported
 	include(CheckIPOSupported)
@@ -64,7 +65,7 @@ add_test(NAME ${PROJECT_NAME}_example COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJ
 add_executable(${PROJECT_NAME}_bench EXCLUDE_FROM_ALL ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.cpp)
 # link the Google benchmark infrastructure and a default main fuction to the benchmark executable.
 target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} benchmark::benchmark_main Threads::Threads)
-set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests)
+set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 # enable interprocedural optimization if it is supported
 include(CheckIPOSupported)
