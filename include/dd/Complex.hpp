@@ -16,28 +16,30 @@
 #include <utility>
 
 namespace dd {
+    using CTEntry = ComplexTable<>::Entry;
+
     struct Complex {
-        ComplexTable<>::Entry* r;
-        ComplexTable<>::Entry* i;
+        CTEntry* r;
+        CTEntry* i;
 
         static Complex zero;
         static Complex one;
 
         void setVal(const Complex& c) const {
-            r->value = c.r->val();
-            i->value = c.i->val();
+            r->value = CTEntry::val(c.r);
+            i->value = CTEntry::val(c.i);
         }
 
         [[nodiscard]] bool approximatelyEquals(const Complex& c) const {
-            return r->approximatelyEquals(c.r) && i->approximatelyEquals(c.i);
+            return CTEntry::approximatelyEquals(r, c.r) && CTEntry::approximatelyEquals(i, c.i);
         };
 
         [[nodiscard]] bool approximatelyZero() const {
-            return r->approximatelyZero() && i->approximatelyZero();
+            return CTEntry::approximatelyZero(r) && CTEntry::approximatelyZero(i);
         }
 
         [[nodiscard]] bool approximatelyOne() const {
-            return r->approximatelyOne() && i->approximatelyZero();
+            return CTEntry::approximatelyOne(r) && CTEntry::approximatelyZero(i);
         }
 
         bool operator==(const Complex& other) const {
@@ -49,18 +51,18 @@ namespace dd {
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
-            return ComplexValue::toString(r->val(), i->val(), formatted, precision);
+            return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }
 
         void writeBinary(std::ostream& os) const {
-            r->writeBinary(os);
-            i->writeBinary(os);
+            CTEntry::writeBinary(r, os);
+            CTEntry::writeBinary(i, os);
         }
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
-        auto r = c.r->val();
-        auto i = c.i->val();
+        auto r = CTEntry::val(c.r);
+        auto i = CTEntry::val(c.i);
 
         if (r != 0) {
             ComplexValue::printFormatted(os, r);

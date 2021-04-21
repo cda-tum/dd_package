@@ -117,7 +117,7 @@ TEST(DDPackageTest, PartialIdentityTrace) {
     auto dd  = std::make_unique<dd::Package>(2);
     auto tr  = dd->partialTrace(dd->makeIdent(2), {false, true});
     auto mul = dd->multiply(tr, tr);
-    EXPECT_EQ(mul.w.r->val(), 4.0);
+    EXPECT_EQ(dd::CTEntry::val(mul.w.r), 4.0);
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {

@@ -50,8 +50,8 @@ namespace dd {
             p(p), w(w) {}
         CachedEdge(Node* p, const Complex& c):
             p(p) {
-            w.r = c.r->val();
-            w.i = c.i->val();
+            w.r = CTEntry::val(c.r);
+            w.i = CTEntry::val(c.i);
         }
 
         /// Comparing two DD edges with another involves comparing the respective pointers

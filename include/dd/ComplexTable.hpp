@@ -33,48 +33,48 @@ namespace dd {
             /// If not handled properly, this causes misaligned access
             /// These routines allow to obtain safe pointers
             ///
-            [[nodiscard]] inline Entry* getAlignedPointer() const {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(this) & (~1ULL));
+            [[nodiscard]] static inline Entry* getAlignedPointer(const Entry* e) {
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) & (~1ULL));
             }
-            [[nodiscard]] inline Entry* getNegativePointer() const {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(this) | 1ULL);
+            [[nodiscard]] static inline Entry* getNegativePointer(const Entry* e) {
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) | 1ULL);
             }
-            [[nodiscard]] inline Entry* flipPointerSign() const {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(this) ^ 1ULL);
+            [[nodiscard]] static inline Entry* flipPointerSign(const Entry* e) {
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) ^ 1ULL);
             }
-            [[nodiscard]] inline bool isNegativePointer() const {
-                return reinterpret_cast<std::uintptr_t>(this) & 1ULL;
+            [[nodiscard]] static inline bool isNegativePointer(const Entry* e) {
+                return reinterpret_cast<std::uintptr_t>(e) & 1ULL;
             }
 
-            [[nodiscard]] inline fp val() const {
-                if (isNegativePointer()) {
-                    return -getAlignedPointer()->value;
+            [[nodiscard]] static inline fp val(const Entry* e) {
+                if (isNegativePointer(e)) {
+                    return -getAlignedPointer(e)->value;
                 }
-                return value;
+                return e->value;
             }
 
-            [[nodiscard]] inline RefCount ref() const {
-                if (isNegativePointer()) {
-                    return -getAlignedPointer()->refCount;
+            [[nodiscard]] static inline RefCount ref(const Entry* e) {
+                if (isNegativePointer(e)) {
+                    return -getAlignedPointer(e)->refCount;
                 }
-                return refCount;
+                return e->refCount;
             }
 
-            [[nodiscard]] inline bool approximatelyEquals(const Entry* entry) const {
-                return std::abs(val() - entry->val()) < TOLERANCE;
+            [[nodiscard]] static inline bool approximatelyEquals(const Entry* left, const Entry* right) {
+                return std::abs(val(left) - val(right)) < TOLERANCE;
             }
 
-            [[nodiscard]] inline bool approximatelyZero() const {
-                return this == &zero || std::abs(val()) < TOLERANCE;
+            [[nodiscard]] static inline bool approximatelyZero(const Entry* e) {
+                return e == &zero || std::abs(val(e)) < TOLERANCE;
             }
 
-            [[nodiscard]] inline bool approximatelyOne() const {
-                return this == &one || std::abs(val() - 1) < TOLERANCE;
+            [[nodiscard]] static inline bool approximatelyOne(const Entry* e) {
+                return e == &one || std::abs(val(e) - 1) < TOLERANCE;
             }
 
-            void writeBinary(std::ostream& os) const {
-                auto temp = val();
-                os.write(reinterpret_cast<const char*>(&temp), sizeof(decltype(value)));
+            static void writeBinary(const Entry* e, std::ostream& os) {
+                auto temp = val(e);
+                os.write(reinterpret_cast<const char*>(&temp), sizeof(decltype(temp)));
             }
         };
 
@@ -169,12 +169,11 @@ namespace dd {
             }
 
             // value was not found in the table -> get a new entry and add it to the central bucket
-            auto entry   = getEntry();
-            entry->value = val;
-            table[key].push_front(entry);
+            table[key].emplace_front(getEntry());
+            table[key].front()->value = val;
             count++;
             peakCount = std::max(peakCount, count);
-            return entry;
+            return table[key].front();
         }
 
         [[nodiscard]] Entry* getEntry() {
@@ -212,7 +211,7 @@ namespace dd {
                 return;
 
             // get valid pointer
-            auto entryPtr = entry->getAlignedPointer();
+            auto entryPtr = Entry::getAlignedPointer(entry);
 
             // `zero` and `one` are static and never altered
             if (entryPtr != &one && entryPtr != &zero) {
@@ -232,7 +231,7 @@ namespace dd {
                 return;
 
             // get valid pointer
-            auto entryPtr = entry->getAlignedPointer();
+            auto entryPtr = Entry::getAlignedPointer(entry);
 
             // `zero` and `one` are static and never altered
             if (entryPtr != &one && entryPtr != &zero) {
@@ -357,7 +356,7 @@ namespace dd {
         std::size_t gcRuns  = 0;
         std::size_t gcLimit = 250000;
 
-        typename Bucket::const_iterator find(const Bucket& bucket, const fp& val) {
+        inline typename Bucket::const_iterator find(const Bucket& bucket, const fp& val) {
             auto it = bucket.cbegin();
             while (it != bucket.cend()) {
                 if (std::abs((*it)->value - val) < TOLERANCE) {

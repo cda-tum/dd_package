@@ -152,7 +152,7 @@ namespace dd {
                 r.w.r->value *= sum;
                 r.w.i->value *= sum;
             } else {
-                r.w = cn.lookup(max.w.r->val() * sum, max.w.i->val() * sum);
+                r.w = cn.lookup(CTEntry::val(max.w.r) * sum, CTEntry::val(max.w.i) * sum);
                 if (r.w.approximatelyZero()) {
                     return vEdge::zero;
                 }
@@ -605,12 +605,12 @@ namespace dd {
             if (x.w == Complex::zero) {
                 if (y.w == Complex::zero) return y;
                 auto r = y;
-                r.w    = cn.getCached(y.w.r->val(), y.w.i->val());
+                r.w    = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                 return r;
             }
             if (y.w == Complex::zero) {
                 auto r = x;
-                r.w    = cn.getCached(x.w.r->val(), x.w.i->val());
+                r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 return r;
             }
             if (x.p == y.p) {
@@ -981,7 +981,7 @@ namespace dd {
                 auto c = cn.getTemporary(r.w);
                 ComplexNumbers::mul(c, c, x.w);
                 ComplexNumbers::mul(c, c, y.w);
-                return {c.r->val(), c.i->val()};
+                return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
             auto w = static_cast<Qubit>(var - 1);
@@ -1012,7 +1012,7 @@ namespace dd {
             auto c = cn.getTemporary(sum);
             ComplexNumbers::mul(c, c, x.w);
             ComplexNumbers::mul(c, c, y.w);
-            return {c.r->val(), c.i->val()};
+            return {CTEntry::val(c.r), CTEntry::val(c.i)};
         }
 
         ///
@@ -1075,7 +1075,7 @@ namespace dd {
                         e = makeDDNode(static_cast<Qubit>(e.p->v + 1), std::array{e, Edge<Node>::zero, Edge<Node>::zero, e});
                     }
 
-                    e.w = cn.getCached(y.w.r->val(), y.w.i->val());
+                    e.w = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                     computeTable.insert(x, y, {e.p, e.w});
                     return e;
                 }
@@ -1109,7 +1109,7 @@ namespace dd {
             const auto                  res       = partialTrace(a, eliminate);
             [[maybe_unused]] const auto after     = cn.cacheCount();
             assert(before == after);
-            return {res.w.r->val(), res.w.i->val()};
+            return {CTEntry::val(res.w.r), CTEntry::val(res.w.i)};
         }
 
     private:
@@ -1500,7 +1500,7 @@ namespace dd {
         template<class Edge>
         ComplexValue getValueByPath(const Edge& e, const std::string& elements) {
             if (e.isTerminal()) {
-                return {e.w.r->val(), e.w.i->val()};
+                return {CTEntry::val(e.w.r), CTEntry::val(e.w.i)};
             }
 
             auto c = cn.getTemporary(1, 0);
@@ -1513,11 +1513,11 @@ namespace dd {
             } while (!r.isTerminal());
             ComplexNumbers::mul(c, c, r.w);
 
-            return {c.r->val(), c.i->val()};
+            return {CTEntry::val(c.r), CTEntry::val(c.i)};
         }
         ComplexValue getValueByPath(const vEdge& e, std::size_t i) {
             if (e.isTerminal()) {
-                return {e.w.r->val(), e.w.i->val()};
+                return {CTEntry::val(e.w.r), CTEntry::val(e.w.i)};
             }
             return getValueByPath(e, Complex::one, i);
         }
@@ -1526,7 +1526,7 @@ namespace dd {
 
             if (e.isTerminal()) {
                 cn.returnToCache(c);
-                return {c.r->val(), c.i->val()};
+                return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
             bool one = i & (1 << e.p->v);
@@ -1542,7 +1542,7 @@ namespace dd {
         }
         ComplexValue getValueByPath(const mEdge& e, std::size_t i, std::size_t j) {
             if (e.isTerminal()) {
-                return {e.w.r->val(), e.w.i->val()};
+                return {CTEntry::val(e.w.r), CTEntry::val(e.w.i)};
             }
             return getValueByPath(e, Complex::one, i, j);
         }
@@ -1551,7 +1551,7 @@ namespace dd {
 
             if (e.isTerminal()) {
                 cn.returnToCache(c);
-                return {c.r->val(), c.i->val()};
+                return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
             bool row = i & (1 << e.p->v);
@@ -1584,7 +1584,7 @@ namespace dd {
 
             // base case
             if (e.isTerminal()) {
-                vec.at(i) = {c.r->val(), c.i->val()};
+                vec.at(i) = {CTEntry::val(c.r), CTEntry::val(c.i)};
                 cn.returnToCache(c);
                 return;
             }
@@ -1643,7 +1643,7 @@ namespace dd {
 
             // base case
             if (e.isTerminal()) {
-                mat.at(i).at(j) = {c.r->val(), c.i->val()};
+                mat.at(i).at(j) = {CTEntry::val(c.r), CTEntry::val(c.i)};
                 cn.returnToCache(c);
                 return;
             }
@@ -1818,8 +1818,8 @@ namespace dd {
             std::clog << "Debug node: " << debugnode_line(p) << "\n";
             for (const auto& edge: p->e) {
                 std::clog << "  " << std::hexfloat
-                          << std::setw(22) << edge.w.r->val() << " "
-                          << std::setw(22) << edge.w.i->val() << std::defaultfloat
+                          << std::setw(22) << CTEntry::val(edge.w.r) << " "
+                          << std::setw(22) << CTEntry::val(edge.w.i) << std::defaultfloat
                           << "i --> " << debugnode_line(edge.p) << "\n";
             }
             std::clog << std::flush;
@@ -1865,8 +1865,8 @@ namespace dd {
     private:
         template<class Edge>
         bool isLocallyConsistent2(const Edge& e) {
-            const auto ptr_r = e.w.r->getAlignedPointer();
-            const auto ptr_i = e.w.i->getAlignedPointer();
+            const auto ptr_r = CTEntry::getAlignedPointer(e.w.r);
+            const auto ptr_i = CTEntry::getAlignedPointer(e.w.i);
 
             if ((ptr_r->refCount == 0 || ptr_i->refCount == 0) && e.w != Complex::one && e.w != Complex::zero) {
                 std::clog << "\nLOCAL INCONSISTENCY FOUND\nOffending Number: " << e.w << " (" << ptr_r->refCount << ", " << ptr_i->refCount << ")\n\n";
@@ -1904,8 +1904,8 @@ namespace dd {
 
         template<class Edge>
         void fillConsistencyCounter(const Edge& edge, std::map<ComplexTable<>::Entry*, std::size_t>& weight_map, std::map<decltype(edge.p), std::size_t>& node_map) {
-            weight_map[edge.w.r->getAlignedPointer()]++;
-            weight_map[edge.w.i->getAlignedPointer()]++;
+            weight_map[CTEntry::getAlignedPointer(edge.w.r)]++;
+            weight_map[CTEntry::getAlignedPointer(edge.w.i)]++;
 
             if (edge.isTerminal()) {
                 return;
@@ -1916,20 +1916,20 @@ namespace dd {
                     fillConsistencyCounter(child, weight_map, node_map);
                 } else {
                     node_map[child.p]++;
-                    weight_map[child.w.r->getAlignedPointer()]++;
-                    weight_map[child.w.i->getAlignedPointer()]++;
+                    weight_map[CTEntry::getAlignedPointer(child.w.r)]++;
+                    weight_map[CTEntry::getAlignedPointer(child.w.i)]++;
                 }
             }
         }
 
         template<class Edge>
         void checkConsistencyCounter(const Edge& edge, const std::map<ComplexTable<>::Entry*, std::size_t>& weight_map, const std::map<decltype(edge.p), std::size_t>& node_map) {
-            auto* r_ptr = edge.w.r->getAlignedPointer();
-            auto* i_ptr = edge.w.i->getAlignedPointer();
+            auto* r_ptr = CTEntry::getAlignedPointer(edge.w.r);
+            auto* i_ptr = CTEntry::getAlignedPointer(edge.w.i);
 
             if (weight_map.at(r_ptr) > r_ptr->refCount && r_ptr != Complex::one.r && r_ptr != Complex::zero.i) {
                 std::clog << "\nOffending weight: " << edge.w << "\n";
-                std::clog << "Bits: " << std::hexfloat << edge.w.r->val() << " " << edge.w.i->val() << std::defaultfloat << "\n";
+                std::clog << "Bits: " << std::hexfloat << CTEntry::val(edge.w.r) << " " << CTEntry::val(edge.w.i) << std::defaultfloat << "\n";
                 debugnode(edge.p);
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(r_ptr->value) + "(r): " + std::to_string(weight_map.at(r_ptr)) + " occurences in DD but Ref-Count is only " + std::to_string(r_ptr->refCount));
             }
