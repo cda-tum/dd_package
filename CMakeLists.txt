@@ -14,7 +14,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(DEPLOY "Configure for deployment")
 option(BINDINGS "Configure for building Python bindings")
 option(COVERAGE "Configure for coverage report generation")
-option(BUILD_DD_PACKAGE_TESTS "Also build tests for DD package" )
+option(BUILD_DD_PACKAGE_TESTS "Also build tests for DD package")
 
 # build type settings
 set(default_build_type "Release")
@@ -22,6 +22,10 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
 	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
+
+if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	message(WARNING "Using (Apple)Clang under macOS may lead to severe performance degradation. Consider using gcc to compile the project!")
 endif ()
 
 # add main library code
