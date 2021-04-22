@@ -71,6 +71,15 @@ endif ()
 # add JKQ alias
 add_library(JKQ::DDPackage ALIAS ${PROJECT_NAME})
 
+macro(enable_lto TARGET_NAME)
+	# enable interprocedural optimization if it is supported (Clang's ThinLTO does not work with Ubuntu 20.04's default linker at the moment)
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT ipo_supported)
+	if (ipo_supported AND NOT ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")))
+		set_target_properties(${TARGETNAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+	endif ()
+endmacro()
+
 # add test code
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR BUILD_DD_PACKAGE_TESTS)
 	if (NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/googletest/CMakeLists.txt")
