@@ -24,12 +24,19 @@ if (NOT TARGET benchmark::benchmark)
 	if (BINDINGS)
 		# adjust visibility settings for building Python bindings
 		target_compile_options(benchmark PUBLIC -fvisibility=hidden)
-	endif()
-endif()
+	endif ()
+endif ()
 
 add_executable(${PROJECT_NAME}_example ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 target_link_libraries(${PROJECT_NAME}_example PRIVATE ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME}_example PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+# enable interprocedural optimization if it is supported
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported)
+if (ipo_supported)
+	set_target_properties(${PROJECT_NAME}_example PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif ()
+
 
 macro(package_add_test TESTNAME)
 	# create an exectuable in which the tests will be stored
