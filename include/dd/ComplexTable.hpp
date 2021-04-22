@@ -90,8 +90,8 @@ namespace dd {
             chunkEndIt = chunks[0].end();
 
             // emplace static zero and one in the table
-            table[0].push_front(&zero);
-            table[NBUCKET - 1].push_front(&one);
+            table[0].emplace_front(&zero);
+            table[NBUCKET - 1].emplace_front(&one);
             count     = 2;
             peakCount = 2;
 
