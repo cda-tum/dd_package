@@ -606,6 +606,8 @@ TEST(DDPackageTest, SpecialCaseTerminal) {
     dd->debugnode(one.p);
     dd::ComplexValue cOne{1.0, 0.0};
     EXPECT_EQ(dd->getValueByPath(one, ""), cOne);
+    EXPECT_EQ(dd->getValueByPath(one, 0), cOne);
+    EXPECT_EQ(dd->getValueByPath(dd::Package::mEdge::one, 0, 0), cOne);
 }
 
 TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
