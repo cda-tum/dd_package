@@ -509,12 +509,13 @@ namespace dd {
         UniqueTable<mNode> mUniqueTable{nqubits};
 
         void garbageCollect(bool force = false) {
-            [[maybe_unused]] auto vCollect = vUniqueTable.garbageCollect(force);
-            [[maybe_unused]] auto mCollect = mUniqueTable.garbageCollect(force);
-            [[maybe_unused]] auto cCollect = cn.garbageCollect(force);
+            auto vCollect = vUniqueTable.garbageCollect(force);
+            auto mCollect = mUniqueTable.garbageCollect(force);
+            auto cCollect = cn.garbageCollect(force);
 
-            // IMPORTANT clear all compute tables
-            clearComputeTables();
+            // IMPORTANT clear all compute tables if anything has been collected
+            if (vCollect > 0 || mCollect > 0 || cCollect > 0)
+                clearComputeTables();
         }
 
         void clearUniqueTables() {
