@@ -20,6 +20,7 @@
 #include <iostream>
 #include <queue>
 #include <stack>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

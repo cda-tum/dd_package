@@ -21,9 +21,11 @@
 #include "UnaryComputeTable.hpp"
 #include "UniqueTable.hpp"
 
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -93,9 +95,10 @@ namespace dd {
         ///
     public:
         struct vNode {
-            std::array<Edge<vNode>, RADIX> e{};   // edges out of this node
-            RefCount                       ref{}; // reference count
-            Qubit                          v{};   // variable index (nonterminal) value (-1 for terminal)
+            std::array<Edge<vNode>, RADIX> e{};    // edges out of this node
+            vNode*                         next{}; // used to link nodes in unique table
+            RefCount                       ref{};  // reference count
+            Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
 
             static vNode            terminalNode;
             constexpr static vNode* terminal{&terminalNode};
@@ -248,6 +251,7 @@ namespace dd {
     public:
         struct mNode {
             std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
+            mNode*                         next{};        // used to link nodes in unique table
             RefCount                       ref{};         // reference count
             Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
             bool                           symm  = false; // node is symmetric
@@ -2024,11 +2028,13 @@ namespace dd {
     };
 
     inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+                                                       nullptr,
                                                        0,
                                                        -1};
 
     inline Package::mNode Package::mNode::terminalNode{
             {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+            nullptr,
             0,
             -1,
             true,

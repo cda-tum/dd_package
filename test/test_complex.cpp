@@ -113,16 +113,13 @@ TEST(DDComplexTest, GarbageCollectSomeInBucket) {
     fp num2 = num + 2. * ComplexTable<>::tolerance();
     ComplexNumbers::incRef(cn.lookup(num2, 0.0)); // num2 should be placed in same bucket as num
 
-    auto  key    = ComplexTable<>::hash(num);
-    auto& bucket = cn.complexTable.getTable()[key];
-    auto  it     = bucket.begin();
-    EXPECT_NEAR((*it)->value, num2, ComplexTable<>::tolerance());
-    auto it1 = it;
-    it1++;
-    EXPECT_NEAR((*it1)->value, num, ComplexTable<>::tolerance());
+    auto  key = ComplexTable<>::hash(num);
+    auto* p   = cn.complexTable.getTable()[key];
+    EXPECT_NEAR(p->value, num2, ComplexTable<>::tolerance());
+    EXPECT_NEAR((p->next)->value, num, ComplexTable<>::tolerance());
 
     cn.garbageCollect(true); // num should be collected
-    EXPECT_NEAR(bucket.front()->value, num2, ComplexTable<>::tolerance());
+    EXPECT_NEAR(cn.complexTable.getTable()[key]->value, num2, ComplexTable<>::tolerance());
 }
 
 TEST(DDComplexTest, LookupInNeighbouringBuckets) {

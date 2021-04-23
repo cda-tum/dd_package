@@ -10,13 +10,10 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <forward_list>
 #include <iostream>
 #include <limits>
-#include <stack>
 #include <vector>
 
 namespace dd {
@@ -25,6 +22,7 @@ namespace dd {
     public:
         struct Entry {
             fp       value{};
+            Entry*   next{};
             RefCount refCount{};
 
             ///
@@ -77,8 +75,8 @@ namespace dd {
             }
         };
 
-        static inline Entry zero{0., 1};
-        static inline Entry one{1., 1};
+        static inline Entry zero{0., nullptr, 1};
+        static inline Entry one{1., nullptr, 1};
 
         ComplexTable():
             chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
@@ -90,10 +88,10 @@ namespace dd {
             chunkEndIt = chunks[0].end();
 
             // emplace static zero and one in the table
-            table[0].emplace_front(&zero);
-            table[NBUCKET - 1].emplace_front(&one);
-            count     = 2;
-            peakCount = 2;
+            table[0]           = &zero;
+            table[NBUCKET - 1] = &one;
+            count              = 2;
+            peakCount          = 2;
 
             // add 1/2 and 1/sqrt(2) to the complex table and increase their ref count (so that they are not collected)
             lookup(0.5L)->refCount++;
@@ -140,9 +138,9 @@ namespace dd {
             // search in intended bucket
             const auto  key    = hash(val);
             const auto& bucket = table[key];
-            auto        it     = find(bucket, val);
-            if (it != bucket.end()) {
-                return (*it);
+            auto        p      = find(bucket, val);
+            if (p != nullptr) {
+                return p;
             }
 
             // search in (potentially) lower bucket
@@ -150,9 +148,9 @@ namespace dd {
                 const auto lowerKey = hash(val - TOLERANCE);
                 if (lowerKey != key) {
                     const auto& lowerBucket = table[lowerKey];
-                    it                      = find(lowerBucket, val);
-                    if (it != lowerBucket.end()) {
-                        return (*it);
+                    p                       = find(lowerBucket, val);
+                    if (p != nullptr) {
+                        return p;
                     }
                 }
             }
@@ -161,25 +159,27 @@ namespace dd {
             const auto upperKey = hash(val - TOLERANCE);
             if (upperKey != key) {
                 const auto& upperBucket = table[upperKey];
-                it                      = find(upperBucket, val);
-                if (it != upperBucket.end()) {
-                    return (*it);
+                p                       = find(upperBucket, val);
+                if (p != nullptr) {
+                    return p;
                 }
             }
 
             // value was not found in the table -> get a new entry and add it to the central bucket
-            table[key].emplace_front(getEntry());
-            table[key].front()->value = val;
+            Entry* entry = getEntry();
+            entry->value = val;
+            entry->next  = table[key];
+            table[key]   = entry;
             count++;
             peakCount = std::max(peakCount, count);
-            return table[key].front();
+            return entry;
         }
 
         [[nodiscard]] Entry* getEntry() {
             // an entry is available on the stack
-            if (!available.empty()) {
-                auto& entry = available.top();
-                available.pop();
+            if (available != nullptr) {
+                Entry* entry = available;
+                available    = entry->next;
                 // returned entries could have a ref count != 0
                 entry->refCount = 0;
                 return entry;
@@ -201,7 +201,8 @@ namespace dd {
         }
 
         void returnEntry(Entry* entry) {
-            available.emplace(entry);
+            entry->next = available;
+            available   = entry;
         }
 
         // increment reference count for corresponding entry
@@ -250,17 +251,22 @@ namespace dd {
             std::size_t collected = 0;
             std::size_t remaining = 0;
             for (auto& bucket: table) {
-                auto it     = bucket.begin();
-                auto lastit = bucket.before_begin();
-                while (it != bucket.end()) {
-                    if ((*it)->refCount == 0) {
-                        auto entry = (*it);
-                        it         = bucket.erase_after(lastit); // erases the element at `it`
-                        returnEntry(entry);
+                Entry* p     = bucket;
+                Entry* lastp = nullptr;
+                while (p != nullptr) {
+                    if (p->refCount == 0) {
+                        Entry* next = p->next;
+                        if (lastp == nullptr) {
+                            bucket = next;
+                        } else {
+                            lastp->next = next;
+                        }
+                        returnEntry(p);
+                        p = next;
                         collected++;
                     } else {
-                        ++it;
-                        ++lastit;
+                        lastp = p;
+                        p     = p->next;
                         remaining++;
                     }
                 }
@@ -273,12 +279,11 @@ namespace dd {
         void clear() {
             // clear table buckets
             for (auto& bucket: table) {
-                bucket.clear();
+                bucket = nullptr;
             }
 
             // clear available stack
-            while (!available.empty())
-                available.pop();
+            available = nullptr;
 
             // release memory of all but the first chunk TODO: it could be desirable to keep the memory
             while (chunkID > 0) {
@@ -305,14 +310,16 @@ namespace dd {
 
         void print() {
             for (std::size_t key = 0; key < table.size(); ++key) {
-                auto& bucket = table[key];
-                if (!bucket.empty())
+                auto& p = table[key];
+                if (p != nullptr)
                     std::cout << key << ": ";
 
-                for (const auto& node: bucket)
-                    std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(node) << " " << node->refCount << "\t";
+                while (p != nullptr) {
+                    std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\t";
+                    p = p->next;
+                }
 
-                if (!bucket.empty())
+                if (table[key] != nullptr)
                     std::cout << "\n";
             }
         }
@@ -326,7 +333,7 @@ namespace dd {
         }
 
     private:
-        using Bucket = std::forward_list<Entry*>;
+        using Bucket = Entry*;
         /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
         /// std::vector shouldn't be any less efficient in our application scenario
         /// TODO: revisit this in the future
@@ -337,7 +344,7 @@ namespace dd {
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;
 
-        std::stack<Entry*>                    available{};
+        Entry*                                available{};
         std::vector<std::vector<Entry>>       chunks{};
         std::size_t                           chunkID;
         typename std::vector<Entry>::iterator chunkIt;
@@ -358,17 +365,17 @@ namespace dd {
         std::size_t gcRuns  = 0;
         std::size_t gcLimit = 250000;
 
-        inline typename Bucket::const_iterator find(const Bucket& bucket, const fp& val) {
-            auto it = bucket.cbegin();
-            while (it != bucket.cend()) {
-                if (std::abs((*it)->value - val) < TOLERANCE) {
+        inline Entry* find(const Bucket& bucket, const fp& val) {
+            auto p = bucket;
+            while (p != nullptr) {
+                if (std::abs(p->value - val) < TOLERANCE) {
                     ++hits;
-                    return it;
+                    return p;
                 }
                 ++collisions;
-                ++it;
+                p = p->next;
             }
-            return it;
+            return p;
         }
     };
 } // namespace dd

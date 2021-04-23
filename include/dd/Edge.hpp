@@ -7,7 +7,6 @@
 #define DD_PACKAGE_EDGE_HPP
 
 #include "Complex.hpp"
-#include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 
 #include <cstddef>

@@ -14,11 +14,9 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <forward_list>
 #include <iostream>
 #include <limits>
 #include <numeric>
-#include <stack>
 #include <stdexcept>
 #include <vector>
 
@@ -90,32 +88,32 @@ namespace dd {
             for ([[maybe_unused]] const auto& edge: e.p->e)
                 assert(edge.p->v == v - 1 || edge.isTerminal());
 
-            auto& bucket = tables[v][key];
-            auto  it     = bucket.begin();
-            while (it != bucket.end()) {
-                if (e.p->e == (*it)->e) {
+            Node* p = tables[v][key];
+            while (p != nullptr) {
+                if (e.p->e == p->e) {
                     // Match found
-                    if (e.p != (*it) && !keepNode) {
+                    if (e.p != p && !keepNode) {
                         // put node pointed to by e.p on available chain
                         returnNode(e.p);
                     }
                     hits++;
 
                     // variables should stay the same
-                    assert((*it)->v == e.p->v);
+                    assert(p->v == e.p->v);
 
                     // successors of a node shall either have successive variable numbers or be terminals
                     for ([[maybe_unused]] const auto& edge: e.p->e)
                         assert(edge.p->v == v - 1 || edge.isTerminal());
 
-                    return {(*it), e.w};
+                    return {p, e.w};
                 }
                 collisions++;
-                ++it;
+                p = p->next;
             }
 
             // node was not found -> add it to front of unique table bucket
-            bucket.push_front(e.p);
+            e.p->next      = tables[v][key];
+            tables[v][key] = e.p;
             nodeCount++;
             peakNodeCount = std::max(peakNodeCount, nodeCount);
 
@@ -124,9 +122,9 @@ namespace dd {
 
         [[nodiscard]] Node* getNode() {
             // a node is available on the stack
-            if (!available.empty()) {
-                auto& p = available.top();
-                available.pop();
+            if (available != nullptr) {
+                Node* p   = available;
+                available = p->next;
                 // returned nodes could have a ref count != 0
                 p->ref = 0;
                 return p;
@@ -148,7 +146,8 @@ namespace dd {
         }
 
         void returnNode(Node* p) {
-            available.emplace(p);
+            p->next   = available;
+            available = p;
         }
 
         // increment reference counter for node e points to
@@ -213,19 +212,23 @@ namespace dd {
             std::size_t remaining = 0;
             for (auto& table: tables) {
                 for (auto& bucket: table) {
-                    auto it     = bucket.begin();
-                    auto lastit = bucket.before_begin();
-                    while (it != bucket.end()) {
-                        if ((*it)->ref == 0) {
-                            assert(!Node::isTerminal(*it));
-
-                            auto node = (*it);
-                            it        = bucket.erase_after(lastit); // erases the element at `it`
-                            returnNode(node);
+                    Node* p     = bucket;
+                    Node* lastp = nullptr;
+                    while (p != nullptr) {
+                        if (p->ref == 0) {
+                            assert(!Node::isTerminal(p));
+                            Node* next = p->next;
+                            if (lastp == nullptr) {
+                                bucket = next;
+                            } else {
+                                lastp->next = next;
+                            }
+                            returnNode(p);
+                            p = next;
                             collected++;
                         } else {
-                            ++it;
-                            ++lastit;
+                            lastp = p;
+                            p     = p->next;
                             remaining++;
                         }
                     }
@@ -240,12 +243,11 @@ namespace dd {
             // clear unique table buckets
             for (auto& table: tables) {
                 for (auto& bucket: table) {
-                    bucket.clear();
+                    bucket = nullptr;
                 }
             }
             // clear available stack
-            while (!available.empty())
-                available.pop();
+            available = nullptr;
 
             // release memory of all but the first chunk TODO: it could be desirable to keep the memory
             while (chunkID > 0) {
@@ -281,14 +283,16 @@ namespace dd {
                 std::cout << "\t" << static_cast<std::size_t>(q) << ":"
                           << "\n";
                 for (std::size_t key = 0; key < table.size(); ++key) {
-                    auto& bucket = table[key];
-                    if (!bucket.empty())
+                    auto& p = table[key];
+                    if (p != nullptr)
                         std::cout << key << ": ";
 
-                    for (const auto& node: bucket)
-                        std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(node) << " " << node->ref << "\t";
+                    while (p != nullptr) {
+                        std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(p) << " " << p->ref << "\t";
+                        p = p->next;
+                    }
 
-                    if (!bucket.empty())
+                    if (table[key] != nullptr)
                         std::cout << "\n";
                 }
                 --q;
@@ -316,7 +320,7 @@ namespace dd {
         }
 
     private:
-        using NodeBucket = std::forward_list<Node*>;
+        using NodeBucket = Node*;
         /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
         /// std::vector shouldn't be any less efficient in our application scenario
         /// TODO: revisit this in the future
@@ -326,7 +330,7 @@ namespace dd {
         std::size_t        nvars = 0;
         std::vector<Table> tables{nvars, std::vector<NodeBucket>{NBUCKET}};
 
-        std::stack<Node*>                    available{};
+        Node*                                available{};
         std::vector<std::vector<Node>>       chunks{};
         std::size_t                          chunkID;
         typename std::vector<Node>::iterator chunkIt;

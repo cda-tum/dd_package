@@ -501,15 +501,15 @@ TEST(DDPackageTest, PackageReset) {
     const auto& unique = dd->mUniqueTable.getTables();
     const auto& table  = unique[0];
     auto        ihash  = dd->mUniqueTable.hash(i_gate.p);
-    const auto& node   = table[ihash].front();
+    const auto* node   = table[ihash];
     std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
     // node should be the first in this unique table bucket
     EXPECT_EQ(node, i_gate.p);
     dd->reset();
     // after clearing the tables, they should be empty
-    EXPECT_TRUE(table[ihash].empty());
+    EXPECT_EQ(table[ihash], nullptr);
     i_gate            = dd->makeIdent(1);
-    const auto& node2 = table[ihash].front();
+    const auto* node2 = table[ihash];
     // after recreating the DD, it should receive the same node
     EXPECT_EQ(node2, node);
 
@@ -518,13 +518,11 @@ TEST(DDPackageTest, PackageReset) {
     auto zhash  = dd->mUniqueTable.hash(z_gate.p);
     std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
     // both nodes should reside in the same bucket
-    EXPECT_EQ(table[ihash].front(), z_gate.p);
-    auto it = table[ihash].begin();
-    std::advance(it, 1);
-    EXPECT_EQ(*it, i_gate.p);
+    EXPECT_EQ(table[ihash], z_gate.p);
+    EXPECT_EQ(table[ihash]->next, i_gate.p);
     dd->reset();
     // after clearing the tables, they should be empty
-    EXPECT_TRUE(table[ihash].empty());
+    EXPECT_EQ(table[ihash], nullptr);
     auto z_gate2 = dd->makeGateDD(dd::Zmat, 1, 0);
     auto i_gate2 = dd->makeIdent(1);
     // recreating the decision diagrams in reverse order should use the same pointers as before
@@ -633,10 +631,8 @@ TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
     // garbage collection should only collect the I gate and leave the Z gate at the front of the bucket
     dd->garbageCollect(true);
 
-    EXPECT_EQ(table[Zhash].front(), Z.p);
-    auto it = table[Zhash].begin();
-    ++it;
-    EXPECT_EQ(it, table[Zhash].end());
+    EXPECT_EQ(table[Zhash], Z.p);
+    EXPECT_EQ(table[Zhash]->next, nullptr);
 }
 
 TEST(DDPackageTest, KroneckerProduct) {
