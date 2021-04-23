@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 100000, std::size_t GC_INCREMENT = 0>
+    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 50000>
     class ComplexTable {
     public:
         struct Entry {
@@ -244,9 +244,11 @@ namespace dd {
             }
         }
 
+        [[nodiscard]] bool needsCollection() const { return count >= gcLimit; }
+
         std::size_t garbageCollect(bool force = false) {
             gcCalls++;
-            if (!force && count < gcLimit)
+            if ((!force && count < gcLimit) || count == 0)
                 return 0;
 
             gcRuns++;
@@ -273,7 +275,16 @@ namespace dd {
                     }
                 }
             }
-            gcLimit += GC_INCREMENT;
+            // The garbage collection limit changes dynamically depending on the number of remaining (active) nodes.
+            // If it were not changed, garbage collection would run through the complete table on each successive call
+            // once the number of remaining entries reaches the garbage collection limit. It is increased whenever the
+            // number of remaining entries is rather close to the garbage collection threshold and decreased if the
+            // number of remaining entries is much lower than the current limit.
+            if (remaining > gcLimit * 9 / 10) {
+                gcLimit = remaining + INITIAL_GC_LIMIT;
+            } else if (remaining < gcLimit / 16) {
+                gcLimit /= 8;
+            }
             count = remaining;
             return collected;
         }
@@ -362,7 +373,7 @@ namespace dd {
         // garbage collection
         std::size_t gcCalls = 0;
         std::size_t gcRuns  = 0;
-        std::size_t gcLimit = 250000;
+        std::size_t gcLimit = 100000;
 
         inline Entry* find(const Bucket& bucket, const fp& val) {
             auto p = bucket;

@@ -30,7 +30,7 @@ namespace dd {
     /// \tparam GROWTH_PERCENTAGE percentage that the allocations' size shall grow over time
     /// \tparam INITIAL_GC_LIMIT number of nodes initially used as garbage collection threshold
     /// \tparam GC_INCREMENT absolute number of nodes to increase the garbage collection threshold after garbage collection has been performed
-    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 250000, std::size_t GC_INCREMENT = 0>
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 100000>
     class UniqueTable {
     public:
         explicit UniqueTable(std::size_t nvars):
@@ -203,9 +203,11 @@ namespace dd {
             }
         }
 
+        [[nodiscard]] bool needsCollection() const { return nodeCount >= gcLimit; }
+
         std::size_t garbageCollect(bool force = false) {
             gcCalls++;
-            if (!force && nodeCount < gcLimit)
+            if ((!force && nodeCount < gcLimit) || nodeCount == 0)
                 return 0;
 
             gcRuns++;
@@ -235,7 +237,16 @@ namespace dd {
                     }
                 }
             }
-            gcLimit += GC_INCREMENT;
+            // The garbage collection limit changes dynamically depending on the number of remaining (active) nodes.
+            // If it were not changed, garbage collection would run through the complete table on each successive call
+            // once the number of remaining entries reaches the garbage collection limit. It is increased whenever the
+            // number of remaining entries is rather close to the garbage collection threshold and decreased if the
+            // number of remaining entries is much lower than the current limit.
+            if (remaining > gcLimit * 9 / 10) {
+                gcLimit = remaining + INITIAL_GC_LIMIT;
+            } else if (remaining < gcLimit / 16) {
+                gcLimit /= 8;
+            }
             nodeCount = remaining;
             return collected;
         }

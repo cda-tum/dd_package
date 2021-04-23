@@ -509,9 +509,19 @@ namespace dd {
         UniqueTable<mNode> mUniqueTable{nqubits};
 
         void garbageCollect(bool force = false) {
-            auto vCollect = vUniqueTable.garbageCollect(force);
-            auto mCollect = mUniqueTable.garbageCollect(force);
-            auto cCollect = cn.garbageCollect(force);
+            // return immediately if no table needs collection
+            if (!force &&
+                !vUniqueTable.needsCollection() &&
+                !mUniqueTable.needsCollection() &&
+                !cn.complexTable.needsCollection()) {
+                return;
+            }
+
+            // if any table needs collection, enforce garbage collection on all of them
+            // this way compute tables are invalidated less frequently
+            auto vCollect = vUniqueTable.garbageCollect(true);
+            auto mCollect = mUniqueTable.garbageCollect(true);
+            auto cCollect = cn.garbageCollect(true);
 
             // IMPORTANT clear all compute tables if anything has been collected
             if (vCollect > 0 || mCollect > 0 || cCollect > 0)
