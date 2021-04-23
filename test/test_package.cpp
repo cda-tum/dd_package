@@ -544,7 +544,7 @@ TEST(DDPackageTest, Inverse) {
     auto x    = dd->makeGateDD(dd::Xmat, 1, 0);
     auto xdag = dd->conjugateTranspose(x);
     EXPECT_EQ(x, xdag);
-    dd->garbageCollect(true);
+    dd->garbageCollect();
 }
 
 TEST(DDPackageTest, UniqueTableAllocation) {
