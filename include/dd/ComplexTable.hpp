@@ -9,7 +9,9 @@
 #include "Definitions.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -334,12 +336,9 @@ namespace dd {
 
     private:
         using Bucket = Entry*;
-        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
-        /// std::vector shouldn't be any less efficient in our application scenario
-        /// TODO: revisit this in the future
-        using Table = std::vector<Bucket>;
+        using Table  = std::array<Bucket, NBUCKET>;
 
-        Table table{NBUCKET};
+        Table table{};
 
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;

@@ -11,6 +11,7 @@
 #include "Edge.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -321,14 +322,11 @@ namespace dd {
 
     private:
         using NodeBucket = Node*;
-        /// gcc is having serious troubles compiling this using std::array (compilation times >15min).
-        /// std::vector shouldn't be any less efficient in our application scenario
-        /// TODO: revisit this in the future
-        using Table = std::vector<NodeBucket>;
+        using Table      = std::array<NodeBucket, NBUCKET>;
 
         // unique tables (one per input variable)
         std::size_t        nvars = 0;
-        std::vector<Table> tables{nvars, std::vector<NodeBucket>{NBUCKET}};
+        std::vector<Table> tables{nvars};
 
         Node*                                available{};
         std::vector<std::vector<Node>>       chunks{};
