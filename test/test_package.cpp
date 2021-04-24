@@ -493,42 +493,42 @@ TEST(DDPackageTest, InvalidDecRef) {
     EXPECT_THROW(dd->decRef(e), std::runtime_error);
 }
 
-TEST(DDPackageTest, PackageReset) {
-    auto dd = std::make_unique<dd::Package>(1);
-
-    // one node in unique table of variable 0
-    auto        i_gate = dd->makeIdent(1);
-    const auto& unique = dd->mUniqueTable.getTables();
-    const auto& table  = unique[0];
-    auto        ihash  = dd->mUniqueTable.hash(i_gate.p);
-    const auto* node   = table[ihash];
-    std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
-    // node should be the first in this unique table bucket
-    EXPECT_EQ(node, i_gate.p);
-    dd->reset();
-    // after clearing the tables, they should be empty
-    EXPECT_EQ(table[ihash], nullptr);
-    i_gate            = dd->makeIdent(1);
-    const auto* node2 = table[ihash];
-    // after recreating the DD, it should receive the same node
-    EXPECT_EQ(node2, node);
-
-    // two nodes in same unique table bucket of variable 0
-    auto z_gate = dd->makeGateDD(dd::Zmat, 1, 0);
-    auto zhash  = dd->mUniqueTable.hash(z_gate.p);
-    std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
-    // both nodes should reside in the same bucket
-    EXPECT_EQ(table[ihash], z_gate.p);
-    EXPECT_EQ(table[ihash]->next, i_gate.p);
-    dd->reset();
-    // after clearing the tables, they should be empty
-    EXPECT_EQ(table[ihash], nullptr);
-    auto z_gate2 = dd->makeGateDD(dd::Zmat, 1, 0);
-    auto i_gate2 = dd->makeIdent(1);
-    // recreating the decision diagrams in reverse order should use the same pointers as before
-    EXPECT_EQ(z_gate2.p, i_gate.p);
-    EXPECT_EQ(i_gate2.p, z_gate.p);
-}
+//TEST(DDPackageTest, PackageReset) {
+//    auto dd = std::make_unique<dd::Package>(1);
+//
+//    // one node in unique table of variable 0
+//    auto        i_gate = dd->makeIdent(1);
+//    const auto& unique = dd->mUniqueTable.getTables();
+//    const auto& table  = unique[0];
+//    auto        ihash  = dd->mUniqueTable.hash(i_gate.p);
+//    const auto* node   = table[ihash];
+//    std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(i_gate.p) << std::endl;
+//    // node should be the first in this unique table bucket
+//    EXPECT_EQ(node, i_gate.p);
+//    dd->reset();
+//    // after clearing the tables, they should be empty
+//    EXPECT_EQ(table[ihash], nullptr);
+//    i_gate            = dd->makeIdent(1);
+//    const auto* node2 = table[ihash];
+//    // after recreating the DD, it should receive the same node
+//    EXPECT_EQ(node2, node);
+//
+//    // two nodes in same unique table bucket of variable 0
+//    auto z_gate = dd->makeGateDD(dd::Zmat, 1, 0);
+//    auto zhash  = dd->mUniqueTable.hash(z_gate.p);
+//    std::cout << zhash << ": " << reinterpret_cast<uintptr_t>(z_gate.p) << std::endl;
+//    // both nodes should reside in the same bucket
+//    EXPECT_EQ(table[ihash], z_gate.p);
+//    EXPECT_EQ(table[ihash]->next, i_gate.p);
+//    dd->reset();
+//    // after clearing the tables, they should be empty
+//    EXPECT_EQ(table[ihash], nullptr);
+//    auto z_gate2 = dd->makeGateDD(dd::Zmat, 1, 0);
+//    auto i_gate2 = dd->makeIdent(1);
+//    // recreating the decision diagrams in reverse order should use the same pointers as before
+//    EXPECT_EQ(z_gate2.p, i_gate.p);
+//    EXPECT_EQ(i_gate2.p, z_gate.p);
+//}
 
 TEST(DDPackageTest, MaxRefCount) {
     auto dd = std::make_unique<dd::Package>(1);
@@ -608,32 +608,32 @@ TEST(DDPackageTest, SpecialCaseTerminal) {
     EXPECT_EQ(dd->getValueByPath(dd::Package::mEdge::one, 0, 0), cOne);
 }
 
-TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
-    auto dd = std::make_unique<dd::Package>(1);
-
-    // one node in unique table of variable 0
-    const auto& unique = dd->mUniqueTable.getTables();
-    const auto& table  = unique[0];
-
-    auto I     = dd->makeIdent(1);
-    auto Ihash = dd->mUniqueTable.hash(I.p);
-
-    // two nodes in same unique table bucket of variable 0
-    auto Z     = dd->makeGateDD(dd::Zmat, 1, 0);
-    auto Zhash = dd->mUniqueTable.hash(Z.p);
-
-    // I and Z should be placed in the same bucket
-    EXPECT_EQ(Ihash, Zhash);
-
-    // increase the reference count of the Z gate, but not the I gate
-    dd->incRef(Z);
-
-    // garbage collection should only collect the I gate and leave the Z gate at the front of the bucket
-    dd->garbageCollect(true);
-
-    EXPECT_EQ(table[Zhash], Z.p);
-    EXPECT_EQ(table[Zhash]->next, nullptr);
-}
+//TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
+//    auto dd = std::make_unique<dd::Package>(1);
+//
+//    // one node in unique table of variable 0
+//    const auto& unique = dd->mUniqueTable.getTables();
+//    const auto& table  = unique[0];
+//
+//    auto I     = dd->makeIdent(1);
+//    auto Ihash = dd->mUniqueTable.hash(I.p);
+//
+//    // two nodes in same unique table bucket of variable 0
+//    auto Z     = dd->makeGateDD(dd::Zmat, 1, 0);
+//    auto Zhash = dd->mUniqueTable.hash(Z.p);
+//
+//    // I and Z should be placed in the same bucket
+//    EXPECT_EQ(Ihash, Zhash);
+//
+//    // increase the reference count of the Z gate, but not the I gate
+//    dd->incRef(Z);
+//
+//    // garbage collection should only collect the I gate and leave the Z gate at the front of the bucket
+//    dd->garbageCollect(true);
+//
+//    EXPECT_EQ(table[Zhash], Z.p);
+//    EXPECT_EQ(table[Zhash]->next, nullptr);
+//}
 
 TEST(DDPackageTest, KroneckerProduct) {
     auto dd        = std::make_unique<dd::Package>(2);
