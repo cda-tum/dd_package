@@ -36,7 +36,7 @@ namespace dd {
         static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
             const auto h1   = std::hash<LeftOperandType>{}(leftOperand);
             const auto h2   = std::hash<RightOperandType>{}(rightOperand);
-            const auto hash = h1 ^ (h2 << 1);
+            const auto hash = dd::combineHash(h1, h2);
             return hash & MASK;
         }
 

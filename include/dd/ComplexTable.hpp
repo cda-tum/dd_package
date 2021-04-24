@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 50000>
+    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 65536>
     class ComplexTable {
     public:
         struct Entry {
@@ -282,8 +282,8 @@ namespace dd {
             // number of remaining entries is much lower than the current limit.
             if (remaining > gcLimit * 9 / 10) {
                 gcLimit = remaining + INITIAL_GC_LIMIT;
-            } else if (remaining < gcLimit / 16) {
-                gcLimit /= 8;
+            } else if (remaining < gcLimit / 128) {
+                gcLimit /= 2;
             }
             count = remaining;
             return collected;

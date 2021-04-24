@@ -54,5 +54,19 @@ namespace dd {
 
     static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
 
+    constexpr std::size_t murmur64(std::size_t k) {
+        k ^= k >> 33;
+        k *= 0xff51afd7ed558ccdUL;
+        k ^= k >> 33;
+        k *= 0xc4ceb9fe1a85ec53UL;
+        k ^= k >> 33;
+        return k;
+    }
+
+    constexpr std::size_t combineHash(std::size_t lhs, std::size_t rhs) {
+        lhs ^= rhs + 0x9e3779b97f4a7c15 + (lhs << 6) + (lhs >> 2);
+        return lhs;
+    }
+
 } // namespace dd
 #endif //DDpackage_DATATYPES_HPP

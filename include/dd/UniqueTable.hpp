@@ -30,7 +30,7 @@ namespace dd {
     /// \tparam GROWTH_PERCENTAGE percentage that the allocations' size shall grow over time
     /// \tparam INITIAL_GC_LIMIT number of nodes initially used as garbage collection threshold
     /// \tparam GC_INCREMENT absolute number of nodes to increase the garbage collection threshold after garbage collection has been performed
-    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 100000>
+    template<class Node, std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 131072>
     class UniqueTable {
     public:
         explicit UniqueTable(std::size_t nvars):
@@ -56,14 +56,15 @@ namespace dd {
         }
 
         static std::size_t hash(const Node* p) {
-            std::uintptr_t key = 0;
+            std::size_t key = 0;
             for (std::size_t i = 0; i < p->e.size(); ++i) {
-                key += ((reinterpret_cast<std::uintptr_t>(p->e[i].p) >> i) +
-                        (reinterpret_cast<std::uintptr_t>(p->e[i].w.r) >> i) +
-                        (reinterpret_cast<std::uintptr_t>(p->e[i].w.i) >> (i + 1))) &
-                       MASK;
-                key &= MASK;
+                key = dd::combineHash(key, std::hash<Edge<Node>>{}(p->e[i]));
+                // old hash function:
+                //     key += ((reinterpret_cast<std::size_t>(p->e[i].p)   >>  i) +
+                //             (reinterpret_cast<std::size_t>(p->e[i].w.r) >>  i) +
+                //             (reinterpret_cast<std::size_t>(p->e[i].w.i) >> (i + 1))) & MASK;
             }
+            key &= MASK;
             return key;
         }
 
@@ -244,8 +245,8 @@ namespace dd {
             // number of remaining entries is much lower than the current limit.
             if (remaining > gcLimit * 9 / 10) {
                 gcLimit = remaining + INITIAL_GC_LIMIT;
-            } else if (remaining < gcLimit / 16) {
-                gcLimit /= 8;
+            } else if (remaining < gcLimit / 32) {
+                gcLimit /= 4;
             }
             nodeCount = remaining;
             return collected;

@@ -517,15 +517,42 @@ namespace dd {
                 return;
             }
 
-            // if any table needs collection, enforce garbage collection on all of them
-            // this way compute tables are invalidated less frequently
-            auto vCollect = vUniqueTable.garbageCollect(true);
-            auto mCollect = mUniqueTable.garbageCollect(true);
-            auto cCollect = cn.garbageCollect(true);
+            auto vCollect = vUniqueTable.garbageCollect(force);
+            auto mCollect = mUniqueTable.garbageCollect(force);
+            auto cCollect = cn.garbageCollect(force);
 
-            // IMPORTANT clear all compute tables if anything has been collected
-            if (vCollect > 0 || mCollect > 0 || cCollect > 0)
-                clearComputeTables();
+            // invalidate all compute tables involving vectors if any vector node has been collected
+            if (vCollect > 0) {
+                vectorAdd.clear();
+                vectorInnerProduct.clear();
+                vectorKronecker.clear();
+                matrixVectorMultiplication.clear();
+            }
+            // invalidate all compute tables involving matrices if any matrix node has been collected
+            if (mCollect > 0) {
+                matrixAdd.clear();
+                matrixTranspose.clear();
+                conjugateMatrixTranspose.clear();
+                matrixKronecker.clear();
+                matrixVectorMultiplication.clear();
+                matrixMatrixMultiplication.clear();
+                toffoliTable.clear();
+                clearIdentityTable();
+                noiseOperationTable.clear();
+            }
+            // invalidate all compute tables where any component of the entry contains numbers from the complex table if any complex numbers were collected
+            if (cCollect > 0) {
+                matrixVectorMultiplication.clear();
+                matrixMatrixMultiplication.clear();
+                matrixTranspose.clear();
+                conjugateMatrixTranspose.clear();
+                vectorInnerProduct.clear();
+                vectorKronecker.clear();
+                matrixKronecker.clear();
+                toffoliTable.clear();
+                clearIdentityTable();
+                noiseOperationTable.clear();
+            }
         }
 
         void clearUniqueTables() {
@@ -708,8 +735,8 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        UnaryComputeTable<mEdge, mEdge> matrixTranspose{};
-        UnaryComputeTable<mEdge, mEdge> conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, 4096> matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, 4096> conjugateMatrixTranspose{};
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->symm) {
@@ -949,7 +976,7 @@ namespace dd {
         /// Inner product and fidelity
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge> vectorInnerProduct{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorInnerProduct{};
 
         ComplexValue innerProduct(const vEdge& x, const vEdge& y) {
             if (x.p == nullptr || y.p == nullptr || x.w.approximatelyZero() || y.w.approximatelyZero()) { // the 0 case
@@ -1034,11 +1061,11 @@ namespace dd {
         /// Kronecker/tensor product
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge> vectorKronecker{};
-        ComputeTable<mEdge, mEdge, mCachedEdge> matrixKronecker{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorKronecker{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, 4096> matrixKronecker{};
 
         template<class Node>
-        [[nodiscard]] ComputeTable<Edge<Node>, Edge<Node>, CachedEdge<Node>>& getKroneckerComputeTable();
+        [[nodiscard]] ComputeTable<Edge<Node>, Edge<Node>, CachedEdge<Node>, 4096>& getKroneckerComputeTable();
 
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y) {
@@ -2070,9 +2097,9 @@ namespace dd {
     [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getMultiplicationComputeTable() { return matrixMatrixMultiplication; }
 
     template<>
-    [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge>& Package::getKroneckerComputeTable() { return vectorKronecker; }
+    [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge, 4096>& Package::getKroneckerComputeTable() { return vectorKronecker; }
 
     template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getKroneckerComputeTable() { return matrixKronecker; }
+    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge, 4096>& Package::getKroneckerComputeTable() { return matrixKronecker; }
 } // namespace dd
 #endif
