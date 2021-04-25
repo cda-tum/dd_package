@@ -54,19 +54,32 @@ namespace dd {
 
     static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
 
+    // 64bit mixing hash (from MurmurHash3, https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp)
     constexpr std::size_t murmur64(std::size_t k) {
         k ^= k >> 33;
-        k *= 0xff51afd7ed558ccdUL;
+        k *= 0xff51afd7ed558ccdULL;
         k ^= k >> 33;
-        k *= 0xc4ceb9fe1a85ec53UL;
+        k *= 0xc4ceb9fe1a85ec53ULL;
         k ^= k >> 33;
         return k;
     }
 
+    // combine two 64bit hashes into one 64bit hash (boost::hash_combine, https://www.boost.org/LICENSE_1_0.txt)
     constexpr std::size_t combineHash(std::size_t lhs, std::size_t rhs) {
-        lhs ^= rhs + 0x9e3779b97f4a7c15 + (lhs << 6) + (lhs >> 2);
+        lhs ^= rhs + 0x9e3779b97f4a7c15ULL + (lhs << 6) + (lhs >> 2);
         return lhs;
     }
+
+    //    // alternative hash combinator (from Google's city hash, https://github.com/google/cityhash/blob/master/COPYING)
+    //    constexpr std::size_t hash128to64(std::size_t lhs, std::size_t rhs) {
+    //        const std::size_t kMul = 0x9ddfea08eb382d69ULL;
+    //        std::size_t a = (lhs ^ rhs) * kMul;
+    //        a ^= (a >> 47);
+    //        std::size_t b = (rhs ^ a) * kMul;
+    //        b ^= (b >> 47);
+    //        b *= kMul;
+    //        return b;
+    //    }
 
 } // namespace dd
 #endif //DDpackage_DATATYPES_HPP
