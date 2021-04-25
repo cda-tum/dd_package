@@ -59,7 +59,7 @@ add_test(NAME ${PROJECT_NAME}_example COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJ
 add_executable(${PROJECT_NAME}_bench EXCLUDE_FROM_ALL ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.cpp)
 # link the Google benchmark infrastructure and a default main fuction to the benchmark executable.
 target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} benchmark::benchmark_main Threads::Threads)
-set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
+set_target_properties(${PROJECT_NAME}_bench PROPERTIES FOLDER tests CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_lto(${PROJECT_NAME}_bench)
 
 add_custom_command(TARGET ${PROJECT_NAME}_bench
