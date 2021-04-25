@@ -52,6 +52,8 @@ TEST(DDPackageTest, TrivialTest) {
     auto one_state  = dd->multiply(x_gate, zero_state);
 
     ASSERT_EQ(dd->fidelity(zero_state, one_state), 0.0);
+    // repeat the same calculation - triggering compute table hit
+    ASSERT_EQ(dd->fidelity(zero_state, one_state), 0.0);
     ASSERT_NEAR(dd->fidelity(zero_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
     ASSERT_NEAR(dd->fidelity(one_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
 }
@@ -590,6 +592,9 @@ TEST(DDPackageTest, SpecialCaseTerminal) {
     EXPECT_EQ(dd->getValueByPath(one, ""), cOne);
     EXPECT_EQ(dd->getValueByPath(one, 0), cOne);
     EXPECT_EQ(dd->getValueByPath(dd::Package::mEdge::one, 0, 0), cOne);
+
+    dd::ComplexValue cZero{0.0, 0.0};
+    EXPECT_EQ(dd->innerProduct(zero, zero), cZero);
 }
 
 //TEST(DDPackageTest, GarbageCollectSomeButNotAll) {
