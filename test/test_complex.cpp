@@ -34,6 +34,9 @@ TEST(DDComplexTest, TrivialTest) {
     // since lookup does not increase the ref count, garbage collection removes the new values
     unsigned int end_count = cn->cacheCount();
     ASSERT_EQ(before_count, end_count);
+
+    EXPECT_NO_THROW(cn->incRef({nullptr, nullptr}));
+    EXPECT_NO_THROW(cn->decRef({nullptr, nullptr}));
 }
 
 TEST(DDComplexTest, ComplexNumberCreation) {
@@ -286,6 +289,16 @@ TEST(DDComplexTest, ComplexTableAllocation) {
     // clearing the complex table should reduce the allocated size to the original size
     cn.complexTable.clear();
     EXPECT_EQ(cn.complexTable.getAllocations(), allocs);
+
+    EXPECT_TRUE(cn.complexTable.availableEmpty());
+    // obtain entry
+    auto entry = cn.complexTable.getEntry();
+    // immediately return entry
+    cn.complexTable.returnEntry(entry);
+    EXPECT_FALSE(cn.complexTable.availableEmpty());
+    // obtain the same entry again, but this time from the available stack
+    auto entry2 = cn.complexTable.getEntry();
+    EXPECT_EQ(entry, entry2);
 }
 
 TEST(DDComplexTest, ComplexCacheAllocation) {

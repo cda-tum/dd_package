@@ -124,6 +124,7 @@ namespace dd {
         [[nodiscard]] std::size_t getAllocations() const { return allocations; }
         [[nodiscard]] std::size_t getGrowthFactor() const { return GROWTH_FACTOR; }
         [[nodiscard]] const auto& getTable() const { return table; }
+        [[nodiscard]] bool        availableEmpty() const { return available == nullptr; };
 
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
@@ -179,7 +180,7 @@ namespace dd {
 
         [[nodiscard]] Entry* getEntry() {
             // an entry is available on the stack
-            if (available != nullptr) {
+            if (!availableEmpty()) {
                 Entry* entry = available;
                 available    = entry->next;
                 // returned entries could have a ref count != 0
