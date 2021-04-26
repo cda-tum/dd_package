@@ -1971,14 +1971,14 @@ namespace dd {
             auto* r_ptr = CTEntry::getAlignedPointer(edge.w.r);
             auto* i_ptr = CTEntry::getAlignedPointer(edge.w.i);
 
-            if (weight_map.at(r_ptr) > r_ptr->refCount && r_ptr != Complex::one.r && r_ptr != Complex::zero.i) {
+            if (weight_map.at(r_ptr) > r_ptr->refCount && r_ptr != Complex::one.r && r_ptr != Complex::zero.i && r_ptr != &ComplexTable<>::sqrt2_2) {
                 std::clog << "\nOffending weight: " << edge.w << "\n";
                 std::clog << "Bits: " << std::hexfloat << CTEntry::val(edge.w.r) << " " << CTEntry::val(edge.w.i) << std::defaultfloat << "\n";
                 debugnode(edge.p);
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(r_ptr->value) + "(r): " + std::to_string(weight_map.at(r_ptr)) + " occurences in DD but Ref-Count is only " + std::to_string(r_ptr->refCount));
             }
 
-            if (weight_map.at(i_ptr) > i_ptr->refCount && i_ptr != Complex::zero.i && i_ptr != Complex::one.r) {
+            if (weight_map.at(i_ptr) > i_ptr->refCount && i_ptr != Complex::zero.i && i_ptr != Complex::one.r && r_ptr != &ComplexTable<>::sqrt2_2) {
                 std::clog << edge.w << "\n";
                 debugnode(edge.p);
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(i_ptr->value) + "(i): " + std::to_string(weight_map.at(i_ptr)) + " occurences in DD but Ref-Count is only " + std::to_string(i_ptr->refCount));
