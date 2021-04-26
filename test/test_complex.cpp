@@ -109,6 +109,7 @@ TEST(DDComplexTest, NearZeroLookup) {
 
 TEST(DDComplexTest, GarbageCollectSomeInBucket) {
     auto cn = ComplexNumbers();
+    EXPECT_EQ(cn.garbageCollect(), 0);
 
     fp num = 0.25;
     cn.lookup(num, 0.0);

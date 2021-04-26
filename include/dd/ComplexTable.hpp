@@ -279,7 +279,9 @@ namespace dd {
 
         std::size_t garbageCollect(bool force = false) {
             gcCalls++;
-            if ((!force && count < gcLimit) || count == 0)
+            // nothing to be done if garbage collection is not forced and the limit has not been reached
+            // or the current count is minimal (the complex table always contains at least 0, 0.5, 1/sqrt(2), and 1)
+            if ((!force && count < gcLimit) || count <= 4)
                 return 0;
 
             gcRuns++;
