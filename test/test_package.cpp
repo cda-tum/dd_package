@@ -702,3 +702,16 @@ TEST(DDPackageTest, NearZeroNormalize) {
     auto meNormalized = dd->normalize(me, false);
     EXPECT_EQ(meNormalized, dd::Package::mEdge::zero);
 }
+
+TEST(DDPackageTest, Controls) {
+    dd::Control cpos{0};
+    dd::Control cneg{0, dd::Control::Type::neg};
+
+    EXPECT_NE(cpos, cneg);
+
+    dd::Controls controls{};
+    controls.insert(cpos);
+    controls.insert(cneg);
+    EXPECT_EQ(controls.begin()->type, dd::Control::Type::neg);
+    EXPECT_EQ(controls.count(0), 2);
+}
