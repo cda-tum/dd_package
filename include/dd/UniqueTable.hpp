@@ -296,7 +296,7 @@ namespace dd {
                 std::cout << "\t" << static_cast<std::size_t>(q) << ":"
                           << "\n";
                 for (std::size_t key = 0; key < table.size(); ++key) {
-                    auto& p = table[key];
+                    auto p = table[key];
                     if (p != nullptr)
                         std::cout << key << ": ";
 

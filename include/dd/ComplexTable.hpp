@@ -354,7 +354,7 @@ namespace dd {
 
         void print() {
             for (std::size_t key = 0; key < table.size(); ++key) {
-                auto& p = table[key];
+                auto p = table[key];
                 if (p != nullptr)
                     std::cout << key << ": "
                               << "\n";
