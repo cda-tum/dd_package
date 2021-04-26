@@ -23,26 +23,26 @@ namespace dd {
     struct ComplexValue {
         fp r, i;
 
-        [[nodiscard]] bool approximatelyEquals(const ComplexValue& c) const {
+        [[nodiscard]] inline bool approximatelyEquals(const ComplexValue& c) const {
             return std::abs(r - c.r) < ComplexTable<>::tolerance() &&
                    std::abs(i - c.i) < ComplexTable<>::tolerance();
         }
 
-        [[nodiscard]] bool approximatelyZero() const {
+        [[nodiscard]] inline bool approximatelyZero() const {
             return std::abs(r) < ComplexTable<>::tolerance() &&
                    std::abs(i) < ComplexTable<>::tolerance();
         }
 
-        [[nodiscard]] bool approximatelyOne() const {
+        [[nodiscard]] inline bool approximatelyOne() const {
             return std::abs(r - 1.) < ComplexTable<>::tolerance() &&
                    std::abs(i) < ComplexTable<>::tolerance();
         }
 
-        bool operator==(const ComplexValue& other) const {
+        inline bool operator==(const ComplexValue& other) const {
             return r == other.r && i == other.i;
         }
 
-        bool operator!=(const ComplexValue& other) const {
+        inline bool operator!=(const ComplexValue& other) const {
             return !operator==(other);
         }
 

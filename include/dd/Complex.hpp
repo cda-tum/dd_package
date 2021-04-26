@@ -28,23 +28,23 @@ namespace dd {
             i->value = CTEntry::val(c.i);
         }
 
-        [[nodiscard]] bool approximatelyEquals(const Complex& c) const {
+        [[nodiscard]] inline bool approximatelyEquals(const Complex& c) const {
             return CTEntry::approximatelyEquals(r, c.r) && CTEntry::approximatelyEquals(i, c.i);
         };
 
-        [[nodiscard]] bool approximatelyZero() const {
+        [[nodiscard]] inline bool approximatelyZero() const {
             return CTEntry::approximatelyZero(r) && CTEntry::approximatelyZero(i);
         }
 
-        [[nodiscard]] bool approximatelyOne() const {
+        [[nodiscard]] inline bool approximatelyOne() const {
             return CTEntry::approximatelyOne(r) && CTEntry::approximatelyZero(i);
         }
 
-        bool operator==(const Complex& other) const {
+        inline bool operator==(const Complex& other) const {
             return r == other.r && i == other.i;
         }
 
-        bool operator!=(const Complex& other) const {
+        inline bool operator!=(const Complex& other) const {
             return !operator==(other);
         }
 
