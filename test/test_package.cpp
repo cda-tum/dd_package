@@ -544,6 +544,16 @@ TEST(DDPackageTest, Inverse) {
     auto xdag = dd->conjugateTranspose(x);
     EXPECT_EQ(x, xdag);
     dd->garbageCollect();
+    // nothing should have been collected since the threshold is not reached
+    EXPECT_EQ(dd->mUniqueTable.getNodeCount(), 1);
+    dd->incRef(x);
+    dd->garbageCollect(true);
+    // nothing should have been collected since the lone node has a non-zero ref count
+    EXPECT_EQ(dd->mUniqueTable.getNodeCount(), 1);
+    dd->decRef(x);
+    dd->garbageCollect(true);
+    // now the node should have been collected
+    EXPECT_EQ(dd->mUniqueTable.getNodeCount(), 0);
 }
 
 TEST(DDPackageTest, UniqueTableAllocation) {
