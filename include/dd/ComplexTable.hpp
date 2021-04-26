@@ -78,6 +78,7 @@ namespace dd {
         };
 
         static inline Entry zero{0., nullptr, 1};
+        static inline Entry sqrt2_2{SQRT2_2, nullptr, 1};
         static inline Entry one{1., nullptr, 1};
 
         ComplexTable():
@@ -89,15 +90,15 @@ namespace dd {
             chunkIt    = chunks[0].begin();
             chunkEndIt = chunks[0].end();
 
-            // emplace static zero and one in the table
+            // emplace static zero, 1/sqrt(2), and one in the table
             table[0]           = &zero;
+            table[sqrt2_2Key]  = &sqrt2_2;
             table[NBUCKET - 1] = &one;
-            count              = 2;
-            peakCount          = 2;
+            count              = 3;
+            peakCount          = 3;
 
-            // add 1/2 and 1/sqrt(2) to the complex table and increase their ref count (so that they are not collected)
+            // add 1/2 to the complex table and increase its ref count (so that it is not collected)
             lookup(0.5L)->refCount++;
-            lookup(SQRT2_2)->refCount++;
         }
 
         ~ComplexTable() = default;
@@ -112,11 +113,15 @@ namespace dd {
         static constexpr std::size_t MASK = NBUCKET - 1;
 
         // linear (clipped) hash function
-        static std::size_t hash(const fp val) {
+        static constexpr std::size_t hash(const fp val) {
             assert(val >= 0);
-            auto key = static_cast<std::size_t>(val * MASK);
+            auto key = static_cast<std::size_t>(val * MASK + 0.5L);
             return std::min(key, MASK);
         }
+
+        static constexpr std::size_t zeroKey    = hash(0.);
+        static constexpr std::size_t sqrt2_2Key = hash(SQRT2_2);
+        static constexpr std::size_t oneKey     = hash(1.);
 
         // access functions
         [[nodiscard]] std::size_t getCount() const { return count; }
@@ -139,7 +144,32 @@ namespace dd {
             lookups++;
 
             // search in intended bucket
-            const auto  key    = hash(val);
+            const auto key = hash(val);
+
+            // ensure that the exact value of important constants is checked first on all occasions
+            if (key == zeroKey) {
+                if (std::abs(val) < TOLERANCE) {
+                    ++hits;
+                    return &zero;
+                } else {
+                    ++collisions;
+                }
+            } else if (key == oneKey) {
+                if (std::abs(val - 1.) < TOLERANCE) {
+                    ++hits;
+                    return &one;
+                } else {
+                    ++collisions;
+                }
+            } else if (key == sqrt2_2Key) {
+                if (std::abs(val - SQRT2_2) < TOLERANCE) {
+                    ++hits;
+                    return &sqrt2_2;
+                } else {
+                    ++collisions;
+                }
+            }
+
             const auto& bucket = table[key];
             auto        p      = find(bucket, val);
             if (p != nullptr) {
@@ -216,8 +246,8 @@ namespace dd {
             // get valid pointer
             auto entryPtr = Entry::getAlignedPointer(entry);
 
-            // `zero` and `one` are static and never altered
-            if (entryPtr != &one && entryPtr != &zero) {
+            // important (static) numbers are never altered
+            if (entryPtr != &one && entryPtr != &zero && entryPtr != &sqrt2_2) {
                 if (entryPtr->refCount == std::numeric_limits<RefCount>::max()) {
                     std::clog << "[WARN] MAXREFCNT reached for " << entryPtr->value << ". Number will never be collected." << std::endl;
                     return;
@@ -236,8 +266,8 @@ namespace dd {
             // get valid pointer
             auto entryPtr = Entry::getAlignedPointer(entry);
 
-            // `zero` and `one` are static and never altered
-            if (entryPtr != &one && entryPtr != &zero) {
+            // important (static) numbers are never altered
+            if (entryPtr != &one && entryPtr != &zero && entryPtr != &sqrt2_2) {
                 assert(entryPtr->refCount > 0);
 
                 // decrease reference count
@@ -326,10 +356,11 @@ namespace dd {
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto& p = table[key];
                 if (p != nullptr)
-                    std::cout << key << ": ";
+                    std::cout << key << ": "
+                              << "\n";
 
                 while (p != nullptr) {
-                    std::cout << "\t\t" << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\t";
+                    std::cout << "\t\t" << p->value << " " << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\n";
                     p = p->next;
                 }
 

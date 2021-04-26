@@ -401,13 +401,16 @@ TEST(DDPackageTest, Ancillaries) {
     auto cx_gate     = dd->makeGateDD(dd::Xmat, 2, 0, 1);
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
+    dd->incRef(bell_matrix);
     auto reduced_bell_matrix = dd->reduceAncillae(bell_matrix, {false, false, false, false});
     EXPECT_EQ(bell_matrix, reduced_bell_matrix);
+    dd->incRef(bell_matrix);
     reduced_bell_matrix = dd->reduceAncillae(bell_matrix, {false, false, true, true});
     EXPECT_EQ(bell_matrix, reduced_bell_matrix);
 
     auto extended_bell_matrix = dd->extend(bell_matrix, 2);
-    reduced_bell_matrix       = dd->reduceAncillae(extended_bell_matrix, {false, false, true, true});
+    dd->incRef(extended_bell_matrix);
+    reduced_bell_matrix = dd->reduceAncillae(extended_bell_matrix, {false, false, true, true});
     EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
     EXPECT_TRUE(reduced_bell_matrix.p->e[2].isZeroTerminal());
     EXPECT_TRUE(reduced_bell_matrix.p->e[3].isZeroTerminal());
@@ -417,6 +420,7 @@ TEST(DDPackageTest, Ancillaries) {
     EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[2].isZeroTerminal());
     EXPECT_TRUE(reduced_bell_matrix.p->e[0].p->e[3].isZeroTerminal());
 
+    dd->incRef(extended_bell_matrix);
     reduced_bell_matrix = dd->reduceAncillae(extended_bell_matrix, {false, false, true, true}, false);
     EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
     EXPECT_TRUE(reduced_bell_matrix.p->e[2].isZeroTerminal());
@@ -436,11 +440,14 @@ TEST(DDPackageTest, GarbageVector) {
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
     dd->printVector(bell_state);
 
+    dd->incRef(bell_state);
     auto reduced_bell_state = dd->reduceGarbage(bell_state, {false, false, false, false});
     EXPECT_EQ(bell_state, reduced_bell_state);
+    dd->incRef(bell_state);
     reduced_bell_state = dd->reduceGarbage(bell_state, {false, false, true, false});
     EXPECT_EQ(bell_state, reduced_bell_state);
 
+    dd->incRef(bell_state);
     reduced_bell_state = dd->reduceGarbage(bell_state, {false, true, false, false});
     auto vec           = dd->getVector(reduced_bell_state);
     dd->printVector(reduced_bell_state);
@@ -448,6 +455,7 @@ TEST(DDPackageTest, GarbageVector) {
     EXPECT_EQ(vec[2], zero);
     EXPECT_EQ(vec[3], zero);
 
+    dd->incRef(bell_state);
     reduced_bell_state = dd->reduceGarbage(bell_state, {true, false, false, false});
     dd->printVector(reduced_bell_state);
     vec = dd->getVector(reduced_bell_state);
@@ -461,22 +469,27 @@ TEST(DDPackageTest, GarbageMatrix) {
     auto cx_gate     = dd->makeGateDD(dd::Xmat, 2, 0, 1);
     auto bell_matrix = dd->multiply(cx_gate, h_gate);
 
+    dd->incRef(bell_matrix);
     auto reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {false, false, false, false});
     EXPECT_EQ(bell_matrix, reduced_bell_matrix);
+    dd->incRef(bell_matrix);
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {false, false, true, false});
     EXPECT_EQ(bell_matrix, reduced_bell_matrix);
 
+    dd->incRef(bell_matrix);
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {false, true, false, false});
     auto mat            = dd->getMatrix(reduced_bell_matrix);
     auto zero           = dd::CVec{{0., 0.}, {0., 0.}, {0., 0.}, {0., 0.}};
     EXPECT_EQ(mat[2], zero);
     EXPECT_EQ(mat[3], zero);
 
+    dd->incRef(bell_matrix);
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {true, false, false, false});
     mat                 = dd->getMatrix(reduced_bell_matrix);
     EXPECT_EQ(mat[1], zero);
     EXPECT_EQ(mat[3], zero);
 
+    dd->incRef(bell_matrix);
     reduced_bell_matrix = dd->reduceGarbage(bell_matrix, {false, true, false, false}, false);
     EXPECT_TRUE(reduced_bell_matrix.p->e[1].isZeroTerminal());
     EXPECT_TRUE(reduced_bell_matrix.p->e[3].isZeroTerminal());

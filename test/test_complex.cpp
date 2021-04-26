@@ -130,7 +130,7 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     constexpr std::size_t NBUCKET = ComplexTable<>::MASK + 1;
 
     // lower border of a bucket
-    fp bucketBorder = 0.25 * NBUCKET / (NBUCKET - 1);
+    fp bucketBorder = (0.25 * NBUCKET - 0.5) / (NBUCKET - 1);
 
     // insert a number slightly away from the border
     fp num = bucketBorder + 2 * ComplexTable<>::tolerance();

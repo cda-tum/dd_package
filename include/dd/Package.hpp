@@ -1314,7 +1314,10 @@ namespace dd {
                 }
             }
             if (e.p->v < lowerbound) return e;
-            return reduceAncillaeRecursion(e, ancillary, lowerbound, regular);
+            auto f = reduceAncillaeRecursion(e, ancillary, lowerbound, regular);
+            decRef(e);
+            incRef(f);
+            return f;
         }
 
         // Garbage reduction works for reversible circuits --- to be thoroughly tested for quantum circuits
@@ -1329,7 +1332,10 @@ namespace dd {
                 }
             }
             if (e.p->v < lowerbound) return e;
-            return reduceGarbageRecursion(e, garbage, lowerbound);
+            auto f = reduceGarbageRecursion(e, garbage, lowerbound);
+            decRef(e);
+            incRef(f);
+            return f;
         }
         mEdge reduceGarbage(mEdge& e, const std::vector<bool>& garbage, bool regular = true) {
             // return if no more garbage left
@@ -1342,7 +1348,10 @@ namespace dd {
                 }
             }
             if (e.p->v < lowerbound) return e;
-            return reduceGarbageRecursion(e, garbage, lowerbound, regular);
+            auto f = reduceGarbageRecursion(e, garbage, lowerbound, regular);
+            decRef(e);
+            incRef(f);
+            return f;
         }
 
     private:
@@ -1387,9 +1396,6 @@ namespace dd {
             auto c = cn.mulCached(f.w, e.w);
             f.w    = cn.lookup(c);
             cn.returnToCache(c);
-
-            // increasing the ref count for safety. TODO: find out if this is necessary
-            incRef(f);
             return f;
         }
 
@@ -1441,8 +1447,6 @@ namespace dd {
             if (ComplexNumbers::mag2(f.w) > 1.0)
                 f.w = Complex::one;
 
-            // increasing the ref count for safety. TODO: find out if this is necessary
-            incRef(f);
             return f;
         }
         mEdge reduceGarbageRecursion(mEdge& e, const std::vector<bool>& garbage, Qubit lowerbound, bool regular = true) {
@@ -1523,8 +1527,6 @@ namespace dd {
             if (ComplexNumbers::mag2(f.w) > 1.0)
                 f.w = Complex::one;
 
-            // increasing the ref count for safety. TODO: find out if this is necessary
-            incRef(f);
             return f;
         }
 

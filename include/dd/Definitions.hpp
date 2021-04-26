@@ -70,8 +70,8 @@ namespace dd {
         return lhs;
     }
 
-    //    // alternative hash combinator (from Google's city hash, https://github.com/google/cityhash/blob/master/COPYING)
-    //    constexpr std::size_t hash128to64(std::size_t lhs, std::size_t rhs) {
+    // alternative hash combinator (from Google's city hash, https://github.com/google/cityhash/blob/master/COPYING)
+    //    constexpr std::size_t combineHash(std::size_t lhs, std::size_t rhs) {
     //        const std::size_t kMul = 0x9ddfea08eb382d69ULL;
     //        std::size_t a = (lhs ^ rhs) * kMul;
     //        a ^= (a >> 47);
