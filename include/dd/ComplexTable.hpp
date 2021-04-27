@@ -275,7 +275,7 @@ namespace dd {
             }
         }
 
-        [[nodiscard]] bool needsCollection() const { return count >= gcLimit; }
+        [[nodiscard]] bool possiblyNeedsCollection() const { return count >= gcLimit; }
 
         std::size_t garbageCollect(bool force = false) {
             gcCalls++;
@@ -313,7 +313,7 @@ namespace dd {
             // once the number of remaining entries reaches the garbage collection limit. It is increased whenever the
             // number of remaining entries is rather close to the garbage collection threshold and decreased if the
             // number of remaining entries is much lower than the current limit.
-            if (remaining > gcLimit * 9 / 10) {
+            if (remaining > gcLimit / 10 * 9) {
                 gcLimit = remaining + INITIAL_GC_LIMIT;
             } else if (remaining < gcLimit / 128) {
                 gcLimit /= 2;

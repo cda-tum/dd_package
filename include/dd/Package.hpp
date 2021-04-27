@@ -511,9 +511,9 @@ namespace dd {
         void garbageCollect(bool force = false) {
             // return immediately if no table needs collection
             if (!force &&
-                !vUniqueTable.needsCollection() &&
-                !mUniqueTable.needsCollection() &&
-                !cn.complexTable.needsCollection()) {
+                !vUniqueTable.possiblyNeedsCollection() &&
+                !mUniqueTable.possiblyNeedsCollection() &&
+                !cn.complexTable.possiblyNeedsCollection()) {
                 return;
             }
 
@@ -549,8 +549,6 @@ namespace dd {
                 vectorInnerProduct.clear();
                 vectorKronecker.clear();
                 matrixKronecker.clear();
-                toffoliTable.clear();
-                clearIdentityTable();
                 noiseOperationTable.clear();
             }
         }
