@@ -1855,7 +1855,7 @@ namespace dd {
             Edge              root{};
             std::stack<Edge*> stack;
 
-            std::unordered_map<decltype(original.p)*, decltype(original.p)*> mapped_node{};
+            std::unordered_map<decltype(original.p), decltype(original.p)> mapped_node{};
 
             Edge* node = &original;
             if (!node->isTerminal()) {
