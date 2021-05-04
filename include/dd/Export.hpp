@@ -138,7 +138,7 @@ namespace dd {
         return os;
     }
 
-    static std::ostream& modernNode(const Package::mEdge& e, std::ostream& os) {
+    [[maybe_unused]] static std::ostream& modernNode(const Package::mEdge& e, std::ostream& os) {
         auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[label=<";
         os << R"(<font point-size="10"><table border="1" cellspacing="0" cellpadding="2" style="rounded">)";
@@ -155,7 +155,7 @@ namespace dd {
         os << "</table></font>>,tooltip=\"q" << static_cast<std::size_t>(e.p->v) << "\"]\n";
         return os;
     }
-    static std::ostream& modernNode(const Package::vEdge& e, std::ostream& os) {
+    [[maybe_unused]] static std::ostream& modernNode(const Package::vEdge& e, std::ostream& os) {
         auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[label=<";
         os << R"(<font point-size="8"><table border="1" cellspacing="0" cellpadding="0" style="rounded">)";
@@ -165,7 +165,7 @@ namespace dd {
         os << "</tr></table></font>>,tooltip=\"q" << static_cast<std::size_t>(e.p->v) << "\"]\n";
         return os;
     }
-    static std::ostream& classicNode(const Package::mEdge& e, std::ostream& os) {
+    [[maybe_unused]] static std::ostream& classicNode(const Package::mEdge& e, std::ostream& os) {
         auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[shape=circle, width=0.53, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
@@ -203,7 +203,7 @@ namespace dd {
         os << "<td></td></tr></table></font>>,tooltip=\"q" << static_cast<std::size_t>(e.p->v) << "\"]\n";
         return os;
     }
-    static std::ostream& classicNode(const Package::vEdge& e, std::ostream& os) {
+    [[maybe_unused]] static std::ostream& classicNode(const Package::vEdge& e, std::ostream& os) {
         auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[shape=circle, width=0.46, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
@@ -249,7 +249,7 @@ namespace dd {
         return os;
     }
 
-    static std::ostream& bwEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false) {
+    [[maybe_unused]] static std::ostream& bwEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false) {
         auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
@@ -288,7 +288,7 @@ namespace dd {
 
         return os;
     }
-    static std::ostream& bwEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, [[maybe_unused]] bool classic = false) {
+    [[maybe_unused]] static std::ostream& bwEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, [[maybe_unused]] bool classic = false) {
         auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
@@ -312,7 +312,7 @@ namespace dd {
 
         return os;
     }
-    static std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false) {
+    [[maybe_unused]] static std::ostream& coloredEdge(const Package::mEdge& from, const Package::mEdge& to, short idx, std::ostream& os, bool edgeLabels = false, bool classic = false) {
         auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
@@ -349,7 +349,7 @@ namespace dd {
 
         return os;
     }
-    static std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, [[maybe_unused]] bool classic = false) {
+    [[maybe_unused]] static std::ostream& coloredEdge(const Package::vEdge& from, const Package::vEdge& to, short idx, std::ostream& os, bool edgeLabels = false, [[maybe_unused]] bool classic = false) {
         auto fromlabel = (reinterpret_cast<std::uintptr_t>(from.p) & 0x001fffffU) >> 1U;
         auto tolabel   = (reinterpret_cast<std::uintptr_t>(to.p) & 0x001fffffU) >> 1U;
 
@@ -486,7 +486,7 @@ namespace dd {
     }
 
     template<class Edge>
-    static void export2Dot(Edge basic, const std::string& outputFilename, bool colored = true, bool edgeLabels = false, bool classic = false, bool memory = false, bool show = true) {
+    [[maybe_unused]] static void export2Dot(Edge basic, const std::string& outputFilename, bool colored = true, bool edgeLabels = false, bool classic = false, bool memory = false, bool show = true) {
         std::ofstream init(outputFilename);
         toDot(basic, init, colored, edgeLabels, classic, memory);
         init.close();
@@ -629,7 +629,7 @@ namespace dd {
             }
         }
     }
-    static void serialize(const Package::mEdge& basic, std::ostream& os, bool writeBinary = false) {
+    [[maybe_unused]] static void serialize(const Package::mEdge& basic, std::ostream& os, bool writeBinary = false) {
         if (writeBinary) {
             os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(decltype(SERIALIZATION_VERSION)));
             basic.w.writeBinary(os);
