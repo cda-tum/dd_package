@@ -504,7 +504,7 @@ namespace dd {
     /// Note: do not rely on the binary format being portable across different architectures/platforms
     ///
 
-    static void serialize(const Package::vEdge& basic, std::ostream& os, bool writeBinary = false) {
+    [[maybe_unused]] static void serialize(const Package::vEdge& basic, std::ostream& os, bool writeBinary = false) {
         if (writeBinary) {
             os.write(reinterpret_cast<const char*>(&SERIALIZATION_VERSION), sizeof(decltype(SERIALIZATION_VERSION)));
             basic.w.writeBinary(os);
