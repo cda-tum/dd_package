@@ -644,7 +644,12 @@ namespace dd {
     }
     template<class Edge>
     static void serialize(const Edge& basic, const std::string& outputFilename, bool writeBinary = false) {
-        std::ofstream ofs(outputFilename);
+        std::ofstream ofs;
+        if (writeBinary) {
+            ofs = std::ofstream(outputFilename, std::ios::binary);
+        } else {
+            ofs = std::ofstream(outputFilename);
+        }
 
         if (!ofs.good()) {
             throw std::invalid_argument("Cannot open file: " + outputFilename);
