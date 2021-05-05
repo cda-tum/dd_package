@@ -2034,12 +2034,7 @@ namespace dd {
 
         template<class Node, class Edge = Edge<Node>>
         Edge deserialize(const std::string& inputFilename, bool readBinary) {
-            std::ifstream ifs;
-            if (readBinary) {
-                ifs = std::ifstream(inputFilename, std::ios::binary);
-            } else {
-                ifs = std::ifstream(inputFilename);
-            }
+            auto ifs = std::ifstream(inputFilename, std::ios::binary);
 
             if (!ifs.good()) {
                 throw std::invalid_argument("Cannot open serialized file: " + inputFilename);
