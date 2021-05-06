@@ -1775,10 +1775,10 @@ namespace dd {
             cn.returnToCache(c);
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& node, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
-            if (node.isTerminal()) {
+        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
+            if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
-                dd::ComplexNumbers::mul(amp, amplitude, node.w);
+                dd::ComplexNumbers::mul(amp, amplitude, edge.w);
                 for (std::size_t i = 0; i < (1UL << level); i++) {
                     if (binary) {
                         amp.writeBinary(oss);
@@ -1790,34 +1790,34 @@ namespace dd {
                 return;
             }
 
-            auto a = cn.mulCached(amplitude, node.w);
-            exportAmplitudesRec(node.p->e[0], oss, path + "0", a, level - 1, binary);
-            exportAmplitudesRec(node.p->e[1], oss, path + "1", a, level - 1, binary);
+            auto a = cn.mulCached(amplitude, edge.w);
+            exportAmplitudesRec(edge.p->e[0], oss, path + "0", a, level - 1, binary);
+            exportAmplitudesRec(edge.p->e[1], oss, path + "1", a, level - 1, binary);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& node, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
-            if (node.isTerminal()) {
+        void exportAmplitudes(const dd::Package::vEdge& edge, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
+            if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
             }
             auto weight = cn.getCached(1., 0.);
-            exportAmplitudesRec(node, oss, "", weight, nq, binary);
+            exportAmplitudesRec(edge, oss, "", weight, nq, binary);
             cn.returnToCache(weight);
         }
-        void exportAmplitudes(const dd::Package::vEdge& node, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
+        void exportAmplitudes(const dd::Package::vEdge& edge, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
             std::ofstream      init(outputFilename);
             std::ostringstream oss{};
 
-            exportAmplitudes(node, oss, nq, binary);
+            exportAmplitudes(edge, oss, nq, binary);
 
             init << oss.str() << std::flush;
             init.close();
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& node, std::vector<ComplexValue>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
-            if (node.isTerminal()) {
+        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::vector<ComplexValue>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
+            if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
-                dd::ComplexNumbers::mul(amp, amplitude, node.w);
+                dd::ComplexNumbers::mul(amp, amplitude, edge.w);
                 idx <<= level;
                 for (std::size_t i = 0; i < (1UL << level); i++) {
                     amplitudes[idx++] = dd::ComplexValue{dd::ComplexTable<>::Entry::val(amp.r), dd::ComplexTable<>::Entry::val(amp.i)};
@@ -1826,27 +1826,27 @@ namespace dd {
                 return;
             }
 
-            auto a = cn.mulCached(amplitude, node.w);
-            exportAmplitudesRec(node.p->e[0], amplitudes, a, level - 1, idx << 1);
-            exportAmplitudesRec(node.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1);
+            auto a = cn.mulCached(amplitude, edge.w);
+            exportAmplitudesRec(edge.p->e[0], amplitudes, a, level - 1, idx << 1);
+            exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& node, std::vector<ComplexValue>& amplitudes, dd::QubitCount nq) {
-            if (node.isTerminal()) {
+        void exportAmplitudes(const dd::Package::vEdge& edge, std::vector<ComplexValue>& amplitudes, dd::QubitCount nq) {
+            if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
             }
             auto weight = cn.getCached(1., 0.);
-            exportAmplitudesRec(node, amplitudes, weight, nq, 0);
+            exportAmplitudesRec(edge, amplitudes, weight, nq, 0);
             cn.returnToCache(weight);
         }
 
-        void addAmplitudesRec(const dd::Package::vEdge& node, std::vector<ComplexValue>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
-            auto         ar = dd::ComplexTable<>::Entry::val(node.w.r);
-            auto         ai = dd::ComplexTable<>::Entry::val(node.w.i);
+        void addAmplitudesRec(const dd::Package::vEdge& edge, std::vector<ComplexValue>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
+            auto         ar = dd::ComplexTable<>::Entry::val(edge.w.r);
+            auto         ai = dd::ComplexTable<>::Entry::val(edge.w.i);
             ComplexValue amp{ar * amplitude.r - ai * amplitude.i, ar * amplitude.i + ai * amplitude.r};
 
-            if (node.isTerminal()) {
+            if (edge.isTerminal()) {
                 idx <<= level;
                 for (std::size_t i = 0; i < (1UL << level); i++) {
                     auto temp         = dd::ComplexValue{amp.r + amplitudes[idx].r, amp.i + amplitudes[idx].i};
@@ -1856,16 +1856,16 @@ namespace dd {
                 return;
             }
 
-            addAmplitudesRec(node.p->e[0], amplitudes, amp, level - 1, idx << 1);
-            addAmplitudesRec(node.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1);
+            addAmplitudesRec(edge.p->e[0], amplitudes, amp, level - 1, idx << 1);
+            addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1);
         }
-        void addAmplitudes(const dd::Package::vEdge& node, std::vector<ComplexValue>& amplitudes, dd::QubitCount nq) {
-            if (node.isTerminal()) {
+        void addAmplitudes(const dd::Package::vEdge& edge, std::vector<ComplexValue>& amplitudes, dd::QubitCount nq) {
+            if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
             }
             ComplexValue a{1., 0.};
-            addAmplitudesRec(node, amplitudes, a, nq, 0);
+            addAmplitudesRec(edge, amplitudes, a, nq, 0);
         }
 
         // transfers a decision diagram from another package to this package
@@ -1877,13 +1877,13 @@ namespace dd {
 
             std::unordered_map<decltype(original.p), decltype(original.p)> mapped_node{};
 
-            Edge* node = &original;
-            if (!node->isTerminal()) {
+            Edge* currentEdge = &original;
+            if (!currentEdge->isTerminal()) {
                 constexpr std::size_t N = std::tuple_size_v<decltype(original.p->e)>;
                 do {
-                    while (node != nullptr && !node->isTerminal()) {
+                    while (currentEdge != nullptr && !currentEdge->isTerminal()) {
                         for (short i = N - 1; i > 0; --i) {
-                            auto& edge = node->p->e[i];
+                            auto& edge = currentEdge->p->e[i];
                             if (edge.isTerminal()) {
                                 continue;
                             }
@@ -1897,15 +1897,15 @@ namespace dd {
                             // non-zero edge to be included
                             stack.push(&edge);
                         }
-                        stack.push(node);
-                        node = &node->p->e[0];
+                        stack.push(currentEdge);
+                        currentEdge = &currentEdge->p->e[0];
                     }
-                    node = stack.top();
+                    currentEdge = stack.top();
                     stack.pop();
 
                     bool hasChild = false;
                     for (std::size_t i = 1; i < N && !hasChild; ++i) {
-                        auto& edge = node->p->e[i];
+                        auto& edge = currentEdge->p->e[i];
                         if (edge.w.approximatelyZero()) {
                             continue;
                         }
@@ -1918,25 +1918,25 @@ namespace dd {
                     if (hasChild) {
                         Edge* temp = stack.top();
                         stack.pop();
-                        stack.push(node);
-                        node = temp;
+                        stack.push(currentEdge);
+                        currentEdge = temp;
                     } else {
-                        if (mapped_node.find(node->p) != mapped_node.end()) {
-                            node = nullptr;
+                        if (mapped_node.find(currentEdge->p) != mapped_node.end()) {
+                            currentEdge = nullptr;
                             continue;
                         }
                         std::array<Edge, N> edges{};
                         for (std::size_t i = 0; i < N; i++) {
-                            if (node->p->e[i].isTerminal()) {
-                                edges[i].p = node->p->e[i].p;
+                            if (currentEdge->p->e[i].isTerminal()) {
+                                edges[i].p = currentEdge->p->e[i].p;
                             } else {
-                                edges[i].p = mapped_node[node->p->e[i].p];
+                                edges[i].p = mapped_node[currentEdge->p->e[i].p];
                             }
-                            edges[i].w = cn.lookup(node->p->e[i].w);
+                            edges[i].w = cn.lookup(currentEdge->p->e[i].w);
                         }
-                        root                 = makeDDNode(node->p->v, edges);
-                        mapped_node[node->p] = root.p;
-                        node                 = nullptr;
+                        root                        = makeDDNode(currentEdge->p->v, edges);
+                        mapped_node[currentEdge->p] = root.p;
+                        currentEdge                 = nullptr;
                     }
                 } while (!stack.empty());
 
