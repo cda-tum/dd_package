@@ -191,8 +191,13 @@ namespace dd {
 
         // generate |0...0> with n qubits
         vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
-            assert(n + start <= nqubits);
-
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
             auto f = vEdge::one;
             for (std::size_t p = start; p < n + start; p++) {
                 f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
@@ -201,8 +206,13 @@ namespace dd {
         }
         // generate computational basis state |i> with n qubits
         vEdge makeBasisState(QubitCount n, const std::vector<bool>& state, std::size_t start = 0) {
-            assert(n + start <= nqubits);
-
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
             auto f = vEdge::one;
             for (std::size_t p = start; p < n + start; ++p) {
                 if (state[p] == 0) {
@@ -215,10 +225,15 @@ namespace dd {
         }
         // generate general basis state with n qubits
         vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0) {
-            assert(n + start <= nqubits);
-
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
             if (state.size() < n) {
-                throw std::invalid_argument("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
+                throw std::runtime_error("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
             }
 
             auto f = vEdge::one;
@@ -360,8 +375,13 @@ namespace dd {
             return makeGateDD(mat, n, Controls{control}, target, start);
         }
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Controls& controls, Qubit target, std::size_t start = 0) {
-            assert(n + start <= nqubits);
-
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested gate with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
             std::array<mEdge, NEDGE> em{};
             auto                     it = controls.begin();
             for (auto i = 0U; i < NEDGE; ++i) {
