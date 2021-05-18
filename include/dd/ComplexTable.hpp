@@ -163,6 +163,7 @@ namespace dd {
             if (val - TOLERANCE >= 0) {
                 const auto lowerKey = hash(val - TOLERANCE);
                 if (lowerKey != key) {
+                    ++neighbors;
                     Entry* p = find(table[lowerKey], val);
                     if (p != nullptr) {
                         return p;
@@ -171,8 +172,9 @@ namespace dd {
             }
 
             // search in (potentially) higher bucket
-            const auto upperKey = hash(val - TOLERANCE);
+            const auto upperKey = hash(val + TOLERANCE);
             if (upperKey != key) {
+                ++neighbors;
                 Entry* p = find(table[upperKey], val);
                 if (p != nullptr) {
                     return p;
@@ -369,6 +371,7 @@ namespace dd {
                << ", collisions: " << collisions
                << ", looks: " << lookups
                << ", breaks: " << breaks
+               << ", neighbors: " << neighbors
                << ", hitRatio: " << hitRatio()
                << ", colRatio: " << colRatio()
                << ", gc calls: " << gcCalls
@@ -377,6 +380,13 @@ namespace dd {
             //clang-format on
             return os;
         }
+
+        // table lookup statistics
+        std::size_t collisions = 0;
+        std::size_t hits = 0;
+        std::size_t lookups = 0;
+        std::size_t breaks = 0;
+        std::size_t neighbors = 0;
 
     private:
         using Bucket = Entry *;
@@ -397,12 +407,6 @@ namespace dd {
         std::size_t allocations = 0;
         std::size_t count = 0;
         std::size_t peakCount = 0;
-
-        // table lookup statistics
-        std::size_t collisions = 0;
-        std::size_t hits = 0;
-        std::size_t lookups = 0;
-        std::size_t breaks = 0;
 
         // garbage collection
         std::size_t gcCalls = 0;
@@ -429,7 +433,7 @@ namespace dd {
             if (prev == nullptr) {
                 // table bucket is empty
                 table[key] = entry;
-                entry->next = nullptr;
+                entry->next = curr;
             } else {
                 prev->next = entry;
                 entry->next = curr;
