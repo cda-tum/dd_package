@@ -136,7 +136,6 @@ namespace dd {
 
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
-            std::clog << "Looking up: " << val << std::endl;
 
             // special treatment of zero and one (these are not counted as lookups)
             if (std::abs(val) < TOLERANCE)
@@ -153,19 +152,18 @@ namespace dd {
             // search in intended bucket
             const auto key = hash(val);
 
-            auto p = find(table[key], val);
-            std::clog << "Looking in central bucket: " << key << std::endl;
-            if (p != nullptr) {
-                return p;
+            {
+                Entry* p = find(table[key], val);
+                if (p != nullptr) {
+                    return p;
+                }
             }
 
             // search in (potentially) lower bucket
             if (val - TOLERANCE >= 0) {
                 const auto lowerKey = hash(val - TOLERANCE);
                 if (lowerKey != key) {
-                    std::clog << "Looking in lower bucket: " << lowerKey << std::endl;
-                    const auto& lowerBucket = table[lowerKey];
-                    p                       = find(lowerBucket, val);
+                    Entry* p = find(table[lowerKey], val);
                     if (p != nullptr) {
                         return p;
                     }
@@ -175,9 +173,7 @@ namespace dd {
             // search in (potentially) higher bucket
             const auto upperKey = hash(val - TOLERANCE);
             if (upperKey != key) {
-                std::clog << "Looking in upper bucket: " << upperKey << std::endl;
-                const auto& upperBucket = table[upperKey];
-                p                       = find(upperBucket, val);
+                Entry* p = find(table[upperKey], val);
                 if (p != nullptr) {
                     return p;
                 }
