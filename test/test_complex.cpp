@@ -112,8 +112,8 @@ TEST(DDComplexTest, NearZeroLookup) {
 }
 
 TEST(DDComplexTest, SortedBuckets) {
-    auto ct = ComplexTable<>{};
-    const fp              num     = 0.25;
+    auto     ct  = ComplexTable<>{};
+    const fp num = 0.25;
 
     const std::array<dd::fp, 7> numbers = {
             num + 2. * ComplexTable<>::tolerance(),
@@ -126,7 +126,7 @@ TEST(DDComplexTest, SortedBuckets) {
 
     const std::size_t the_bucket = ct.hash(num);
 
-    for(auto const& number : numbers) {
+    for (auto const& number: numbers) {
         ASSERT_EQ(the_bucket, ct.hash(number));
         ct.lookup(number);
     }
@@ -134,7 +134,7 @@ TEST(DDComplexTest, SortedBuckets) {
     CTEntry* p = ct.getTable().at(the_bucket);
     ASSERT_NE(p, nullptr);
 
-    dd::fp last = std::numeric_limits<dd::fp>::min();
+    dd::fp      last    = std::numeric_limits<dd::fp>::min();
     std::size_t counter = 0;
     while (p != nullptr) {
         ASSERT_LT(last, p->value);
