@@ -430,12 +430,12 @@ namespace dd {
         std::size_t gcLimit = 100000;
 
         inline Entry* find_or_insert(const std::size_t key, const fp val) {
-            [[maybe_unused]] const fp val_tol = val - TOLERANCE;
+            [[maybe_unused]] const fp val_tol = val + TOLERANCE;
 
             Entry* curr = table[key];
             Entry* prev = nullptr;
 
-            while (curr != nullptr && val_tol <= curr->value) {
+            while (curr != nullptr && val_tol > curr->value) {
                 if (std::abs(curr->value - val) < TOLERANCE) {
                     ++hits;
                     return curr;
