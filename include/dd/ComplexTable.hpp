@@ -113,13 +113,9 @@ namespace dd {
         // linear (clipped) hash function
         static constexpr std::size_t hash(const fp val) {
             assert(val >= 0);
-            auto key = static_cast<std::size_t>(val * MASK + 0.5L);
-            return std::min(key, MASK);
+            auto key = static_cast<std::size_t>(val * MASK + static_cast<dd::fp>(0.5));
+            return std::min<std::size_t>(key, MASK);
         }
-
-        static constexpr std::size_t zeroKey    = hash(0.);
-        static constexpr std::size_t sqrt2_2Key = hash(SQRT2_2);
-        static constexpr std::size_t oneKey     = hash(1.);
 
         // access functions
         [[nodiscard]] std::size_t getCount() const { return count; }
@@ -136,6 +132,7 @@ namespace dd {
 
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
+            assert(val >= 0); // required anyway for the hash function
 
             // special treatment of zero and one (these are not counted as lookups)
             if (std::abs(val) < TOLERANCE)
@@ -149,35 +146,38 @@ namespace dd {
 
             lookups++;
 
-            // search in intended bucket
-            const auto key = hash(val);
+            assert(val - TOLERANCE >= 0); // should be handle above as special case
 
-            {
-                Entry* p = find(table[key], val);
-                if (p != nullptr) {
-                    return p;
-                }
+            // search in intended bucket
+            const std::size_t key = hash(val);
+            const std::size_t lowerKey = hash(val - TOLERANCE);
+            const std::size_t upperKey = hash(val + TOLERANCE);
+
+            if (upperKey == lowerKey) {
+                ++find_or_inserts;
+                return find_or_insert(key, val);
+            }
+
+            Entry* p = find(table[key], val);
+            if (p != nullptr) {
+                return p;
             }
 
             // search in (potentially) lower bucket
-            if (val - TOLERANCE >= 0) {
-                const auto lowerKey = hash(val - TOLERANCE);
-                if (lowerKey != key) {
-                    ++neighbors;
-                    Entry* p = find(table[lowerKey], val);
-                    if (p != nullptr) {
-                        return p;
-                    }
+            if (lowerKey != key) {
+                ++lower_neighbors;
+                Entry* p_lower = find(table[lowerKey], val);
+                if (p_lower != nullptr) {
+                    return p_lower;
                 }
             }
 
             // search in (potentially) higher bucket
-            const auto upperKey = hash(val + TOLERANCE);
             if (upperKey != key) {
-                ++neighbors;
-                Entry* p = find(table[upperKey], val);
-                if (p != nullptr) {
-                    return p;
+                ++upper_neighbors;
+                Entry* p_upper = find(table[upperKey], val);
+                if (p_upper != nullptr) {
+                    return p_upper;
                 }
             }
 
@@ -370,8 +370,11 @@ namespace dd {
             os << "hits: " << hits
                << ", collisions: " << collisions
                << ", looks: " << lookups
-               << ", breaks: " << breaks
-               << ", neighbors: " << neighbors
+               << ", inserts: " << inserts
+               << ", insert_collisions: " << insert_collisions
+               << ", find_or_inserts: " << find_or_inserts
+               << ", upper_neighbors: " << upper_neighbors
+               << ", lower_neighbors: " << lower_neighbors
                << ", hitRatio: " << hitRatio()
                << ", colRatio: " << colRatio()
                << ", gc calls: " << gcCalls
@@ -383,10 +386,13 @@ namespace dd {
 
         // table lookup statistics
         std::size_t collisions = 0;
+        std::size_t insert_collisions = 0;
         std::size_t hits = 0;
+        std::size_t find_or_inserts = 0;
         std::size_t lookups = 0;
-        std::size_t breaks = 0;
-        std::size_t neighbors = 0;
+        std::size_t inserts = 0;
+        std::size_t lower_neighbors = 0;
+        std::size_t upper_neighbors = 0;
 
     private:
         using Bucket = Entry *;
@@ -413,31 +419,59 @@ namespace dd {
         std::size_t gcRuns = 0;
         std::size_t gcLimit = 100000;
 
+        inline Entry *find_or_insert(const std::size_t key, const fp val) {
+            const fp val_tol = val - TOLERANCE;
 
-        inline Entry *insert(std::size_t key, const fp val) {
+            Entry* curr = table[key];
+            Entry *prev = nullptr;
+
+            while (curr != nullptr && val_tol <= curr->value) {
+                if (std::abs(curr->value - val) < TOLERANCE) {
+                    ++hits;
+                    return curr;
+                }
+                ++collisions;
+                prev = curr;
+                curr = curr->next;
+            }
+
+            ++inserts;
+            Entry *entry = getEntry();
+            entry->value = val;
+
+            if (prev == nullptr) {
+                // table bucket is empty
+                table[key] = entry;
+            } else {
+                prev->next = entry;
+            }
+            entry->next = curr;
+            count++;
+            peakCount = std::max(peakCount, count);
+            return entry;
+        }
+
+        inline Entry *insert(const std::size_t key, const fp val) {
+            ++inserts;
             Entry *entry = getEntry();
             entry->value = val;
 
             Entry *curr = table[key];
             Entry *prev = nullptr;
 
-            while (curr != nullptr) {
-                if (val > curr->value) {
-                    prev = curr;
-                    curr = curr->next;
-                } else {
-                    break;
-                }
+            while (curr != nullptr && val < curr->value) {
+                ++insert_collisions;
+                prev = curr;
+                curr = curr->next;
             }
 
             if (prev == nullptr) {
                 // table bucket is empty
                 table[key] = entry;
-                entry->next = curr;
             } else {
                 prev->next = entry;
-                entry->next = curr;
             }
+            entry->next = curr;
             count++;
             peakCount = std::max(peakCount, count);
             return entry;
@@ -445,19 +479,16 @@ namespace dd {
 
         inline Entry *find(const Bucket &bucket, const fp &val) {
             Entry *p = bucket;
-            while (p != nullptr) {
-                if (std::abs(p->value - val) < TOLERANCE) {
+            const fp val_tol = val - TOLERANCE;
+            while (p != nullptr && val_tol <= p->value) {
+                if (p->value - val < TOLERANCE) {
                     ++hits;
                     return p;
-                }
-                if (val > p->value + TOLERANCE) {
-                    ++breaks;
-                    return nullptr;
                 }
                 ++collisions;
                 p = p->next;
             }
-            return p;
+            return nullptr;
         }
     };
 } // namespace dd
