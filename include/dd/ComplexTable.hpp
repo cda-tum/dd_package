@@ -133,30 +133,37 @@ namespace dd {
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
             assert(val >= 0); // required anyway for the hash function
-
-            // special treatment of zero and one (these are not counted as lookups)
-            if (std::abs(val) < TOLERANCE)
-                return &zero;
-
-            if (std::abs(val - 1.) < TOLERANCE)
-                return &one;
-
-            if (std::abs(val - SQRT2_2) < TOLERANCE)
-                return &sqrt2_2;
-
             lookups++;
+            // special treatment of zero and one (these are not counted as lookups)
+            if (std::abs(val) < TOLERANCE) {
+                ++hits;
+                return &zero;
+            }
+
+            if (std::abs(val - 1.) < TOLERANCE) {
+                ++hits;
+                return &one;
+            }
+
+            if (std::abs(val - SQRT2_2) < TOLERANCE) {
+                ++hits;
+                return &sqrt2_2;
+            }
 
             assert(val - TOLERANCE >= 0); // should be handle above as special case
 
-            // search in intended bucket
-            const std::size_t key = hash(val);
             const std::size_t lowerKey = hash(val - TOLERANCE);
             const std::size_t upperKey = hash(val + TOLERANCE);
 
             if (upperKey == lowerKey) {
                 ++find_or_inserts;
-                return find_or_insert(key, val);
+                return find_or_insert(lowerKey, val);
             }
+
+            // code below is to handle cases where the looked up value
+            // could be in the lower or upper buckets and we have to go through them
+
+            const std::size_t key = hash(val);
 
             Entry* p = find(table[key], val);
             if (p != nullptr) {
@@ -166,6 +173,7 @@ namespace dd {
             // search in (potentially) lower bucket
             if (lowerKey != key) {
                 ++lower_neighbors;
+                // buckets are sorted but we currently have no pointer to the last entry :(
                 Entry* p_lower = find(table[lowerKey], val);
                 if (p_lower != nullptr) {
                     return p_lower;
@@ -175,8 +183,10 @@ namespace dd {
             // search in (potentially) higher bucket
             if (upperKey != key) {
                 ++upper_neighbors;
-                Entry* p_upper = find(table[upperKey], val);
-                if (p_upper != nullptr) {
+                // buckets are sorted, we only have to look at the first element
+
+                Entry* p_upper = table[upperKey];
+                if (p_upper != nullptr && p_upper->value - val < TOLERANCE) {
                     return p_upper;
                 }
             }
@@ -380,50 +390,50 @@ namespace dd {
                << ", gc calls: " << gcCalls
                << ", gc runs: " << gcRuns
                << "\n";
-            //clang-format on
+            // clang-format on
             return os;
         }
 
         // table lookup statistics
-        std::size_t collisions = 0;
+        std::size_t collisions        = 0;
         std::size_t insert_collisions = 0;
-        std::size_t hits = 0;
-        std::size_t find_or_inserts = 0;
-        std::size_t lookups = 0;
-        std::size_t inserts = 0;
-        std::size_t lower_neighbors = 0;
-        std::size_t upper_neighbors = 0;
+        std::size_t hits              = 0;
+        std::size_t find_or_inserts   = 0;
+        std::size_t lookups           = 0;
+        std::size_t inserts           = 0;
+        std::size_t lower_neighbors   = 0;
+        std::size_t upper_neighbors   = 0;
 
     private:
-        using Bucket = Entry *;
-        using Table = std::array<Bucket, NBUCKET>;
+        using Bucket = Entry*;
+        using Table  = std::array<Bucket, NBUCKET>;
 
         Table table{};
 
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;
 
-        Entry *available{};
-        std::vector<std::vector<Entry>> chunks{};
-        std::size_t chunkID;
+        Entry*                                available{};
+        std::vector<std::vector<Entry>>       chunks{};
+        std::size_t                           chunkID;
         typename std::vector<Entry>::iterator chunkIt;
         typename std::vector<Entry>::iterator chunkEndIt;
-        std::size_t allocationSize;
+        std::size_t                           allocationSize;
 
         std::size_t allocations = 0;
-        std::size_t count = 0;
-        std::size_t peakCount = 0;
+        std::size_t count       = 0;
+        std::size_t peakCount   = 0;
 
         // garbage collection
         std::size_t gcCalls = 0;
-        std::size_t gcRuns = 0;
+        std::size_t gcRuns  = 0;
         std::size_t gcLimit = 100000;
 
-        inline Entry *find_or_insert(const std::size_t key, const fp val) {
-            const fp val_tol = val - TOLERANCE;
+        inline Entry* find_or_insert(const std::size_t key, const fp val) {
+            [[maybe_unused]] const fp val_tol = val - TOLERANCE;
 
             Entry* curr = table[key];
-            Entry *prev = nullptr;
+            Entry* prev = nullptr;
 
             while (curr != nullptr && val_tol <= curr->value) {
                 if (std::abs(curr->value - val) < TOLERANCE) {
@@ -436,7 +446,7 @@ namespace dd {
             }
 
             ++inserts;
-            Entry *entry = getEntry();
+            Entry* entry = getEntry();
             entry->value = val;
 
             if (prev == nullptr) {
@@ -451,13 +461,20 @@ namespace dd {
             return entry;
         }
 
-        inline Entry *insert(const std::size_t key, const fp val) {
+        /**
+         * Inserts a value into the bucket indexed by key. This function assumes no element within TOLERANCE is
+         * present in the bucket.
+         * @param key index to the bucket
+         * @param val value to be inserted
+         * @return pointer to the inserted entry
+         */
+        inline Entry* insert(const std::size_t key, const fp val) {
             ++inserts;
-            Entry *entry = getEntry();
+            Entry* entry = getEntry();
             entry->value = val;
 
-            Entry *curr = table[key];
-            Entry *prev = nullptr;
+            Entry* curr = table[key];
+            Entry* prev = nullptr;
 
             while (curr != nullptr && val < curr->value) {
                 ++insert_collisions;
@@ -477,8 +494,8 @@ namespace dd {
             return entry;
         }
 
-        inline Entry *find(const Bucket &bucket, const fp &val) {
-            Entry *p = bucket;
+        inline Entry* find(const Bucket& bucket, const fp& val) {
+            Entry*   p       = bucket;
             const fp val_tol = val - TOLERANCE;
             while (p != nullptr && val_tol <= p->value) {
                 if (p->value - val < TOLERANCE) {
