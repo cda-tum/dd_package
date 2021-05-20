@@ -413,6 +413,7 @@ namespace dd {
         using Table  = std::array<Bucket, NBUCKET>;
 
         Table table{};
+
         std::array<Entry*, NBUCKET> last_entry_table{};
 
         // numerical tolerance to be used for floating point values
