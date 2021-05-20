@@ -173,9 +173,9 @@ namespace dd {
             // search in (potentially) lower bucket
             if (lowerKey != key) {
                 ++lower_neighbors;
-                // buckets are sorted but we currently have no pointer to the last entry :(
-                Entry* p_lower = find(table[lowerKey], val);
-                if (p_lower != nullptr) {
+                // buckets are sorted so we only have to look into the last entry of the lower bucket
+                Entry* p_lower = last_entry_table[lowerKey];
+                if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
                     return p_lower;
                 }
             }
@@ -282,14 +282,14 @@ namespace dd {
             gcRuns++;
             std::size_t collected = 0;
             std::size_t remaining = 0;
-            for (auto& bucket: table) {
-                Entry* p     = bucket;
+            for (std::size_t key = 0; key < table.size(); ++key) {
+                Entry* p     = table[key];
                 Entry* lastp = nullptr;
                 while (p != nullptr) {
                     if (p->refCount == 0) {
                         Entry* next = p->next;
                         if (lastp == nullptr) {
-                            bucket = next;
+                            table[key] = next;
                         } else {
                             lastp->next = next;
                         }
@@ -301,6 +301,7 @@ namespace dd {
                         p     = p->next;
                         remaining++;
                     }
+                    last_entry_table[key] = lastp;
                 }
             }
             // The garbage collection limit changes dynamically depending on the number of remaining (active) nodes.
@@ -321,6 +322,9 @@ namespace dd {
             // clear table buckets
             for (auto& bucket: table) {
                 bucket = nullptr;
+            }
+            for (auto& entry: last_entry_table) {
+                entry = nullptr;
             }
 
             // clear available stack
@@ -409,6 +413,7 @@ namespace dd {
         using Table  = std::array<Bucket, NBUCKET>;
 
         Table table{};
+        std::array<Entry*, NBUCKET> last_entry_table{};
 
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;
@@ -456,6 +461,9 @@ namespace dd {
                 prev->next = entry;
             }
             entry->next = curr;
+            if (curr == nullptr) {
+                last_entry_table[key] = entry;
+            }
             count++;
             peakCount = std::max(peakCount, count);
             return entry;
@@ -489,6 +497,9 @@ namespace dd {
                 prev->next = entry;
             }
             entry->next = curr;
+            if (curr == nullptr) {
+                last_entry_table[key] = entry;
+            }
             count++;
             peakCount = std::max(peakCount, count);
             return entry;
