@@ -350,9 +350,14 @@ namespace dd {
             count     = 0;
             peakCount = 0;
 
-            collisions = 0;
-            hits       = 0;
-            lookups    = 0;
+            collisions        = 0;
+            insert_collisions = 0;
+            hits              = 0;
+            find_or_inserts   = 0;
+            lookups           = 0;
+            inserts           = 0;
+            lower_neighbors   = 0;
+            upper_neighbors   = 0;
 
             gcCalls = 0;
             gcRuns  = 0;
