@@ -142,7 +142,7 @@ TEST(DDComplexTest, SortedBuckets) {
         ++counter;
     }
     ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.lower_neighbors, 1); // default insertion of 0.5 is close to lower bucket
+    EXPECT_EQ(ct.getStatistics().at("lower_neighbors"), 1); // default insertion of 0.5 is close to lower bucket
     EXPECT_EQ(counter, numbers.size());
 }
 

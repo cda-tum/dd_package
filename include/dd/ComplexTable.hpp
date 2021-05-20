@@ -16,7 +16,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace dd {
@@ -379,6 +381,21 @@ namespace dd {
 
         [[nodiscard]] fp colRatio() const { return static_cast<fp>(collisions) / lookups; }
 
+        std::map<std::string, std::size_t> getStatistics() {
+            return {
+                    {"hits", hits},
+                    {"collisions", collisions},
+                    {"lookups", lookups},
+                    {"inserts", inserts},
+                    {"insert_collisions", insert_collisions},
+                    {"find_or_inserts", find_or_inserts},
+                    {"upper_neighbors", upper_neighbors},
+                    {"lower_neighbors", lower_neighbors},
+                    {"gc calls", gcCalls},
+                    {"gc runs", gcRuns},
+            };
+        }
+
         std::ostream& printStatistics(std::ostream& os = std::cout) {
             // clang-format off
             os << "hits: " << hits
@@ -398,6 +415,14 @@ namespace dd {
             return os;
         }
 
+    private:
+        using Bucket = Entry*;
+        using Table  = std::array<Bucket, NBUCKET>;
+
+        Table table{};
+
+        std::array<Entry*, NBUCKET> last_entry_table{};
+
         // table lookup statistics
         std::size_t collisions        = 0;
         std::size_t insert_collisions = 0;
@@ -407,14 +432,6 @@ namespace dd {
         std::size_t inserts           = 0;
         std::size_t lower_neighbors   = 0;
         std::size_t upper_neighbors   = 0;
-
-    private:
-        using Bucket = Entry*;
-        using Table  = std::array<Bucket, NBUCKET>;
-
-        Table table{};
-
-        std::array<Entry*, NBUCKET> last_entry_table{};
 
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;
