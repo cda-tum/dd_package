@@ -135,8 +135,7 @@ namespace dd {
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
             assert(val >= 0); // required anyway for the hash function
-            lookups++;
-            // special treatment of zero and one (these are not counted as lookups)
+            ++lookups;
             if (std::abs(val) < TOLERANCE) {
                 ++hits;
                 return &zero;
@@ -158,8 +157,8 @@ namespace dd {
             const std::size_t upperKey = hash(val + TOLERANCE);
 
             if (upperKey == lowerKey) {
-                ++find_or_inserts;
-                return find_or_insert(lowerKey, val);
+                ++findOrInserts;
+                return findOrInsert(lowerKey, val);
             }
 
             // code below is to handle cases where the looked up value
@@ -174,9 +173,9 @@ namespace dd {
 
             // search in (potentially) lower bucket
             if (lowerKey != key) {
-                ++lower_neighbors;
+                ++lowerNeighbors;
                 // buckets are sorted so we only have to look into the last entry of the lower bucket
-                Entry* p_lower = last_entry_table[lowerKey];
+                Entry* p_lower = tailTable[lowerKey];
                 if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
                     return p_lower;
                 }
@@ -184,7 +183,7 @@ namespace dd {
 
             // search in (potentially) higher bucket
             if (upperKey != key) {
-                ++upper_neighbors;
+                ++upperNeighbors;
                 // buckets are sorted, we only have to look at the first element
 
                 Entry* p_upper = table[upperKey];
@@ -303,7 +302,7 @@ namespace dd {
                         p     = p->next;
                         remaining++;
                     }
-                    last_entry_table[key] = lastp;
+                    tailTable[key] = lastp;
                 }
             }
             // The garbage collection limit changes dynamically depending on the number of remaining (active) nodes.
@@ -325,7 +324,7 @@ namespace dd {
             for (auto& bucket: table) {
                 bucket = nullptr;
             }
-            for (auto& entry: last_entry_table) {
+            for (auto& entry: tailTable) {
                 entry = nullptr;
             }
 
@@ -350,14 +349,14 @@ namespace dd {
             count     = 0;
             peakCount = 0;
 
-            collisions        = 0;
-            insert_collisions = 0;
-            hits              = 0;
-            find_or_inserts   = 0;
-            lookups           = 0;
-            inserts           = 0;
-            lower_neighbors   = 0;
-            upper_neighbors   = 0;
+            collisions       = 0;
+            insertCollisions = 0;
+            hits             = 0;
+            findOrInserts    = 0;
+            lookups          = 0;
+            inserts          = 0;
+            lowerNeighbors   = 0;
+            upperNeighbors   = 0;
 
             gcCalls = 0;
             gcRuns  = 0;
@@ -392,12 +391,12 @@ namespace dd {
                     {"collisions", collisions},
                     {"lookups", lookups},
                     {"inserts", inserts},
-                    {"insert_collisions", insert_collisions},
-                    {"find_or_inserts", find_or_inserts},
-                    {"upper_neighbors", upper_neighbors},
-                    {"lower_neighbors", lower_neighbors},
-                    {"gc calls", gcCalls},
-                    {"gc runs", gcRuns},
+                    {"insertCollisions", insertCollisions},
+                    {"findOrInserts", findOrInserts},
+                    {"upperNeighbors", upperNeighbors},
+                    {"lowerNeighbors", lowerNeighbors},
+                    {"gcCalls", gcCalls},
+                    {"gcRuns", gcRuns},
             };
         }
 
@@ -407,10 +406,10 @@ namespace dd {
                << ", collisions: " << collisions
                << ", looks: " << lookups
                << ", inserts: " << inserts
-               << ", insert_collisions: " << insert_collisions
-               << ", find_or_inserts: " << find_or_inserts
-               << ", upper_neighbors: " << upper_neighbors
-               << ", lower_neighbors: " << lower_neighbors
+               << ", insertCollisions: " << insertCollisions
+               << ", findOrInserts: " << findOrInserts
+               << ", upperNeighbors: " << upperNeighbors
+               << ", lowerNeighbors: " << lowerNeighbors
                << ", hitRatio: " << hitRatio()
                << ", colRatio: " << colRatio()
                << ", gc calls: " << gcCalls
@@ -426,17 +425,17 @@ namespace dd {
 
         Table table{};
 
-        std::array<Entry*, NBUCKET> last_entry_table{};
+        std::array<Entry*, NBUCKET> tailTable{};
 
         // table lookup statistics
-        std::size_t collisions        = 0;
-        std::size_t insert_collisions = 0;
-        std::size_t hits              = 0;
-        std::size_t find_or_inserts   = 0;
-        std::size_t lookups           = 0;
-        std::size_t inserts           = 0;
-        std::size_t lower_neighbors   = 0;
-        std::size_t upper_neighbors   = 0;
+        std::size_t collisions       = 0;
+        std::size_t insertCollisions = 0;
+        std::size_t hits             = 0;
+        std::size_t findOrInserts    = 0;
+        std::size_t lookups          = 0;
+        std::size_t inserts          = 0;
+        std::size_t lowerNeighbors   = 0;
+        std::size_t upperNeighbors   = 0;
 
         // numerical tolerance to be used for floating point values
         static inline fp TOLERANCE = 1e-13;
@@ -457,7 +456,7 @@ namespace dd {
         std::size_t gcRuns  = 0;
         std::size_t gcLimit = 100000;
 
-        inline Entry* find_or_insert(const std::size_t key, const fp val) {
+        inline Entry* findOrInsert(const std::size_t key, const fp val) {
             [[maybe_unused]] const fp val_tol = val + TOLERANCE;
 
             Entry* curr = table[key];
@@ -485,7 +484,7 @@ namespace dd {
             }
             entry->next = curr;
             if (curr == nullptr) {
-                last_entry_table[key] = entry;
+                tailTable[key] = entry;
             }
             count++;
             peakCount = std::max(peakCount, count);
@@ -508,7 +507,7 @@ namespace dd {
             Entry* prev = nullptr;
 
             while (curr != nullptr && val < curr->value) {
-                ++insert_collisions;
+                ++insertCollisions;
                 prev = curr;
                 curr = curr->next;
             }
@@ -521,7 +520,7 @@ namespace dd {
             }
             entry->next = curr;
             if (curr == nullptr) {
-                last_entry_table[key] = entry;
+                tailTable[key] = entry;
             }
             count++;
             peakCount = std::max(peakCount, count);
