@@ -33,6 +33,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <random>
 #include <regex>
 #include <set>
 #include <stdexcept>
@@ -674,6 +675,201 @@ namespace dd {
             clearIdentityTable();
 
             noiseOperationTable.clear();
+        }
+
+        ///
+        /// Measurements from state decision diagrams
+        ///
+    public:
+        std::string measureAll(vEdge& root_edge, const bool collapse, std::mt19937_64& mt, fp epsilon = 0.001) {
+            if (std::abs(ComplexNumbers::mag2(root_edge.w) - 1.0L) > epsilon) {
+                if (root_edge.w.approximatelyZero()) {
+                    throw std::runtime_error("Numerical instabilities led to a 0-vector! Abort simulation!");
+                }
+                std::cerr << "WARNING in MAll: numerical instability occurred during simulation: |alpha|^2 + |beta|^2 = "
+                          << ComplexNumbers::mag2(root_edge.w) << ", but should be 1!\n";
+            }
+
+            vEdge            cur      = root_edge;
+            const QubitCount n_qubits = root_edge.p->v + 1;
+
+            std::string result(n_qubits, '0');
+
+            std::uniform_real_distribution<fp> dist(0.0, 1.0L);
+
+            for (Qubit i = root_edge.p->v; i >= 0; --i) {
+                fp p0  = ComplexNumbers::mag2(cur.p->e.at(0).w);
+                fp p1  = ComplexNumbers::mag2(cur.p->e.at(1).w);
+                fp tmp = p0 + p1;
+
+                if (std::abs(tmp - 1.0L) > epsilon) {
+                    throw std::runtime_error("Added probabilities differ from 1 by " + std::to_string(std::abs(tmp - 1.0L)));
+                }
+                p0 /= tmp;
+
+                const fp n = dist(mt);
+                if (n < p0) {
+                    cur = cur.p->e.at(0);
+                } else {
+                    result[cur.p->v] = '1';
+                    cur              = cur.p->e.at(1);
+                }
+            }
+
+            if (collapse) {
+                decRef(root_edge);
+
+                vEdge                e = vEdge::one;
+                std::array<vEdge, 2> edges{};
+
+                for (Qubit p = 0; p < n_qubits; p++) {
+                    if (result[p] == '0') {
+                        edges[0] = e;
+                        edges[1] = vEdge::zero;
+                    } else {
+                        edges[0] = vEdge::zero;
+                        edges[1] = e;
+                    }
+                    e = makeDDNode(p, edges, false);
+                }
+                incRef(e);
+                root_edge = e;
+                garbageCollect();
+            }
+
+            return std::string{result.rbegin(), result.rend()};
+        }
+
+    private:
+        double assignProbabilities(vEdge edge, std::unordered_map<vNode*, double>& probs) {
+            auto it = probs.find(edge.p);
+            if (it != probs.end()) {
+                return ComplexNumbers::mag2(edge.w) * it->second;
+            }
+            double sum;
+            if (edge.isTerminal()) {
+                sum = 1.0;
+            } else {
+                sum = assignProbabilities(edge.p->e.at(0), probs) + assignProbabilities(edge.p->e.at(1), probs);
+            }
+
+            probs.insert({edge.p, sum});
+
+            return ComplexNumbers::mag2(edge.w) * sum;
+        }
+
+    public:
+        char measureOneCollapsing(vEdge& root_edge, const Qubit index, const bool assume_probability_normalization, std::mt19937_64& mt, fp epsilon = 0.001) {
+            std::map<vNode*, fp> probsMone;
+            std::set<vNode*>     visited_nodes2;
+            std::queue<vNode*>   q;
+
+            probsMone[root_edge.p] = ComplexNumbers::mag2(root_edge.w);
+            visited_nodes2.insert(root_edge.p);
+            q.push(root_edge.p);
+
+            while (q.front()->v != index) {
+                vNode* ptr = q.front();
+                q.pop();
+                double prob = probsMone[ptr];
+
+                if (!ptr->e.at(0).w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(0).w);
+
+                    if (visited_nodes2.find(ptr->e.at(0).p) != visited_nodes2.end()) {
+                        probsMone[ptr->e.at(0).p] = probsMone[ptr->e.at(0).p] + tmp1;
+                    } else {
+                        probsMone[ptr->e.at(0).p] = tmp1;
+                        visited_nodes2.insert(ptr->e.at(0).p);
+                        q.push(ptr->e.at(0).p);
+                    }
+                }
+
+                if (!ptr->e.at(1).w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(1).w);
+
+                    if (visited_nodes2.find(ptr->e.at(1).p) != visited_nodes2.end()) {
+                        probsMone[ptr->e.at(1).p] = probsMone[ptr->e.at(1).p] + tmp1;
+                    } else {
+                        probsMone[ptr->e.at(1).p] = tmp1;
+                        visited_nodes2.insert(ptr->e.at(1).p);
+                        q.push(ptr->e.at(1).p);
+                    }
+                }
+            }
+
+            fp pzero{0}, pone{0};
+
+            if (assume_probability_normalization) {
+                while (!q.empty()) {
+                    vNode* ptr = q.front();
+                    q.pop();
+
+                    if (!ptr->e.at(0).w.approximatelyZero()) {
+                        pzero += probsMone[ptr] * ComplexNumbers::mag2(ptr->e.at(0).w);
+                    }
+
+                    if (!ptr->e.at(1).w.approximatelyZero()) {
+                        pone += probsMone[ptr] * ComplexNumbers::mag2(ptr->e.at(1).w);
+                    }
+                }
+            } else {
+                std::unordered_map<vNode*, double> probs;
+                assignProbabilities(root_edge, probs);
+
+                while (!q.empty()) {
+                    vNode* ptr = q.front();
+                    q.pop();
+
+                    if (!ptr->e.at(0).w.approximatelyZero()) {
+                        pzero += probsMone[ptr] * probs[ptr->e.at(0).p] * ComplexNumbers::mag2(ptr->e.at(0).w);
+                    }
+
+                    if (!ptr->e.at(1).w.approximatelyZero()) {
+                        pone += probsMone[ptr] * probs[ptr->e.at(1).p] * ComplexNumbers::mag2(ptr->e.at(1).w);
+                    }
+                }
+            }
+
+            if (std::abs(pzero + pone - 1) > epsilon) {
+                throw std::runtime_error("Numerical instability occurred during measurement: |alpha|^2 + |beta|^2 = " + std::to_string(pzero) + " + " + std::to_string(pone) + " = " +
+                                         std::to_string(pzero + pone) + ", but should be 1!");
+            }
+
+            const fp sum = pzero + pone;
+
+            GateMatrix measure_m{
+                    complex_zero, complex_zero,
+                    complex_zero, complex_zero};
+
+            std::uniform_real_distribution<fp> dist(0.0, 1.0L);
+
+            fp   n = dist(mt);
+            fp   norm_factor;
+            char result;
+
+            if (n < pzero / sum) {
+                measure_m[0] = complex_one;
+                norm_factor  = pzero;
+                result       = '0';
+            } else {
+                measure_m[3] = complex_one;
+                norm_factor  = pone;
+                result       = '1';
+            }
+
+            mEdge m_gate = makeGateDD(measure_m, root_edge.p->v + 1, index);
+
+            vEdge e = multiply(m_gate, root_edge);
+
+            Complex c = cn.getTemporary(std::sqrt(1.0 / norm_factor), 0);
+            ComplexNumbers::mul(c, e.w, c);
+            e.w = cn.lookup(c);
+            incRef(e);
+            decRef(root_edge);
+            root_edge = e;
+
+            return result;
         }
 
         ///
