@@ -772,19 +772,40 @@ TEST(DDPackageTest, DestructiveMeasurementOne) {
     const char     m       = dd->measureOneCollapsing(plus_state, 0, true, mt);
     const dd::CVec v_after = dd->getVector(plus_state);
 
-    if (m == '0') {
-        ASSERT_EQ(v_after[0], dd::complex_SQRT2_2);
-        ASSERT_EQ(v_after[2], dd::complex_SQRT2_2);
-        ASSERT_EQ(v_after[1], dd::complex_zero);
-        ASSERT_EQ(v_after[3], dd::complex_zero);
-    } else if (m == '1') {
-        ASSERT_EQ(v_after[0], dd::complex_zero);
-        ASSERT_EQ(v_after[2], dd::complex_zero);
-        ASSERT_EQ(v_after[1], dd::complex_SQRT2_2);
-        ASSERT_EQ(v_after[3], dd::complex_SQRT2_2);
-    } else {
-        FAIL() << "Measurement result not in {0,1}!";
+    ASSERT_EQ(m, '0');
+    ASSERT_EQ(v_after[0], dd::complex_SQRT2_2);
+    ASSERT_EQ(v_after[2], dd::complex_SQRT2_2);
+    ASSERT_EQ(v_after[1], dd::complex_zero);
+    ASSERT_EQ(v_after[3], dd::complex_zero);
+
+    const auto v_after_compl = dd->getVectorStdComplex(plus_state);
+
+    assert(v_after.size() == v_after_compl.size());
+    for (std::size_t i = 0; i < v_after.size(); i++) {
+        ASSERT_DOUBLE_EQ(v_after.at(i).r, v_after_compl.at(i).real());
+        ASSERT_DOUBLE_EQ(v_after.at(i).i, v_after_compl.at(i).imag());
     }
+}
+
+TEST(DDPackageTest, DestructiveMeasurementOneArbitraryNormalization) {
+    auto dd          = std::make_unique<dd::Package>(4);
+    auto h_gate0     = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto h_gate1     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto plus_matrix = dd->multiply(h_gate0, h_gate1);
+    auto zero_state  = dd->makeZeroState(2);
+    auto plus_state  = dd->multiply(plus_matrix, zero_state);
+    dd->incRef(plus_state);
+
+    std::mt19937_64 mt{0};
+
+    const char     m       = dd->measureOneCollapsing(plus_state, 0, false, mt);
+    const dd::CVec v_after = dd->getVector(plus_state);
+
+    ASSERT_EQ(m, '0');
+    ASSERT_EQ(v_after[0], dd::complex_SQRT2_2);
+    ASSERT_EQ(v_after[2], dd::complex_SQRT2_2);
+    ASSERT_EQ(v_after[1], dd::complex_zero);
+    ASSERT_EQ(v_after[3], dd::complex_zero);
 
     const auto v_after_compl = dd->getVectorStdComplex(plus_state);
 
