@@ -102,6 +102,27 @@ TEST(DDPackageTest, BellState) {
     dd->statistics();
 }
 
+TEST(DDPackageTest, CorruptedBellState) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
+    auto zero_state = dd->makeZeroState(2);
+
+    auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+
+    bell_state.w = dd->cn.getTemporary(0.5, 0);
+    // prints a warning
+    std::mt19937_64 mt;
+    std::cout << dd->measureAll(bell_state, false, mt) << "\n";
+
+    bell_state.w = dd::Complex::zero;
+
+    ASSERT_THROW(dd->measureAll(bell_state, false, mt), std::runtime_error);
+
+    ASSERT_THROW(dd->measureOneCollapsing(bell_state, 0, true, mt), std::runtime_error);
+}
+
 TEST(DDPackageTest, NegativeControl) {
     auto dd = std::make_unique<dd::Package>(2);
 
