@@ -661,7 +661,7 @@ namespace dd {
                 return left->p->v < right->p->v;
             }
         };
-        stream << std::showpos << CTEntry::val(edge.w.r) << CTEntry::val(edge.w.i) << std::noshowpos <<"i\n";
+        stream << std::showpos << CTEntry::val(edge.w.r) << CTEntry::val(edge.w.i) << std::noshowpos << "i\n";
 
         std::unordered_set<decltype(edge.p)> nodes{};
 
@@ -691,7 +691,7 @@ namespace dd {
 
                 // non-zero child to be included
                 q.push(&child);
-                stream << std::showpos << CTEntry::val(child.w.r) << CTEntry::val(child.w.i) << std::noshowpos <<"i\n";
+                stream << std::showpos << CTEntry::val(child.w.r) << CTEntry::val(child.w.i) << std::noshowpos << "i\n";
             }
         }
     }
