@@ -756,84 +756,84 @@ TEST(DDPackageTest, Controls) {
 }
 
 TEST(DDPackageTest, DestructiveMeasurementAll) {
-    auto dd          = std::make_unique<dd::Package>(4);
-    auto h_gate0     = dd->makeGateDD(dd::Hmat, 2, 0);
-    auto h_gate1     = dd->makeGateDD(dd::Hmat, 2, 1);
-    auto plus_matrix = dd->multiply(h_gate0, h_gate1);
-    auto zero_state  = dd->makeZeroState(2);
-    auto plus_state  = dd->multiply(plus_matrix, zero_state);
-    dd->incRef(plus_state);
+    auto dd         = std::make_unique<dd::Package>(4);
+    auto hGate0     = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto hGate1     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto plusMatrix = dd->multiply(hGate0, hGate1);
+    auto zeroState  = dd->makeZeroState(2);
+    auto plusState  = dd->multiply(plusMatrix, zeroState);
+    dd->incRef(plusState);
 
     std::mt19937_64 mt{0};
 
-    const dd::CVec v_before = dd->getVector(plus_state);
+    const dd::CVec vBefore = dd->getVector(plusState);
 
-    ASSERT_EQ(v_before[0], v_before[1]);
-    ASSERT_EQ(v_before[0], v_before[2]);
-    ASSERT_EQ(v_before[0], v_before[3]);
+    ASSERT_EQ(vBefore[0], vBefore[1]);
+    ASSERT_EQ(vBefore[0], vBefore[2]);
+    ASSERT_EQ(vBefore[0], vBefore[3]);
 
-    const std::string m = dd->measureAll(plus_state, true, mt);
+    const std::string m = dd->measureAll(plusState, true, mt);
 
-    const dd::CVec v_after = dd->getVector(plus_state);
-    const int      i       = std::stoi(m, nullptr, 2);
+    const dd::CVec vAfter = dd->getVector(plusState);
+    const int      i      = std::stoi(m, nullptr, 2);
 
-    ASSERT_EQ(v_after[i], dd::complex_one);
+    ASSERT_EQ(vAfter[i], dd::complex_one);
 }
 
 TEST(DDPackageTest, DestructiveMeasurementOne) {
-    auto dd          = std::make_unique<dd::Package>(4);
-    auto h_gate0     = dd->makeGateDD(dd::Hmat, 2, 0);
-    auto h_gate1     = dd->makeGateDD(dd::Hmat, 2, 1);
-    auto plus_matrix = dd->multiply(h_gate0, h_gate1);
-    auto zero_state  = dd->makeZeroState(2);
-    auto plus_state  = dd->multiply(plus_matrix, zero_state);
-    dd->incRef(plus_state);
+    auto dd         = std::make_unique<dd::Package>(4);
+    auto hGate0     = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto hGate1     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto plusMatrix = dd->multiply(hGate0, hGate1);
+    auto zeroState  = dd->makeZeroState(2);
+    auto plusState  = dd->multiply(plusMatrix, zeroState);
+    dd->incRef(plusState);
 
     std::mt19937_64 mt{0};
 
-    const char     m       = dd->measureOneCollapsing(plus_state, 0, true, mt);
-    const dd::CVec v_after = dd->getVector(plus_state);
+    const char     m      = dd->measureOneCollapsing(plusState, 0, true, mt);
+    const dd::CVec vAfter = dd->getVector(plusState);
 
     ASSERT_EQ(m, '0');
-    ASSERT_EQ(v_after[0], dd::complex_SQRT2_2);
-    ASSERT_EQ(v_after[2], dd::complex_SQRT2_2);
-    ASSERT_EQ(v_after[1], dd::complex_zero);
-    ASSERT_EQ(v_after[3], dd::complex_zero);
+    ASSERT_EQ(vAfter[0], dd::complex_SQRT2_2);
+    ASSERT_EQ(vAfter[2], dd::complex_SQRT2_2);
+    ASSERT_EQ(vAfter[1], dd::complex_zero);
+    ASSERT_EQ(vAfter[3], dd::complex_zero);
 
-    const auto v_after_compl = dd->getVectorStdComplex(plus_state);
+    const auto vAfterCompl = dd->getVectorStdComplex(plusState);
 
-    assert(v_after.size() == v_after_compl.size());
-    for (std::size_t i = 0; i < v_after.size(); i++) {
-        ASSERT_DOUBLE_EQ(v_after.at(i).r, v_after_compl.at(i).real());
-        ASSERT_DOUBLE_EQ(v_after.at(i).i, v_after_compl.at(i).imag());
+    assert(vAfter.size() == vAfterCompl.size());
+    for (std::size_t i = 0; i < vAfter.size(); i++) {
+        ASSERT_DOUBLE_EQ(vAfter.at(i).r, vAfterCompl.at(i).real());
+        ASSERT_DOUBLE_EQ(vAfter.at(i).i, vAfterCompl.at(i).imag());
     }
 }
 
 TEST(DDPackageTest, DestructiveMeasurementOneArbitraryNormalization) {
-    auto dd          = std::make_unique<dd::Package>(4);
-    auto h_gate0     = dd->makeGateDD(dd::Hmat, 2, 0);
-    auto h_gate1     = dd->makeGateDD(dd::Hmat, 2, 1);
-    auto plus_matrix = dd->multiply(h_gate0, h_gate1);
-    auto zero_state  = dd->makeZeroState(2);
-    auto plus_state  = dd->multiply(plus_matrix, zero_state);
-    dd->incRef(plus_state);
+    auto dd         = std::make_unique<dd::Package>(4);
+    auto hGate0     = dd->makeGateDD(dd::Hmat, 2, 0);
+    auto hGate1     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto plusMatrix = dd->multiply(hGate0, hGate1);
+    auto zeroState  = dd->makeZeroState(2);
+    auto plusState  = dd->multiply(plusMatrix, zeroState);
+    dd->incRef(plusState);
 
     std::mt19937_64 mt{0};
 
-    const char     m       = dd->measureOneCollapsing(plus_state, 0, false, mt);
-    const dd::CVec v_after = dd->getVector(plus_state);
+    const char     m      = dd->measureOneCollapsing(plusState, 0, false, mt);
+    const dd::CVec vAfter = dd->getVector(plusState);
 
     ASSERT_EQ(m, '0');
-    ASSERT_EQ(v_after[0], dd::complex_SQRT2_2);
-    ASSERT_EQ(v_after[2], dd::complex_SQRT2_2);
-    ASSERT_EQ(v_after[1], dd::complex_zero);
-    ASSERT_EQ(v_after[3], dd::complex_zero);
+    ASSERT_EQ(vAfter[0], dd::complex_SQRT2_2);
+    ASSERT_EQ(vAfter[2], dd::complex_SQRT2_2);
+    ASSERT_EQ(vAfter[1], dd::complex_zero);
+    ASSERT_EQ(vAfter[3], dd::complex_zero);
 
-    const auto v_after_compl = dd->getVectorStdComplex(plus_state);
+    const auto vAfterCompl = dd->getVectorStdComplex(plusState);
 
-    assert(v_after.size() == v_after_compl.size());
-    for (std::size_t i = 0; i < v_after.size(); i++) {
-        ASSERT_DOUBLE_EQ(v_after.at(i).r, v_after_compl.at(i).real());
-        ASSERT_DOUBLE_EQ(v_after.at(i).i, v_after_compl.at(i).imag());
+    assert(vAfter.size() == vAfterCompl.size());
+    for (std::size_t i = 0; i < vAfter.size(); i++) {
+        ASSERT_DOUBLE_EQ(vAfter.at(i).r, vAfterCompl.at(i).real());
+        ASSERT_DOUBLE_EQ(vAfter.at(i).i, vAfterCompl.at(i).imag());
     }
 }

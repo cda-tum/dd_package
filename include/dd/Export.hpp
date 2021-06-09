@@ -670,20 +670,20 @@ namespace dd {
 
         // bfs until finished
         while (!q.empty()) {
-            auto edge_ptr = q.top();
+            auto edgePtr = q.top();
             q.pop();
 
             // base case
-            if (edge_ptr->isTerminal())
+            if (edgePtr->isTerminal())
                 continue;
 
-            // check if edge_ptr has already been processed
-            auto ret = nodes.emplace(edge_ptr->p);
+            // check if edgePtr has already been processed
+            auto ret = nodes.emplace(edgePtr->p);
             if (!ret.second) continue;
 
             // iterate over edges in reverse to guarantee correct proceossing order
-            for (auto i = static_cast<Qubit>(edge_ptr->p->e.size() - 1); i >= 0; --i) {
-                auto& child = edge_ptr->p->e[i];
+            for (auto i = static_cast<Qubit>(edgePtr->p->e.size() - 1); i >= 0; --i) {
+                auto& child = edgePtr->p->e[i];
                 if (child.w.approximatelyZero()) {
                     // potentially add zero stubs here
                     continue;
