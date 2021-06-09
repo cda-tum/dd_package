@@ -1804,7 +1804,7 @@ namespace dd {
         /// \tparam Edge type of edge to use (vector or matrix)
         /// \param e edge to traverse
         /// \param elements string {0, 1, 2, 3}^n describing which outgoing edge should be followed
-        ///        (for vectors entries are limitted to 0 and 1)
+        ///        (for vectors entries are limited to 0 and 1)
         ///        If string is longer than required, the additional characters are ignored.
         /// \return the complex amplitude of the specified element
         template<class Edge>

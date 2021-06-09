@@ -97,6 +97,7 @@ TEST(DDPackageTest, BellState) {
     export2Dot(bell_state, "bell_state_mono.dot", false, false, false, false, false);
     export2Dot(bell_state, "bell_state_mono_classic.dot", false, false, true, false, false);
     export2Dot(bell_state, "bell_state_memory.dot", false, true, true, true, false);
+    dd::exportEdgeWeights(bell_state, std::cout);
 
     dd->statistics();
 }
