@@ -70,7 +70,7 @@ namespace dd {
                 auto num    = lowerBound.first + upperBound.first;
                 auto den    = lowerBound.second + upperBound.second;
                 auto median = static_cast<fp>(num) / static_cast<fp>(den);
-                if (abs(x - median) < tol) {
+                if (std::abs(x - median) < tol) {
                     if (den <= maxDenominator) {
                         return std::pair{num, den};
                     } else if (upperBound.second > lowerBound.second) {
