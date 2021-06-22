@@ -60,7 +60,7 @@ namespace dd {
             phase = phase_str.empty() ? 0. : std::stod(phase_str);
         }
 
-        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = std::uint64_t(1) << 16, const fp tol = dd::ComplexTable<>::tolerance()) {
+        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = std::uint64_t(1) << 10, const fp tol = dd::ComplexTable<>::tolerance()) {
             assert(x >= 0.);
 
             std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};
@@ -224,14 +224,17 @@ namespace dd {
             }
 
             if (formatted) {
-                if (std::abs(mag + 1.0) < tol) {
+                if (std::abs(phase - 1.0) < tol) {
                     ss << "-";
-                } else if (std::abs(mag - 1.0) > tol) {
                     ComplexValue::printFormatted(ss, mag);
-                    ss << " ";
-                }
+                } else {
+                    if (std::abs(mag - 1.0) > tol) {
+                        ComplexValue::printFormatted(ss, mag);
+                        ss << " ";
+                    }
 
-                ComplexValue::printFormatted(ss, phase, true);
+                    ComplexValue::printFormatted(ss, phase, true);
+                }
             } else {
                 ss << mag;
                 if (std::abs(phase) > tol) {
