@@ -38,20 +38,53 @@ namespace dd {
         static void add(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            auto aRect = std::polar(CTEntry::val(a.mag), CTEntry::val(a.phase) * PI);
-            auto bRect = std::polar(CTEntry::val(b.mag), CTEntry::val(b.phase) * PI);
-            aRect += bRect;
-            r.mag->value   = std::abs(aRect);
-            r.phase->value = std::arg(aRect) / PI;
+            if (a.approximatelyZero()) {
+                r.setVal(b);
+            } else if (b.approximatelyZero()) {
+                r.setVal(a);
+            } else {
+                const auto aMag   = CTEntry::val(a.mag);
+                const auto aPhase = CTEntry::val(a.phase);
+                const auto bMag   = CTEntry::val(b.mag);
+                const auto bPhase = CTEntry::val(b.phase);
+
+                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) {
+                    r.mag->value   = aMag + bMag;
+                    r.phase->value = aPhase;
+                } else {
+                    auto aRect = std::polar(aMag, aPhase * PI);
+                    auto bRect = std::polar(bMag, bPhase * PI);
+                    aRect += bRect;
+                    r.mag->value   = std::abs(aRect);
+                    r.phase->value = std::arg(aRect) / PI;
+                }
+            }
         }
         static void sub(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            auto aRect = std::polar(CTEntry::val(a.mag), CTEntry::val(a.phase) * PI);
-            auto bRect = std::polar(CTEntry::val(b.mag), CTEntry::val(b.phase) * PI);
-            aRect -= bRect;
-            r.mag->value   = std::abs(aRect);
-            r.phase->value = std::arg(aRect) / PI;
+            if (b.approximatelyZero()) {
+                r.setVal(a);
+            } else if (a.approximatelyZero()) {
+                r.setVal(b);
+                r.phase->value += 1.0;
+            } else {
+                const auto aMag   = CTEntry::val(a.mag);
+                const auto aPhase = CTEntry::val(a.phase);
+                const auto bMag   = CTEntry::val(b.mag);
+                const auto bPhase = CTEntry::val(b.phase);
+
+                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) {
+                    r.mag->value   = aMag - bMag;
+                    r.phase->value = aPhase;
+                } else {
+                    auto aRect = std::polar(aMag, aPhase * PI);
+                    auto bRect = std::polar(bMag, bPhase * PI);
+                    aRect -= bRect;
+                    r.mag->value   = std::abs(aRect);
+                    r.phase->value = std::arg(aRect) / PI;
+                }
+            }
         }
         static void mul(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
