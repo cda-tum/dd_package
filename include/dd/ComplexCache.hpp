@@ -43,7 +43,7 @@ namespace dd {
             if (available != nullptr) {
                 assert(available->next != nullptr);
                 auto entry = Complex{available, available->next};
-                available  = entry.i->next;
+                available  = entry.phase->next;
                 count += 2;
                 return entry;
             }
@@ -59,9 +59,9 @@ namespace dd {
             }
 
             Complex c{};
-            c.r = &(*chunkIt);
+            c.mag = &(*chunkIt);
             ++chunkIt;
-            c.i = &(*chunkIt);
+            c.phase = &(*chunkIt);
             ++chunkIt;
             count += 2;
             return c;
@@ -90,11 +90,11 @@ namespace dd {
             assert(count >= 2);
             assert(c != Complex::zero);
             assert(c != Complex::one);
-            assert(c.r->refCount == 0);
-            assert(c.i->refCount == 0);
-            c.i->next = available;
-            c.r->next = c.i;
-            available = c.r;
+            assert(c.mag->refCount == 0);
+            assert(c.phase->refCount == 0);
+            c.phase->next = available;
+            c.mag->next   = c.phase;
+            available     = c.mag;
             count -= 2;
         }
 

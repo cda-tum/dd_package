@@ -129,7 +129,7 @@ TEST(DDPackageTest, NegativeControl) {
     auto x_gate     = dd->makeGateDD(dd::Xmat, 2, 1_nc, 0);
     auto zero_state = dd->makeZeroState(2);
     auto state01    = dd->multiply(x_gate, zero_state);
-    EXPECT_EQ(dd->getValueByPath(state01, 0b01).r, 1.);
+    EXPECT_EQ(dd->getValueByPath(state01, 0b01).mag, 1.);
 }
 
 TEST(DDPackageTest, IdentityTrace) {
@@ -143,7 +143,7 @@ TEST(DDPackageTest, PartialIdentityTrace) {
     auto dd  = std::make_unique<dd::Package>(2);
     auto tr  = dd->partialTrace(dd->makeIdent(2), {false, true});
     auto mul = dd->multiply(tr, tr);
-    EXPECT_EQ(dd::CTEntry::val(mul.w.r), 4.0);
+    EXPECT_EQ(dd::CTEntry::val(mul.w.mag), 4.0);
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
@@ -211,17 +211,17 @@ TEST(DDPackageTest, BellMatrix) {
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 2), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 2), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 2), (dd::ComplexValue{-dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 2), (dd::ComplexValue{dd::SQRT2_2, 1.0}));
 
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 0, 3), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 1, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
-    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 3), (dd::ComplexValue{-dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(bell_matrix, 2, 3), (dd::ComplexValue{dd::SQRT2_2, 1.0}));
     ASSERT_EQ(dd->getValueByPath(bell_matrix, 3, 3), (dd::ComplexValue{0, 0}));
 
     auto goal_row_0  = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}};
     auto goal_row_1  = dd::CVec{{0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
-    auto goal_row_2  = dd::CVec{{0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}, {-dd::SQRT2_2, 0.}};
-    auto goal_row_3  = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {-dd::SQRT2_2, 0.}, {0., 0.}};
+    auto goal_row_2  = dd::CVec{{0., 0.}, {dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 1.}};
+    auto goal_row_3  = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {dd::SQRT2_2, 1.}, {0., 0.}};
     auto goal_matrix = dd::CMat{goal_row_0, goal_row_1, goal_row_2, goal_row_3};
     ASSERT_EQ(dd->getMatrix(bell_matrix), goal_matrix);
 
@@ -269,13 +269,13 @@ TEST(DDPackageTest, SerializationErrors) {
 
     // test wrong version number
     std::stringstream ss{};
-    ss << 2 << std::endl;
+    ss << 3 << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, false), std::runtime_error);
-    ss << 2 << std::endl;
+    ss << 3 << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss, false), std::runtime_error);
 
     ss.str("");
-    std::remove_const_t<decltype(dd::SERIALIZATION_VERSION)> version = 2;
+    std::remove_const_t<decltype(dd::SERIALIZATION_VERSION)> version = 3;
     ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss, true), std::runtime_error);
     ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
@@ -283,19 +283,19 @@ TEST(DDPackageTest, SerializationErrors) {
 
     // test wrong format
     ss.str("");
-    ss << "1" << std::endl;
+    ss << "2" << std::endl;
     ss << "not_complex" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
-    ss << "1" << std::endl;
+    ss << "2" << std::endl;
     ss << "not_complex" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
 
     ss.str("");
-    ss << "1" << std::endl;
+    ss << "2" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::vNode>(ss), std::runtime_error);
-    ss << "1" << std::endl;
+    ss << "2" << std::endl;
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
@@ -414,10 +414,10 @@ TEST(DDPackageTest, TestLocalInconsistency) {
     EXPECT_FALSE(local);
     bell_state.p->v = 1;
 
-    bell_state.p->e[0].w.r->refCount = 0;
-    local                            = dd->isLocallyConsistent(bell_state);
+    bell_state.p->e[0].w.mag->refCount = 0;
+    local                              = dd->isLocallyConsistent(bell_state);
     EXPECT_FALSE(local);
-    bell_state.p->e[0].w.r->refCount = 1;
+    bell_state.p->e[0].w.mag->refCount = 1;
 }
 
 TEST(DDPackageTest, Ancillaries) {

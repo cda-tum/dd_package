@@ -15,10 +15,10 @@ TEST(DDComplexTest, TrivialTest) {
     auto         cn           = std::make_unique<ComplexNumbers>();
     unsigned int before_count = cn->cacheCount();
 
-    auto a = cn->getCached(2, -3);
-    auto b = cn->getCached(3, 2);
+    auto a = cn->getCached(0.5, -0.25);
+    auto b = cn->getCached(0.75, 0.75);
 
-    auto r0 = cn->getCached(12, -5);
+    auto r0 = cn->getCached(1.0, -0.125);
     auto r1 = cn->mulCached(a, b);
 
     cn->lookup(a);
@@ -44,50 +44,42 @@ TEST(DDComplexTest, ComplexNumberCreation) {
     EXPECT_EQ(cn.lookup(Complex::zero), Complex::zero);
     EXPECT_EQ(cn.lookup(Complex::one), Complex::one);
     EXPECT_EQ(cn.lookup(1e-14, 0.), Complex::zero);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, 1.).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, 1.).i), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, -1.).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, -1.).i), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(-1., -1.).r), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(-1., -1.).i), -1.);
-    auto c = cn.lookup(0., -1.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(1., 1e-14).mag), 1.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(1., 1e-14).phase), 0.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(1., -1e-14).mag), 1.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(1., -1e-14).phase), 0.);
+    auto c = cn.lookup(1., -0.5);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -1.);
-    c = cn.lookup(0., 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), 1.);
-    c = cn.lookup(0., -0.5);
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 1.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), -0.5);
+    c = cn.lookup(1., 0.5);
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 1.);
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), 0.5);
+    c = cn.lookup(0.5, -0.5);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -0.5);
-    c = cn.lookup(-1., -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -1.);
-    std::cout << c << std::endl;
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 0.5);
+    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), -0.5);
 
-    auto e = cn.lookup(1., -1.);
+    auto e = cn.lookup(1., -0.25);
     std::cout << e << std::endl;
-    std::cout << ComplexValue{1., 1.} << std::endl;
-    std::cout << ComplexValue{1., -1.} << std::endl;
-    std::cout << ComplexValue{1., -0.5} << std::endl;
+    std::cout << ComplexValue{1., 0.25} << std::endl;
     cn.complexTable.print();
     cn.complexTable.printStatistics();
 }
 
 TEST(DDComplexTest, ComplexNumberArithmetic) {
     auto cn = ComplexNumbers();
-    auto c  = cn.lookup(0., 1.);
+    auto c  = cn.lookup(1., 0.5);
     auto d  = ComplexNumbers::conj(c);
-    EXPECT_EQ(CTEntry::val(d.r), 0.);
-    EXPECT_EQ(CTEntry::val(d.i), -1.);
-    c = cn.lookup(-1., -1.);
-    d = ComplexNumbers::neg(c);
-    EXPECT_EQ(CTEntry::val(d.r), 1.);
-    EXPECT_EQ(CTEntry::val(d.i), 1.);
-    c = cn.lookup(0.5, 0.5);
+    EXPECT_EQ(CTEntry::val(d.mag), 1.);
+    EXPECT_EQ(CTEntry::val(d.phase), -0.5);
+    c = cn.lookup(1., -0.25);
+    ComplexNumbers::neg(d, c);
+    EXPECT_EQ(CTEntry::val(d.mag), 1.);
+    EXPECT_EQ(CTEntry::val(d.phase), 0.75);
+    c = cn.lookup(SQRT2_2, 0.25);
     ComplexNumbers::incRef(c);
-    d = cn.lookup(-0.5, 0.5);
+    d = cn.lookup(SQRT2_2, 0.75);
     ComplexNumbers::incRef(d);
     auto e = cn.getTemporary();
     ComplexNumbers::sub(e, c, d);
@@ -107,8 +99,8 @@ TEST(DDComplexTest, NearZeroLookup) {
     auto cn = ComplexNumbers();
     auto c  = cn.getTemporary(ComplexTable<>::tolerance() / 10., ComplexTable<>::tolerance() / 10.);
     auto d  = cn.lookup(c);
-    EXPECT_EQ(d.r, Complex::zero.r);
-    EXPECT_EQ(d.i, Complex::zero.i);
+    EXPECT_EQ(d.mag, Complex::zero.mag);
+    EXPECT_EQ(d.phase, Complex::zero.phase);
 }
 
 TEST(DDComplexTest, SortedBuckets) {
@@ -201,7 +193,7 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     auto c    = cn.lookup(num4, 0.0);
     auto key4 = ComplexTable<>::hash(num4 - ComplexTable<>::tolerance());
     EXPECT_EQ(key2, key4);
-    EXPECT_NEAR(c.r->value, num2, ComplexTable<>::tolerance());
+    EXPECT_NEAR(c.mag->value, num2, ComplexTable<>::tolerance());
 
     // insert a number in the higher bucket
     fp nextBorder = bucketBorder + 1.0 / (NBUCKET - 1);
@@ -215,107 +207,130 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     auto d    = cn.lookup(num6, 0.0);
     auto key6 = ComplexTable<>::hash(num6 + ComplexTable<>::tolerance());
     EXPECT_EQ(key5, key6);
-    EXPECT_NEAR(d.r->value, num5, ComplexTable<>::tolerance());
+    EXPECT_NEAR(d.mag->value, num5, ComplexTable<>::tolerance());
 }
 
 TEST(DDComplexTest, ComplexValueEquals) {
     ComplexValue a{1.0, 0.0};
     ComplexValue a_tol{1.0 + ComplexTable<>::tolerance() / 10, 0.0};
-    ComplexValue b{0.0, 1.0};
+    ComplexValue b{1.0, 0.5};
     EXPECT_TRUE(a.approximatelyEquals(a_tol));
     EXPECT_FALSE(a.approximatelyEquals(b));
 }
 
 TEST(DDComplexTest, NumberPrinting) {
     auto cn       = ComplexNumbers();
-    auto imag     = cn.lookup(0., 1.);
+    auto imag     = cn.lookup(1., 0.5);
     auto imag_str = imag.toString(false);
-    EXPECT_STREQ(imag_str.c_str(), "1i");
+    EXPECT_STREQ(imag_str.c_str(), "1 0.5");
     auto imag_str_formatted = imag.toString(true);
-    EXPECT_STREQ(imag_str_formatted.c_str(), "+i");
+    EXPECT_STREQ(imag_str_formatted.c_str(), "ℯ(iπ/2)");
 
-    auto superposition     = cn.lookup(dd::SQRT2_2, dd::SQRT2_2);
+    auto superposition     = cn.lookup(1.0, 0.25);
     auto superposition_str = superposition.toString(false, 3);
-    EXPECT_STREQ(superposition_str.c_str(), "0.707+0.707i");
+    EXPECT_STREQ(superposition_str.c_str(), "1 0.25");
     auto superposition_str_formatted = superposition.toString(true, 3);
-    EXPECT_STREQ(superposition_str_formatted.c_str(), "√½(1+i)");
-    auto neg_superposition               = cn.lookup(dd::SQRT2_2, -dd::SQRT2_2);
+    EXPECT_STREQ(superposition_str_formatted.c_str(), "ℯ(iπ/4)");
+    auto neg_superposition               = cn.lookup(1.0, -0.25);
     auto neg_superposition_str_formatted = neg_superposition.toString(true, 3);
-    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "√½(1-i)");
+    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "ℯ(-iπ/4)");
 
     std::stringstream ss{};
+    ss << std::setprecision(16);
     ComplexValue::printFormatted(ss, dd::SQRT2_2, false);
-    EXPECT_STREQ(ss.str().c_str(), "√½");
+    EXPECT_STREQ(ss.str().c_str(), "1/√2");
     ss.str("");
     ComplexValue::printFormatted(ss, dd::SQRT2_2, true);
-    EXPECT_STREQ(ss.str().c_str(), "+√½i");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/√2)");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.5, false);
-    EXPECT_STREQ(ss.str().c_str(), "½");
+    EXPECT_STREQ(ss.str().c_str(), "1/2");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.5, true);
-    EXPECT_STREQ(ss.str().c_str(), "+½i");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/2)");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.75, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/4");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.75, true);
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ 3/4)");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, false);
-    EXPECT_STREQ(ss.str().c_str(), "√½ ½");
+    EXPECT_STREQ(ss.str().c_str(), "1/(2√2)");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, true);
-    EXPECT_STREQ(ss.str().c_str(), "+√½ ½i");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/(2√2))");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.75 * dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/(4√2)");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.75 * dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ 3/(4√2))");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.25, false);
-    EXPECT_STREQ(ss.str().c_str(), "½**2");
+    EXPECT_STREQ(ss.str().c_str(), "1/4");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.25, true);
-    EXPECT_STREQ(ss.str().c_str(), "+½**2i");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/4)");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.25 * dd::SQRT2_2, false);
-    EXPECT_STREQ(ss.str().c_str(), "√½ ½**2");
+    EXPECT_STREQ(ss.str().c_str(), "1/(4√2)");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.25 * dd::SQRT2_2, true);
-    EXPECT_STREQ(ss.str().c_str(), "+√½ ½**2i");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/(4√2))");
     ss.str("");
 
     ComplexValue::printFormatted(ss, dd::PI, false);
     EXPECT_STREQ(ss.str().c_str(), "π");
     ss.str("");
     ComplexValue::printFormatted(ss, dd::PI, true);
-    EXPECT_STREQ(ss.str().c_str(), "+πi");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ π)");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.5 * dd::PI, false);
-    EXPECT_STREQ(ss.str().c_str(), "½ π");
+    EXPECT_STREQ(ss.str().c_str(), "π/2");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.5 * dd::PI, true);
-    EXPECT_STREQ(ss.str().c_str(), "+½ πi");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ π/2)");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.25 * dd::PI, false);
-    EXPECT_STREQ(ss.str().c_str(), "½**2 π");
+    EXPECT_STREQ(ss.str().c_str(), "π/4");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.25 * dd::PI, true);
-    EXPECT_STREQ(ss.str().c_str(), "+½**2 πi");
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ π/4)");
     ss.str("");
 
-    ComplexValue::printFormatted(ss, 0.1234, false);
-    EXPECT_STREQ(ss.str().c_str(), "0.1234");
+    ComplexValue::printFormatted(ss, 0.75 * dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "3π/4");
     ss.str("");
-    ComplexValue::printFormatted(ss, 0.1234, true);
-    EXPECT_STREQ(ss.str().c_str(), "+0.1234i");
+    ComplexValue::printFormatted(ss, 0.75 * dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ 3π/4)");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.1234567, false);
+    EXPECT_STREQ(ss.str().c_str(), "0.1234567");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.1234567, true);
+    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ 0.1234567)");
     ss.str("");
 }
 
 TEST(DDComplexTest, MaxRefCountReached) {
-    auto cn       = ComplexNumbers();
-    auto c        = cn.lookup(SQRT2_2, SQRT2_2);
-    auto max      = std::numeric_limits<decltype(c.r->refCount)>::max();
-    c.r->refCount = max;
+    auto cn           = ComplexNumbers();
+    auto c            = cn.lookup(1., 0.25);
+    auto max          = std::numeric_limits<decltype(c.mag->refCount)>::max();
+    c.mag->refCount   = max;
+    c.phase->refCount = max;
     CN::incRef(c);
-    EXPECT_EQ(c.r->refCount, max);
-    EXPECT_EQ(c.i->refCount, max);
+    EXPECT_EQ(c.mag->refCount, max);
+    EXPECT_EQ(c.phase->refCount, max);
 }
 
 TEST(DDComplexTest, ComplexTableAllocation) {

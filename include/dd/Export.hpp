@@ -113,24 +113,24 @@ namespace dd {
             } else if (e.w == Complex::one) {
                 os << "1";
             } else {
-                if (e.w.r == &ComplexTable<>::zero) {
+                if (e.w.mag == &ComplexTable<>::zero) {
                     os << "0";
-                } else if (e.w.r == &ComplexTable<>::sqrt2_2) {
+                } else if (e.w.mag == &ComplexTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (e.w.r == &ComplexTable<>::one) {
+                } else if (e.w.mag == &ComplexTable<>::one) {
                     os << "1";
                 } else {
-                    os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.r) << std::dec;
+                    os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.mag) << std::dec;
                 }
                 os << " ";
-                if (e.w.i == &ComplexTable<>::zero) {
+                if (e.w.phase == &ComplexTable<>::zero) {
                     os << "0";
-                } else if (e.w.i == &ComplexTable<>::sqrt2_2) {
+                } else if (e.w.phase == &ComplexTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (e.w.i == &ComplexTable<>::one) {
+                } else if (e.w.phase == &ComplexTable<>::one) {
                     os << "1";
                 } else {
-                    os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.i) << std::dec;
+                    os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.phase) << std::dec;
                 }
             }
             os << "]</font>>";
@@ -392,24 +392,24 @@ namespace dd {
             if (to.w == Complex::one) {
                 os << "1";
             } else {
-                if (to.w.r == &ComplexTable<>::zero) {
+                if (to.w.mag == &ComplexTable<>::zero) {
                     os << "0";
-                } else if (to.w.r == &ComplexTable<>::sqrt2_2) {
+                } else if (to.w.mag == &ComplexTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (to.w.r == &ComplexTable<>::one) {
+                } else if (to.w.mag == &ComplexTable<>::one) {
                     os << "1";
                 } else {
-                    os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.r) << std::dec;
+                    os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.mag) << std::dec;
                 }
                 os << " ";
-                if (to.w.i == &ComplexTable<>::zero) {
+                if (to.w.phase == &ComplexTable<>::zero) {
                     os << "0";
-                } else if (to.w.i == &ComplexTable<>::sqrt2_2) {
+                } else if (to.w.phase == &ComplexTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (to.w.i == &ComplexTable<>::one) {
+                } else if (to.w.phase == &ComplexTable<>::one) {
                     os << "1";
                 } else {
-                    os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.i) << std::dec;
+                    os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.phase) << std::dec;
                 }
             }
             os << "]</font>>";
@@ -511,7 +511,7 @@ namespace dd {
             basic.w.writeBinary(os);
         } else {
             os << SERIALIZATION_VERSION << "\n";
-            os << basic.w.toString(false, 16) << "\n";
+            os << basic.w.toString(false, 17) << "\n";
         }
         std::int_least64_t                                      next_index = 0;
         std::unordered_map<Package::vNode*, std::int_least64_t> node_index{};
@@ -580,7 +580,7 @@ namespace dd {
                             auto& edge = node->p->e[i];
                             if (!edge.w.approximatelyZero()) {
                                 std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
-                                os << edge_idx << " " << edge.w.toString(false, 16);
+                                os << edge_idx << " " << edge.w.toString(false, 17);
                             }
                             os << ")";
                         }
@@ -622,7 +622,7 @@ namespace dd {
                     os << " (";
                     if (!edge.w.approximatelyZero()) {
                         std::int_least64_t edge_idx = edge.isTerminal() ? -1 : node_index[edge.p];
-                        os << edge_idx << " " << edge.w.toString(false, 16);
+                        os << edge_idx << " " << edge.w.toString(false, 17);
                     }
                     os << ")";
                 }
@@ -636,7 +636,7 @@ namespace dd {
             basic.w.writeBinary(os);
         } else {
             os << SERIALIZATION_VERSION << "\n";
-            os << basic.w.toString(false, 16) << "\n";
+            os << basic.w.toString(false, 17) << "\n";
         }
         std::int_least64_t                                      idx = 0;
         std::unordered_map<Package::mNode*, std::int_least64_t> node_index{};
@@ -661,7 +661,7 @@ namespace dd {
                 return left->p->v < right->p->v;
             }
         };
-        stream << std::showpos << CTEntry::val(edge.w.r) << CTEntry::val(edge.w.i) << std::noshowpos << "i\n";
+        stream << std::showpos << CTEntry::val(edge.w.mag) << CTEntry::val(edge.w.phase) << std::noshowpos << "i\n";
 
         std::unordered_set<decltype(edge.p)> nodes{};
 
@@ -691,7 +691,7 @@ namespace dd {
 
                 // non-zero child to be included
                 q.push(&child);
-                stream << std::showpos << CTEntry::val(child.w.r) << CTEntry::val(child.w.i) << std::noshowpos << "i\n";
+                stream << std::showpos << CTEntry::val(child.w.mag) << CTEntry::val(child.w.phase) << std::noshowpos << "i\n";
             }
         }
     }

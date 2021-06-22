@@ -17,31 +17,31 @@ namespace dd {
     using CTEntry = ComplexTable<>::Entry;
 
     struct Complex {
-        CTEntry* r;
-        CTEntry* i;
+        CTEntry* mag;
+        CTEntry* phase;
 
         static Complex zero;
         static Complex one;
 
         void setVal(const Complex& c) const {
-            r->value = CTEntry::val(c.r);
-            i->value = CTEntry::val(c.i);
+            mag->value   = CTEntry::val(c.mag);
+            phase->value = CTEntry::val(c.phase);
         }
 
         [[nodiscard]] inline bool approximatelyEquals(const Complex& c) const {
-            return CTEntry::approximatelyEquals(r, c.r) && CTEntry::approximatelyEquals(i, c.i);
+            return CTEntry::approximatelyEquals(mag, c.mag) && CTEntry::approximatelyEquals(phase, c.phase);
         };
 
         [[nodiscard]] inline bool approximatelyZero() const {
-            return CTEntry::approximatelyZero(r) && CTEntry::approximatelyZero(i);
+            return CTEntry::approximatelyZero(mag);
         }
 
         [[nodiscard]] inline bool approximatelyOne() const {
-            return CTEntry::approximatelyOne(r) && CTEntry::approximatelyZero(i);
+            return CTEntry::approximatelyOne(mag) && CTEntry::approximatelyZero(phase);
         }
 
         inline bool operator==(const Complex& other) const {
-            return r == other.r && i == other.i;
+            return mag == other.mag && phase == other.phase;
         }
 
         inline bool operator!=(const Complex& other) const {
@@ -49,34 +49,17 @@ namespace dd {
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
-            return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
+            return ComplexValue::toString(CTEntry::val(mag), CTEntry::val(phase), formatted, precision);
         }
 
         void writeBinary(std::ostream& os) const {
-            CTEntry::writeBinary(r, os);
-            CTEntry::writeBinary(i, os);
+            CTEntry::writeBinary(mag, os);
+            CTEntry::writeBinary(phase, os);
         }
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
-        auto r = CTEntry::val(c.r);
-        auto i = CTEntry::val(c.i);
-
-        if (r != 0) {
-            ComplexValue::printFormatted(os, r);
-        }
-        if (i != 0) {
-            if (r == i) {
-                os << "(1+i)";
-                return os;
-            } else if (i == -r) {
-                os << "(1-i)";
-                return os;
-            }
-            ComplexValue::printFormatted(os, i, true);
-        }
-        if (r == 0 && i == 0) os << 0;
-
+        os << c.toString();
         return os;
     }
 
@@ -88,8 +71,8 @@ namespace std {
     template<>
     struct hash<dd::Complex> {
         std::size_t operator()(dd::Complex const& c) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(c.r));
-            auto h2 = dd::murmur64(reinterpret_cast<std::size_t>(c.i));
+            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(c.mag));
+            auto h2 = dd::murmur64(reinterpret_cast<std::size_t>(c.phase));
             return dd::combineHash(h1, h2);
         }
     };

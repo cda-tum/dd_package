@@ -15,18 +15,18 @@
 namespace dd {
     // Complex constants
     constexpr ComplexValue complex_one       = {1., 0.};
-    constexpr ComplexValue complex_mone      = {-1., 0.};
+    constexpr ComplexValue complex_mone      = {1., 1.};
     constexpr ComplexValue complex_zero      = {0., 0.};
-    constexpr ComplexValue complex_i         = {0., 1.};
-    constexpr ComplexValue complex_mi        = {0., -1.};
+    constexpr ComplexValue complex_i         = {1., 0.5};
+    constexpr ComplexValue complex_mi        = {1., -0.5};
     constexpr ComplexValue complex_SQRT2_2   = {SQRT2_2, 0.};
-    constexpr ComplexValue complex_mSQRT2_2  = {-SQRT2_2, 0.};
-    constexpr ComplexValue complex_iSQRT2_2  = {0., SQRT2_2};
-    constexpr ComplexValue complex_miSQRT2_2 = {0., -SQRT2_2};
-    constexpr ComplexValue complex_1plusi    = {SQRT2_2, SQRT2_2};
-    constexpr ComplexValue complex_1minusi   = {SQRT2_2, -SQRT2_2};
-    constexpr ComplexValue complex_1plusi_2  = {0.5, 0.5};
-    constexpr ComplexValue complex_1minusi_2 = {0.5, -0.5};
+    constexpr ComplexValue complex_mSQRT2_2  = {SQRT2_2, 1.};
+    constexpr ComplexValue complex_iSQRT2_2  = {SQRT2_2, 0.5};
+    constexpr ComplexValue complex_miSQRT2_2 = {SQRT2_2, -0.5};
+    constexpr ComplexValue complex_1plusi    = {1.0, 0.25};
+    constexpr ComplexValue complex_1minusi   = {1.0, -0.25};
+    constexpr ComplexValue complex_1plusi_2  = {SQRT2_2, 0.25};
+    constexpr ComplexValue complex_1minusi_2 = {SQRT2_2, -0.25};
 
     // Gate matrices
     using GateMatrix = std::array<ComplexValue, NEDGE>;
@@ -46,26 +46,26 @@ namespace dd {
 
     inline GateMatrix U3mat(fp lambda, fp phi, fp theta) {
         return GateMatrix{{{std::cos(theta / 2.), 0.},
-                           {-std::cos(lambda) * std::sin(theta / 2.), -std::sin(lambda) * std::sin(theta / 2.)},
-                           {std::cos(phi) * std::sin(theta / 2.), std::sin(phi) * std::sin(theta / 2.)},
-                           {std::cos(lambda + phi) * std::cos(theta / 2.), std::sin(lambda + phi) * std::cos(theta / 2.)}}};
+                           {-std::sin(theta / 2.), lambda / PI},
+                           {std::sin(theta / 2.), phi / PI},
+                           {std::cos(theta / 2.), (lambda + phi) / PI}}};
     }
 
     inline GateMatrix U2mat(fp lambda, fp phi) {
         return GateMatrix{complex_SQRT2_2,
-                          {-std::cos(lambda) * SQRT2_2, -std::sin(lambda) * SQRT2_2},
-                          {std::cos(phi) * SQRT2_2, std::sin(phi) * SQRT2_2},
-                          {std::cos(lambda + phi) * SQRT2_2, std::sin(lambda + phi) * SQRT2_2}};
+                          {-SQRT2_2, lambda / PI},
+                          {SQRT2_2, phi / PI},
+                          {SQRT2_2, (lambda + phi) / PI}};
     }
 
     inline GateMatrix Phasemat(fp lambda) {
-        return GateMatrix{complex_one, complex_zero, complex_zero, {std::cos(lambda), std::sin(lambda)}};
+        return GateMatrix{complex_one, complex_zero, complex_zero, {1.0, lambda / PI}};
     }
 
     inline GateMatrix RXmat(fp lambda) {
         return GateMatrix{{{std::cos(lambda / 2.), 0.},
-                           {0., -std::sin(lambda / 2.)},
-                           {0., -std::sin(lambda / 2.)},
+                           {std::sin(lambda / 2.), -0.5},
+                           {std::sin(lambda / 2.), -0.5},
                            {std::cos(lambda / 2.), 0.}}};
     }
 
@@ -77,10 +77,10 @@ namespace dd {
     }
 
     inline GateMatrix RZmat(fp lambda) {
-        return GateMatrix{{{-std::cos(lambda / 2.), -std::sin(lambda / 2.)},
+        return GateMatrix{{{1.0, -(lambda / 2.) / PI},
                            complex_zero,
                            complex_zero,
-                           {std::cos(lambda / 2.), std::sin(lambda / 2.)}}};
+                           {1.0, (lambda / 2.) / PI}}};
     }
 } // namespace dd
 #endif //DD_PACKAGE_GATEMATRIXDEFINITIONS_H

@@ -38,14 +38,20 @@ namespace dd {
         static void add(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            r.r->value = CTEntry::val(a.r) + CTEntry::val(b.r);
-            r.i->value = CTEntry::val(a.i) + CTEntry::val(b.i);
+            auto aRect = std::polar(CTEntry::val(a.mag), CTEntry::val(a.phase) * PI);
+            auto bRect = std::polar(CTEntry::val(b.mag), CTEntry::val(b.phase) * PI);
+            aRect += bRect;
+            r.mag->value   = std::abs(aRect);
+            r.phase->value = std::arg(aRect) / PI;
         }
         static void sub(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            r.r->value = CTEntry::val(a.r) - CTEntry::val(b.r);
-            r.i->value = CTEntry::val(a.i) - CTEntry::val(b.i);
+            auto aRect = std::polar(CTEntry::val(a.mag), CTEntry::val(a.phase) * PI);
+            auto bRect = std::polar(CTEntry::val(b.mag), CTEntry::val(b.phase) * PI);
+            aRect -= bRect;
+            r.mag->value   = std::abs(aRect);
+            r.phase->value = std::arg(aRect) / PI;
         }
         static void mul(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
@@ -55,71 +61,53 @@ namespace dd {
             } else if (b.approximatelyOne()) {
                 r.setVal(a);
             } else if (a.approximatelyZero() || b.approximatelyZero()) {
-                r.r->value = 0.;
-                r.i->value = 0.;
+                r.mag->value   = 0.;
+                r.phase->value = 0.;
             } else {
-                auto ar = CTEntry::val(a.r);
-                auto ai = CTEntry::val(a.i);
-                auto br = CTEntry::val(b.r);
-                auto bi = CTEntry::val(b.i);
-
-                r.r->value = ar * br - ai * bi;
-                r.i->value = ar * bi + ai * br;
+                r.mag->value   = CTEntry::val(a.mag) * CTEntry::val(b.mag);
+                r.phase->value = CTEntry::val(a.phase) + CTEntry::val(b.phase);
             }
         }
         static void div(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
             if (a.approximatelyEquals(b)) {
-                r.r->value = 1.;
-                r.i->value = 0.;
+                r.mag->value   = 1.;
+                r.phase->value = 0.;
             } else if (a.approximatelyZero()) {
-                r.r->value = 0.;
-                r.i->value = 0.;
+                r.mag->value   = 0.;
+                r.phase->value = 0.;
             } else if (b.approximatelyOne()) {
                 r.setVal(a);
             } else {
-                auto ar = CTEntry::val(a.r);
-                auto ai = CTEntry::val(a.i);
-                auto br = CTEntry::val(b.r);
-                auto bi = CTEntry::val(b.i);
-
-                auto cmag = br * br + bi * bi;
-
-                r.r->value = (ar * br + ai * bi) / cmag;
-                r.i->value = (ai * br - ar * bi) / cmag;
+                r.mag->value   = CTEntry::val(a.mag) / CTEntry::val(b.mag);
+                r.phase->value = CTEntry::val(a.phase) - CTEntry::val(b.phase);
             }
         }
         static inline fp mag2(const Complex& a) {
-            auto ar = CTEntry::val(a.r);
-            auto ai = CTEntry::val(a.i);
-
-            return ar * ar + ai * ai;
+            auto mag = CTEntry::val(a.mag);
+            return mag * mag;
         }
         static inline fp mag(const Complex& a) {
-            return std::sqrt(mag2(a));
+            return CTEntry::val(a.mag);
         }
         static inline fp arg(const Complex& a) {
-            auto ar = CTEntry::val(a.r);
-            auto ai = CTEntry::val(a.i);
-            return std::atan2(ai, ar);
+            return CTEntry::val(a.phase) * PI;
         }
         static Complex conj(const Complex& a) {
             auto ret = a;
-            if (a.i != Complex::zero.i) {
-                ret.i = CTEntry::flipPointerSign(a.i);
+            if (a.phase != &ComplexTable<>::zero && a.phase != &ComplexTable<>::one) {
+                ret.phase = CTEntry::flipPointerSign(a.phase);
             }
             return ret;
         }
-        static Complex neg(const Complex& a) {
-            auto ret = a;
-            if (a.i != Complex::zero.i) {
-                ret.i = CTEntry::flipPointerSign(a.i);
-            }
-            if (a.r != Complex::zero.i) {
-                ret.r = CTEntry::flipPointerSign(a.r);
-            }
-            return ret;
+        static void neg(Complex& r, const Complex& a) {
+            assert(r.phase != &ComplexTable<>::zero);
+            assert(r.phase != &ComplexTable<>::one);
+            r.mag            = a.mag;
+            const auto phase = CTEntry::val(a.phase) + 1.0;
+            r.phase          = CTEntry::getAlignedPointer(r.phase);
+            r.phase->value   = phase;
         }
 
         inline Complex addCached(const Complex& a, const Complex& b) {
@@ -155,56 +143,55 @@ namespace dd {
                 return Complex::one;
             }
 
-            auto valr = CTEntry::val(c.r);
-            auto vali = CTEntry::val(c.i);
-            return lookup(valr, vali);
+            auto mag   = CTEntry::val(c.mag);
+            auto phase = CTEntry::val(c.phase);
+            return lookup(mag, phase);
         }
-        Complex lookup(const fp& r, const fp& i) {
+        Complex lookup(const fp& mag, const fp& phase) {
             Complex ret{};
+            assert(mag >= 0.);
+            ret.mag = complexTable.lookup(mag);
 
-            auto sign_r = std::signbit(r);
-            if (sign_r) {
-                auto absr = std::abs(r);
-                // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
-                if (absr < decltype(complexTable)::tolerance()) {
-                    ret.r = &decltype(complexTable)::zero;
-                } else {
-                    ret.r = CTEntry::getNegativePointer(complexTable.lookup(absr));
-                }
-            } else {
-                ret.r = complexTable.lookup(r);
+            auto normalizedPhase = phase;
+            while (normalizedPhase < -1.0) {
+                normalizedPhase += 2.0;
             }
-
-            auto sign_i = std::signbit(i);
-            if (sign_i) {
-                auto absi = std::abs(i);
-                // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
-                if (absi < decltype(complexTable)::tolerance()) {
-                    ret.i = &decltype(complexTable)::zero;
+            while (normalizedPhase > 1.0) {
+                normalizedPhase -= 2.0;
+            }
+            auto signPhase = std::signbit(normalizedPhase);
+            if (signPhase) {
+                auto absPhase = std::abs(normalizedPhase);
+                if (absPhase < decltype(complexTable)::tolerance()) {
+                    // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
+                    ret.phase = &decltype(complexTable)::zero;
+                } else if (std::abs(absPhase - 1.0) < decltype(complexTable)::tolerance()) {
+                    // if absolute value is close enough to one, just return the one entry (avoiding -1.0)
+                    ret.phase = &decltype(complexTable)::one;
                 } else {
-                    ret.i = CTEntry::getNegativePointer(complexTable.lookup(absi));
+                    ret.phase = CTEntry::getNegativePointer(complexTable.lookup(absPhase));
                 }
             } else {
-                ret.i = complexTable.lookup(i);
+                ret.phase = complexTable.lookup(normalizedPhase);
             }
 
             return ret;
         }
-        inline Complex lookup(const ComplexValue& c) { return lookup(c.r, c.i); }
+        inline Complex lookup(const ComplexValue& c) { return lookup(c.mag, c.phase); }
 
         // reference counting and garbage collection
         static void incRef(const Complex& c) {
             // `zero` and `one` are static and never altered
             if (c != Complex::zero && c != Complex::one) {
-                ComplexTable<>::incRef(c.r);
-                ComplexTable<>::incRef(c.i);
+                ComplexTable<>::incRef(c.mag);
+                ComplexTable<>::incRef(c.phase);
             }
         }
         static void decRef(const Complex& c) {
             // `zero` and `one` are static and never altered
             if (c != Complex::zero && c != Complex::one) {
-                ComplexTable<>::decRef(c.r);
-                ComplexTable<>::decRef(c.i);
+                ComplexTable<>::decRef(c.mag);
+                ComplexTable<>::decRef(c.phase);
             }
         }
         std::size_t garbageCollect(bool force = false) {
@@ -216,30 +203,30 @@ namespace dd {
             return complexCache.getTemporaryComplex();
         }
 
-        inline Complex getTemporary(const fp& r, const fp& i) {
-            auto c     = complexCache.getTemporaryComplex();
-            c.r->value = r;
-            c.i->value = i;
+        inline Complex getTemporary(const fp& mag, const fp& phase) {
+            auto c         = complexCache.getTemporaryComplex();
+            c.mag->value   = mag;
+            c.phase->value = phase;
             return c;
         }
 
         inline Complex getTemporary(const ComplexValue& c) {
-            return getTemporary(c.r, c.i);
+            return getTemporary(c.mag, c.phase);
         }
 
         inline Complex getCached() {
             return complexCache.getCachedComplex();
         }
 
-        inline Complex getCached(const fp& r, const fp& i) {
-            auto c     = complexCache.getCachedComplex();
-            c.r->value = r;
-            c.i->value = i;
+        inline Complex getCached(const fp& mag, const fp& phase) {
+            auto c         = complexCache.getCachedComplex();
+            c.mag->value   = mag;
+            c.phase->value = phase;
             return c;
         }
 
         inline Complex getCached(const ComplexValue& c) {
-            return getCached(c.r, c.i);
+            return getCached(c.mag, c.phase);
         }
 
         void returnToCache(Complex& c) {

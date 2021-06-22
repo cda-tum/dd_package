@@ -53,7 +53,7 @@ namespace dd {
     using CVec = std::vector<std::complex<dd::fp>>;
     using CMat = std::vector<CVec>;
 
-    static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
+    static constexpr std::uint_least64_t SERIALIZATION_VERSION = 2;
 
     // 64bit mixing hash (from MurmurHash3, https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp)
     constexpr std::size_t murmur64(std::size_t k) {
