@@ -45,17 +45,31 @@ namespace dd {
     constexpr GateMatrix Vdagmat{complex_SQRT2_2, complex_iSQRT2_2, complex_iSQRT2_2, complex_SQRT2_2};
 
     inline GateMatrix U3mat(fp lambda, fp phi, fp theta) {
-        return GateMatrix{{{std::cos(theta / 2.), 0.},
-                           {-std::sin(theta / 2.), lambda / PI},
-                           {std::sin(theta / 2.), phi / PI},
-                           {std::cos(theta / 2.), (lambda + phi) / PI}}};
+        if (lambda >= 0.0) {
+            return GateMatrix{{{std::cos(theta / 2.), 0.},
+                               {std::sin(theta / 2.), lambda / PI - 1.0},
+                               {std::sin(theta / 2.), phi / PI},
+                               {std::cos(theta / 2.), (lambda + phi) / PI}}};
+        } else {
+            return GateMatrix{{{std::cos(theta / 2.), 0.},
+                               {-std::sin(theta / 2.), lambda / PI + 1.0},
+                               {std::sin(theta / 2.), phi / PI},
+                               {std::cos(theta / 2.), (lambda + phi) / PI}}};
+        }
     }
 
     inline GateMatrix U2mat(fp lambda, fp phi) {
-        return GateMatrix{complex_SQRT2_2,
-                          {-SQRT2_2, lambda / PI},
-                          {SQRT2_2, phi / PI},
-                          {SQRT2_2, (lambda + phi) / PI}};
+        if (lambda >= 0.0) {
+            return GateMatrix{complex_SQRT2_2,
+                              {SQRT2_2, lambda / PI - 1.0},
+                              {SQRT2_2, phi / PI},
+                              {SQRT2_2, (lambda + phi) / PI}};
+        } else {
+            return GateMatrix{complex_SQRT2_2,
+                              {SQRT2_2, lambda / PI + 1.0},
+                              {SQRT2_2, phi / PI},
+                              {SQRT2_2, (lambda + phi) / PI}};
+        }
     }
 
     inline GateMatrix Phasemat(fp lambda) {
@@ -71,7 +85,7 @@ namespace dd {
 
     inline GateMatrix RYmat(fp lambda) {
         return GateMatrix{{{std::cos(lambda / 2.), 0.},
-                           {-std::sin(lambda / 2.), 0.},
+                           {std::sin(lambda / 2.), 1.},
                            {std::sin(lambda / 2.), 0.},
                            {std::cos(lambda / 2.), 0.}}};
     }
