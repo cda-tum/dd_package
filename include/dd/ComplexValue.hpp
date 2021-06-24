@@ -231,8 +231,10 @@ namespace dd {
                     if (std::abs(mag - 1.0) > tol) {
                         ComplexValue::printFormatted(ss, mag);
                         ss << " ";
+                    } else if (std::abs(phase) < tol) {
+                        ss << "1";
+                        return ss.str();
                     }
-
                     ComplexValue::printFormatted(ss, phase, true);
                 }
             } else {
