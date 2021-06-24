@@ -45,16 +45,31 @@ namespace dd {
     constexpr GateMatrix Vdagmat{complex_SQRT2_2, complex_iSQRT2_2, complex_iSQRT2_2, complex_SQRT2_2};
 
     inline GateMatrix U3mat(fp lambda, fp phi, fp theta) {
+        auto cos_2 = std::cos(theta / 2.);
+        auto sin_2 = std::sin(theta / 2.);
+
+        auto cosIncrement = 0.0;
+        if (cos_2 < 0) {
+            cosIncrement = 1.0;
+            cos_2 *= -1;
+        }
+
+        auto sinIncrement = 0.0;
+        if (sin_2 < 0) {
+            sinIncrement = 1.0;
+            sin_2 *= -1;
+        }
+
         if (lambda >= 0.0) {
-            return GateMatrix{{{std::cos(theta / 2.), 0.},
-                               {std::sin(theta / 2.), lambda / PI - 1.0},
-                               {std::sin(theta / 2.), phi / PI},
-                               {std::cos(theta / 2.), (lambda + phi) / PI}}};
+            return GateMatrix{{{cos_2, cosIncrement},
+                               {sin_2, lambda / PI - 1.0 + sinIncrement},
+                               {sin_2, phi / PI + sinIncrement},
+                               {cos_2, (lambda + phi) / PI + cosIncrement}}};
         } else {
-            return GateMatrix{{{std::cos(theta / 2.), 0.},
-                               {-std::sin(theta / 2.), lambda / PI + 1.0},
-                               {std::sin(theta / 2.), phi / PI},
-                               {std::cos(theta / 2.), (lambda + phi) / PI}}};
+            return GateMatrix{{{cos_2, cosIncrement},
+                               {sin_2, lambda / PI + 1.0 + sinIncrement},
+                               {sin_2, phi / PI + sinIncrement},
+                               {cos_2, (lambda + phi) / PI + cosIncrement}}};
         }
     }
 
@@ -77,17 +92,45 @@ namespace dd {
     }
 
     inline GateMatrix RXmat(fp lambda) {
-        return GateMatrix{{{std::cos(lambda / 2.), 0.},
-                           {std::sin(lambda / 2.), -0.5},
-                           {std::sin(lambda / 2.), -0.5},
-                           {std::cos(lambda / 2.), 0.}}};
+        auto cos_2 = std::cos(lambda / 2.);
+        auto sin_2 = std::sin(lambda / 2.);
+
+        auto cosIncrement = 0.0;
+        if (cos_2 < 0) {
+            cosIncrement = 1.0;
+            cos_2 *= -1;
+        }
+
+        auto sinIncrement = 0.0;
+        if (sin_2 < 0) {
+            sinIncrement = 1.0;
+            sin_2 *= -1;
+        }
+        return GateMatrix{{{cos_2, cosIncrement},
+                           {sin_2, -0.5 + sinIncrement},
+                           {sin_2, -0.5 + sinIncrement},
+                           {cos_2, cosIncrement}}};
     }
 
     inline GateMatrix RYmat(fp lambda) {
-        return GateMatrix{{{std::cos(lambda / 2.), 0.},
-                           {std::sin(lambda / 2.), 1.},
-                           {std::sin(lambda / 2.), 0.},
-                           {std::cos(lambda / 2.), 0.}}};
+        auto cos_2 = std::cos(lambda / 2.);
+        auto sin_2 = std::sin(lambda / 2.);
+
+        auto cosIncrement = 0.0;
+        if (cos_2 < 0) {
+            cosIncrement = 1.0;
+            cos_2 *= -1;
+        }
+
+        auto sinIncrement = 0.0;
+        if (sin_2 < 0) {
+            sinIncrement = 1.0;
+            sin_2 *= -1;
+        }
+        return GateMatrix{{{cos_2, cosIncrement},
+                           {sin_2, 1. + sinIncrement},
+                           {sin_2, sinIncrement},
+                           {cos_2, cosIncrement}}};
     }
 
     inline GateMatrix RZmat(fp lambda) {
