@@ -44,13 +44,26 @@ namespace dd {
                 r.setVal(a);
             } else {
                 const auto aMag   = CTEntry::val(a.mag);
-                const auto aPhase = CTEntry::val(a.phase);
+                const auto aPhase = std::remainder(CTEntry::val(a.phase), 2.0);
                 const auto bMag   = CTEntry::val(b.mag);
-                const auto bPhase = CTEntry::val(b.phase);
+                const auto bPhase = std::remainder(CTEntry::val(b.phase), 2.0);
 
-                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) {
+                //                std::cout << ComplexValue::toString(aMag, aPhase) << " + " << ComplexValue::toString(bMag, bPhase) << " = ";
+
+                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) { // same phase
                     r.mag->value   = aMag + bMag;
                     r.phase->value = aPhase;
+                } else if (std::abs(aPhase + bPhase - 1.0) < decltype(complexTable)::tolerance()) { // opposing phase
+                    if (std::abs(aMag - bMag) < decltype(complexTable)::tolerance()) {
+                        r.mag->value   = 0.;
+                        r.phase->value = 0.;
+                    } else if (aMag > bMag) {
+                        r.mag->value   = aMag - bMag;
+                        r.phase->value = aPhase;
+                    } else {
+                        r.mag->value   = bMag - aMag;
+                        r.phase->value = bPhase;
+                    }
                 } else {
                     auto aRect = std::polar(aMag, aPhase * PI);
                     auto bRect = std::polar(bMag, bPhase * PI);
@@ -58,6 +71,7 @@ namespace dd {
                     r.mag->value   = std::abs(aRect);
                     r.phase->value = std::arg(aRect) / PI;
                 }
+                //                std::cout << r << std::endl;
             }
         }
         static void sub(Complex& r, const Complex& a, const Complex& b) {
@@ -185,14 +199,8 @@ namespace dd {
             assert(mag >= 0.);
             ret.mag = complexTable.lookup(mag);
 
-            auto normalizedPhase = phase;
-            while (normalizedPhase < -1.0) {
-                normalizedPhase += 2.0;
-            }
-            while (normalizedPhase > 1.0) {
-                normalizedPhase -= 2.0;
-            }
-            auto signPhase = std::signbit(normalizedPhase);
+            auto normalizedPhase = std::remainder(phase, 2.0);
+            auto signPhase       = std::signbit(normalizedPhase);
             if (signPhase) {
                 auto absPhase = std::abs(normalizedPhase);
                 if (absPhase < decltype(complexTable)::tolerance()) {
