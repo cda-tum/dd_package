@@ -65,9 +65,9 @@ namespace dd {
                         r.phase->value = bPhase;
                     }
                 } else {
-                    auto c         = std::polar(aMag, aPhase * M_PI) + std::polar(bMag, bPhase * M_PI);
+                    auto c         = std::polar(aMag, aPhase * PI) + std::polar(bMag, bPhase * PI);
                     r.mag->value   = std::abs(c);
-                    r.phase->value = std::arg(c) * M_1_PI;
+                    r.phase->value = std::arg(c) * PIinv;
                 }
                 //                std::cout << r << std::endl;
             }
