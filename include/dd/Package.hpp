@@ -309,10 +309,10 @@ namespace dd {
                 if (zero[i]) continue;
                 if (argmax == -1) {
                     argmax = static_cast<decltype(argmax)>(i);
-                    max    = ComplexNumbers::mag2(e.p->e[i].w);
+                    max    = ComplexNumbers::mag(e.p->e[i].w);
                     maxc   = e.p->e[i].w;
                 } else {
-                    auto mag = ComplexNumbers::mag2(e.p->e[i].w);
+                    auto mag = ComplexNumbers::mag(e.p->e[i].w);
                     if (mag - max > ComplexTable<>::tolerance()) {
                         argmax = static_cast<decltype(argmax)>(i);
                         max    = mag;
