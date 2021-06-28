@@ -43,10 +43,10 @@ namespace dd {
             } else if (b.approximatelyZero()) {
                 r.setVal(a);
             } else {
-                const auto aMag   = CTEntry::val(a.mag);
-                const auto aPhase = std::remainder(CTEntry::val(a.phase), 2.0);
-                const auto bMag   = CTEntry::val(b.mag);
-                const auto bPhase = std::remainder(CTEntry::val(b.phase), 2.0);
+                const auto& aMag   = CTEntry::val(a.mag);
+                const auto& aPhase = CTEntry::val(a.phase);
+                const auto& bMag   = CTEntry::val(b.mag);
+                const auto& bPhase = CTEntry::val(b.phase);
 
                 //                std::cout << ComplexValue::toString(aMag, aPhase) << " + " << ComplexValue::toString(bMag, bPhase) << " = ";
 
@@ -65,11 +65,9 @@ namespace dd {
                         r.phase->value = bPhase;
                     }
                 } else {
-                    auto aRect = std::polar(aMag, aPhase * PI);
-                    auto bRect = std::polar(bMag, bPhase * PI);
-                    aRect += bRect;
-                    r.mag->value   = std::abs(aRect);
-                    r.phase->value = std::arg(aRect) / PI;
+                    auto c         = std::polar(aMag, aPhase * M_PI) + std::polar(bMag, bPhase * M_PI);
+                    r.mag->value   = std::abs(c);
+                    r.phase->value = std::arg(c) * M_1_PI;
                 }
                 //                std::cout << r << std::endl;
             }
