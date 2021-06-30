@@ -49,7 +49,7 @@ namespace dd {
             p(p), w(w) {}
         CachedEdge(Node* p, const Complex& c):
             p(p) {
-            w.mag   = CTEntry::val(c.mag);
+            w.mag   = c.mag->value;
             w.phase = CTEntry::val(c.phase);
         }
 

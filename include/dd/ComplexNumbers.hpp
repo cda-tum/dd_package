@@ -43,28 +43,38 @@ namespace dd {
             } else if (b.approximatelyZero()) {
                 r.setVal(a);
             } else {
-                const auto& aMag   = CTEntry::val(a.mag);
+                const auto& aMag   = a.mag->value;
                 const auto& aPhase = CTEntry::val(a.phase);
-                const auto& bMag   = CTEntry::val(b.mag);
+                const auto& bMag   = b.mag->value;
                 const auto& bPhase = CTEntry::val(b.phase);
 
                 //                std::cout << ComplexValue::toString(aMag, aPhase) << " + " << ComplexValue::toString(bMag, bPhase) << " = ";
 
-                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) { // same phase
-                    r.mag->value   = aMag + bMag;
-                    r.phase->value = aPhase;
-                } else if (std::abs(aPhase + bPhase - 1.0) < decltype(complexTable)::tolerance()) { // opposing phase
-                    if (std::abs(aMag - bMag) < decltype(complexTable)::tolerance()) {
-                        r.mag->value   = 0.;
-                        r.phase->value = 0.;
-                    } else if (aMag > bMag) {
-                        r.mag->value   = aMag - bMag;
+                const auto minmax    = std::minmax(aPhase, bPhase);
+                const auto diff      = minmax.second - minmax.first;
+                const auto nearby    = std::nearbyint(diff);
+                const auto closeness = std::abs(diff - nearby);
+
+                if (closeness < decltype(complexTable)::tolerance()) {
+                    if ((static_cast<std::uint64_t>(nearby) % 2) == 0) {
+                        // same phase
+                        r.mag->value   = aMag + bMag;
                         r.phase->value = aPhase;
                     } else {
-                        r.mag->value   = bMag - aMag;
-                        r.phase->value = bPhase;
+                        // opposing phase
+                        if (std::abs(aMag - bMag) < decltype(complexTable)::tolerance()) {
+                            r.mag->value   = 0.;
+                            r.phase->value = 0.;
+                        } else if (aMag > bMag) {
+                            r.mag->value   = aMag - bMag;
+                            r.phase->value = aPhase;
+                        } else {
+                            r.mag->value   = bMag - aMag;
+                            r.phase->value = bPhase;
+                        }
                     }
                 } else {
+                    // general case
                     auto c         = std::polar(aMag, aPhase * PI) + std::polar(bMag, bPhase * PI);
                     r.mag->value   = std::abs(c);
                     r.phase->value = std::arg(c) * PIinv;
@@ -81,20 +91,18 @@ namespace dd {
                 r.setVal(b);
                 r.phase->value += 1.0;
             } else {
-                const auto aMag   = CTEntry::val(a.mag);
-                const auto aPhase = CTEntry::val(a.phase);
-                const auto bMag   = CTEntry::val(b.mag);
-                const auto bPhase = CTEntry::val(b.phase);
+                const auto& aMag   = a.mag->value;
+                const auto& aPhase = CTEntry::val(a.phase);
+                const auto& bMag   = b.mag->value;
+                const auto& bPhase = CTEntry::val(b.phase);
 
                 if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) {
                     r.mag->value   = aMag - bMag;
                     r.phase->value = aPhase;
                 } else {
-                    auto aRect = std::polar(aMag, aPhase * PI);
-                    auto bRect = std::polar(bMag, bPhase * PI);
-                    aRect -= bRect;
-                    r.mag->value   = std::abs(aRect);
-                    r.phase->value = std::arg(aRect) / PI;
+                    auto c         = std::polar(aMag, aPhase * PI) - std::polar(bMag, bPhase * PI);
+                    r.mag->value   = std::abs(c);
+                    r.phase->value = std::arg(c) * PIinv;
                 }
             }
         }
@@ -109,7 +117,7 @@ namespace dd {
                 r.mag->value   = 0.;
                 r.phase->value = 0.;
             } else {
-                r.mag->value   = CTEntry::val(a.mag) * CTEntry::val(b.mag);
+                r.mag->value   = a.mag->value * b.mag->value;
                 r.phase->value = CTEntry::val(a.phase) + CTEntry::val(b.phase);
             }
         }
@@ -125,16 +133,16 @@ namespace dd {
             } else if (b.approximatelyOne()) {
                 r.setVal(a);
             } else {
-                r.mag->value   = CTEntry::val(a.mag) / CTEntry::val(b.mag);
+                r.mag->value   = a.mag->value / b.mag->value;
                 r.phase->value = CTEntry::val(a.phase) - CTEntry::val(b.phase);
             }
         }
         static inline fp mag2(const Complex& a) {
-            auto mag = CTEntry::val(a.mag);
+            auto mag = a.mag->value;
             return mag * mag;
         }
         static inline fp mag(const Complex& a) {
-            return CTEntry::val(a.mag);
+            return a.mag->value;
         }
         static inline fp arg(const Complex& a) {
             return CTEntry::val(a.phase) * PI;
@@ -188,7 +196,7 @@ namespace dd {
                 return Complex::one;
             }
 
-            auto mag   = CTEntry::val(c.mag);
+            auto mag   = c.mag->value;
             auto phase = CTEntry::val(c.phase);
             return lookup(mag, phase);
         }

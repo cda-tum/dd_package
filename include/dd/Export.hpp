@@ -661,7 +661,9 @@ namespace dd {
                 return left->p->v < right->p->v;
             }
         };
-        stream << std::showpos << CTEntry::val(edge.w.mag) << CTEntry::val(edge.w.phase) << std::noshowpos << "i\n";
+        //        stream << edge.w << "\n";
+        auto c = std::polar(CTEntry::val(edge.w.mag), CTEntry::val(edge.w.phase) * PI);
+        stream << std::showpos << c.real() << c.imag() << std::noshowpos << "i\n";
 
         std::unordered_set<decltype(edge.p)> nodes{};
 
@@ -691,7 +693,9 @@ namespace dd {
 
                 // non-zero child to be included
                 q.push(&child);
-                stream << std::showpos << CTEntry::val(child.w.mag) << CTEntry::val(child.w.phase) << std::noshowpos << "i\n";
+                c = std::polar(CTEntry::val(child.w.mag), CTEntry::val(child.w.phase) * PI);
+                stream << std::showpos << c.real() << c.imag() << std::noshowpos << "i\n";
+                //                stream << child.w << "\n";
             }
         }
     }
