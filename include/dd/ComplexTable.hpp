@@ -22,7 +22,7 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 65536>
+    template<std::size_t NBUCKET = 65537, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 65536>
     class ComplexTable {
     public:
         struct Entry {
