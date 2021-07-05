@@ -78,7 +78,7 @@ namespace dd {
         static inline Entry zero{0., nullptr, 1};
 
         static inline Entry* zeroPtr = &zero;
-        static inline Entry* onePtr  = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | reinterpret_cast<std::uintptr_t>(2UL));
+        static inline Entry* onePtr  = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | 2u);
 
         PhaseTable():
             chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
