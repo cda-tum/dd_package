@@ -6,8 +6,9 @@
 #ifndef DD_PACKAGE_COMPLEXVALUE_HPP
 #define DD_PACKAGE_COMPLEXVALUE_HPP
 
-#include "ComplexTable.hpp"
 #include "Definitions.hpp"
+#include "dd/tables/MagnitudeTable.hpp"
+#include "dd/tables/PhaseTable.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -24,17 +25,17 @@ namespace dd {
         fp mag, phase;
 
         [[nodiscard]] inline bool approximatelyEquals(const ComplexValue& c) const {
-            return std::abs(mag - c.mag) < ComplexTable<>::tolerance() &&
-                   std::abs(phase - c.phase) < ComplexTable<>::tolerance();
+            return std::abs(mag - c.mag) < MagnitudeTable<>::tolerance() &&
+                   std::abs(phase - c.phase) < PhaseTable<>::tolerance();
         }
 
         [[nodiscard]] inline bool approximatelyZero() const {
-            return std::abs(mag) < ComplexTable<>::tolerance();
+            return std::abs(mag) < MagnitudeTable<>::tolerance();
         }
 
         [[nodiscard]] inline bool approximatelyOne() const {
-            return std::abs(mag - 1.) < ComplexTable<>::tolerance() &&
-                   std::abs(phase) < ComplexTable<>::tolerance();
+            return std::abs(mag - 1.) < MagnitudeTable<>::tolerance() &&
+                   std::abs(phase) < PhaseTable<>::tolerance();
         }
 
         inline bool operator==(const ComplexValue& other) const {
@@ -60,7 +61,7 @@ namespace dd {
             phase = phase_str.empty() ? 0. : std::stod(phase_str);
         }
 
-        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = std::uint64_t(1) << 10, const fp tol = dd::ComplexTable<>::tolerance()) {
+        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = std::uint64_t(1) << 10, const fp tol = dd::MagnitudeTable<>::tolerance()) {
             assert(x >= 0.);
 
             std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};
@@ -92,7 +93,7 @@ namespace dd {
         }
 
         static void printFormatted(std::ostream& os, fp r, bool phase = false) {
-            const auto tol = dd::ComplexTable<>::tolerance();
+            const auto tol = dd::MagnitudeTable<>::tolerance();
             if (std::abs(r) < tol) {
                 return;
             }
@@ -215,23 +216,22 @@ namespace dd {
 
         static std::string toString(const fp& mag, const fp& phase, bool formatted = true, int precision = -1) {
             std::ostringstream ss{};
-            const auto         tol = ComplexTable<>::tolerance();
 
             if (precision >= 0) ss << std::setprecision(precision);
 
-            if (std::abs(mag) < tol) {
+            if (std::abs(mag) < MagnitudeTable<>::tolerance()) {
                 return "0";
             }
 
             if (formatted) {
-                if (std::abs(phase - 1.0) < tol) {
+                if (std::abs(phase - 1.0) < PhaseTable<>::tolerance()) {
                     ss << "-";
                     ComplexValue::printFormatted(ss, mag);
                 } else {
-                    if (std::abs(mag - 1.0) > tol) {
+                    if (std::abs(mag - 1.0) > MagnitudeTable<>::tolerance()) {
                         ComplexValue::printFormatted(ss, mag);
                         ss << " ";
-                    } else if (std::abs(phase) < tol) {
+                    } else if (std::abs(phase) < PhaseTable<>::tolerance()) {
                         ss << "1";
                         return ss.str();
                     }
@@ -239,7 +239,7 @@ namespace dd {
                 }
             } else {
                 ss << mag;
-                if (std::abs(phase) > tol) {
+                if (std::abs(phase) > PhaseTable<>::tolerance()) {
                     ss << " " << phase;
                 }
             }
@@ -274,8 +274,8 @@ namespace std {
     template<>
     struct hash<dd::ComplexValue> {
         std::size_t operator()(dd::ComplexValue const& c) const noexcept {
-            auto h1 = dd::murmur64(static_cast<std::size_t>(std::round(c.mag / dd::ComplexTable<>::tolerance())));
-            auto h2 = dd::murmur64(static_cast<std::size_t>(std::round(c.phase / dd::ComplexTable<>::tolerance())));
+            auto h1 = dd::murmur64(static_cast<std::size_t>(std::round(c.mag / dd::MagnitudeTable<>::tolerance())));
+            auto h2 = dd::murmur64(static_cast<std::size_t>(std::round(c.phase / dd::PhaseTable<>::tolerance())));
             return dd::combineHash(h1, h2);
         }
     };

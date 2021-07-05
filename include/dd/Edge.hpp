@@ -50,7 +50,7 @@ namespace dd {
         CachedEdge(Node* p, const Complex& c):
             p(p) {
             w.mag   = c.mag->value;
-            w.phase = CTEntry::val(c.phase);
+            w.phase = PhaseEntry::val(c.phase);
         }
 
         /// Comparing two DD edges with another involves comparing the respective pointers

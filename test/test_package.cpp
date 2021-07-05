@@ -55,8 +55,8 @@ TEST(DDPackageTest, TrivialTest) {
     ASSERT_EQ(dd->fidelity(zero_state, one_state), 0.0);
     // repeat the same calculation - triggering compute table hit
     ASSERT_EQ(dd->fidelity(zero_state, one_state), 0.0);
-    ASSERT_NEAR(dd->fidelity(zero_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
-    ASSERT_NEAR(dd->fidelity(one_state, h_state), 0.5, dd::ComplexTable<>::tolerance());
+    ASSERT_NEAR(dd->fidelity(zero_state, h_state), 0.5, dd::MagnitudeTable<>::tolerance());
+    ASSERT_NEAR(dd->fidelity(one_state, h_state), 0.5, dd::MagnitudeTable<>::tolerance());
 }
 
 TEST(DDPackageTest, BellState) {
@@ -83,8 +83,9 @@ TEST(DDPackageTest, BellState) {
     ASSERT_EQ(dd->getValueByPath(bell_state, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
-    auto goal_state = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
-    ASSERT_EQ(dd->getVector(bell_state), goal_state);
+    auto goalVector       = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
+    auto retrievedVector  = dd->getVector(bell_state);
+    ASSERT_EQ(retrievedVector, goalVector);
 
     ASSERT_DOUBLE_EQ(dd->fidelity(zero_state, bell_state), 0.5);
 
@@ -143,7 +144,7 @@ TEST(DDPackageTest, PartialIdentityTrace) {
     auto dd  = std::make_unique<dd::Package>(2);
     auto tr  = dd->partialTrace(dd->makeIdent(2), {false, true});
     auto mul = dd->multiply(tr, tr);
-    EXPECT_EQ(dd::CTEntry::val(mul.w.mag), 4.0);
+    EXPECT_EQ(dd::MagEntry::val(mul.w.mag), 4.0);
 }
 
 TEST(DDPackageTest, StateGenerationManipulation) {
@@ -299,30 +300,6 @@ TEST(DDPackageTest, SerializationErrors) {
     ss << "1.0" << std::endl;
     ss << "no_node_here" << std::endl;
     EXPECT_THROW(dd->deserialize<dd::Package::mNode>(ss), std::runtime_error);
-}
-
-TEST(DDPackageTest, TestConsistency) {
-    auto dd = std::make_unique<dd::Package>(2);
-
-    auto h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
-    auto cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
-    auto zero_state = dd->makeZeroState(2);
-
-    auto bell_matrix = dd->multiply(cx_gate, h_gate);
-    dd->incRef(bell_matrix);
-    auto local = dd->isLocallyConsistent(bell_matrix);
-    EXPECT_TRUE(local);
-    auto global = dd->isGloballyConsistent(bell_matrix);
-    EXPECT_TRUE(global);
-    dd->debugnode(bell_matrix.p);
-
-    auto bell_state = dd->multiply(bell_matrix, zero_state);
-    dd->incRef(bell_state);
-    local = dd->isLocallyConsistent(bell_state);
-    EXPECT_TRUE(local);
-    global = dd->isGloballyConsistent(bell_state);
-    EXPECT_TRUE(global);
-    dd->debugnode(bell_state.p);
 }
 
 TEST(DDPackageTest, ToffoliTable) {
@@ -696,7 +673,7 @@ TEST(DDPackageTest, KroneckerProduct) {
 
 TEST(DDPackageTest, NearZeroNormalize) {
     auto               dd       = std::make_unique<dd::Package>(2);
-    dd::fp             nearZero = dd::ComplexTable<>::tolerance() / 10;
+    dd::fp             nearZero = dd::MagnitudeTable<>::tolerance() / 10;
     dd::Package::vEdge ve{};
     ve.p    = dd->vUniqueTable.getNode();
     ve.p->v = 1;

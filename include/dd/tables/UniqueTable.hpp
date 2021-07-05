@@ -6,9 +6,9 @@
 #ifndef DDpackage_UNIQUETABLE_HPP
 #define DDpackage_UNIQUETABLE_HPP
 
-#include "ComplexNumbers.hpp"
-#include "Definitions.hpp"
-#include "Edge.hpp"
+#include "dd/ComplexNumbers.hpp"
+#include "dd/Definitions.hpp"
+#include "dd/Edge.hpp"
 
 #include <algorithm>
 #include <array>

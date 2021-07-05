@@ -113,21 +113,19 @@ namespace dd {
             } else if (e.w == Complex::one) {
                 os << "1";
             } else {
-                if (e.w.mag == &ComplexTable<>::zero) {
+                if (e.w.mag == &MagnitudeTable<>::zero) {
                     os << "0";
-                } else if (e.w.mag == &ComplexTable<>::sqrt2_2) {
+                } else if (e.w.mag == &MagnitudeTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (e.w.mag == &ComplexTable<>::one) {
+                } else if (e.w.mag == &MagnitudeTable<>::one) {
                     os << "1";
                 } else {
                     os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.mag) << std::dec;
                 }
                 os << " ";
-                if (e.w.phase == &ComplexTable<>::zero) {
+                if (e.w.phase == PhaseTable<>::zeroPtr) {
                     os << "0";
-                } else if (e.w.phase == &ComplexTable<>::sqrt2_2) {
-                    os << u8"\u221a\u00bd";
-                } else if (e.w.phase == &ComplexTable<>::one) {
+                } else if (e.w.phase == PhaseTable<>::onePtr) {
                     os << "1";
                 } else {
                     os << std::hex << reinterpret_cast<std::uintptr_t>(e.w.phase) << std::dec;
@@ -392,21 +390,19 @@ namespace dd {
             if (to.w == Complex::one) {
                 os << "1";
             } else {
-                if (to.w.mag == &ComplexTable<>::zero) {
+                if (to.w.mag == &MagnitudeTable<>::zero) {
                     os << "0";
-                } else if (to.w.mag == &ComplexTable<>::sqrt2_2) {
+                } else if (to.w.mag == &MagnitudeTable<>::sqrt2_2) {
                     os << u8"\u221a\u00bd";
-                } else if (to.w.mag == &ComplexTable<>::one) {
+                } else if (to.w.mag == &MagnitudeTable<>::one) {
                     os << "1";
                 } else {
                     os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.mag) << std::dec;
                 }
                 os << " ";
-                if (to.w.phase == &ComplexTable<>::zero) {
+                if (to.w.phase == PhaseTable<>::zeroPtr) {
                     os << "0";
-                } else if (to.w.phase == &ComplexTable<>::sqrt2_2) {
-                    os << u8"\u221a\u00bd";
-                } else if (to.w.phase == &ComplexTable<>::one) {
+                } else if (to.w.phase == PhaseTable<>::onePtr) {
                     os << "1";
                 } else {
                     os << std::hex << reinterpret_cast<std::uintptr_t>(to.w.phase) << std::dec;
@@ -662,7 +658,7 @@ namespace dd {
             }
         };
         //        stream << edge.w << "\n";
-        auto c = std::polar(CTEntry::val(edge.w.mag), CTEntry::val(edge.w.phase) * PI);
+        auto c = std::polar(MagEntry::val(edge.w.mag), PhaseEntry::val(edge.w.phase) * PI);
         stream << std::showpos << c.real() << c.imag() << std::noshowpos << "i\n";
 
         std::unordered_set<decltype(edge.p)> nodes{};
@@ -693,7 +689,7 @@ namespace dd {
 
                 // non-zero child to be included
                 q.push(&child);
-                c = std::polar(CTEntry::val(child.w.mag), CTEntry::val(child.w.phase) * PI);
+                c = std::polar(MagEntry::val(child.w.mag), PhaseEntry::val(child.w.phase) * PI);
                 stream << std::showpos << c.real() << c.imag() << std::noshowpos << "i\n";
                 //                stream << child.w << "\n";
             }

@@ -8,9 +8,10 @@
 
 #include "Complex.hpp"
 #include "ComplexCache.hpp"
-#include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "Definitions.hpp"
+#include "dd/tables/MagnitudeTable.hpp"
+#include "dd/tables/PhaseTable.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -18,19 +19,22 @@
 
 namespace dd {
     struct ComplexNumbers {
-        ComplexTable<> complexTable{};
-        ComplexCache<> complexCache{};
+        ComplexCache<>   complexCache{};
+        MagnitudeTable<> magnitudeTable{};
+        PhaseTable<>     phaseTable{};
 
         ComplexNumbers()  = default;
         ~ComplexNumbers() = default;
 
         void clear() {
-            complexTable.clear();
+            magnitudeTable.clear();
+            phaseTable.clear();
             complexCache.clear();
         }
 
         static void setTolerance(fp tol) {
-            ComplexTable<>::setTolerance(tol);
+            MagnitudeTable<>::setTolerance(tol);
+            PhaseTable<>::setTolerance(tol);
         }
 
         // operations on complex numbers
@@ -44,9 +48,9 @@ namespace dd {
                 r.setVal(a);
             } else {
                 const auto& aMag   = a.mag->value;
-                const auto& aPhase = CTEntry::val(a.phase);
+                const auto& aPhase = PhaseEntry::val(a.phase);
                 const auto& bMag   = b.mag->value;
-                const auto& bPhase = CTEntry::val(b.phase);
+                const auto& bPhase = PhaseEntry::val(b.phase);
 
                 //                std::cout << ComplexValue::toString(aMag, aPhase) << " + " << ComplexValue::toString(bMag, bPhase) << " = ";
 
@@ -55,14 +59,14 @@ namespace dd {
                 const auto nearby    = std::nearbyint(diff);
                 const auto closeness = std::abs(diff - nearby);
 
-                if (closeness < decltype(complexTable)::tolerance()) {
+                if (closeness < decltype(magnitudeTable)::tolerance()) {
                     if ((static_cast<std::uint64_t>(nearby) % 2) == 0) {
                         // same phase
                         r.mag->value   = aMag + bMag;
                         r.phase->value = aPhase;
                     } else {
                         // opposing phase
-                        if (std::abs(aMag - bMag) < decltype(complexTable)::tolerance()) {
+                        if (std::abs(aMag - bMag) < decltype(magnitudeTable)::tolerance()) {
                             r.mag->value   = 0.;
                             r.phase->value = 0.;
                         } else if (aMag > bMag) {
@@ -92,11 +96,11 @@ namespace dd {
                 r.phase->value += 1.0;
             } else {
                 const auto& aMag   = a.mag->value;
-                const auto& aPhase = CTEntry::val(a.phase);
+                const auto& aPhase = PhaseEntry::val(a.phase);
                 const auto& bMag   = b.mag->value;
-                const auto& bPhase = CTEntry::val(b.phase);
+                const auto& bPhase = PhaseEntry::val(b.phase);
 
-                if (std::abs(aPhase - bPhase) < decltype(complexTable)::tolerance()) {
+                if (std::abs(aPhase - bPhase) < decltype(magnitudeTable)::tolerance()) {
                     r.mag->value   = aMag - bMag;
                     r.phase->value = aPhase;
                 } else {
@@ -118,7 +122,7 @@ namespace dd {
                 r.phase->value = 0.;
             } else {
                 r.mag->value   = a.mag->value * b.mag->value;
-                r.phase->value = CTEntry::val(a.phase) + CTEntry::val(b.phase);
+                r.phase->value = PhaseEntry::val(a.phase) + PhaseEntry::val(b.phase);
             }
         }
         static void div(Complex& r, const Complex& a, const Complex& b) {
@@ -134,7 +138,7 @@ namespace dd {
                 r.setVal(a);
             } else {
                 r.mag->value   = a.mag->value / b.mag->value;
-                r.phase->value = CTEntry::val(a.phase) - CTEntry::val(b.phase);
+                r.phase->value = PhaseEntry::val(a.phase) - PhaseEntry::val(b.phase);
             }
         }
         static inline fp mag2(const Complex& a) {
@@ -145,22 +149,25 @@ namespace dd {
             return a.mag->value;
         }
         static inline fp arg(const Complex& a) {
-            return CTEntry::val(a.phase) * PI;
+            return PhaseEntry::val(a.phase) * PI;
         }
-        static Complex conj(const Complex& a) {
-            auto ret = a;
-            if (a.phase != &ComplexTable<>::zero && a.phase != &ComplexTable<>::one) {
-                ret.phase = CTEntry::flipPointerSign(a.phase);
+        static void conj(Complex& r, const Complex& a) {
+            if (r.phase == PhaseTable<>::zeroPtr || r.phase == PhaseTable<>::onePtr) {
+                r.mag   = a.mag;
+                r.phase = a.phase;
+                return;
             }
-            return ret;
+            r.mag               = a.mag;
+            const auto newPhase = static_cast<fp>(2) - PhaseEntry::val(a.phase);
+            r.phase             = PhaseEntry::getAlignedPointer(r.phase);
+            r.phase->value      = newPhase;
         }
         static void neg(Complex& r, const Complex& a) {
-            assert(r.phase != &ComplexTable<>::zero);
-            assert(r.phase != &ComplexTable<>::one);
+            assert(r.phase != PhaseTable<>::zeroPtr);
+            assert(r.phase != PhaseTable<>::onePtr);
             r.mag            = a.mag;
-            const auto phase = CTEntry::val(a.phase) + 1.0;
-            r.phase          = CTEntry::getAlignedPointer(r.phase);
-            r.phase->value   = phase;
+            auto newQuadrant = (PhaseEntry::getQuadrant(a.phase) + 2) % 4;
+            r.phase          = PhaseEntry::setQuadrant(a.phase, newQuadrant);
         }
 
         inline Complex addCached(const Complex& a, const Complex& b) {
@@ -197,31 +204,14 @@ namespace dd {
             }
 
             auto mag   = c.mag->value;
-            auto phase = CTEntry::val(c.phase);
+            auto phase = PhaseEntry::val(c.phase);
             return lookup(mag, phase);
         }
         Complex lookup(const fp& mag, const fp& phase) {
             Complex ret{};
             assert(mag >= 0.);
-            ret.mag = complexTable.lookup(mag);
-
-            auto normalizedPhase = std::remainder(phase, 2.0);
-            auto signPhase       = std::signbit(normalizedPhase);
-            if (signPhase) {
-                auto absPhase = std::abs(normalizedPhase);
-                if (absPhase < decltype(complexTable)::tolerance()) {
-                    // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
-                    ret.phase = &decltype(complexTable)::zero;
-                } else if (std::abs(absPhase - 1.0) < decltype(complexTable)::tolerance()) {
-                    // if absolute value is close enough to one, just return the one entry (avoiding -1.0)
-                    ret.phase = &decltype(complexTable)::one;
-                } else {
-                    ret.phase = CTEntry::getNegativePointer(complexTable.lookup(absPhase));
-                }
-            } else {
-                ret.phase = complexTable.lookup(normalizedPhase);
-            }
-
+            ret.mag   = magnitudeTable.lookup(mag);
+            ret.phase = phaseTable.lookup(phase);
             return ret;
         }
         inline Complex lookup(const ComplexValue& c) { return lookup(c.mag, c.phase); }
@@ -230,19 +220,19 @@ namespace dd {
         static void incRef(const Complex& c) {
             // `zero` and `one` are static and never altered
             if (c != Complex::zero && c != Complex::one) {
-                ComplexTable<>::incRef(c.mag);
-                ComplexTable<>::incRef(c.phase);
+                MagnitudeTable<>::incRef(c.mag);
+                PhaseTable<>::incRef(c.phase);
             }
         }
         static void decRef(const Complex& c) {
             // `zero` and `one` are static and never altered
             if (c != Complex::zero && c != Complex::one) {
-                ComplexTable<>::decRef(c.mag);
-                ComplexTable<>::decRef(c.phase);
+                MagnitudeTable<>::decRef(c.mag);
+                PhaseTable<>::decRef(c.phase);
             }
         }
         std::size_t garbageCollect(bool force = false) {
-            return complexTable.garbageCollect(force);
+            return magnitudeTable.garbageCollect(force) + phaseTable.garbageCollect(force);
         }
 
         // provide (temporary) cached complex number

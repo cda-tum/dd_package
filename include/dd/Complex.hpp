@@ -6,38 +6,40 @@
 #ifndef DD_PACKAGE_COMPLEX_HPP
 #define DD_PACKAGE_COMPLEX_HPP
 
-#include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
+#include "dd/tables/MagnitudeTable.hpp"
+#include "dd/tables/PhaseTable.hpp"
 
 #include <cstddef>
 #include <iostream>
 #include <utility>
 
 namespace dd {
-    using CTEntry = ComplexTable<>::Entry;
+    using MagEntry = MagnitudeTable<>::Entry;
+    using PhaseEntry = PhaseTable<>::Entry;
 
     struct Complex {
-        CTEntry* mag;
-        CTEntry* phase;
+        MagEntry* mag;
+        PhaseEntry* phase;
 
         static Complex zero;
         static Complex one;
 
         void setVal(const Complex& c) const {
-            mag->value   = CTEntry::val(c.mag);
-            phase->value = CTEntry::val(c.phase);
+            mag->value   = MagEntry::val(c.mag);
+            phase->value = PhaseEntry::val(c.phase);
         }
 
         [[nodiscard]] inline bool approximatelyEquals(const Complex& c) const {
-            return CTEntry::approximatelyEquals(mag, c.mag) && CTEntry::approximatelyEquals(phase, c.phase);
+            return MagEntry::approximatelyEquals(mag, c.mag) && PhaseEntry::approximatelyEquals(phase, c.phase);
         };
 
         [[nodiscard]] inline bool approximatelyZero() const {
-            return CTEntry::approximatelyZero(mag);
+            return MagEntry::approximatelyZero(mag);
         }
 
         [[nodiscard]] inline bool approximatelyOne() const {
-            return CTEntry::approximatelyOne(mag) && CTEntry::approximatelyZero(phase);
+            return MagEntry::approximatelyOne(mag) && PhaseEntry::approximatelyZero(phase);
         }
 
         inline bool operator==(const Complex& other) const {
@@ -49,12 +51,12 @@ namespace dd {
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
-            return ComplexValue::toString(CTEntry::val(mag), CTEntry::val(phase), formatted, precision);
+            return ComplexValue::toString(MagEntry::val(mag), PhaseEntry::val(phase), formatted, precision);
         }
 
         void writeBinary(std::ostream& os) const {
-            CTEntry::writeBinary(mag, os);
-            CTEntry::writeBinary(phase, os);
+            MagEntry::writeBinary(mag, os);
+            PhaseEntry::writeBinary(phase, os);
         }
     };
 
@@ -63,8 +65,8 @@ namespace dd {
         return os;
     }
 
-    inline Complex Complex::zero{&ComplexTable<>::zero, &ComplexTable<>::zero};
-    inline Complex Complex::one{&ComplexTable<>::one, &ComplexTable<>::zero};
+    inline Complex Complex::zero{&MagnitudeTable<>::zero, PhaseTable<>::zeroPtr};
+    inline Complex Complex::one{&MagnitudeTable<>::one, PhaseTable<>::zeroPtr};
 } // namespace dd
 
 namespace std {

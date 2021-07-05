@@ -9,17 +9,18 @@
 #include "Complex.hpp"
 #include "ComplexCache.hpp"
 #include "ComplexNumbers.hpp"
-#include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
-#include "ComputeTable.hpp"
 #include "Control.hpp"
 #include "Definitions.hpp"
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
-#include "NoiseOperationTable.hpp"
-#include "ToffoliTable.hpp"
-#include "UnaryComputeTable.hpp"
-#include "UniqueTable.hpp"
+#include "dd/tables/ComputeTable.hpp"
+#include "dd/tables/NoiseOperationTable.hpp"
+#include "dd/tables/MagnitudeTable.hpp"
+#include "dd/tables/PhaseTable.hpp"
+#include "dd/tables/ToffoliTable.hpp"
+#include "dd/tables/UnaryComputeTable.hpp"
+#include "dd/tables/UniqueTable.hpp"
 
 #include <algorithm>
 #include <array>
@@ -140,7 +141,7 @@ namespace dd {
             auto r = e;
             if (!zero[0]) {
                 auto&      e0     = r.p->e[0];
-                const auto phase0 = CTEntry::val(e0.w.phase);
+                const auto phase0 = PhaseEntry::val(e0.w.phase);
 
                 if (cached) {
                     r.w = cn.getCached(norm, phase0);
@@ -154,7 +155,7 @@ namespace dd {
 
                 if (!zero[1]) {
                     auto&      e1     = r.p->e[1];
-                    const auto phase1 = CTEntry::val(e1.w.phase);
+                    const auto phase1 = PhaseEntry::val(e1.w.phase);
                     if (cached)
                         cn.returnToCache(e1.w);
                     e1.w = cn.lookup(mag1 / norm, phase1 - phase0);
@@ -163,7 +164,7 @@ namespace dd {
                 }
             } else {
                 auto&      e1     = r.p->e[1];
-                const auto phase1 = CTEntry::val(e1.w.phase);
+                const auto phase1 = PhaseEntry::val(e1.w.phase);
 
                 if (cached) {
                     r.w = cn.getCached(norm, phase1);
@@ -301,7 +302,7 @@ namespace dd {
                     maxc   = e.p->e[i].w;
                 } else {
                     auto mag = e.p->e[i].w.mag->value;
-                    if (mag - max > ComplexTable<>::tolerance()) {
+                    if (mag - max > MagnitudeTable<>::tolerance()) {
                         argmax = static_cast<decltype(argmax)>(i);
                         max    = mag;
                         maxc   = e.p->e[i].w;
@@ -524,7 +525,8 @@ namespace dd {
             if (!force &&
                 !vUniqueTable.possiblyNeedsCollection() &&
                 !mUniqueTable.possiblyNeedsCollection() &&
-                !cn.complexTable.possiblyNeedsCollection()) {
+                !cn.magnitudeTable.possiblyNeedsCollection() &&
+                !cn.phaseTable.possiblyNeedsCollection()) {
                 return false;
             }
 
@@ -894,12 +896,12 @@ namespace dd {
             if (x.w == Complex::zero) {
                 if (y.w == Complex::zero) return y;
                 auto r = y;
-                r.w    = cn.getCached(y.w.mag->value, CTEntry::val(y.w.phase));
+                r.w    = cn.getCached(y.w.mag->value, PhaseEntry::val(y.w.phase));
                 return r;
             }
             if (y.w == Complex::zero) {
                 auto r = x;
-                r.w    = cn.getCached(x.w.mag->value, CTEntry::val(x.w.phase));
+                r.w    = cn.getCached(x.w.mag->value, PhaseEntry::val(x.w.phase));
                 return r;
             }
             if (x.p == y.p) {
@@ -1019,7 +1021,7 @@ namespace dd {
                 return a;
             if (a.isTerminal()) { // terminal case
                 auto r = a;
-                r.w    = ComplexNumbers::conj(a.w);
+                ComplexNumbers::conj(r.w, a.w);
                 return r;
             }
 
@@ -1041,7 +1043,9 @@ namespace dd {
 
             auto c = cn.getTemporary();
             // adjust top weight including conjugate
-            ComplexNumbers::mul(c, r.w, ComplexNumbers::conj(a.w));
+            auto temp = cn.getTemporary();
+            ComplexNumbers::conj(temp, a.w);
+            ComplexNumbers::mul(c, r.w, temp);
             r.w = cn.lookup(c);
 
             // put it in the compute table
@@ -1270,7 +1274,7 @@ namespace dd {
                 auto c = cn.getTemporary(r.w);
                 ComplexNumbers::mul(c, c, x.w);
                 ComplexNumbers::mul(c, c, y.w);
-                return {c.mag->value, CTEntry::val(c.phase)};
+                return {c.mag->value, PhaseEntry::val(c.phase)};
             }
 
             auto w = static_cast<Qubit>(var - 1);
@@ -1286,7 +1290,7 @@ namespace dd {
                 vEdge e2{};
                 if (!y.isTerminal() && y.p->v == w) {
                     e2   = y.p->e[i];
-                    e2.w = ComplexNumbers::conj(e2.w);
+                     ComplexNumbers::conj(e2.w, e2.w);
                 } else {
                     e2 = yCopy;
                 }
@@ -1304,7 +1308,7 @@ namespace dd {
             auto c = cn.getTemporary(sum);
             ComplexNumbers::mul(c, c, x.w);
             ComplexNumbers::mul(c, c, y.w);
-            return {c.mag->value, CTEntry::val(c.phase)};
+            return {c.mag->value, PhaseEntry::val(c.phase)};
         }
 
         ///
@@ -1369,7 +1373,7 @@ namespace dd {
                         e   = makeDDNode(idx, std::array{e, Edge<Node>::zero, Edge<Node>::zero, e});
                     }
 
-                    e.w = cn.getCached(y.w.mag->value, CTEntry::val(y.w.phase));
+                    e.w = cn.getCached(y.w.mag->value, PhaseEntry::val(y.w.phase));
                     computeTable.insert(x, y, {e.p, e.w});
                     return e;
                 }
@@ -1404,7 +1408,7 @@ namespace dd {
             const auto                  res       = partialTrace(a, eliminate);
             [[maybe_unused]] const auto after     = cn.cacheCount();
             assert(before == after);
-            return {res.w.mag->value, CTEntry::val(res.w.phase)};
+            return {res.w.mag->value, PhaseEntry::val(res.w.phase)};
         }
 
     private:
@@ -1797,7 +1801,7 @@ namespace dd {
         template<class Edge>
         ComplexValue getValueByPath(const Edge& e, const std::string& elements) {
             if (e.isTerminal()) {
-                return {e.w.mag->value, CTEntry::val(e.w.phase)};
+                return {e.w.mag->value, PhaseEntry::val(e.w.phase)};
             }
 
             auto c = cn.getTemporary(1, 0);
@@ -1810,11 +1814,11 @@ namespace dd {
             } while (!r.isTerminal());
             ComplexNumbers::mul(c, c, r.w);
 
-            return {c.mag->value, CTEntry::val(c.phase)};
+            return {c.mag->value, PhaseEntry::val(c.phase)};
         }
         ComplexValue getValueByPath(const vEdge& e, std::size_t i) {
             if (e.isTerminal()) {
-                return {e.w.mag->value, CTEntry::val(e.w.phase)};
+                return {e.w.mag->value, PhaseEntry::val(e.w.phase)};
             }
             return getValueByPath(e, Complex::one, i);
         }
@@ -1823,7 +1827,7 @@ namespace dd {
 
             if (e.isTerminal()) {
                 cn.returnToCache(c);
-                return {c.mag->value, CTEntry::val(c.phase)};
+                return {c.mag->value, PhaseEntry::val(c.phase)};
             }
 
             bool one = i & (1 << e.p->v);
@@ -1839,7 +1843,7 @@ namespace dd {
         }
         ComplexValue getValueByPath(const mEdge& e, std::size_t i, std::size_t j) {
             if (e.isTerminal()) {
-                return {e.w.mag->value, CTEntry::val(e.w.phase)};
+                return {e.w.mag->value, PhaseEntry::val(e.w.phase)};
             }
             return getValueByPath(e, Complex::one, i, j);
         }
@@ -1848,7 +1852,7 @@ namespace dd {
 
             if (e.isTerminal()) {
                 cn.returnToCache(c);
-                return {c.mag->value, CTEntry::val(c.phase)};
+                return {c.mag->value, PhaseEntry::val(c.phase)};
             }
 
             bool row = i & (1 << e.p->v);
@@ -1877,11 +1881,14 @@ namespace dd {
         }
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec) {
             // calculate new accumulated amplitude
+            std::cout << "[i==" << i << " e.w*amp  ] " << e.w.mag << "(" << e.w.mag->value << ") * " << amp.mag << "(" << amp.mag->value << ")\n";
             auto c = cn.mulCached(e.w, amp);
+            std::cout << "[i==" << i << " e.w*amp=c] " << e.w.mag << "(" << e.w.mag->value << ") * " << amp.mag << "(" << amp.mag->value << ") " << " = " << c.mag << "(" << c.mag->value << ")\n";
 
             // base case
             if (e.isTerminal()) {
-                vec.at(i) = {c.mag->value, CTEntry::val(c.phase)};
+                vec.at(i) = std::polar(c.mag->value, PhaseEntry::val(c.phase));
+                std::cout << "vec[" << i << "] = " << vec.at(i) << "\n";
                 cn.returnToCache(c);
                 return;
             }
@@ -1943,7 +1950,7 @@ namespace dd {
 
             // base case
             if (e.isTerminal()) {
-                mat.at(i).at(j) = {c.mag->value, CTEntry::val(c.phase)};
+                mat.at(i).at(j) = {c.mag->value, PhaseEntry::val(c.phase)};
                 cn.returnToCache(c);
                 return;
             }
@@ -2008,7 +2015,7 @@ namespace dd {
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
                 idx <<= level;
                 for (std::size_t i = 0; i < (1UL << level); i++) {
-                    amplitudes[idx++] = std::polar(amp.mag->value, CTEntry::val(amp.phase));
+                    amplitudes[idx++] = std::polar(amp.mag->value, PhaseEntry::val(amp.phase));
                 }
 
                 return;
@@ -2031,7 +2038,7 @@ namespace dd {
 
         void addAmplitudesRec(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
             auto         mag   = edge.w.mag->value;
-            auto         phase = CTEntry::val(edge.w.phase);
+            auto         phase = PhaseEntry::val(edge.w.phase);
             ComplexValue amp{amplitude.mag * mag, std::remainder(amplitude.phase + phase, 2.0)};
             auto         ampRect = std::polar(amp.mag, amp.phase);
 
@@ -2129,7 +2136,7 @@ namespace dd {
                     }
                 } while (!stack.empty());
 
-                auto w = cn.getCached(original.w.mag->value, CTEntry::val(original.w.phase));
+                auto w = cn.getCached(original.w.mag->value, PhaseEntry::val(original.w.phase));
                 dd::ComplexNumbers::mul(w, root.w, w);
                 root.w = cn.lookup(w);
                 cn.returnToCache(w);
@@ -2295,7 +2302,7 @@ namespace dd {
             for (const auto& edge: p->e) {
                 std::clog << "  " << std::hexfloat
                           << std::setw(22) << edge.w.mag->value << " "
-                          << std::setw(22) << CTEntry::val(edge.w.phase) << std::defaultfloat
+                          << std::setw(22) << PhaseTable<>::Entry::val(edge.w.phase) << std::defaultfloat
                           << "i --> " << debugnode_line(edge.p) << "\n";
             }
             std::clog << std::flush;
@@ -2326,7 +2333,7 @@ namespace dd {
 
         template<class Edge>
         bool isGloballyConsistent(const Edge& e) {
-            std::map<ComplexTable<>::Entry*, std::size_t> weight_counter{};
+            std::map<std::uintptr_t, std::size_t> weight_counter{};
             std::map<decltype(e.p), std::size_t>          node_counter{};
             fillConsistencyCounter(e, weight_counter, node_counter);
             checkConsistencyCounter(e, weight_counter, node_counter);
@@ -2336,8 +2343,8 @@ namespace dd {
     private:
         template<class Edge>
         bool isLocallyConsistent2(const Edge& e) {
-            const auto ptrMag   = CTEntry::getAlignedPointer(e.w.mag);
-            const auto ptrPhase = CTEntry::getAlignedPointer(e.w.phase);
+            const auto ptrMag   = e.w.mag;
+            const auto ptrPhase = PhaseEntry::getAlignedPointer(e.w.phase);
 
             if ((ptrMag->refCount == 0 || ptrPhase->refCount == 0) && e.w != Complex::one && e.w != Complex::zero) {
                 std::clog << "\nLOCAL INCONSISTENCY FOUND\nOffending Number: " << e.w << " (" << ptrMag->refCount << ", " << ptrPhase->refCount << ")\n\n";
@@ -2374,9 +2381,9 @@ namespace dd {
         }
 
         template<class Edge>
-        void fillConsistencyCounter(const Edge& edge, std::map<ComplexTable<>::Entry*, std::size_t>& weight_map, std::map<decltype(edge.p), std::size_t>& node_map) {
-            weight_map[CTEntry::getAlignedPointer(edge.w.mag)]++;
-            weight_map[CTEntry::getAlignedPointer(edge.w.phase)]++;
+        void fillConsistencyCounter(const Edge& edge, std::map<std::uintptr_t, std::size_t>& weight_map, std::map<decltype(edge.p), std::size_t>& node_map) {
+            weight_map[edge.w.mag]++;
+            weight_map[PhaseEntry::getAlignedPointer(edge.w.phase)]++;
 
             if (edge.isTerminal()) {
                 return;
@@ -2387,27 +2394,27 @@ namespace dd {
                     fillConsistencyCounter(child, weight_map, node_map);
                 } else {
                     node_map[child.p]++;
-                    weight_map[CTEntry::getAlignedPointer(child.w.mag)]++;
-                    weight_map[CTEntry::getAlignedPointer(child.w.phase)]++;
+                    weight_map[child.w.mag]++;
+                    weight_map[PhaseEntry::getAlignedPointer(child.w.phase)]++;
                 }
             }
         }
 
         template<class Edge>
-        void checkConsistencyCounter(const Edge& edge, const std::map<ComplexTable<>::Entry*, std::size_t>& weight_map, const std::map<decltype(edge.p), std::size_t>& node_map) {
-            auto* ptrMag   = CTEntry::getAlignedPointer(edge.w.mag);
-            auto* ptrPhase = CTEntry::getAlignedPointer(edge.w.phase);
+        void checkConsistencyCounter(const Edge& edge, const std::map<std::uintptr_t, std::size_t>& weight_map, const std::map<decltype(edge.p), std::size_t>& node_map) {
+            auto* ptrMag   = edge.w.mag;
+            auto* ptrPhase = PhaseTable<>::Entry::getAlignedPointer(edge.w.phase);
 
-            if (weight_map.at(ptrMag) > ptrMag->refCount && ptrMag != Complex::one.mag && ptrMag != Complex::zero.mag && ptrMag != &ComplexTable<>::sqrt2_2) {
+            if (weight_map.at(ptrMag) > ptrMag->refCount && ptrMag != Complex::one.mag && ptrMag != Complex::zero.mag && ptrMag != &MagnitudeTable<>::sqrt2_2) {
                 std::clog << "\nOffending weight: " << edge.w << "\n";
-                std::clog << "Bits: " << std::hexfloat << CTEntry::val(edge.w.mag) << "r " << CTEntry::val(edge.w.phase) << std::defaultfloat << "i\n";
+                std::clog << "Bits: " << std::hexfloat << MagEntry::val(edge.w.mag) << "r " << PhaseEntry::val(edge.w.phase) << std::defaultfloat << "i\n";
                 debugnode(edge.p);
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(ptrMag->value) + "(mag): " + std::to_string(weight_map.at(ptrMag)) + " occurences in DD but Ref-Count is only " + std::to_string(ptrMag->refCount));
             }
 
-            if (weight_map.at(ptrPhase) > ptrPhase->refCount && ptrPhase != Complex::zero.phase && ptrPhase != Complex::one.mag && ptrPhase != &ComplexTable<>::sqrt2_2) {
+            if (weight_map.at(ptrPhase) > ptrPhase->refCount && ptrPhase != Complex::zero.phase) {
                 std::clog << "\nOffending weight: " << edge.w << "\n";
-                std::clog << "Bits: " << std::hexfloat << CTEntry::val(edge.w.mag) << "r " << CTEntry::val(edge.w.phase) << std::defaultfloat << "i\n";
+                std::clog << "Bits: " << std::hexfloat << MagEntry::val(edge.w.mag) << "r " << PhaseEntry::val(edge.w.phase) << std::defaultfloat << "i\n";
                 debugnode(edge.p);
                 throw std::runtime_error("Ref-Count mismatch for " + std::to_string(ptrPhase->value) + "(phase): " + std::to_string(weight_map.at(ptrPhase)) + " occurences in DD but Ref-Count is only " + std::to_string(ptrPhase->refCount));
             }
@@ -2490,8 +2497,10 @@ namespace dd {
             toffoliTable.printStatistics();
             std::cout << "[Operation Table] ";
             noiseOperationTable.printStatistics();
-            std::cout << "[ComplexTable] ";
-            cn.complexTable.printStatistics();
+            std::cout << "[MagnitudeTable] ";
+            cn.magnitudeTable.printStatistics();
+            std::cout << "[PhaseTable] ";
+            cn.phaseTable.printStatistics();
         }
     };
 

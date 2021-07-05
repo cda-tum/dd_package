@@ -41,42 +41,48 @@ TEST(DDComplexTest, TrivialTest) {
 
 TEST(DDComplexTest, ComplexNumberCreation) {
     auto cn = ComplexNumbers();
-    EXPECT_EQ(cn.lookup(Complex::zero), Complex::zero);
-    EXPECT_EQ(cn.lookup(Complex::one), Complex::one);
-    EXPECT_EQ(cn.lookup(1e-14, 0.), Complex::zero);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1., 1e-14).mag), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1., 1e-14).phase), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1., -1e-14).mag), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1., -1e-14).phase), 0.);
-    auto c = cn.lookup(1., -0.5);
+    ASSERT_EQ(cn.lookup(Complex::zero), Complex::zero);
+    ASSERT_EQ(cn.lookup(Complex::one), Complex::one);
+    ASSERT_EQ(cn.lookup(1e-14, 0.), Complex::zero);
+    ASSERT_EQ(MagEntry::val(cn.lookup(1., 1e-14).mag), 1.);
+    ASSERT_EQ(PhaseEntry::val(cn.lookup(1., 1e-14).phase), 0.);
+    ASSERT_EQ(MagEntry::val(cn.lookup(1., -1e-14).mag), 1.);
+    ASSERT_EQ(PhaseEntry::val(cn.lookup(1., -1e-14).phase), 0.);
+    auto c = cn.lookup(1., 1.5);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), -0.5);
+    ASSERT_EQ(MagEntry::val(cn.lookup(c).mag), 1.);
+    ASSERT_EQ(PhaseEntry::val(cn.lookup(c).phase), 1.5);
     c = cn.lookup(1., 0.5);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), 0.5);
+    ASSERT_EQ(MagEntry::val(cn.lookup(c).mag), 1.);
+    ASSERT_EQ(PhaseEntry::val(cn.lookup(c).phase), 0.5);
     c = cn.lookup(0.5, -0.5);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).mag), 0.5);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).phase), -0.5);
+    ASSERT_EQ(MagEntry::val(cn.lookup(c).mag), 0.5);
+    ASSERT_EQ(PhaseEntry::val(cn.lookup(c).phase), 1.5);
 
-    auto e = cn.lookup(1., -0.25);
+    auto e = cn.lookup(1., 2-0.25);
     std::cout << e << std::endl;
     std::cout << ComplexValue{1., 0.25} << std::endl;
-    cn.complexTable.print();
-    cn.complexTable.printStatistics();
+    cn.magnitudeTable.print();
+    cn.magnitudeTable.printStatistics();
+    cn.phaseTable.print();
+    cn.phaseTable.printStatistics();
 }
 
 TEST(DDComplexTest, ComplexNumberArithmetic) {
     auto cn = ComplexNumbers();
     auto c  = cn.lookup(1., 0.5);
-    auto d  = ComplexNumbers::conj(c);
-    EXPECT_EQ(CTEntry::val(d.mag), 1.);
-    EXPECT_EQ(CTEntry::val(d.phase), -0.5);
-    c = cn.lookup(1., -0.25);
+    auto d  = cn.getCached();
+    ComplexNumbers::conj(d, c);
+    EXPECT_EQ(MagEntry::val(d.mag), 1.);
+    EXPECT_EQ(PhaseEntry ::val(d.phase), 1.5);
+
+    c = cn.lookup(1., 1.75);
+    std::cout << "c = " << c.toString(false) << "  raw phase=" << PhaseEntry::getAlignedPointer(c.phase)->value << "\n";
     ComplexNumbers::neg(d, c);
-    EXPECT_EQ(CTEntry::val(d.mag), 1.);
-    EXPECT_EQ(CTEntry::val(d.phase), 0.75);
+    std::cout << "d = " << d.toString(false) << "  raw phase=" << PhaseEntry::getAlignedPointer(d.phase)->value << "\n";
+    EXPECT_EQ(MagEntry::val(d.mag), 1.);
+    EXPECT_EQ(PhaseEntry::val(d.phase), 0.75);
     c = cn.lookup(SQRT2_2, 0.25);
     ComplexNumbers::incRef(c);
     d = cn.lookup(SQRT2_2, 0.75);
@@ -86,6 +92,7 @@ TEST(DDComplexTest, ComplexNumberArithmetic) {
     ComplexNumbers::decRef(c);
     ComplexNumbers::decRef(d);
     e = cn.lookup(e);
+    std::cout << "e.phase=" << PhaseEntry::val(e.phase) << " q=" << +PhaseEntry::getQuadrant(e.phase) << "\n";
     EXPECT_EQ(e, Complex::one);
     auto f = cn.getTemporary();
     ComplexNumbers::div(f, Complex::zero, Complex::one);
@@ -97,24 +104,24 @@ TEST(DDComplexTest, ComplexNumberArithmetic) {
 
 TEST(DDComplexTest, NearZeroLookup) {
     auto cn = ComplexNumbers();
-    auto c  = cn.getTemporary(ComplexTable<>::tolerance() / 10., ComplexTable<>::tolerance() / 10.);
+    auto c  = cn.getTemporary(MagnitudeTable<>::tolerance() / 10., PhaseTable<>::tolerance() / 10.);
     auto d  = cn.lookup(c);
     EXPECT_EQ(d.mag, Complex::zero.mag);
     EXPECT_EQ(d.phase, Complex::zero.phase);
 }
 
 TEST(DDComplexTest, SortedBuckets) {
-    auto     ct  = ComplexTable<>{};
+    auto     ct  = MagnitudeTable<>{};
     const fp num = 0.25;
 
     const std::array<dd::fp, 7> numbers = {
-            num + 2. * ComplexTable<>::tolerance(),
-            num - 2. * ComplexTable<>::tolerance(),
-            num + 4. * ComplexTable<>::tolerance(),
+            num + 2. * MagnitudeTable<>::tolerance(),
+            num - 2. * MagnitudeTable<>::tolerance(),
+            num + 4. * MagnitudeTable<>::tolerance(),
             num,
-            num - 4. * ComplexTable<>::tolerance(),
-            num + 6. * ComplexTable<>::tolerance(),
-            num + 8. * ComplexTable<>::tolerance()};
+            num - 4. * MagnitudeTable<>::tolerance(),
+            num + 6. * MagnitudeTable<>::tolerance(),
+            num + 8. * MagnitudeTable<>::tolerance()};
 
     const std::size_t the_bucket = ct.hash(num);
 
@@ -123,7 +130,7 @@ TEST(DDComplexTest, SortedBuckets) {
         ct.lookup(number);
     }
 
-    CTEntry* p = ct.getTable().at(the_bucket);
+    auto* p = ct.getTable().at(the_bucket);
     ASSERT_NE(p, nullptr);
 
     dd::fp      last    = std::numeric_limits<dd::fp>::min();
@@ -134,7 +141,7 @@ TEST(DDComplexTest, SortedBuckets) {
         ++counter;
     }
     ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 1); // default insertion of 0.5 is close to lower bucket
+    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0); // default insertion of 0.5 is close to lower bucket
     EXPECT_EQ(counter, numbers.size());
 }
 
@@ -145,74 +152,74 @@ TEST(DDComplexTest, GarbageCollectSomeInBucket) {
     const fp num = 0.25;
     cn.lookup(num, 0.0);
 
-    const fp num2 = num + 2. * ComplexTable<>::tolerance();
+    const fp num2 = num + 2. * MagnitudeTable<>::tolerance();
     ComplexNumbers::incRef(cn.lookup(num2, 0.0)); // num2 should be placed in same bucket as num
 
-    auto key  = ComplexTable<>::hash(num);
-    auto key2 = ComplexTable<>::hash(num2);
+    auto key  = MagnitudeTable<>::hash(num);
+    auto key2 = MagnitudeTable<>::hash(num2);
     ASSERT_EQ(key, key2);
 
-    auto* p = cn.complexTable.getTable()[key];
-    EXPECT_NEAR(p->value, num, ComplexTable<>::tolerance());
+    auto* p = cn.magnitudeTable.getTable()[key];
+    EXPECT_NEAR(p->value, num, MagnitudeTable<>::tolerance());
 
     ASSERT_NE(p->next, nullptr);
-    EXPECT_NEAR((p->next)->value, num2, ComplexTable<>::tolerance());
+    EXPECT_NEAR((p->next)->value, num2, MagnitudeTable<>::tolerance());
 
     cn.garbageCollect(true); // num should be collected
-    EXPECT_NEAR(cn.complexTable.getTable()[key]->value, num2, ComplexTable<>::tolerance());
-    EXPECT_EQ(cn.complexTable.getTable()[key]->next, nullptr);
+    EXPECT_NEAR(cn.magnitudeTable.getTable()[key]->value, num2, MagnitudeTable<>::tolerance());
+    EXPECT_EQ(cn.magnitudeTable.getTable()[key]->next, nullptr);
 }
 
 TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     auto                  cn      = ComplexNumbers();
-    constexpr std::size_t NBUCKET = ComplexTable<>::MASK + 1;
+    constexpr std::size_t NBUCKET = MagnitudeTable<>::MASK + 1;
 
     // lower border of a bucket
     fp bucketBorder = (0.25 * NBUCKET - 0.5) / (NBUCKET - 1);
 
     // insert a number slightly away from the border
-    fp num = bucketBorder + 2 * ComplexTable<>::tolerance();
+    fp num = bucketBorder + 2 * MagnitudeTable<>::tolerance();
     cn.lookup(num, 0.0);
-    auto key = ComplexTable<>::hash(num);
+    auto key = MagnitudeTable<>::hash(num);
     EXPECT_EQ(key, NBUCKET / 4);
 
     // insert a number barely in the bucket below
-    fp num2 = bucketBorder - ComplexTable<>::tolerance() / 10;
+    fp num2 = bucketBorder - MagnitudeTable<>::tolerance() / 10;
     cn.lookup(num2, 0.0);
-    auto key2 = ComplexTable<>::hash(num2);
-    EXPECT_EQ(key2, NBUCKET / 4 - 1);
+    auto key2 = MagnitudeTable<>::hash(num2);
+    EXPECT_EQ(key2, NBUCKET / 4);
 
     // insert another number in the bucket below a bit farther away from the border
-    fp num3 = bucketBorder - 2 * ComplexTable<>::tolerance();
+    fp num3 = bucketBorder - 2 * MagnitudeTable<>::tolerance();
     cn.lookup(num3, 0.0);
-    auto key3 = ComplexTable<>::hash(num3);
-    EXPECT_EQ(key3, NBUCKET / 4 - 1);
+    auto key3 = MagnitudeTable<>::hash(num3);
+    EXPECT_EQ(key3, NBUCKET / 4);
 
     // insert border number that is too far away from the number in the bucket, but is close enough to a number in the bucket below
     fp   num4 = bucketBorder;
     auto c    = cn.lookup(num4, 0.0);
-    auto key4 = ComplexTable<>::hash(num4 - ComplexTable<>::tolerance());
+    auto key4 = MagnitudeTable<>::hash(num4 - MagnitudeTable<>::tolerance());
     EXPECT_EQ(key2, key4);
-    EXPECT_NEAR(c.mag->value, num2, ComplexTable<>::tolerance());
+    EXPECT_NEAR(c.mag->value, num2, MagnitudeTable<>::tolerance());
 
     // insert a number in the higher bucket
     fp nextBorder = bucketBorder + 1.0 / (NBUCKET - 1);
     fp num5       = nextBorder;
     cn.lookup(num5, 0.0);
-    auto key5 = ComplexTable<>::hash(num5);
+    auto key5 = MagnitudeTable<>::hash(num5);
     EXPECT_EQ(key5, NBUCKET / 4 + 1);
 
     // search for a number in the lower bucket that is ultimately close enough to a number in the upper bucket
-    fp   num6 = nextBorder - ComplexTable<>::tolerance() / 10;
+    fp   num6 = nextBorder - MagnitudeTable<>::tolerance() / 10;
     auto d    = cn.lookup(num6, 0.0);
-    auto key6 = ComplexTable<>::hash(num6 + ComplexTable<>::tolerance());
+    auto key6 = MagnitudeTable<>::hash(num6 + MagnitudeTable<>::tolerance());
     EXPECT_EQ(key5, key6);
-    EXPECT_NEAR(d.mag->value, num5, ComplexTable<>::tolerance());
+    EXPECT_NEAR(d.mag->value, num5, MagnitudeTable<>::tolerance());
 }
 
 TEST(DDComplexTest, ComplexValueEquals) {
     ComplexValue a{1.0, 0.0};
-    ComplexValue a_tol{1.0 + ComplexTable<>::tolerance() / 10, 0.0};
+    ComplexValue a_tol{1.0 + MagnitudeTable<>::tolerance() / 10, 0.0};
     ComplexValue b{1.0, 0.5};
     EXPECT_TRUE(a.approximatelyEquals(a_tol));
     EXPECT_FALSE(a.approximatelyEquals(b));
@@ -233,7 +240,7 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(superposition_str_formatted.c_str(), "ℯ(iπ/4)");
     auto neg_superposition               = cn.lookup(1.0, -0.25);
     auto neg_superposition_str_formatted = neg_superposition.toString(true, 3);
-    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "ℯ(-iπ/4)");
+    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "ℯ(iπ 7/4)");
 
     std::stringstream ss{};
     ss << std::setprecision(16);
@@ -328,37 +335,40 @@ TEST(DDComplexTest, MaxRefCountReached) {
     auto max          = std::numeric_limits<decltype(c.mag->refCount)>::max();
     c.mag->refCount   = max;
     c.phase->refCount = max;
+    std::cout.flush();
+    std::clog << "Heads up: The following MAXREFCNT warning is part of a passing test.\n";
     CN::incRef(c);
+    std::clog.flush();
     EXPECT_EQ(c.mag->refCount, max);
     EXPECT_EQ(c.phase->refCount, max);
 }
 
 TEST(DDComplexTest, ComplexTableAllocation) {
     auto cn     = ComplexNumbers();
-    auto allocs = cn.complexTable.getAllocations();
+    std::size_t allocs = cn.magnitudeTable.getAllocations();
     std::cout << allocs << std::endl;
-    std::vector<ComplexTable<>::Entry*> nums{allocs};
+    std::vector<MagnitudeTable<>::Entry*> nums{allocs};
     // get all the numbers that are pre-allocated
     for (auto i = 0U; i < allocs; ++i) {
-        nums[i] = cn.complexTable.getEntry();
+        nums[i] = cn.magnitudeTable.getEntry();
     }
 
     // trigger new allocation
-    [[maybe_unused]] auto num = cn.complexTable.getEntry();
-    EXPECT_EQ(cn.complexTable.getAllocations(), (1. + cn.complexTable.getGrowthFactor()) * allocs);
+    [[maybe_unused]] auto num = cn.magnitudeTable.getEntry();
+    EXPECT_EQ(cn.magnitudeTable.getAllocations(), (1. + cn.magnitudeTable.getGrowthFactor()) * allocs);
 
     // clearing the complex table should reduce the allocated size to the original size
-    cn.complexTable.clear();
-    EXPECT_EQ(cn.complexTable.getAllocations(), allocs);
+    cn.magnitudeTable.clear();
+    EXPECT_EQ(cn.magnitudeTable.getAllocations(), allocs);
 
-    EXPECT_TRUE(cn.complexTable.availableEmpty());
+    EXPECT_TRUE(cn.magnitudeTable.availableEmpty());
     // obtain entry
-    auto entry = cn.complexTable.getEntry();
+    auto entry = cn.magnitudeTable.getEntry();
     // immediately return entry
-    cn.complexTable.returnEntry(entry);
-    EXPECT_FALSE(cn.complexTable.availableEmpty());
+    cn.magnitudeTable.returnEntry(entry);
+    EXPECT_FALSE(cn.magnitudeTable.availableEmpty());
     // obtain the same entry again, but this time from the available stack
-    auto entry2 = cn.complexTable.getEntry();
+    auto entry2 = cn.magnitudeTable.getEntry();
     EXPECT_EQ(entry, entry2);
 }
 
@@ -368,26 +378,28 @@ TEST(DDComplexTest, ComplexCacheAllocation) {
     std::cout << allocs << std::endl;
     std::vector<Complex> cnums{allocs};
     // get all the cached complex numbers that are pre-allocated
-    for (auto i = 0U; i < allocs; i += 2) {
+    for (auto i = 0U; i < allocs; i += 1) {
         cnums[i % 2] = cn.getCached();
     }
 
+    EXPECT_EQ(allocs, cn.complexCache.getAllocations());
     // trigger new allocation for obtaining a complex from cache
     [[maybe_unused]] auto cnum = cn.getCached();
-    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.getGrowthFactor()) * allocs);
+    EXPECT_LT(allocs, cn.complexCache.getAllocations());
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1 + cn.complexCache.getGrowthFactor()) * allocs);
 
     // clearing the cache should reduce the allocated size to the original size
     cn.complexCache.clear();
     EXPECT_EQ(cn.complexCache.getAllocations(), allocs);
 
     // get all the cached complex numbers again
-    for (auto i = 0U; i < allocs; i += 2) {
+    for (auto i = 0U; i < allocs; i += 1) {
         cnums[i % 2] = cn.getCached();
     }
 
     // trigger new allocation for obtaining a temporary from cache
     [[maybe_unused]] auto cnumtmp = cn.getTemporary();
-    EXPECT_EQ(cn.complexCache.getAllocations(), (1. + cn.complexCache.getGrowthFactor()) * allocs);
+    EXPECT_EQ(cn.complexCache.getAllocations(), (1 + cn.complexCache.getGrowthFactor()) * allocs);
 
     // clearing the unique table should reduce the allocated size to the original size
     cn.complexCache.clear();
