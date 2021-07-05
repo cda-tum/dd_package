@@ -109,8 +109,6 @@ target_sources(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Export.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/GateMatrixDefinitions.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Package.hpp>
-
-        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/tables/ComplexTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/tables/ComputeTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/tables/MagnitudeTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/tables/NoiseOperationTable.hpp>
