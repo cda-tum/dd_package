@@ -15,11 +15,11 @@
 #include <utility>
 
 namespace dd {
-    using MagEntry = MagnitudeTable<>::Entry;
+    using MagEntry   = MagnitudeTable<>::Entry;
     using PhaseEntry = PhaseTable<>::Entry;
 
     struct Complex {
-        MagEntry* mag;
+        MagEntry*   mag;
         PhaseEntry* phase;
 
         static Complex zero;

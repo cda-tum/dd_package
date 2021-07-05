@@ -60,7 +60,7 @@ TEST(DDComplexTest, ComplexNumberCreation) {
     ASSERT_EQ(MagEntry::val(cn.lookup(c).mag), 0.5);
     ASSERT_EQ(PhaseEntry::val(cn.lookup(c).phase), 1.5);
 
-    auto e = cn.lookup(1., 2-0.25);
+    auto e = cn.lookup(1., 2 - 0.25);
     std::cout << e << std::endl;
     std::cout << ComplexValue{1., 0.25} << std::endl;
     cn.magnitudeTable.print();
@@ -344,7 +344,7 @@ TEST(DDComplexTest, MaxRefCountReached) {
 }
 
 TEST(DDComplexTest, ComplexTableAllocation) {
-    auto cn     = ComplexNumbers();
+    auto        cn     = ComplexNumbers();
     std::size_t allocs = cn.magnitudeTable.getAllocations();
     std::cout << allocs << std::endl;
     std::vector<MagnitudeTable<>::Entry*> nums{allocs};

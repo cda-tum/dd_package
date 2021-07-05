@@ -30,7 +30,6 @@ namespace dd {
             Entry*   next{};
             RefCount refCount{};
 
-
             [[nodiscard]] static inline fp val(const Entry* e) {
                 return e->value;
             }

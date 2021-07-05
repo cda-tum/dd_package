@@ -48,7 +48,7 @@ namespace dd {
             }
 
             [[nodiscard]] static inline fp val(const Entry* e) {
-                switch(getQuadrant(e)) {
+                switch (getQuadrant(e)) {
                     case 0: return e->value;
                     case 1: return getAlignedPointer(e)->value + 0.5;
                     case 2: return getAlignedPointer(e)->value + 1.0;
@@ -78,7 +78,7 @@ namespace dd {
         static inline Entry zero{0., nullptr, 1};
 
         static inline Entry* zeroPtr = &zero;
-        static inline Entry* onePtr = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | reinterpret_cast<std::uintptr_t>(2UL));
+        static inline Entry* onePtr  = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | reinterpret_cast<std::uintptr_t>(2UL));
 
         PhaseTable():
             chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {

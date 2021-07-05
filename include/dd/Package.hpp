@@ -15,8 +15,8 @@
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
 #include "dd/tables/ComputeTable.hpp"
-#include "dd/tables/NoiseOperationTable.hpp"
 #include "dd/tables/MagnitudeTable.hpp"
+#include "dd/tables/NoiseOperationTable.hpp"
 #include "dd/tables/PhaseTable.hpp"
 #include "dd/tables/ToffoliTable.hpp"
 #include "dd/tables/UnaryComputeTable.hpp"
@@ -1293,8 +1293,8 @@ namespace dd {
                 }
                 vEdge e2{};
                 if (!y.isTerminal() && y.p->v == w) {
-                    e2   = y.p->e[i];
-                     ComplexNumbers::conj(e2.w, e2.w);
+                    e2 = y.p->e[i];
+                    ComplexNumbers::conj(e2.w, e2.w);
                 } else {
                     e2 = yCopy;
                 }
@@ -1887,7 +1887,8 @@ namespace dd {
             // calculate new accumulated amplitude
             std::cout << "[i==" << i << " e.w*amp  ] " << e.w.mag << "(" << e.w.mag->value << ") * " << amp.mag << "(" << amp.mag->value << ")\n";
             auto c = cn.mulCached(e.w, amp);
-            std::cout << "[i==" << i << " e.w*amp=c] " << e.w.mag << "(" << e.w.mag->value << ") * " << amp.mag << "(" << amp.mag->value << ") " << " = " << c.mag << "(" << c.mag->value << ")\n";
+            std::cout << "[i==" << i << " e.w*amp=c] " << e.w.mag << "(" << e.w.mag->value << ") * " << amp.mag << "(" << amp.mag->value << ") "
+                      << " = " << c.mag << "(" << c.mag->value << ")\n";
 
             // base case
             if (e.isTerminal()) {
@@ -2338,7 +2339,7 @@ namespace dd {
         template<class Edge>
         bool isGloballyConsistent(const Edge& e) {
             std::map<std::uintptr_t, std::size_t> weight_counter{};
-            std::map<decltype(e.p), std::size_t>          node_counter{};
+            std::map<decltype(e.p), std::size_t>  node_counter{};
             fillConsistencyCounter(e, weight_counter, node_counter);
             checkConsistencyCounter(e, weight_counter, node_counter);
             return true;

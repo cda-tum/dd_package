@@ -83,8 +83,8 @@ TEST(DDPackageTest, BellState) {
     ASSERT_EQ(dd->getValueByPath(bell_state, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bell_state, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
 
-    auto goalVector       = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
-    auto retrievedVector  = dd->getVector(bell_state);
+    auto goalVector      = dd::CVec{{dd::SQRT2_2, 0.}, {0., 0.}, {0., 0.}, {dd::SQRT2_2, 0.}};
+    auto retrievedVector = dd->getVector(bell_state);
     ASSERT_EQ(retrievedVector, goalVector);
 
     ASSERT_DOUBLE_EQ(dd->fidelity(zero_state, bell_state), 0.5);
