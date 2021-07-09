@@ -78,9 +78,9 @@ TEST(DDComplexTest, ComplexNumberArithmetic) {
     EXPECT_EQ(PhaseEntry ::val(d.phase), 1.5);
 
     c = cn.lookup(1., 1.75);
-    std::cout << "c = " << c.toString(false) << " | phase = " <<  PhaseEntry::val(c.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(c.phase)->value << "\n";
+    std::cout << "c = " << c.toString(false) << " | phase = " << PhaseEntry::val(c.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(c.phase)->value << "\n";
     ComplexNumbers::neg(d, c);
-    std::cout << "d = " << d.toString(false) << " | phase = " <<  PhaseEntry::val(d.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(d.phase)->value << "\n";
+    std::cout << "d = " << d.toString(false) << " | phase = " << PhaseEntry::val(d.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(d.phase)->value << "\n";
     EXPECT_EQ(MagEntry::val(d.mag), 1.);
     EXPECT_EQ(PhaseEntry::val(d.phase), 0.75);
     c = cn.lookup(dd::SQRT2_2, 0.25);
