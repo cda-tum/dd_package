@@ -78,14 +78,14 @@ TEST(DDComplexTest, ComplexNumberArithmetic) {
     EXPECT_EQ(PhaseEntry ::val(d.phase), 1.5);
 
     c = cn.lookup(1., 1.75);
-    std::cout << "c = " << c.toString(false) << "  raw phase=" << PhaseEntry::getAlignedPointer(c.phase)->value << "\n";
+    std::cout << "c = " << c.toString(false) << " | phase = " <<  PhaseEntry::val(c.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(c.phase)->value << "\n";
     ComplexNumbers::neg(d, c);
-    std::cout << "d = " << d.toString(false) << "  raw phase=" << PhaseEntry::getAlignedPointer(d.phase)->value << "\n";
+    std::cout << "d = " << d.toString(false) << " | phase = " <<  PhaseEntry::val(d.phase) << " raw phase=" << PhaseEntry::getAlignedPointer(d.phase)->value << "\n";
     EXPECT_EQ(MagEntry::val(d.mag), 1.);
     EXPECT_EQ(PhaseEntry::val(d.phase), 0.75);
-    c = cn.lookup(SQRT2_2, 0.25);
+    c = cn.lookup(dd::SQRT2_2, 0.25);
     ComplexNumbers::incRef(c);
-    d = cn.lookup(SQRT2_2, 0.75);
+    d = cn.lookup(dd::SQRT2_2, 0.75);
     ComplexNumbers::incRef(d);
     auto e = cn.getTemporary();
     ComplexNumbers::sub(e, c, d);
@@ -110,7 +110,7 @@ TEST(DDComplexTest, NearZeroLookup) {
     EXPECT_EQ(d.phase, Complex::zero.phase);
 }
 
-TEST(DDComplexTest, SortedBuckets) {
+TEST(DDComplexTest, SortedBucketsMagnitude) {
     auto     ct  = MagnitudeTable<>{};
     const fp num = 0.25;
 
@@ -141,7 +141,42 @@ TEST(DDComplexTest, SortedBuckets) {
         ++counter;
     }
     ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0); // default insertion of 0.5 is close to lower bucket
+    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0);
+    EXPECT_EQ(counter, numbers.size());
+}
+
+TEST(DDComplexTest, SortedBucketsPhase) {
+    auto     ct  = PhaseTable<>{};
+    const fp num = 0.25;
+
+    const std::array<dd::fp, 7> numbers = {
+            num + 2. * PhaseTable<>::tolerance(),
+            num - 2. * PhaseTable<>::tolerance(),
+            num + 4. * PhaseTable<>::tolerance(),
+            num,
+            num - 4. * PhaseTable<>::tolerance(),
+            num + 6. * PhaseTable<>::tolerance(),
+            num + 8. * PhaseTable<>::tolerance()};
+
+    const std::size_t the_bucket = ct.hash(num);
+
+    for (auto const& number: numbers) {
+        ASSERT_EQ(the_bucket, ct.hash(number));
+        ct.lookup(number);
+    }
+
+    auto* p = ct.getTable().at(the_bucket);
+    ASSERT_NE(p, nullptr);
+
+    dd::fp      last    = std::numeric_limits<dd::fp>::min();
+    std::size_t counter = 0;
+    while (p != nullptr) {
+        ASSERT_LT(last, p->value);
+        p = p->next;
+        ++counter;
+    }
+    ct.printStatistics(std::cout);
+    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0);
     EXPECT_EQ(counter, numbers.size());
 }
 

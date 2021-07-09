@@ -49,7 +49,6 @@ namespace dd {
                 magAvailable   = magAvailable->next;
                 phaseAvailable = phaseAvailable->next;
                 count += 2;
-                std::cout << "getCachedComplex(): returned " << entry.mag << " " << entry.phase << " from available\n";
                 return entry;
             }
 
@@ -73,7 +72,6 @@ namespace dd {
             c.phase = &(*phaseChunkIt);
             ++phaseChunkIt;
             count += 2;
-            std::cout << "getCachedComplex(): returned " << c.mag << " " << c.phase << " from newly allocated\n";
             return c;
         }
 
@@ -106,8 +104,6 @@ namespace dd {
             assert(c != Complex::one);
             assert(c.mag->refCount == 0);
             assert(c.phase->refCount == 0);
-
-            std::cout << "returnToCache(c): returned " << c.mag << " " << c.phase << " to cache\n";
 
             c.phase->next  = phaseAvailable;
             phaseAvailable = c.phase;

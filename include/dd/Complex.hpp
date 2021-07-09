@@ -65,8 +65,8 @@ namespace dd {
         return os;
     }
 
-    inline Complex Complex::zero{&MagnitudeTable<>::zero, PhaseTable<>::zeroPtr};
-    inline Complex Complex::one{&MagnitudeTable<>::one, PhaseTable<>::zeroPtr};
+    inline Complex Complex::zero{&MagnitudeTable<>::zero, &PhaseTable<>::zero};
+    inline Complex Complex::one{&MagnitudeTable<>::one, &PhaseTable<>::zero};
 } // namespace dd
 
 namespace std {
