@@ -180,6 +180,7 @@ namespace dd {
 
         Entry* lookup(fp val) {
             assert(!std::isnan(val));
+            ++lookups;
             //std::cout << val;
             if (std::abs(val) <= TOLERANCE) {
                 ++hits;
