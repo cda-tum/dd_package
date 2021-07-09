@@ -67,7 +67,7 @@ namespace dd {
             std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};
             std::pair<std::uint64_t, std::uint64_t> upperBound{1U, 0U};
 
-            while ((lowerBound.second <= maxDenominator) and (upperBound.second <= maxDenominator)) {
+            while ((lowerBound.second <= maxDenominator) && (upperBound.second <= maxDenominator)) {
                 auto num    = lowerBound.first + upperBound.first;
                 auto den    = lowerBound.second + upperBound.second;
                 auto median = static_cast<fp>(num) / static_cast<fp>(den);
