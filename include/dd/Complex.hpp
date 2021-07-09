@@ -51,7 +51,7 @@ namespace dd {
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
-            return ComplexValue::toString(MagEntry::val(mag), PhaseEntry::val(phase), formatted, precision);
+            return ComplexValue::toString(MagEntry::val(mag), std::remainder(PhaseEntry::val(phase), 2.0), formatted, precision);
         }
 
         void writeBinary(std::ostream& os) const {

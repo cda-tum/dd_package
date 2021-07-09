@@ -98,6 +98,15 @@ namespace dd {
                 return;
             }
             if (phase) {
+                // special case treatment for +-i
+                if (std::abs(r - 0.5) < tol) {
+                    os << "i";
+                    return;
+                } else if (std::abs(r + 0.5) < tol) {
+                    os << "-i";
+                    return;
+                }
+
                 os << "ℯ(";
                 if (std::signbit(r))
                     os << "-";
@@ -230,7 +239,9 @@ namespace dd {
                 } else {
                     if (std::abs(mag - 1.0) > MagnitudeTable<>::tolerance()) {
                         ComplexValue::printFormatted(ss, mag);
-                        ss << " ";
+                        if (std::abs(phase) > PhaseTable<>::tolerance()) {
+                            ss << " ";
+                        }
                     } else if (std::abs(phase) < PhaseTable<>::tolerance()) {
                         ss << "1";
                         return ss.str();
@@ -265,7 +276,7 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const ComplexValue& c) {
-        os << ComplexValue::toString(c.mag, c.phase);
+        os << ComplexValue::toString(c.mag, std::remainder(c.phase, 2.0));
         return os;
     }
 } // namespace dd
