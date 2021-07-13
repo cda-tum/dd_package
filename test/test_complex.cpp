@@ -112,7 +112,7 @@ TEST(DDComplexTest, NearZeroLookup) {
 }
 
 TEST(DDComplexTest, SortedBucketsMagnitude) {
-    auto     ct  = MagnitudeTable<>{};
+    auto     ct  = std::make_unique<MagnitudeTable<>>();
     const fp num = 0.25;
 
     const std::array<dd::fp, 7> numbers = {
@@ -124,14 +124,14 @@ TEST(DDComplexTest, SortedBucketsMagnitude) {
             num + 6. * MagnitudeTable<>::tolerance(),
             num + 8. * MagnitudeTable<>::tolerance()};
 
-    const std::size_t the_bucket = ct.hash(num);
+    const std::size_t the_bucket = ct->hash(num);
 
     for (auto const& number: numbers) {
-        ASSERT_EQ(the_bucket, ct.hash(number));
-        ct.lookup(number);
+        ASSERT_EQ(the_bucket, ct->hash(number));
+        ct->lookup(number);
     }
 
-    auto* p = ct.getTable().at(the_bucket);
+    auto* p = ct->getTable().at(the_bucket);
     ASSERT_NE(p, nullptr);
 
     dd::fp      last    = std::numeric_limits<dd::fp>::min();
@@ -141,13 +141,13 @@ TEST(DDComplexTest, SortedBucketsMagnitude) {
         p = p->next;
         ++counter;
     }
-    ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0);
+    ct->printStatistics(std::cout);
+    EXPECT_EQ(ct->getStatistics().at("lowerNeighbors"), 0);
     EXPECT_EQ(counter, numbers.size());
 }
 
 TEST(DDComplexTest, SortedBucketsPhase) {
-    auto     ct  = PhaseTable<>{};
+    auto     ct  = std::make_unique<PhaseTable<>>();
     const fp num = 0.25;
 
     const std::array<dd::fp, 7> numbers = {
@@ -159,14 +159,14 @@ TEST(DDComplexTest, SortedBucketsPhase) {
             num + 6. * PhaseTable<>::tolerance(),
             num + 8. * PhaseTable<>::tolerance()};
 
-    const std::size_t the_bucket = ct.hash(num);
+    const std::size_t the_bucket = ct->hash(num);
 
     for (auto const& number: numbers) {
-        ASSERT_EQ(the_bucket, ct.hash(number));
-        ct.lookup(number);
+        ASSERT_EQ(the_bucket, ct->hash(number));
+        ct->lookup(number);
     }
 
-    auto* p = ct.getTable().at(the_bucket);
+    auto* p = ct->getTable().at(the_bucket);
     ASSERT_NE(p, nullptr);
 
     dd::fp      last    = std::numeric_limits<dd::fp>::min();
@@ -176,8 +176,8 @@ TEST(DDComplexTest, SortedBucketsPhase) {
         p = p->next;
         ++counter;
     }
-    ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0);
+    ct->printStatistics(std::cout);
+    EXPECT_EQ(ct->getStatistics().at("lowerNeighbors"), 0);
     EXPECT_EQ(counter, numbers.size());
 }
 
