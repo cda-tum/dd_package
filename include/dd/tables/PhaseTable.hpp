@@ -180,6 +180,7 @@ namespace dd {
 
         Entry* lookup(fp val) {
             assert(!std::isnan(val));
+            ++lookups;
             //std::cout << val;
             if (std::abs(val) <= TOLERANCE) {
                 ++hits;
@@ -419,6 +420,23 @@ namespace dd {
                << ", gc runs: " << gcRuns
                << "\n";
             // clang-format on
+            return os;
+        }
+
+        std::ostream& printBucketDistribution(std::ostream& os = std::cout) {
+            for (auto bucket: table) {
+                if (bucket == nullptr) {
+                    os << "0\n";
+                    continue;
+                }
+                std::size_t bucketCount = 0;
+                while (bucket != nullptr) {
+                    ++bucketCount;
+                    bucket = bucket->next;
+                }
+                os << bucketCount << "\n";
+            }
+            os << std::endl;
             return os;
         }
 

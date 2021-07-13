@@ -67,7 +67,7 @@ namespace dd {
             std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};
             std::pair<std::uint64_t, std::uint64_t> upperBound{1U, 0U};
 
-            while ((lowerBound.second <= maxDenominator) and (upperBound.second <= maxDenominator)) {
+            while ((lowerBound.second <= maxDenominator) && (upperBound.second <= maxDenominator)) {
                 auto num    = lowerBound.first + upperBound.first;
                 auto den    = lowerBound.second + upperBound.second;
                 auto median = static_cast<fp>(num) / static_cast<fp>(den);
@@ -98,6 +98,15 @@ namespace dd {
                 return;
             }
             if (phase) {
+                // special case treatment for +-i
+                if (std::abs(r - 0.5) < tol) {
+                    os << "i";
+                    return;
+                } else if (std::abs(r + 0.5) < tol) {
+                    os << "-i";
+                    return;
+                }
+
                 os << "ℯ(";
                 if (std::signbit(r))
                     os << "-";
@@ -224,13 +233,15 @@ namespace dd {
             }
 
             if (formatted) {
-                if (std::abs(phase - 1.0) < PhaseTable<>::tolerance()) {
+                if (std::abs(std::abs(phase) - 1.0) < PhaseTable<>::tolerance()) {
                     ss << "-";
                     ComplexValue::printFormatted(ss, mag);
                 } else {
                     if (std::abs(mag - 1.0) > MagnitudeTable<>::tolerance()) {
                         ComplexValue::printFormatted(ss, mag);
-                        ss << " ";
+                        if (std::abs(phase) > PhaseTable<>::tolerance()) {
+                            ss << " ";
+                        }
                     } else if (std::abs(phase) < PhaseTable<>::tolerance()) {
                         ss << "1";
                         return ss.str();
@@ -265,7 +276,7 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const ComplexValue& c) {
-        os << ComplexValue::toString(c.mag, c.phase);
+        os << ComplexValue::toString(c.mag, std::remainder(c.phase, 2.0));
         return os;
     }
 } // namespace dd

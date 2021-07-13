@@ -268,7 +268,7 @@ TEST(DDComplexTest, NumberPrinting) {
     auto imag_str = imag.toString(false);
     EXPECT_STREQ(imag_str.c_str(), "1 0.5");
     auto imag_str_formatted = imag.toString(true);
-    EXPECT_STREQ(imag_str_formatted.c_str(), "ℯ(iπ/2)");
+    EXPECT_STREQ(imag_str_formatted.c_str(), "i");
 
     auto superposition     = cn->lookup(1.0, 0.25);
     auto superposition_str = superposition.toString(false, 3);
@@ -277,7 +277,7 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(superposition_str_formatted.c_str(), "ℯ(iπ/4)");
     auto neg_superposition               = cn->lookup(1.0, -0.25);
     auto neg_superposition_str_formatted = neg_superposition.toString(true, 3);
-    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "ℯ(iπ 7/4)");
+    EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "ℯ(-iπ/4)");
 
     std::stringstream ss{};
     ss << std::setprecision(16);
@@ -292,7 +292,7 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(ss.str().c_str(), "1/2");
     ss.str("");
     ComplexValue::printFormatted(ss, 0.5, true);
-    EXPECT_STREQ(ss.str().c_str(), "ℯ(iπ/2)");
+    EXPECT_STREQ(ss.str().c_str(), "i");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.75, false);
