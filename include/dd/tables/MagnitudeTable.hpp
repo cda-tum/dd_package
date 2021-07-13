@@ -384,6 +384,23 @@ namespace dd {
             return os;
         }
 
+        std::ostream& printBucketDistribution(std::ostream& os = std::cout) {
+            for (auto bucket: table) {
+                if (bucket == nullptr) {
+                    os << "0\n";
+                    continue;
+                }
+                std::size_t bucketCount = 0;
+                while (bucket != nullptr) {
+                    ++bucketCount;
+                    bucket = bucket->next;
+                }
+                os << bucketCount << "\n";
+            }
+            os << std::endl;
+            return os;
+        }
+
     private:
         using Bucket = Entry*;
         using Table  = std::array<Bucket, NBUCKET>;
