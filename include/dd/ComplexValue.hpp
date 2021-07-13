@@ -233,7 +233,7 @@ namespace dd {
             }
 
             if (formatted) {
-                if (std::abs(phase - 1.0) < PhaseTable<>::tolerance()) {
+                if (std::abs(std::abs(phase) - 1.0) < PhaseTable<>::tolerance()) {
                     ss << "-";
                     ComplexValue::printFormatted(ss, mag);
                 } else {
