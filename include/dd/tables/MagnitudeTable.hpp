@@ -39,11 +39,11 @@ namespace dd {
             }
 
             [[nodiscard]] static inline bool approximatelyZero(const Entry* e) {
-                return e == &zero || std::abs(val(e)) < TOLERANCE;
+                return e == &zero || val(e) < TOLERANCE;
             }
 
             [[nodiscard]] static inline bool approximatelyOne(const Entry* e) {
-                return e == &one || std::abs(val(e) - 1) < TOLERANCE;
+                return e == &one || std::abs(val(e) - 1.) < TOLERANCE;
             }
 
             static void writeBinary(const Entry* e, std::ostream& os) {
@@ -79,13 +79,13 @@ namespace dd {
             TOLERANCE = tol;
         }
 
-        static constexpr std::size_t MASK = NBUCKET - 1;
+        static constexpr std::int64_t MASK = NBUCKET - 1;
 
         // linear (clipped) hash function
-        static constexpr std::size_t hash(const fp val) {
+        static constexpr std::int64_t hash(const fp val) {
             assert(val >= 0);
-            auto key = static_cast<std::size_t>(val * MASK + static_cast<dd::fp>(0.5));
-            return std::min<std::size_t>(key, MASK);
+            auto key = static_cast<std::int64_t>(std::nearbyint(val * MASK));
+            return std::min<std::int64_t>(key, MASK);
         }
 
         // access functions
@@ -124,8 +124,8 @@ namespace dd {
 
             assert(val - TOLERANCE >= 0); // should be handle above as special case
 
-            const std::size_t lowerKey = hash(val - TOLERANCE);
-            const std::size_t upperKey = hash(val + TOLERANCE);
+            const auto lowerKey = hash(val - TOLERANCE);
+            const auto upperKey = hash(val + TOLERANCE);
 
             if (upperKey == lowerKey) {
                 ++findOrInserts;
@@ -135,28 +135,23 @@ namespace dd {
             // code below is to handle cases where the looked up value
             // could be in the lower or upper buckets and we have to go through them
 
-            const std::size_t key = hash(val);
+            const auto key = hash(val);
 
             Entry* p = find(table[key], val);
             if (p != nullptr) {
                 return p;
             }
 
-            // search in (potentially) lower bucket
-            if (lowerKey != key) {
+            if (lowerKey != key) { // (potentially) search in lower bucket
                 ++lowerNeighbors;
-                // buckets are sorted so we only have to look into the last entry of the lower bucket
+                // buckets are sorted -> we only have to look into the last entry of the lower bucket
                 Entry* p_lower = tailTable[lowerKey];
                 if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
                     return p_lower;
                 }
-            }
-
-            // search in (potentially) higher bucket
-            if (upperKey != key) {
+            } else if (upperKey != key) { // (potentially) search in higher bucket
                 ++upperNeighbors;
-                // buckets are sorted, we only have to look at the first element
-
+                // buckets are sorted -> we only have to look at the first element of the upper bucket
                 Entry* p_upper = table[upperKey];
                 if (p_upper != nullptr && p_upper->value - val < TOLERANCE) {
                     return p_upper;
@@ -438,8 +433,8 @@ namespace dd {
         std::size_t gcRuns  = 0;
         std::size_t gcLimit = 100000;
 
-        inline Entry* findOrInsert(const std::size_t key, const fp val) {
-            [[maybe_unused]] const fp val_tol = val + TOLERANCE;
+        inline Entry* findOrInsert(const std::int64_t key, const fp val) {
+            const fp val_tol = val + TOLERANCE;
 
             Entry* curr = table[key];
             Entry* prev = nullptr;
@@ -480,7 +475,7 @@ namespace dd {
          * @param val value to be inserted
          * @return pointer to the inserted entry
          */
-        inline Entry* insert(const std::size_t key, const fp val) {
+        inline Entry* insert(const std::int64_t key, const fp val) {
             ++inserts;
             Entry* entry = getEntry();
             entry->value = val;
