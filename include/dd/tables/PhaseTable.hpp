@@ -77,8 +77,10 @@ namespace dd {
 
         static inline Entry zero{0., nullptr, 1};
 
-        static inline Entry* zeroPtr = &zero;
-        static inline Entry* onePtr  = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | 2u);
+        static inline Entry* zeroPtr  = &zero;
+        static inline Entry* halfPtr  = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | 1u);
+        static inline Entry* onePtr   = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | 2u);
+        static inline Entry* mhalfPtr = reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(&zero) | 3u);
 
         PhaseTable():
             chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
@@ -171,26 +173,69 @@ namespace dd {
         Entry* lookup(fp val) {
             assert(!std::isnan(val));
             ++lookups;
-            //std::cout << val;
-            if (std::abs(val) <= TOLERANCE) {
+
+            //            std::cout << val;
+
+            auto normalizedPhase = std::remainder(val, 2.);
+            //            std::cout << " " << normalizedPhase;
+            auto signPhase = std::signbit(normalizedPhase);
+            auto absPhase  = std::abs(normalizedPhase);
+
+            // treat border cases (avoiding that entries extremely close to 0 or 0.5 are inserted into the table)
+            if (absPhase < TOLERANCE) {
+                // if absolute value is close enough to zero, just return the zero entry
                 ++hits;
-                //std::cout << " is close to zero\n";
+                //                std::cout << " close to zero" << std::endl;
                 return zeroPtr;
             }
 
-            while (val < 0) {
-                val += 2;
+            if (std::abs(absPhase - 1.0) < TOLERANCE) {
+                // if absolute value is close enough to one, just return the one entry
+                ++hits;
+                //                std::cout << " close to +-1" << std::endl;
+                return onePtr;
             }
 
-            uint_fast8_t quadrant = 0;
-            while (val >= 0.5) {
-                quadrant++;
-                val -= 0.5;
+            auto quadrantBorder = absPhase - 0.5;
+            if (std::abs(quadrantBorder) < TOLERANCE) {
+                // if absolute value is close enough to 1/2, just return the (minus) 1/2 entry
+                ++hits;
+                //                std::cout << " close to +-0.5" << std::endl;
+                return signPhase ? mhalfPtr : halfPtr;
             }
 
-            //std::cout << " --> " << val << " @ " << +quadrant << std::endl;
-            auto entry = lookupQuadrantized(val);
-            return Entry::setQuadrant(entry, quadrant % 4);
+            // determine quadrant
+            uint_fast8_t quadrant = signPhase ? 2U : 0U;
+            if (quadrantBorder > 0) {
+                if (!signPhase) {
+                    quadrant++;
+                }
+            } else {
+                if (signPhase) {
+                    quadrant++;
+                }
+            }
+            //            std::cout << " @ " << static_cast<std::size_t>(quadrant);
+
+            // reduce phase to (0, 0.5)
+            if (signPhase) {
+                if (quadrantBorder > 0) {
+                    // third quadrant
+                    normalizedPhase += 1.;
+                } else {
+                    // fourth quadrant
+                    normalizedPhase += 0.5;
+                }
+            } else {
+                if (quadrantBorder > 0) {
+                    // second quadrant
+                    normalizedPhase -= 0.5;
+                }
+            }
+            //            std::cout << " | " << normalizedPhase << std::endl;
+
+            auto entry = lookupQuadrantized(normalizedPhase);
+            return Entry::setQuadrant(entry, quadrant);
         }
 
         [[nodiscard]] Entry* getEntry() {
