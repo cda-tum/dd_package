@@ -42,48 +42,36 @@ namespace dd {
         static void add(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            if (a.approximatelyZero()) {
-                r.setVal(b);
-            } else if (b.approximatelyZero()) {
-                r.setVal(a);
-            } else {
-                const auto& aMag   = a.mag->value;
-                const auto& aPhase = PhaseEntry::val(a.phase);
-                const auto& bMag   = b.mag->value;
-                const auto& bPhase = PhaseEntry::val(b.phase);
 
-                //                std::cout << ComplexValue::toString(aMag, aPhase) << " + " << ComplexValue::toString(bMag, bPhase) << " = ";
+            const auto& aMag   = a.mag->value;
+            const auto& aPhase = PhaseEntry::val(a.phase);
+            const auto& bMag   = b.mag->value;
+            const auto& bPhase = PhaseEntry::val(b.phase);
 
-                const auto minmax    = std::minmax(aPhase, bPhase);
-                const auto diff      = minmax.second - minmax.first;
-                const auto nearby    = std::nearbyint(diff);
-                const auto closeness = std::abs(diff - nearby);
+            const auto diff      = aPhase - bPhase;
+            const auto nearby    = std::nearbyint(diff);
+            const auto closeness = std::abs(diff - nearby);
 
-                if (closeness < decltype(magnitudeTable)::tolerance()) {
-                    if ((static_cast<std::uint64_t>(nearby) % 2) == 0) {
-                        // same phase
-                        r.mag->value   = aMag + bMag;
+            if (closeness < decltype(phaseTable)::tolerance()) {
+                if ((static_cast<std::int64_t>(nearby) % 2) == 0) {
+                    // same phase
+                    r.mag->value   = aMag + bMag;
+                    r.phase->value = aPhase;
+                } else {
+                    // opposing phase
+                    if (aMag >= bMag) {
+                        r.mag->value   = aMag - bMag;
                         r.phase->value = aPhase;
                     } else {
-                        // opposing phase
-                        if (std::abs(aMag - bMag) < decltype(magnitudeTable)::tolerance()) {
-                            r.mag->value   = 0.;
-                            r.phase->value = 0.;
-                        } else if (aMag > bMag) {
-                            r.mag->value   = aMag - bMag;
-                            r.phase->value = aPhase;
-                        } else {
-                            r.mag->value   = bMag - aMag;
-                            r.phase->value = bPhase;
-                        }
+                        r.mag->value   = bMag - aMag;
+                        r.phase->value = bPhase;
                     }
-                } else {
-                    // general case
-                    auto c         = std::polar(aMag, aPhase * PI) + std::polar(bMag, bPhase * PI);
-                    r.mag->value   = std::abs(c);
-                    r.phase->value = std::arg(c) * PIinv;
                 }
-                //                std::cout << r << std::endl;
+            } else {
+                // general case
+                auto c         = std::polar(aMag, aPhase * PI) + std::polar(bMag, bPhase * PI);
+                r.mag->value   = std::abs(c);
+                r.phase->value = std::arg(c) * PIinv;
             }
         }
         static void sub(Complex& r, const Complex& a, const Complex& b) {
@@ -113,33 +101,30 @@ namespace dd {
         static void mul(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            if (a.approximatelyOne()) {
-                r.setVal(b);
-            } else if (b.approximatelyOne()) {
-                r.setVal(a);
-            } else if (a.approximatelyZero() || b.approximatelyZero()) {
-                r.mag->value   = 0.;
-                r.phase->value = 0.;
-            } else {
-                r.mag->value   = a.mag->value * b.mag->value;
-                r.phase->value = PhaseEntry::val(a.phase) + PhaseEntry::val(b.phase);
-            }
+            //            if (a.approximatelyOne()) {
+            //                r.setVal(b);
+            //            } else if (b.approximatelyOne()) {
+            //                r.setVal(a);
+            //            } else if (a.approximatelyZero() || b.approximatelyZero()) {
+            //                r.mag->value   = 0.;
+            //                r.phase->value = 0.;
+            //            } else {
+            r.mag->value   = a.mag->value * b.mag->value;
+            r.phase->value = PhaseEntry::val(a.phase) + PhaseEntry::val(b.phase);
+            //            }
         }
         static void div(Complex& r, const Complex& a, const Complex& b) {
             assert(r != Complex::zero);
             assert(r != Complex::one);
-            if (a.approximatelyEquals(b)) {
-                r.mag->value   = 1.;
-                r.phase->value = 0.;
-            } else if (a.approximatelyZero()) {
-                r.mag->value   = 0.;
-                r.phase->value = 0.;
-            } else if (b.approximatelyOne()) {
-                r.setVal(a);
-            } else {
-                r.mag->value   = a.mag->value / b.mag->value;
-                r.phase->value = PhaseEntry::val(a.phase) - PhaseEntry::val(b.phase);
-            }
+            //            if (a.approximatelyEquals(b)) {
+            //                r.mag->value   = 1.;
+            //                r.phase->value = 0.;
+            //            } else if (b.approximatelyOne()) {
+            //                r.setVal(a);
+            //            } else {
+            r.mag->value   = a.mag->value / b.mag->value;
+            r.phase->value = PhaseEntry::val(a.phase) - PhaseEntry::val(b.phase);
+            //            }
         }
         static inline fp mag2(const Complex& a) {
             auto mag = a.mag->value;
