@@ -26,7 +26,7 @@ namespace dd {
 
         [[nodiscard]] inline bool approximatelyEquals(const ComplexValue& c) const {
             return std::abs(mag - c.mag) < MagnitudeTable<>::tolerance() &&
-                   std::abs(phase - c.phase) < PhaseTable<>::tolerance();
+                   std::abs(std::remainder(phase - c.phase, 2.)) < PhaseTable<>::tolerance();
         }
 
         [[nodiscard]] inline bool approximatelyZero() const {
@@ -35,7 +35,7 @@ namespace dd {
 
         [[nodiscard]] inline bool approximatelyOne() const {
             return std::abs(mag - 1.) < MagnitudeTable<>::tolerance() &&
-                   std::abs(phase) < PhaseTable<>::tolerance();
+                   std::abs(std::remainder(phase, 2.)) < PhaseTable<>::tolerance();
         }
 
         inline bool operator==(const ComplexValue& other) const {

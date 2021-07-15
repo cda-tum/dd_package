@@ -58,15 +58,15 @@ namespace dd {
             }
 
             [[nodiscard]] static inline bool approximatelyEquals(const Entry* left, const Entry* right) {
-                return std::fmod(std::abs(val(left) - val(right)), 2) < TOLERANCE;
+                return std::abs(std::remainder(val(left) - val(right), 2.)) < TOLERANCE;
             }
 
             [[nodiscard]] static inline bool approximatelyZero(const Entry* e) {
-                return e == zeroPtr || std::fmod(std::abs(val(e)), 2) < TOLERANCE;
+                return e == zeroPtr || std::abs(std::remainder(val(e), 2.0)) < TOLERANCE;
             }
 
             [[nodiscard]] static inline bool approximatelyOne(const Entry* e) {
-                return e == onePtr || std::fmod(std::abs(val(e) - 1), 2) < TOLERANCE;
+                return e == onePtr || std::abs(std::abs(std::remainder(val(e), 2.)) - 1.) < TOLERANCE;
             }
 
             static void writeBinary(const Entry* e, std::ostream& os) {
