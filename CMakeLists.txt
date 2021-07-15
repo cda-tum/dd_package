@@ -56,7 +56,7 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 if (MSVC)
     target_compile_options(${PROJECT_NAME} INTERFACE /utf-8)
 else ()
-    target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wextra -pedantic $<$<CONFIG:DEBUG>:-Og>)
+    target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wextra -pedantic $<$<CONFIG:DEBUG>:-Og> -fno-math-errno -ffinite-math-only -fno-trapping-math -fno-signed-zeros)
     if (NOT DEPLOY)
         # only include machine-specific optimizations when building for the host machine
         target_compile_options(${PROJECT_NAME} INTERFACE -mtune=native -march=native)
