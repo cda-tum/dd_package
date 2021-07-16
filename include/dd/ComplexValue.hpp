@@ -285,9 +285,14 @@ namespace std {
     template<>
     struct hash<dd::ComplexValue> {
         std::size_t operator()(dd::ComplexValue const& c) const noexcept {
-            auto h1 = dd::murmur64(static_cast<std::size_t>(std::round(c.mag / dd::MagnitudeTable<>::tolerance())));
-            auto h2 = dd::murmur64(static_cast<std::size_t>(std::round(c.phase / dd::PhaseTable<>::tolerance())));
-            return dd::combineHash(h1, h2);
+            //            std::cout << dd::ComplexValue::toString(c.mag, c.phase, false, 13);
+            const auto k1 = static_cast<std::size_t>(std::round(c.mag / dd::MagnitudeTable<>::tolerance()));
+            const auto k2 = static_cast<std::size_t>(std::round(std::fmod(c.phase, 2.) / dd::PhaseTable<>::tolerance()));
+            const auto h1 = dd::murmur64(k1);
+            const auto h2 = dd::murmur64(k2);
+            const auto h  = dd::combineHash(h1, h2);
+            //            std::cout << ": " << k1 << " " << k2 << " | " << h1 << " " << h2 << " | " << h << std::endl;
+            return h;
         }
     };
 } // namespace std
