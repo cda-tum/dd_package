@@ -19,6 +19,7 @@
 #include "NoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
+#include "NoiseComputeTable.hpp"
 #include "UniqueTable.hpp"
 
 #include <algorithm>
@@ -558,6 +559,7 @@ namespace dd {
             }
             // invalidate all compute tables involving matrices if any matrix node has been collected
             if (mCollect > 0) {
+                noiseOperationTable.clear();
                 matrixAdd.clear();
                 matrixTranspose.clear();
                 conjugateMatrixTranspose.clear();
@@ -1001,6 +1003,7 @@ namespace dd {
     public:
         UnaryComputeTable<mEdge, mEdge, 4096> matrixTranspose{};
         UnaryComputeTable<mEdge, mEdge, 4096> conjugateMatrixTranspose{};
+        NoiseComputeTable<mEdge, mEdge, 4096> noiseOperations{};
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->symm) {
@@ -1931,7 +1934,7 @@ namespace dd {
             for (unsigned long long i = 0; i < element; i++) {
                 for (unsigned long long j = 0; j < element; j++) {
                     auto           amplitude = getValueByPath(e, i, j);
-                    constexpr auto precision = 3;
+                    constexpr auto precision = 20;
                     // set fixed width to maximum of a printed number
                     // (-) 0.precision plus/minus 0.precision i
                     constexpr auto width = 1 + 2 + precision + 1 + 2 + precision + 1;
