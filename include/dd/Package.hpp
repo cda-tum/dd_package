@@ -14,12 +14,12 @@
 #include "ComputeTable.hpp"
 #include "Control.hpp"
 #include "Definitions.hpp"
+#include "DensityNoiseTable.hpp"
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
 #include "NoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
-#include "NoiseComputeTable.hpp"
 #include "UniqueTable.hpp"
 
 #include <algorithm>
@@ -568,7 +568,7 @@ namespace dd {
                 matrixMatrixMultiplication.clear();
                 toffoliTable.clear();
                 clearIdentityTable();
-                noiseOperationTable.clear();
+                densityNoiseOperations.clear();
             }
             // invalidate all compute tables where any component of the entry contains numbers from the complex table if any complex numbers were collected
             if (cCollect > 0) {
@@ -1003,7 +1003,7 @@ namespace dd {
     public:
         UnaryComputeTable<mEdge, mEdge, 4096> matrixTranspose{};
         UnaryComputeTable<mEdge, mEdge, 4096> conjugateMatrixTranspose{};
-        NoiseComputeTable<mEdge, mEdge, 4096> noiseOperations{};
+        DensityNoiseTable<mEdge, mEdge, 16384> densityNoiseOperations{};
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->symm) {

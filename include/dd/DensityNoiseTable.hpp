@@ -20,14 +20,15 @@ namespace dd {
     /// \tparam ResultType type of the operation's result
     /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
     template<class OperandType, class ResultType, std::size_t NBUCKET = 32768>
-    class NoiseComputeTable {
+    class DensityNoiseTable {
     public:
-        NoiseComputeTable() = default;
+        DensityNoiseTable() = default;
 
         struct Entry {
-            OperandType operand;
-            ResultType  result;
-            signed char usedQubits[std::numeric_limits<dd::Qubit>::max() + 1];
+            OperandType              operand;
+            ResultType               result;
+            ComplexValue             result_weight{};
+            std::vector<signed char> usedQubit;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -36,31 +37,36 @@ namespace dd {
         [[nodiscard]] const auto& getTable() const { return table; }
 
         static std::size_t hash(const OperandType& a, const std::vector<signed char>& usedQubits) {
-            return std::hash<OperandType>{}(a)&MASK;
+            unsigned long i = 0;
+            for (auto qubit: usedQubits) {
+                i = (i << 3U) + i * qubit + qubit;
+            }
+            return (std::hash<OperandType>{}(a) + i) & MASK;
         }
 
-        //        void insert(const OperandType& operand, const std::vector<signed char>& usedQubits, const ResultType& result) {
         void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubit) {
-            const auto key = hash(operand, usedQubit);
-            auto& entry  = table[key];
-            entry.result = result;
-            entry.operand = operand;
-            std::copy(usedQubit.begin(), usedQubit.end(), entry.usedQubits);
+            const auto key        = hash(operand, usedQubit);
+            auto&      entry      = table[key];
+            entry.result          = result;
+            entry.result_weight.r = result.w.r->value;
+            entry.result_weight.i = result.w.i->value;
+            entry.operand         = operand;
+            entry.usedQubit       = usedQubit;
             ++count;
         }
 
-        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubit) {
+        ResultType lookup(const OperandType& operand, const Complex value, const std::vector<signed char>& usedQubit) {
             ResultType result{};
             lookups++;
             const auto key   = hash(operand, usedQubit);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.operand != operand) return result;
-            if (!std::equal(usedQubit.begin(), usedQubit.end(), std::begin(entry.usedQubits))) {
-                return result;
-            }
-
+            if (entry.usedQubit != usedQubit) return result;
             hits++;
+            value.r->value = entry.result_weight.r;
+            value.i->value = entry.result_weight.i;
+            entry.result.w = value;
             return entry.result;
         }
 
@@ -70,8 +76,8 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            hits    = 0;
-            lookups = 0;
+            //            hits    = 0;
+            //            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
