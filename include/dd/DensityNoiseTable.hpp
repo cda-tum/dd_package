@@ -25,10 +25,9 @@ namespace dd {
         DensityNoiseTable() = default;
 
         struct Entry {
-            OperandType              operand;
-            ResultType               result;
-            ComplexValue             result_weight{};
-            std::vector<signed char> usedQubit;
+            OperandType operand;
+            ResultType  result;
+            signed char usedQubits[std::numeric_limits<dd::Qubit>::max() + 1];
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -45,28 +44,26 @@ namespace dd {
         }
 
         void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubit) {
-            const auto key        = hash(operand, usedQubit);
-            auto&      entry      = table[key];
-            entry.result          = result;
-            entry.result_weight.r = result.w.r->value;
-            entry.result_weight.i = result.w.i->value;
-            entry.operand         = operand;
-            entry.usedQubit       = usedQubit;
+            const auto key = hash(operand, usedQubit);
+            auto& entry  = table[key];
+            entry.result = result;
+            entry.operand = operand;
+            std::copy(usedQubit.begin(), usedQubit.end(), entry.usedQubits);
             ++count;
         }
 
-        ResultType lookup(const OperandType& operand, const Complex value, const std::vector<signed char>& usedQubit) {
+        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubit) {
             ResultType result{};
             lookups++;
             const auto key   = hash(operand, usedQubit);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.operand != operand) return result;
-            if (entry.usedQubit != usedQubit) return result;
+            if (!std::equal(usedQubit.begin(), usedQubit.end(), std::begin(entry.usedQubits))) {
+                return result;
+            }
+
             hits++;
-            value.r->value = entry.result_weight.r;
-            value.i->value = entry.result_weight.i;
-            entry.result.w = value;
             return entry.result;
         }
 
