@@ -78,7 +78,7 @@ namespace dd {
             nqubits = nq;
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
-            noiseOperationTable.resize(nqubits);
+            stochasticNoiseTable.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
@@ -559,7 +559,6 @@ namespace dd {
             }
             // invalidate all compute tables involving matrices if any matrix node has been collected
             if (mCollect > 0) {
-                noiseOperationTable.clear();
                 matrixAdd.clear();
                 matrixTranspose.clear();
                 conjugateMatrixTranspose.clear();
@@ -569,6 +568,7 @@ namespace dd {
                 toffoliTable.clear();
                 clearIdentityTable();
                 densityNoiseOperations.clear();
+                stochasticNoiseTable.clear();
             }
             // invalidate all compute tables where any component of the entry contains numbers from the complex table if any complex numbers were collected
             if (cCollect > 0) {
@@ -579,7 +579,8 @@ namespace dd {
                 vectorInnerProduct.clear();
                 vectorKronecker.clear();
                 matrixKronecker.clear();
-                noiseOperationTable.clear();
+                densityNoiseOperations.clear();
+                stochasticNoiseTable.clear();
             }
             return vCollect > 0 || mCollect > 0 || cCollect > 0;
         }
@@ -682,7 +683,8 @@ namespace dd {
 
             clearIdentityTable();
 
-            noiseOperationTable.clear();
+            stochasticNoiseTable.clear();
+            densityNoiseOperations.clear();
         }
 
         ///
@@ -1001,8 +1003,8 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        UnaryComputeTable<mEdge, mEdge, 4096> matrixTranspose{};
-        UnaryComputeTable<mEdge, mEdge, 4096> conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, 4096>  matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, 4096>  conjugateMatrixTranspose{};
         DensityNoiseTable<mEdge, mEdge, 16384> densityNoiseOperations{};
 
         mEdge transpose(const mEdge& a) {
@@ -1539,7 +1541,7 @@ namespace dd {
         /// Noise Operations
         ///
     public:
-        NoiseOperationTable<mEdge> noiseOperationTable{nqubits};
+        NoiseOperationTable<mEdge> stochasticNoiseTable{nqubits};
 
         ///
         /// Decision diagram size
@@ -1854,13 +1856,17 @@ namespace dd {
             cn.returnToCache(c);
             return r;
         }
-        ComplexValue getValueByPath(const mEdge& e, std::size_t i, std::size_t j) {
+        ComplexValue getValueByPath(mEdge& e, std::size_t i, std::size_t j, bool dm = false) {
             if (e.isTerminal()) {
                 return {CTEntry::val(e.w.r), CTEntry::val(e.w.i)};
             }
-            return getValueByPath(e, Complex::one, i, j);
+            return getValueByPath(e, Complex::one, i, j, dm);
         }
-        ComplexValue getValueByPath(const mEdge& e, const Complex& amp, std::size_t i, std::size_t j) {
+        ComplexValue getValueByPath(mEdge& e, const Complex& amp, std::size_t i, std::size_t j, bool dm = false) {
+            if (dm) {
+                e = *getAlignedDensityEdgeModifySubEdges(reinterpret_cast<mEdge*>(&e));
+            }
+
             auto c = cn.mulCached(e.w, amp);
 
             if (e.isTerminal()) {
@@ -1872,16 +1878,20 @@ namespace dd {
             bool col = j & (1 << e.p->v);
 
             ComplexValue r{};
-            if (!row && !col && !e.p->e[0].w.approximatelyZero()) {
-                r = getValueByPath(e.p->e[0], c, i, j);
-            } else if (!row && col && !e.p->e[1].w.approximatelyZero()) {
-                r = getValueByPath(e.p->e[1], c, i, j);
-            } else if (row && !col && !e.p->e[2].w.approximatelyZero()) {
-                r = getValueByPath(e.p->e[2], c, i, j);
-            } else if (row && col && !e.p->e[3].w.approximatelyZero()) {
-                r = getValueByPath(e.p->e[3], c, i, j);
+            if (!row && !col) {
+                r = getValueByPath(e.p->e[0], c, i, j, dm);
+            } else if (!row && col) {
+                r = getValueByPath(e.p->e[1], c, i, j, dm);
+            } else if (row && !col) {
+                r = getValueByPath(e.p->e[2], c, i, j, dm);
+            } else if (row && col) {
+                r = getValueByPath(e.p->e[3], c, i, j, dm);
             }
             cn.returnToCache(c);
+
+            if (dm) {
+                e = *getAlignedDensityEdgeAlignSubEdges(reinterpret_cast<mEdge*>(&e));
+            }
             return r;
         }
 
@@ -1929,12 +1939,12 @@ namespace dd {
             std::cout << std::flush;
         }
 
-        void printMatrix(const mEdge& e) {
+        void printMatrix(mEdge& e, bool dm = false) {
             unsigned long long element = 2u << e.p->v;
             for (unsigned long long i = 0; i < element; i++) {
                 for (unsigned long long j = 0; j < element; j++) {
-                    auto           amplitude = getValueByPath(e, i, j);
-                    constexpr auto precision = 20;
+                    auto           amplitude = getValueByPath(e, i, j, dm);
+                    constexpr auto precision = 5;
                     // set fixed width to maximum of a printed number
                     // (-) 0.precision plus/minus 0.precision i
                     constexpr auto width = 1 + 2 + precision + 1 + 2 + precision + 1;
@@ -2348,6 +2358,76 @@ namespace dd {
             return true;
         }
 
+        [[nodiscard]] static inline dd::Package::mNode* setDensityConjugateTrue(const dd::Package::mNode* p) {
+            return reinterpret_cast<dd::Package::mNode*>(reinterpret_cast<std::uintptr_t>(p) | 1ULL);
+        }
+
+        [[nodiscard]] static inline dd::Package::mNode* setFirstEdgeDensityPathTrue(const dd::Package::mNode* p) {
+            return reinterpret_cast<dd::Package::mNode*>(reinterpret_cast<std::uintptr_t>(p) | 2ULL);
+        }
+
+        [[nodiscard]] static inline bool isDensityConjugateSet(const dd::Package::mNode* p) {
+            return reinterpret_cast<std::uintptr_t>(p) & 1ULL;
+        }
+
+        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const dd::Package::mNode* p) {
+            return reinterpret_cast<std::uintptr_t>(p) & 2ULL;
+        }
+
+        [[nodiscard]] static inline dd::Package::mNode* getAlignedDensityNode(const dd::Package::mNode* p) {
+            return reinterpret_cast<dd::Package::mNode*>(reinterpret_cast<std::uintptr_t>(p) & (~3ULL));
+        }
+
+        [[nodiscard]] static inline dd::Package::mEdge* getAlignedDensityEdgeAlignSubEdges(dd::Package::mEdge* e) {
+            dd::Package::mEdge* aligned_e = e;
+            aligned_e->p                  = getAlignedDensityNode(e->p);
+
+            if (isFirstEdgeDensityPath(e->p)) {
+                // first edge paths are not modified and the property is inherited by all child paths
+                aligned_e->p->e[0].p = getAlignedDensityNode(aligned_e->p->e[0].p);
+                aligned_e->p->e[1].p = getAlignedDensityNode(aligned_e->p->e[1].p);
+                aligned_e->p->e[2].p = getAlignedDensityNode(aligned_e->p->e[2].p);
+                aligned_e->p->e[3].p = getAlignedDensityNode(aligned_e->p->e[3].p);
+            } else if (!isDensityConjugateSet(e->p)) {
+                // Conjugate the second edge (i.e. negate the complex part of the second edge)
+                aligned_e->p->e[2].p   = getAlignedDensityNode(aligned_e->p->e[2].p);
+                aligned_e->p->e[2].w.i = dd::CTEntry::flipPointerSign(aligned_e->p->e[2].w.i);
+
+                // Unmark the first edge
+                aligned_e->p->e[1].p = getAlignedDensityNode(aligned_e->p->e[1].p);
+            } else {
+                // Unmark the first edge
+                aligned_e->p->e[1].p = getAlignedDensityNode(aligned_e->p->e[1].p);
+
+                std::swap(aligned_e->p->e[2], aligned_e->p->e[1]);
+            }
+            return aligned_e;
+        }
+
+        [[nodiscard]] static inline dd::Package::mEdge* getAlignedDensityEdgeModifySubEdges(dd::Package::mEdge* e) {
+            // Before I do anything else, i must aline the pointer
+            dd::Package::mEdge* aligned_e = e;
+            aligned_e->p                  = getAlignedDensityNode(e->p);
+
+            if (isFirstEdgeDensityPath(e->p)) {
+                // first edge paths are not modified and the property is inherited by all child paths
+                aligned_e->p->e[0].p = setFirstEdgeDensityPathTrue(aligned_e->p->e[0].p);
+                aligned_e->p->e[1].p = setFirstEdgeDensityPathTrue(aligned_e->p->e[1].p);
+                aligned_e->p->e[2].p = setFirstEdgeDensityPathTrue(aligned_e->p->e[2].p);
+                aligned_e->p->e[3].p = setFirstEdgeDensityPathTrue(aligned_e->p->e[3].p);
+            } else if (!isDensityConjugateSet(e->p)) {
+                // Conjugate the second edge (i.e. negate the complex part of the second edge)
+                aligned_e->p->e[2].w.i = dd::CTEntry::flipPointerSign(aligned_e->p->e[2].w.i);
+                aligned_e->p->e[2].p   = setDensityConjugateTrue(aligned_e->p->e[2].p);
+            } else {
+                std::swap(aligned_e->p->e[2], aligned_e->p->e[1]);
+            }
+
+            // Mark the first edge
+            aligned_e->p->e[1].p = setFirstEdgeDensityPathTrue(aligned_e->p->e[1].p);
+            return aligned_e;
+        }
+
     private:
         template<class Edge>
         bool isLocallyConsistent2(const Edge& e) {
@@ -2503,8 +2583,10 @@ namespace dd {
             matrixKronecker.printStatistics();
             std::cout << "[Toffoli Table] ";
             toffoliTable.printStatistics();
-            std::cout << "[Operation Table] ";
-            noiseOperationTable.printStatistics();
+            std::cout << "[Stochastic Noise Table] ";
+            stochasticNoiseTable.printStatistics();
+            std::cout << "[Density Noise Table] ";
+            densityNoiseOperations.printStatistics();
             std::cout << "[ComplexTable] ";
             cn.complexTable.printStatistics();
         }
