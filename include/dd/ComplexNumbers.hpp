@@ -73,9 +73,6 @@ namespace dd {
             if (a.approximatelyEquals(b)) {
                 r.r->value = 1.;
                 r.i->value = 0.;
-            } else if (a.approximatelyZero()) {
-                r.r->value = 0.;
-                r.i->value = 0.;
             } else if (b.approximatelyOne()) {
                 r.setVal(a);
             } else {
