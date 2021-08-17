@@ -39,8 +39,45 @@ namespace dd {
         oss << std::fixed << std::setprecision(3) << phase << " " << 0.667 << " " << 0.75;
         return oss.str();
     }
+
     inline fp thicknessFromMagnitude(const Complex& a) {
         return 3.0 * std::max(dd::ComplexNumbers::mag(a), 0.10);
+    }
+
+    inline std::string asPolar(const Complex& a, bool formatted = true, int precision = -1) {
+        const auto         mag   = ComplexNumbers::mag(a);
+        const auto         phase = ComplexNumbers::arg(a);
+        std::ostringstream ss{};
+
+        if (precision >= 0) ss << std::setprecision(precision);
+
+        if (std::abs(mag) < ComplexTable<>::tolerance()) {
+            return "0";
+        }
+
+        if (formatted) {
+            if (std::abs(std::abs(phase) - 1.0) < ComplexTable<>::tolerance()) {
+                ss << "-";
+                ComplexValue::printFormatted(ss, mag);
+            } else {
+                if (std::abs(mag - 1.0) > ComplexTable<>::tolerance()) {
+                    ComplexValue::printFormatted(ss, mag);
+                    if (std::abs(phase) > ComplexTable<>::tolerance()) {
+                        ss << " ";
+                    }
+                } else if (std::abs(phase) < ComplexTable<>::tolerance()) {
+                    ss << "1";
+                    return ss.str();
+                }
+                ComplexValue::printFormatted(ss, phase, true);
+            }
+        } else {
+            ss << mag;
+            if (std::abs(phase) > ComplexTable<>::tolerance()) {
+                ss << " " << phase;
+            }
+        }
+        return ss.str();
     }
 
     template<class Edge>
@@ -56,12 +93,12 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << e.w << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(e.w) << "\"";
         if (!e.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << e.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(e.w) << "</font>>";
         }
 
         os << "]\n";
@@ -83,9 +120,9 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << e.w << "\",color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(e.w) << "\",color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << e.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(e.w) << "</font>>";
         }
         os << "]\n";
         return os;
@@ -143,15 +180,15 @@ namespace dd {
         auto nodelabel = (reinterpret_cast<std::uintptr_t>(e.p) & 0x001fffffU) >> 1U; // this allows for 2^20 (roughly 1e6) unique nodes
         os << nodelabel << "[label=<";
         os << R"(<font point-size="10"><table border="1" cellspacing="0" cellpadding="2" style="rounded">)";
-        os << R"(<tr><td colspan="2" rowspan="2" port="0" href="javascript:;" border="0" tooltip=")" << e.p->e[0].w << "\">" << (e.p->e[0].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>")
+        os << R"(<tr><td colspan="2" rowspan="2" port="0" href="javascript:;" border="0" tooltip=")" << asPolar(e.p->e[0].w) << "\">" << (e.p->e[0].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>")
            << R"(</td><td sides="R"></td><td sides="L"></td>)"
-           << R"(<td colspan="2" rowspan="2" port="1" href="javascript:;" border="0" tooltip=")" << e.p->e[1].w << "\">" << (e.p->e[1].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>") << R"(</td></tr>)";
+           << R"(<td colspan="2" rowspan="2" port="1" href="javascript:;" border="0" tooltip=")" << asPolar(e.p->e[1].w) << "\">" << (e.p->e[1].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>") << R"(</td></tr>)";
         os << R"(<tr><td sides="R"></td><td sides="L"></td></tr>)";
         os << R"(<tr><td colspan="2" sides="B"></td><td colspan="2" rowspan="2" border="0"><font point-size="24">q<sub><font point-size="16">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td><td colspan="2" sides="B"></td></tr>)";
         os << R"(<tr><td sides="T" colspan="2"></td><td sides="T" colspan="2"></td></tr>)";
-        os << R"(<tr><td colspan="2" rowspan="2" port="2" href="javascript:;" border="0" tooltip=")" << e.p->e[2].w << "\">" << (e.p->e[2].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>")
+        os << R"(<tr><td colspan="2" rowspan="2" port="2" href="javascript:;" border="0" tooltip=")" << asPolar(e.p->e[2].w) << "\">" << (e.p->e[2].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>")
            << R"(</td><td sides="R"></td><td sides="L"></td>)"
-           << R"(<td colspan="2" rowspan="2" port="3" href="javascript:;" border="0" tooltip=")" << e.p->e[3].w << "\">" << (e.p->e[3].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>") << "</td></tr>";
+           << R"(<td colspan="2" rowspan="2" port="3" href="javascript:;" border="0" tooltip=")" << asPolar(e.p->e[3].w) << "\">" << (e.p->e[3].w.approximatelyZero() ? "&nbsp;0 " : "<font color=\"white\">&nbsp;0 </font>") << "</td></tr>";
         os << R"(<tr><td sides="R"></td><td sides="L"></td></tr>)";
         os << "</table></font>>,tooltip=\"q" << static_cast<std::size_t>(e.p->v) << "\"]\n";
         return os;
@@ -161,8 +198,8 @@ namespace dd {
         os << nodelabel << "[label=<";
         os << R"(<font point-size="8"><table border="1" cellspacing="0" cellpadding="0" style="rounded">)";
         os << R"(<tr><td colspan="2" border="0" cellpadding="1"><font point-size="20">q<sub><font point-size="12">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
-        os << R"(<td height="6" width="14" port="0" tooltip=")" << e.p->e[0].w << R"(" href="javascript:;" sides="RT">)" << (e.p->e[0].w.approximatelyZero() ? "&nbsp;0 " : R"(<font color="white">&nbsp;0 </font>)") << "</td>";
-        os << R"(<td height="6" width="14" port="1" tooltip=")" << e.p->e[1].w << R"(" href="javascript:;" sides="LT">)" << (e.p->e[1].w.approximatelyZero() ? "&nbsp;0 " : R"(<font color="white">&nbsp;0 </font>)") << "</td>";
+        os << R"(<td height="6" width="14" port="0" tooltip=")" << asPolar(e.p->e[0].w) << R"(" href="javascript:;" sides="RT">)" << (e.p->e[0].w.approximatelyZero() ? "&nbsp;0 " : R"(<font color="white">&nbsp;0 </font>)") << "</td>";
+        os << R"(<td height="6" width="14" port="1" tooltip=")" << asPolar(e.p->e[1].w) << R"(" href="javascript:;" sides="LT">)" << (e.p->e[1].w.approximatelyZero() ? "&nbsp;0 " : R"(<font color="white">&nbsp;0 </font>)") << "</td>";
         os << "</tr></table></font>>,tooltip=\"q" << static_cast<std::size_t>(e.p->v) << "\"]\n";
         return os;
     }
@@ -171,7 +208,7 @@ namespace dd {
         os << nodelabel << "[shape=circle, width=0.53, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
         os << R"(<tr><td colspan="4"><font point-size="18">q<sub><font point-size="10">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
-        os << R"(<td port="0" tooltip=")" << e.p->e[0].w << R"(" href="javascript:;">)";
+        os << R"(<td port="0" tooltip=")" << asPolar(e.p->e[0].w) << R"(" href="javascript:;">)";
         if (e.p->e[0].w.approximatelyZero()) {
             os << R"(<font point-size="8">&nbsp;0 </font>)";
         } else {
@@ -179,7 +216,7 @@ namespace dd {
         }
         os << "</td>";
         os << "<td></td><td></td>";
-        os << R"(<td port="3" tooltip=")" << e.p->e[3].w << R"(" href="javascript:;">)";
+        os << R"(<td port="3" tooltip=")" << asPolar(e.p->e[3].w) << R"(" href="javascript:;">)";
         if (e.p->e[3].w.approximatelyZero()) {
             os << R"(<font point-size="8">&nbsp;0 </font>)";
         } else {
@@ -187,14 +224,14 @@ namespace dd {
         }
         os << "</td>";
         os << "</tr><tr><td></td>";
-        os << R"(<td port="1" tooltip=")" << e.p->e[1].w << R"(" href="javascript:;">)";
+        os << R"(<td port="1" tooltip=")" << asPolar(e.p->e[1].w) << R"(" href="javascript:;">)";
         if (e.p->e[1].w.approximatelyZero()) {
             os << R"(<font point-size="8">&nbsp;0 </font>)";
         } else {
             os << R"(<font color="white">&nbsp;0 </font>)";
         }
         os << "</td>";
-        os << R"(<td port="2" tooltip=")" << e.p->e[2].w << R"(" href="javascript:;">)";
+        os << R"(<td port="2" tooltip=")" << asPolar(e.p->e[2].w) << R"(" href="javascript:;">)";
         if (e.p->e[2].w.approximatelyZero()) {
             os << R"(<font point-size="8">&nbsp;0 </font>)";
         } else {
@@ -209,14 +246,14 @@ namespace dd {
         os << nodelabel << "[shape=circle, width=0.46, fixedsize=true, label=<";
         os << R"(<font point-size="6"><table border="0" cellspacing="0" cellpadding="0">)";
         os << R"(<tr><td colspan="2"><font point-size="18">q<sub><font point-size="10">)" << static_cast<std::size_t>(e.p->v) << R"(</font></sub></font></td></tr><tr>)";
-        os << R"(<td port="0" tooltip=")" << e.p->e[0].w << R"(" href="javascript:;">)";
+        os << R"(<td port="0" tooltip=")" << asPolar(e.p->e[0].w) << R"(" href="javascript:;">)";
         if (e.p->e[0].w.approximatelyZero()) {
             os << R"(<font point-size="10">&nbsp;0 </font>)";
         } else {
             os << R"(<font color="white">&nbsp;0 </font>)";
         }
         os << "</td>";
-        os << R"(<td port="1" tooltip=")" << e.p->e[1].w << R"(" href="javascript:;">)";
+        os << R"(<td port="1" tooltip=")" << asPolar(e.p->e[1].w) << R"(" href="javascript:;">)";
         if (e.p->e[1].w.approximatelyZero()) {
             os << R"(<font point-size="10">&nbsp;0 </font>)";
         } else {
@@ -278,12 +315,12 @@ namespace dd {
         }
 
         auto mag = thicknessFromMagnitude(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(to.w) << "\"";
         if (!to.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(to.w) << "</font>>";
         }
         os << "]\n";
 
@@ -302,12 +339,12 @@ namespace dd {
         }
 
         auto mag = thicknessFromMagnitude(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(to.w) << "\"";
         if (!to.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(to.w) << "</font>>";
         }
         os << "]\n";
 
@@ -342,9 +379,9 @@ namespace dd {
 
         auto mag   = thicknessFromMagnitude(to.w);
         auto color = colorFromPhase(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(to.w) << "\" color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(to.w) << "</font>>";
         }
         os << "]\n";
 
@@ -364,9 +401,9 @@ namespace dd {
 
         auto mag   = thicknessFromMagnitude(to.w);
         auto color = colorFromPhase(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << to.w << "\" color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << asPolar(to.w) << "\" color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << to.w << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << asPolar(to.w) << "</font>>";
         }
         os << "]\n";
 
