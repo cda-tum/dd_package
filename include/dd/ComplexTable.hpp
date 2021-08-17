@@ -65,16 +65,25 @@ namespace dd {
                 return e->refCount;
             }
 
-            [[nodiscard]] static inline bool approximatelyEquals(const Entry* left, const Entry* right) {
-                return std::abs(val(left) - val(right)) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyEquals(const Entry* left, const Entry* right) {
+                return left == right || approximatelyEquals(val(left), val(right));
+            }
+            [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
+                return left == right || std::abs(left - right) <= TOLERANCE;
             }
 
-            [[nodiscard]] static inline bool approximatelyZero(const Entry* e) {
-                return e == &zero || std::abs(val(e)) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyZero(const Entry* e) {
+                return e == &zero || approximatelyZero(val(e));
+            }
+            [[nodiscard]] static constexpr bool approximatelyZero(const fp e) {
+                return std::abs(e) <= TOLERANCE;
             }
 
-            [[nodiscard]] static inline bool approximatelyOne(const Entry* e) {
-                return e == &one || std::abs(val(e) - 1) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyOne(const Entry* e) {
+                return e == &one || approximatelyOne(val(e));
+            }
+            [[nodiscard]] static constexpr bool approximatelyOne(fp e) {
+                return approximatelyEquals(e, 1.0);
             }
 
             static void writeBinary(const Entry* e, std::ostream& os) {
@@ -136,17 +145,17 @@ namespace dd {
             assert(!std::isnan(val));
             assert(val >= 0); // required anyway for the hash function
             ++lookups;
-            if (std::abs(val) < TOLERANCE) {
+            if (Entry::approximatelyZero(val)) {
                 ++hits;
                 return &zero;
             }
 
-            if (std::abs(val - 1.) < TOLERANCE) {
+            if (Entry::approximatelyOne(val)) {
                 ++hits;
                 return &one;
             }
 
-            if (std::abs(val - SQRT2_2) < TOLERANCE) {
+            if (Entry::approximatelyEquals(val, SQRT2_2)) {
                 ++hits;
                 return &sqrt2_2;
             }
@@ -176,7 +185,7 @@ namespace dd {
                 ++lowerNeighbors;
                 // buckets are sorted so we only have to look into the last entry of the lower bucket
                 Entry* p_lower = tailTable[lowerKey];
-                if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
+                if (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value)) {
                     return p_lower;
                 }
             }
@@ -187,7 +196,7 @@ namespace dd {
                 // buckets are sorted, we only have to look at the first element
 
                 Entry* p_upper = table[upperKey];
-                if (p_upper != nullptr && p_upper->value - val < TOLERANCE) {
+                if (p_upper != nullptr && Entry::approximatelyEquals(p_upper->value, val)) {
                     return p_upper;
                 }
             }
@@ -463,7 +472,7 @@ namespace dd {
             Entry* prev = nullptr;
 
             while (curr != nullptr && val_tol > curr->value) {
-                if (std::abs(curr->value - val) < TOLERANCE) {
+                if (Entry::approximatelyEquals(curr->value, val)) {
                     ++hits;
                     return curr;
                 }
@@ -531,7 +540,7 @@ namespace dd {
             Entry*   p       = bucket;
             const fp val_tol = val - TOLERANCE;
             while (p != nullptr && val_tol <= p->value) {
-                if (p->value - val < TOLERANCE) {
+                if (Entry::approximatelyEquals(p->value, val)) {
                     ++hits;
                     return p;
                 }

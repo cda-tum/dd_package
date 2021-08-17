@@ -23,26 +23,26 @@ namespace dd {
     struct ComplexValue {
         fp r, i;
 
-        [[nodiscard]] inline bool approximatelyEquals(const ComplexValue& c) const {
-            return std::abs(r - c.r) < ComplexTable<>::tolerance() &&
-                   std::abs(i - c.i) < ComplexTable<>::tolerance();
+        [[nodiscard]] constexpr bool approximatelyEquals(const ComplexValue& c) const {
+            return ComplexTable<>::Entry::approximatelyEquals(r, c.r) &&
+                   ComplexTable<>::Entry::approximatelyEquals(i, c.i);
         }
 
-        [[nodiscard]] inline bool approximatelyZero() const {
-            return std::abs(r) < ComplexTable<>::tolerance() &&
-                   std::abs(i) < ComplexTable<>::tolerance();
+        [[nodiscard]] constexpr bool approximatelyZero() const {
+            return ComplexTable<>::Entry::approximatelyZero(r) &&
+                   ComplexTable<>::Entry::approximatelyZero(i);
         }
 
-        [[nodiscard]] inline bool approximatelyOne() const {
-            return std::abs(r - 1.) < ComplexTable<>::tolerance() &&
-                   std::abs(i) < ComplexTable<>::tolerance();
+        [[nodiscard]] constexpr bool approximatelyOne() const {
+            return ComplexTable<>::Entry::approximatelyOne(r) &&
+                   ComplexTable<>::Entry::approximatelyZero(i);
         }
 
-        inline bool operator==(const ComplexValue& other) const {
+        constexpr bool operator==(const ComplexValue& other) const {
             return r == other.r && i == other.i;
         }
 
-        inline bool operator!=(const ComplexValue& other) const {
+        constexpr bool operator!=(const ComplexValue& other) const {
             return !operator==(other);
         }
 
