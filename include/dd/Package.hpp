@@ -360,12 +360,6 @@ namespace dd {
                     }
                     r.p->e[i].w = Complex::one;
                 } else {
-                    if (zero[i]) {
-                        if (cached && r.p->e[i].w != Complex::zero)
-                            cn.returnToCache(r.p->e[i].w);
-                        r.p->e[i] = mEdge::zero;
-                        continue;
-                    }
                     if (cached && !zero[i] && r.p->e[i].w != Complex::one) {
                         cn.returnToCache(r.p->e[i].w);
                     }
