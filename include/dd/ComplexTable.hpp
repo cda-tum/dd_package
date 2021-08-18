@@ -179,7 +179,7 @@ namespace dd {
                 if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
                     return p_lower;
                 }
-            } else if (upperKey != key) {// search in (potentially) higher bucket
+            } else if (upperKey != key) { // search in (potentially) higher bucket
                 ++upperNeighbors;
                 // buckets are sorted, we only have to look at the first element
 
@@ -362,7 +362,8 @@ namespace dd {
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto p = table[key];
                 if (p != nullptr)
-                    std::cout << key << ": " << "\n";
+                    std::cout << key << ": "
+                              << "\n";
 
                 while (p != nullptr) {
                     std::cout << "\t\t" << p->value << " " << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\n";

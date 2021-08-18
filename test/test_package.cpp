@@ -113,19 +113,19 @@ TEST(DDPackageTest, QFTState) {
     auto h2_gate   = dd->makeGateDD(dd::Hmat, 3, 2);
     auto swap_gate = dd->makeSWAPDD(3, {}, 0, 2);
 
-    auto qft_op = dd->multiply(s0_gate,h0_gate);
-    qft_op = dd->multiply(t0_gate, qft_op);
-    qft_op = dd->multiply(h1_gate, qft_op);
-    qft_op = dd->multiply(s1_gate, qft_op);
-    qft_op = dd->multiply(h2_gate, qft_op);
+    auto qft_op = dd->multiply(s0_gate, h0_gate);
+    qft_op      = dd->multiply(t0_gate, qft_op);
+    qft_op      = dd->multiply(h1_gate, qft_op);
+    qft_op      = dd->multiply(s1_gate, qft_op);
+    qft_op      = dd->multiply(h2_gate, qft_op);
 
-    qft_op = dd->multiply(swap_gate, qft_op);
+    qft_op         = dd->multiply(swap_gate, qft_op);
     auto qft_state = dd->multiply(qft_op, dd->makeZeroState(3));
 
     dd->printVector(qft_state);
 
     for (dd::Qubit qubit = 0; qubit < 7; ++qubit) {
-        ASSERT_NEAR(dd->getValueByPath(qft_state, qubit).r, static_cast<dd::fp>(0.5)*dd::SQRT2_2, dd->cn.complexTable.tolerance());
+        ASSERT_NEAR(dd->getValueByPath(qft_state, qubit).r, static_cast<dd::fp>(0.5) * dd::SQRT2_2, dd->cn.complexTable.tolerance());
         ASSERT_EQ(dd->getValueByPath(qft_state, qubit).i, 0);
     }
 
