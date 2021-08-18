@@ -142,7 +142,7 @@ TEST(DDComplexTest, SortedBuckets) {
         ++counter;
     }
     ct.printStatistics(std::cout);
-    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 1); // default insertion of 0.5 is close to lower bucket
+    EXPECT_EQ(ct.getStatistics().at("lowerNeighbors"), 0);
     EXPECT_EQ(counter, numbers.size());
 }
 
@@ -188,13 +188,13 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     fp num2 = bucketBorder - ComplexTable<>::tolerance() / 10;
     cn.lookup(num2, 0.0);
     auto key2 = ComplexTable<>::hash(num2);
-    EXPECT_EQ(key2, NBUCKET / 4 - 1);
+    EXPECT_EQ(key2, NBUCKET / 4);
 
     // insert another number in the bucket below a bit farther away from the border
     fp num3 = bucketBorder - 2 * ComplexTable<>::tolerance();
     cn.lookup(num3, 0.0);
     auto key3 = ComplexTable<>::hash(num3);
-    EXPECT_EQ(key3, NBUCKET / 4 - 1);
+    EXPECT_EQ(key3, NBUCKET / 4);
 
     // insert border number that is too far away from the number in the bucket, but is close enough to a number in the bucket below
     fp   num4 = bucketBorder;

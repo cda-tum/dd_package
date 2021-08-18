@@ -102,6 +102,47 @@ TEST(DDPackageTest, BellState) {
     dd->statistics();
 }
 
+TEST(DDPackageTest, QFTState) {
+    auto dd = std::make_unique<dd::Package>(3);
+
+    auto h0_gate   = dd->makeGateDD(dd::Hmat, 3, 0);
+    auto s0_gate   = dd->makeGateDD(dd::Smat, 3, 1_pc, 0);
+    auto t0_gate   = dd->makeGateDD(dd::Smat, 3, 2_pc, 0);
+    auto h1_gate   = dd->makeGateDD(dd::Hmat, 3, 1);
+    auto s1_gate   = dd->makeGateDD(dd::Smat, 3, 2_pc, 1);
+    auto h2_gate   = dd->makeGateDD(dd::Hmat, 3, 2);
+    auto swap_gate = dd->makeSWAPDD(3, {}, 0, 2);
+
+    auto qft_op = dd->multiply(s0_gate,h0_gate);
+    qft_op = dd->multiply(t0_gate, qft_op);
+    qft_op = dd->multiply(h1_gate, qft_op);
+    qft_op = dd->multiply(s1_gate, qft_op);
+    qft_op = dd->multiply(h2_gate, qft_op);
+
+    qft_op = dd->multiply(swap_gate, qft_op);
+    auto qft_state = dd->multiply(qft_op, dd->makeZeroState(3));
+
+    dd->printVector(qft_state);
+
+    for (dd::Qubit qubit = 0; qubit < 7; ++qubit) {
+        ASSERT_NEAR(dd->getValueByPath(qft_state, qubit).r, static_cast<dd::fp>(0.5)*dd::SQRT2_2, dd->cn.complexTable.tolerance());
+        ASSERT_EQ(dd->getValueByPath(qft_state, qubit).i, 0);
+    }
+
+    export2Dot(qft_state, "qft_state_colored_labels.dot", true, true, false, false, false);
+    export2Dot(qft_state, "qft_state_colored_labels_classic.dot", true, true, true, false, false);
+    export2Dot(qft_state, "qft_state_mono_labels.dot", false, true, false, false, false);
+    export2Dot(qft_state, "qft_state_mono_labels_classic.dot", false, true, true, false, false);
+    export2Dot(qft_state, "qft_state_colored.dot", true, false, false, false, false);
+    export2Dot(qft_state, "qft_state_colored_classic.dot", true, false, true, false, false);
+    export2Dot(qft_state, "qft_state_mono.dot", false, false, false, false, false);
+    export2Dot(qft_state, "qft_state_mono_classic.dot", false, false, true, false, false);
+    export2Dot(qft_state, "qft_state_memory.dot", false, true, true, true, false);
+    dd::exportEdgeWeights(qft_state, std::cout);
+
+    dd->statistics();
+}
+
 TEST(DDPackageTest, CorruptedBellState) {
     auto dd = std::make_unique<dd::Package>(2);
 

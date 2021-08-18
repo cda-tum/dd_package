@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <queue>
 #include <stack>
 #include <stdexcept>
@@ -673,7 +674,7 @@ namespace dd {
             basic.w.writeBinary(os);
         } else {
             os << SERIALIZATION_VERSION << "\n";
-            os << basic.w.toString(false, 16) << "\n";
+            os << basic.w.toString(false, std::numeric_limits<dd::fp>::max_digits10) << "\n";
         }
         std::int_least64_t                                      idx = 0;
         std::unordered_map<Package::mNode*, std::int_least64_t> node_index{};

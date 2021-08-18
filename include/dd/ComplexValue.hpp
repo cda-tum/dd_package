@@ -67,8 +67,39 @@ namespace dd {
             i       = {imag};
         }
 
+        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = std::uint64_t(1) << 10, const fp tol = dd::ComplexTable<>::tolerance()) {
+            assert(x >= 0.);
+
+            std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};
+            std::pair<std::uint64_t, std::uint64_t> upperBound{1U, 0U};
+
+            while ((lowerBound.second <= maxDenominator) && (upperBound.second <= maxDenominator)) {
+                auto num    = lowerBound.first + upperBound.first;
+                auto den    = lowerBound.second + upperBound.second;
+                auto median = static_cast<fp>(num) / static_cast<fp>(den);
+                if (std::abs(x - median) < tol) {
+                    if (den <= maxDenominator) {
+                        return std::pair{num, den};
+                    } else if (upperBound.second > lowerBound.second) {
+                        return upperBound;
+                    } else {
+                        return lowerBound;
+                    }
+                } else if (x > median) {
+                    lowerBound = {num, den};
+                } else {
+                    upperBound = {num, den};
+                }
+            }
+            if (lowerBound.second > maxDenominator) {
+                return upperBound;
+            } else {
+                return lowerBound;
+            }
+        }
+
         static void printFormatted(std::ostream& os, fp r, bool imaginary = false) {
-            if (r == 0.L) {
+            if (std::abs(r) < ComplexTable<>::tolerance()) {
                 os << (std::signbit(r) ? "-" : "+") << "0" << (imaginary ? "i" : "");
                 return;
             }
@@ -160,26 +191,29 @@ namespace dd {
             std::ostringstream ss{};
 
             if (precision >= 0) ss << std::setprecision(precision);
+            const auto tol = ComplexTable<>::tolerance();
 
-            if (real != 0.) {
+            if (std::abs(real) < tol && std::abs(imag) < tol) return "0";
+
+            if (std::abs(real) >= tol) {
                 if (formatted) {
                     printFormatted(ss, real);
                 } else {
                     ss << real;
                 }
             }
-            if (imag != 0.) {
+            if (std::abs(imag) >= tol) {
                 if (formatted) {
-                    if (real == imag) {
+                    if (std::abs(real - imag) < tol) {
                         ss << "(1+i)";
                         return ss.str();
-                    } else if (imag == -real) {
+                    } else if (std::abs(real + imag) < tol) {
                         ss << "(1-i)";
                         return ss.str();
                     }
                     printFormatted(ss, imag, true);
                 } else {
-                    if (real == 0.) {
+                    if (std::abs(real) < tol) {
                         ss << imag;
                     } else {
                         if (imag > 0.) {
@@ -190,7 +224,6 @@ namespace dd {
                     ss << "i";
                 }
             }
-            if (real == 0. && imag == 0.) return "0";
 
             return ss.str();
         }
@@ -210,22 +243,7 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const ComplexValue& c) {
-        if (c.r != 0) {
-            ComplexValue::printFormatted(os, c.r);
-        }
-        if (c.i != 0) {
-            if (c.r == c.i) {
-                os << "(1+i)";
-                return os;
-            } else if (c.i == -c.r) {
-                os << "(1-i)";
-                return os;
-            }
-            ComplexValue::printFormatted(os, c.i, true);
-        }
-        if (c.r == 0 && c.i == 0) os << 0;
-
-        return os;
+        return os << ComplexValue::toString(c.r, c.i);
     }
 } // namespace dd
 
