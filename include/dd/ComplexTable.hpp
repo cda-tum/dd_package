@@ -170,35 +170,54 @@ namespace dd {
                 return findOrInsert(lowerKey, val);
             }
 
-            // code below is to handle cases where the looked up value
-            // could be in the lower or upper buckets and we have to go through them
+            // code below is to properly handle border cases |----(-|-)----|
+            // in case a value close to a border is looked up,
+            // only the last entry in the lower bucket and the first entry in the upper bucket need to be checked
 
             const std::size_t key = hash(val);
 
-            Entry* p = find(table[key], val);
-            if (p != nullptr) {
-                return p;
-            }
-
-            // search in (potentially) lower bucket
+            Entry* p_lower;
+            Entry* p_upper;
             if (lowerKey != key) {
+                p_lower = tailTable[lowerKey];
+                p_upper = table[key];
                 ++lowerNeighbors;
-                // buckets are sorted so we only have to look into the last entry of the lower bucket
-                Entry* p_lower = tailTable[lowerKey];
-                if (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value)) {
-                    return p_lower;
-                }
+                //                std::cout << "Border case between lower bucket " << lowerKey << " and actual bucket " << key << ". ";
+            } else {
+                p_lower = tailTable[key];
+                p_upper = table[upperKey];
+                ++upperNeighbors;
+                //                std::cout << "Border case between actual bucket " << key << " and upper bucket " << upperKey << ". ";
             }
 
-            // search in (potentially) higher bucket
-            if (upperKey != key) {
-                ++upperNeighbors;
-                // buckets are sorted, we only have to look at the first element
+            bool lowerMatchFound = (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value));
+            bool upperMatchFound = (p_upper != nullptr && Entry::approximatelyEquals(val, p_upper->value));
 
-                Entry* p_upper = table[upperKey];
-                if (p_upper != nullptr && Entry::approximatelyEquals(p_upper->value, val)) {
+            if (lowerMatchFound && upperMatchFound) {
+                //                std::cout << "Double match. ";
+                ++hits;
+                const auto diffToLower = std::abs(p_lower->value - val);
+                const auto diffToUpper = std::abs(p_upper->value - val);
+                // val is actually closer to p_lower than to p_upper
+                if (diffToLower < diffToUpper) {
+                    //                    std::cout << val << " is closer to lower val " << p_lower->value << " than to upper val " << p_upper->value << std::endl;
+                    return p_lower;
+                } else {
+                    //                    std::cout << val << " is closer to upper val " << p_upper->value << " than to lower val " << p_upper->value << std::endl;
                     return p_upper;
                 }
+            }
+
+            if (lowerMatchFound) {
+                ++hits;
+                //                std::cout << "Matched " << val << " in lower bucket to " << p_lower->value << std::endl;
+                return p_lower;
+            }
+
+            if (upperMatchFound) {
+                ++hits;
+                //                std::cout << "Matched " << val << " in upper bucket to " << p_upper->value << std::endl;
+                return p_upper;
             }
 
             // value was not found in the table -> get a new entry and add it to the central bucket
@@ -373,6 +392,7 @@ namespace dd {
         };
 
         void print() {
+            std::cout << std::setprecision(std::numeric_limits<dd::fp>::max_digits10);
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto p = table[key];
                 if (p != nullptr)
@@ -471,8 +491,24 @@ namespace dd {
             Entry* curr = table[key];
             Entry* prev = nullptr;
 
-            while (curr != nullptr && val_tol > curr->value) {
+            while (curr != nullptr && curr->value <= val_tol) {
                 if (Entry::approximatelyEquals(curr->value, val)) {
+                    // check if val is actually closer to the next element in the list (if there is one)
+                    if (curr->next != nullptr) {
+                        const auto& next = curr->next;
+                        // potential candidate in range
+                        if (val_tol >= next->value) {
+                            const auto diffToCurr = std::abs(curr->value - val);
+                            const auto diffToNext = std::abs(next->value - val);
+                            // val is actually closer to next than to curr
+                            if (diffToNext < diffToCurr) {
+                                //                                std::cout << "Second hit in bucket" << key << "! " << val << " is closer to " << next->value << " than to " << curr->value << std::endl;
+                                ++hits;
+                                return next;
+                            }
+                        }
+                    }
+                    //                    std::cout << "General hit in bucket " << key << "! " << val << " matches " << curr->value << std::endl;
                     ++hits;
                     return curr;
                 }
@@ -484,6 +520,8 @@ namespace dd {
             ++inserts;
             Entry* entry = getEntry();
             entry->value = val;
+
+            //            std::cout << "Insert " << val << " in middle of bucket " << key << std::endl;
 
             if (prev == nullptr) {
                 // table bucket is empty
@@ -515,7 +553,7 @@ namespace dd {
             Entry* curr = table[key];
             Entry* prev = nullptr;
 
-            while (curr != nullptr && val < curr->value) {
+            while (curr != nullptr && curr->value <= val) {
                 ++insertCollisions;
                 prev = curr;
                 curr = curr->next;
@@ -534,20 +572,6 @@ namespace dd {
             count++;
             peakCount = std::max(peakCount, count);
             return entry;
-        }
-
-        inline Entry* find(const Bucket& bucket, const fp& val) {
-            Entry*   p       = bucket;
-            const fp val_tol = val - TOLERANCE;
-            while (p != nullptr && val_tol <= p->value) {
-                if (Entry::approximatelyEquals(p->value, val)) {
-                    ++hits;
-                    return p;
-                }
-                ++collisions;
-                p = p->next;
-            }
-            return nullptr;
         }
     };
 } // namespace dd

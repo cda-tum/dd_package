@@ -83,7 +83,7 @@ namespace dd {
     //    }
 
     // calculates the Units in Last Place (ULP) distance of two floating point numbers
-    static std::size_t ulpDistance(dd::fp a, dd::fp b) {
+    [[maybe_unused]] static std::size_t ulpDistance(dd::fp a, dd::fp b) {
         if (a == b)
             return 0;
 
