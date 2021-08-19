@@ -841,22 +841,19 @@ TEST(DDPackageTest, BasicNumericInstabilityTest) {
     std::cout << "This inaccuracy even persists when computing std::sqrt(0.5) * std::sqrt(0.5): " << std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)) << std::endl;
     EXPECT_EQ(std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)), std::nextafter(dd::fp(0.5), 1.));
 
-    std::cout << "Interestingly, calculating powers of dd::SQRT2_2 can be conducted very precisely, i.e., with an error of only 1 ULP.";
-    dd::fp      accumulator = 1.0;
+    std::cout << "Interestingly, calculating powers of dd::SQRT2_2 can be conducted very precisely, i.e., with an error of only 1 ULP." << std::endl;
+    dd::fp      accumulator = dd::SQRT2_2 * dd::SQRT2_2;
     std::size_t nq          = 64;
-    for (std::size_t i = 0; i < nq; ++i) {
+    for (std::size_t i = 1; i < nq; i += 2) {
+        std::size_t power  = (i + 1) / 2;
+        std::size_t denom  = 1UL << power;
+        dd::fp      target = 1. / static_cast<double>(denom);
+        dd::fp      diff   = std::abs(target - accumulator);
+        const auto  ulps   = dd::ulpDistance(accumulator, target);
+        std::cout << accumulator << ", numerical error: " << diff << ", ulps: " << ulps << std::endl;
+        EXPECT_EQ(ulps, 1);
         accumulator *= dd::SQRT2_2;
-
-        if (i % 2 == 1) {
-            // in these cases it should be a power of 1/2
-            std::size_t power  = (i + 1) / 2;
-            std::size_t denom  = 1UL << power;
-            dd::fp      target = 1. / static_cast<double>(denom);
-            dd::fp      diff   = std::abs(target - accumulator);
-            const auto  ulps   = dd::ulpDistance(accumulator, target);
-            std::cout << accumulator << ", numerical error: " << diff << ", ulps: " << ulps << std::endl;
-            EXPECT_EQ(ulps, 1);
-        }
+        accumulator *= dd::SQRT2_2;
     }
 }
 
