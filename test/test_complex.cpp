@@ -40,39 +40,39 @@ TEST(DDComplexTest, TrivialTest) {
 }
 
 TEST(DDComplexTest, ComplexNumberCreation) {
-    auto cn = ComplexNumbers();
-    EXPECT_EQ(cn.lookup(Complex::zero), Complex::zero);
-    EXPECT_EQ(cn.lookup(Complex::one), Complex::one);
-    EXPECT_EQ(cn.lookup(1e-14, 0.), Complex::zero);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, 1.).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, 1.).i), 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, -1.).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(1e-14, -1.).i), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(-1., -1.).r), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(-1., -1.).i), -1.);
-    auto c = cn.lookup(0., -1.);
+    auto cn = std::make_unique<ComplexNumbers>();
+    EXPECT_EQ(cn->lookup(Complex::zero), Complex::zero);
+    EXPECT_EQ(cn->lookup(Complex::one), Complex::one);
+    EXPECT_EQ(cn->lookup(1e-14, 0.), Complex::zero);
+    EXPECT_EQ(CTEntry::val(cn->lookup(1e-14, 1.).r), 0.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(1e-14, 1.).i), 1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(1e-14, -1.).r), 0.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(1e-14, -1.).i), -1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(-1., -1.).r), -1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(-1., -1.).i), -1.);
+    auto c = cn->lookup(0., -1.);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -1.);
-    c = cn.lookup(0., 1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), 1.);
-    c = cn.lookup(0., -0.5);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).r), 0.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).i), -1.);
+    c = cn->lookup(0., 1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).r), 0.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).i), 1.);
+    c = cn->lookup(0., -0.5);
     std::cout << c << std::endl;
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), 0.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -0.5);
-    c = cn.lookup(-1., -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).r), -1.);
-    EXPECT_EQ(CTEntry::val(cn.lookup(c).i), -1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).r), 0.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).i), -0.5);
+    c = cn->lookup(-1., -1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).r), -1.);
+    EXPECT_EQ(CTEntry::val(cn->lookup(c).i), -1.);
     std::cout << c << std::endl;
 
-    auto e = cn.lookup(1., -1.);
+    auto e = cn->lookup(1., -1.);
     std::cout << e << std::endl;
     std::cout << ComplexValue{1., 1.} << std::endl;
     std::cout << ComplexValue{1., -1.} << std::endl;
     std::cout << ComplexValue{1., -0.5} << std::endl;
-    cn.complexTable.print();
-    cn.complexTable.printStatistics();
+    cn->complexTable.print();
+    cn->complexTable.printStatistics();
 }
 
 TEST(DDComplexTest, ComplexNumberArithmetic) {
