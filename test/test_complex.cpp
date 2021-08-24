@@ -309,13 +309,25 @@ TEST(DDComplexTest, NumberPrinting) {
 }
 
 TEST(DDComplexTest, MaxRefCountReached) {
-    auto cn       = std::make_unique<ComplexNumbers>();
-    auto c        = cn->lookup(SQRT2_2, SQRT2_2);
-    auto max      = std::numeric_limits<decltype(c.r->refCount)>::max();
-    c.r->refCount = max;
+    auto       cn  = std::make_unique<ComplexNumbers>();
+    auto       c   = cn->lookup(SQRT2_2/2, SQRT2_2/2);
+    const auto max = std::numeric_limits<decltype(c.r->refCount)>::max();
+    c.r->refCount  = max - 1;
+
+    std::cout.flush();
+    std::clog << "Heads up: The following three MAXREFCNT warnings are part of a passing test.\n";
     CN::incRef(c);
+    CN::incRef(c);
+    std::clog.flush();
     EXPECT_EQ(c.r->refCount, max);
     EXPECT_EQ(c.i->refCount, max);
+}
+
+TEST(DDComplexTest, NegativeRefCountReached) {
+    auto       cn  = std::make_unique<ComplexNumbers>();
+    auto       c   = cn->lookup(SQRT2_2/2, SQRT2_2/2);
+
+    ASSERT_THROW(CN::decRef(c), std::runtime_error);
 }
 
 TEST(DDComplexTest, ComplexTableAllocation) {
