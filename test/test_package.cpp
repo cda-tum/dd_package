@@ -140,6 +140,16 @@ TEST(DDPackageTest, QFTState) {
     export2Dot(qft_state, "qft_state_memory.dot", false, true, true, true, false);
     dd::exportEdgeWeights(qft_state, std::cout);
 
+    export2Dot(qft_op, "qft_op_colored_labels.dot", true, true, false, false, false);
+    export2Dot(qft_op, "qft_op_colored_labels_classic.dot", true, true, true, false, false);
+    export2Dot(qft_op, "qft_op_mono_labels.dot", false, true, false, false, false);
+    export2Dot(qft_op, "qft_op_mono_labels_classic.dot", false, true, true, false, false);
+    export2Dot(qft_op, "qft_op_colored.dot", true, false, false, false, false);
+    export2Dot(qft_op, "qft_op_colored_classic.dot", true, false, true, false, false);
+    export2Dot(qft_op, "qft_op_mono.dot", false, false, false, false, false);
+    export2Dot(qft_op, "qft_op_mono_classic.dot", false, false, true, false, false);
+    export2Dot(qft_op, "qft_op_memory.dot", false, true, true, true, false);
+
     dd->statistics();
 }
 
