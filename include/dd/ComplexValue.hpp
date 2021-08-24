@@ -98,93 +98,119 @@ namespace dd {
             }
         }
 
-        static void printFormatted(std::ostream& os, fp r, bool imaginary = false) {
-            if (std::abs(r) < ComplexTable<>::tolerance()) {
-                os << (std::signbit(r) ? "-" : "+") << "0" << (imaginary ? "i" : "");
+        static void printFormatted(std::ostream& os, fp num, bool imaginary = false) {
+            if (std::abs(num) < ComplexTable<>::tolerance()) {
+                os << (std::signbit(num) ? "-" : "+") << "0" << (imaginary ? "i" : "");
                 return;
             }
-            auto n = std::log2(std::abs(r));
-            auto m = std::log2(std::abs(r) / SQRT2_2);
-            auto o = std::log2(std::abs(r) / PI);
 
-            if (n == 0) { // +-1
+            if (std::log2(std::abs(num)) == 0) { // +-1
                 if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << "i";
+                    os << (std::signbit(num) ? "-" : "+") << "i";
                 } else
-                    os << (std::signbit(r) ? "-" : "") << 1;
+                    os << (std::signbit(num) ? "-" : "") << 1;
                 return;
             }
 
-            if (m == 0) { // +- 1/sqrt(2)
+            const auto absnum = std::abs(num);
+            auto fraction = getLowestFraction(absnum);
+            auto approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            auto error    = std::abs(absnum - approx);
+
+            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
                 if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u221a\u00bdi";
+                    if (fraction.second == 1U) {
+                        if (fraction.first == 1U) {
+                            os << (std::signbit(num) ? "-" : "+") << "i";
+                        } else {
+                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i";
+                        }
+                    } else {
+                        if (fraction.first == 1U) {
+                            os << (std::signbit(num) ? "-" : "+") << "i/" << fraction.second;
+                        } else {
+                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/" << fraction.second;
+                        }
+                    }
                 } else {
-                    os << (std::signbit(r) ? "-" : "") << u8"\u221a\u00bd";
+                    if (fraction.second == 1U) {
+                        os << fraction.first;
+                    } else {
+                        os << fraction.first << "/" << fraction.second;
+                    }
                 }
                 return;
             }
 
-            if (o == 0) { // +- pi
+            const auto abssqrt = absnum / SQRT2_2;
+            if (std::abs(abssqrt - 1) < ComplexTable<>::tolerance()) { // +- 1/sqrt(2)
                 if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u03c0i";
+                    os << (std::signbit(num) ? "-" : "+") << "i/√2";
                 } else {
-                    os << (std::signbit(r) ? "-" : "") << u8"\u03c0";
+                    os << (std::signbit(num) ? "-" : "") << "1/√2";
                 }
                 return;
             }
 
-            if (std::abs(n + 1) < ComplexTable<>::tolerance()) { // 1/2
+            fraction = getLowestFraction(abssqrt);
+            approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            error    = std::abs(abssqrt - approx);
+
+            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/(b * sqrt(2)) found
                 if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u00bdi";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u00bd";
+                    if (fraction.second == 1U) {
+                        if (fraction.first == 1U) {
+                            os << (std::signbit(num) ? "-" : "+") << "i/√2";
+                        } else {
+                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/√2";
+                        }
+                    } else {
+                        if (fraction.first == 1U) {
+                            os << (std::signbit(num) ? "-" : "+") << "i/(" << fraction.second << "√2)";
+                        } else {
+                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/(" << fraction.second << "√2)";
+                        }
+                    }
+                } else {
+                    if (fraction.second == 1U) {
+                        os << fraction.first << "/√2)";
+                    } else {
+                        os << fraction.first << "/(" << fraction.second << "√2)";
+                    }
+                }
                 return;
             }
 
-            if (std::abs(m + 1) < ComplexTable<>::tolerance()) { // 1/sqrt(2) 1/2
+            const auto abspi = absnum / PI;
+            if (std::abs(abspi - 1) < ComplexTable<>::tolerance()) { // +- π
                 if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u221a\u00bd \u00bdi";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u221a\u00bd \u00bd";
+                    os << (std::signbit(num) ? "-" : "+") << "πi";
+                } else {
+                    os << (std::signbit(num) ? "-" : "") << "π";
+                }
                 return;
             }
 
-            if (std::abs(o + 1) < ComplexTable<>::tolerance()) { // +-pi/2
-                if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u00bd \u03c0i";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u00bd \u03c0";
-                return;
-            }
+            fraction = getLowestFraction(abspi);
+            approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            error    = std::abs(abspi - approx);
 
-            if (std::abs(std::round(n) - n) < ComplexTable<>::tolerance() && n < 0) { // 1/2^n
-                if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u00bd\u002a\u002a" << (int)std::round(-n) << "i";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u00bd\u002a\u002a" << (int)std::round(-n);
-                return;
-            }
-
-            if (std::abs(std::round(m) - m) < ComplexTable<>::tolerance() && m < 0) { // 1/sqrt(2) 1/2^m
-                if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u221a\u00bd \u00bd\u002a\u002a" << (int)std::round(-m) << "i";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u221a\u00bd \u00bd\u002a\u002a" << (int)std::round(-m);
-                return;
-            }
-
-            if (std::abs(std::round(o) - o) < ComplexTable<>::tolerance() && o < 0) { // 1/2^o pi
-                if (imaginary) {
-                    os << (std::signbit(r) ? "-" : "+") << u8"\u00bd\u002a\u002a" << (int)std::round(-o) << u8" \u03c0i";
-                } else
-                    os << (std::signbit(r) ? "-" : "") << u8"\u00bd\u002a\u002a" << (int)std::round(-o) << u8" \u03c0";
+            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b π found
+                if (fraction.second == 1U) {
+                    os << (imaginary && !std::signbit(num) ? "+" : "") << fraction.first << "π" << (imaginary ? "i" : "");
+                } else if (fraction.first == 1U) {
+                    os << (imaginary && !std::signbit(num) ? "+" : "") << "π" << (imaginary ? "i" : "") << "/" << fraction.second;
+                } else {
+                    os << (imaginary && !std::signbit(num) ? "+" : "") << fraction.first << "π" << (imaginary ? "i" : "") << "/" << fraction.second;
+                }
                 return;
             }
 
             if (imaginary) { // default
-                os << (std::signbit(r) ? "" : "+") << r << "i";
-            } else
-                os << r;
+                os << (std::signbit(num) ? "" : "+") << num << "i";
+            } else {
+                os << num;
+            }
         }
 
         static std::string toString(const fp& real, const fp& imag, bool formatted = true, int precision = -1) {
