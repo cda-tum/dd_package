@@ -310,7 +310,7 @@ TEST(DDComplexTest, NumberPrinting) {
 
 TEST(DDComplexTest, MaxRefCountReached) {
     auto       cn  = std::make_unique<ComplexNumbers>();
-    auto       c   = cn->lookup(SQRT2_2/2, SQRT2_2/2);
+    auto       c   = cn->lookup(SQRT2_2 / 2, SQRT2_2 / 2);
     const auto max = std::numeric_limits<decltype(c.r->refCount)>::max();
     c.r->refCount  = max - 1;
 
@@ -324,8 +324,8 @@ TEST(DDComplexTest, MaxRefCountReached) {
 }
 
 TEST(DDComplexTest, NegativeRefCountReached) {
-    auto       cn  = std::make_unique<ComplexNumbers>();
-    auto       c   = cn->lookup(SQRT2_2/2, SQRT2_2/2);
+    auto cn = std::make_unique<ComplexNumbers>();
+    auto c  = cn->lookup(SQRT2_2 / 2, SQRT2_2 / 2);
 
     ASSERT_THROW(CN::decRef(c), std::runtime_error);
 }
