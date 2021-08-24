@@ -112,10 +112,10 @@ namespace dd {
                 return;
             }
 
-            const auto absnum = std::abs(num);
-            auto fraction = getLowestFraction(absnum);
-            auto approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-            auto error    = std::abs(absnum - approx);
+            const auto absnum   = std::abs(num);
+            auto       fraction = getLowestFraction(absnum);
+            auto       approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            auto       error    = std::abs(absnum - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
                 if (imaginary) {
