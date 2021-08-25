@@ -6,8 +6,8 @@
 #include "dd/ComplexNumbers.hpp"
 
 #include "gtest/gtest.h"
-#include <memory>
 #include <limits>
+#include <memory>
 
 using namespace dd;
 using CN = ComplexNumbers;
@@ -176,16 +176,17 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     std::clog << "Current rounding mode: " << std::numeric_limits<fp>::round_style << "\n";
     auto                  cn      = std::make_unique<ComplexNumbers>();
     constexpr std::size_t NBUCKET = ComplexTable<>::MASK + 1;
-    auto preHash = [](const fp val){return val * ComplexTable<>::MASK;};
+    auto                  preHash = [](const fp val) { return val * ComplexTable<>::MASK; };
 
     // lower border of a bucket
-    const fp numBucketBorder = (0.25 * ComplexTable<>::MASK - 0.5) / (ComplexTable<>::MASK);
+    const fp   numBucketBorder  = (0.25 * ComplexTable<>::MASK - 0.5) / (ComplexTable<>::MASK);
     const auto hashBucketBorder = ComplexTable<>::hash(numBucketBorder);
     std::cout.flush();
     std::clog << "numBucketBorder          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBucketBorder << "\n";
     std::clog << "preHash(numBucketBorder) = " << preHash(numBucketBorder) << "\n";
-    std::clog << "hashBucketBorder         = " << hashBucketBorder << "\n" << std::flush;
-    EXPECT_EQ(hashBucketBorder, NBUCKET/4);
+    std::clog << "hashBucketBorder         = " << hashBucketBorder << "\n"
+              << std::flush;
+    EXPECT_EQ(hashBucketBorder, NBUCKET / 4);
 
     // insert a number slightly away from the border
     const fp numAbove = numBucketBorder + 2 * ComplexTable<>::tolerance();
@@ -200,7 +201,8 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     std::cout.flush();
     std::clog << "numBarelyBelow          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBarelyBelow << "\n";
     std::clog << "preHash(numBarelyBelow) = " << preHash(numBarelyBelow) << "\n";
-    std::clog << "hashBarelyBelow         = " << hashBarelyBelow << "\n" << std::flush;
+    std::clog << "hashBarelyBelow         = " << hashBarelyBelow << "\n"
+              << std::flush;
     EXPECT_EQ(hashBarelyBelow, NBUCKET / 4 - 1);
 
     // insert another number in the bucket below a bit farther away from the border
@@ -210,7 +212,8 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     std::cout.flush();
     std::clog << "numBelow          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBelow << "\n";
     std::clog << "preHash(numBelow) = " << preHash(numBelow) << "\n";
-    std::clog << "hashBelow         = " << hashBelow << "\n" << std::flush;
+    std::clog << "hashBelow         = " << hashBelow << "\n"
+              << std::flush;
     EXPECT_EQ(hashBelow, NBUCKET / 4 - 1);
 
     // insert border number that is too far away from the number in the bucket, but is close enough to a number in the bucket below
@@ -227,7 +230,8 @@ TEST(DDComplexTest, LookupInNeighbouringBuckets) {
     std::cout.flush();
     std::clog << "numNextBorder          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numNextBorder << "\n";
     std::clog << "preHash(numNextBorder) = " << preHash(numNextBorder) << "\n";
-    std::clog << "hashNextBorder         = " << hashNextBorder << "\n" << std::flush;
+    std::clog << "hashNextBorder         = " << hashNextBorder << "\n"
+              << std::flush;
     EXPECT_EQ(hashNextBorder, NBUCKET / 4 + 1);
 
     // search for a number in the lower bucket that is ultimately close enough to a number in the upper bucket
