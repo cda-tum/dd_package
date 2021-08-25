@@ -250,7 +250,7 @@ TEST(DDComplexTest, ComplexValueEquals) {
     EXPECT_FALSE(a.approximatelyEquals(b));
 }
 
-TEST(DDComplexTest, NumberPrinting) {
+TEST(DDComplexTest, NumberPrintingToString) {
     auto cn       = std::make_unique<ComplexNumbers>();
     auto imag     = cn->lookup(0., 1.);
     auto imag_str = imag.toString(false);
@@ -266,27 +266,16 @@ TEST(DDComplexTest, NumberPrinting) {
     auto neg_superposition               = cn->lookup(dd::SQRT2_2, -dd::SQRT2_2);
     auto neg_superposition_str_formatted = neg_superposition.toString(true, 3);
     EXPECT_STREQ(neg_superposition_str_formatted.c_str(), "1/√2(1-i)");
+}
 
+TEST(DDComplexTest, NumberPrintingFormattedFractions) {
     std::stringstream ss{};
-    ComplexValue::printFormatted(ss, dd::SQRT2_2, false);
-    EXPECT_STREQ(ss.str().c_str(), "1/√2");
-    ss.str("");
-    ComplexValue::printFormatted(ss, dd::SQRT2_2, true);
-    EXPECT_STREQ(ss.str().c_str(), "+i/√2");
-    ss.str("");
 
-    ComplexValue::printFormatted(ss, 0.5, false);
-    EXPECT_STREQ(ss.str().c_str(), "1/2");
+    ComplexValue::printFormatted(ss, 0, false);
+    EXPECT_STREQ(ss.str().c_str(), "+0");
     ss.str("");
-    ComplexValue::printFormatted(ss, 0.5, true);
-    EXPECT_STREQ(ss.str().c_str(), "+i/2");
-    ss.str("");
-
-    ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, false);
-    EXPECT_STREQ(ss.str().c_str(), "1/(2√2)");
-    ss.str("");
-    ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, true);
-    EXPECT_STREQ(ss.str().c_str(), "+i/(2√2)");
+    ComplexValue::printFormatted(ss, -0., false);
+    EXPECT_STREQ(ss.str().c_str(), "-0");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.25, false);
@@ -296,6 +285,45 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(ss.str().c_str(), "+i/4");
     ss.str("");
 
+    ComplexValue::printFormatted(ss, 0.5, false);
+    EXPECT_STREQ(ss.str().c_str(), "1/2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.5, true);
+    EXPECT_STREQ(ss.str().c_str(), "+i/2");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.75, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/4");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.75, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3i/4");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 1, false);
+    EXPECT_STREQ(ss.str().c_str(), "1");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 1, true);
+    EXPECT_STREQ(ss.str().c_str(), "+i");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 1.5, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 1.5, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3i/2");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 2, false);
+    EXPECT_STREQ(ss.str().c_str(), "2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+2i");
+    ss.str("");
+}
+
+TEST(DDComplexTest, NumberPrintingFormattedFractionsSqrt) {
+    std::stringstream ss{};
+
     ComplexValue::printFormatted(ss, 0.25 * dd::SQRT2_2, false);
     EXPECT_STREQ(ss.str().c_str(), "1/(4√2)");
     ss.str("");
@@ -303,11 +331,50 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(ss.str().c_str(), "+i/(4√2)");
     ss.str("");
 
-    ComplexValue::printFormatted(ss, dd::PI, false);
-    EXPECT_STREQ(ss.str().c_str(), "π");
+    ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "1/(2√2)");
     ss.str("");
-    ComplexValue::printFormatted(ss, dd::PI, true);
-    EXPECT_STREQ(ss.str().c_str(), "+πi");
+    ComplexValue::printFormatted(ss, 0.5 * dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+i/(2√2)");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.75 * dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/(4√2)");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.75 * dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3i/(4√2)");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "1/√2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+i/√2");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 1.5 * dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "3/(2√2)");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 1.5 * dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3i/(2√2)");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 2 * dd::SQRT2_2, false);
+    EXPECT_STREQ(ss.str().c_str(), "2/√2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 2 * dd::SQRT2_2, true);
+    EXPECT_STREQ(ss.str().c_str(), "+2i/√2");
+    ss.str("");
+}
+
+TEST(DDComplexTest, NumberPrintingFormattedFractionsPi) {
+    std::stringstream ss{};
+
+    ComplexValue::printFormatted(ss, 0.25 * dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "π/4");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 0.25 * dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "+πi/4");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.5 * dd::PI, false);
@@ -317,13 +384,37 @@ TEST(DDComplexTest, NumberPrinting) {
     EXPECT_STREQ(ss.str().c_str(), "+πi/2");
     ss.str("");
 
-    ComplexValue::printFormatted(ss, 0.25 * dd::PI, false);
-    EXPECT_STREQ(ss.str().c_str(), "π/4");
+    ComplexValue::printFormatted(ss, 0.75 * dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "3π/4");
     ss.str("");
-    ComplexValue::printFormatted(ss, 0.25 * dd::PI, true);
-    EXPECT_STREQ(ss.str().c_str(), "+πi/4");
+    ComplexValue::printFormatted(ss, 0.75 * dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3πi/4");
     ss.str("");
 
+    ComplexValue::printFormatted(ss, dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "π");
+    ss.str("");
+    ComplexValue::printFormatted(ss, dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "+πi");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 1.5 * dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "3π/2");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 1.5 * dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "+3πi/2");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 2 * dd::PI, false);
+    EXPECT_STREQ(ss.str().c_str(), "2π");
+    ss.str("");
+    ComplexValue::printFormatted(ss, 2 * dd::PI, true);
+    EXPECT_STREQ(ss.str().c_str(), "+2πi");
+    ss.str("");
+}
+
+TEST(DDComplexTest, NumberPrintingFormattedFloating) {
+    std::stringstream ss{};
     ComplexValue::printFormatted(ss, 0.1234, false);
     EXPECT_STREQ(ss.str().c_str(), "0.1234");
     ss.str("");

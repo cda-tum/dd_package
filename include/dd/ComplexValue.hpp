@@ -173,7 +173,7 @@ namespace dd {
                     }
                 } else {
                     if (fraction.second == 1U) {
-                        os << fraction.first << "/√2)";
+                        os << fraction.first << "/√2";
                     } else {
                         os << fraction.first << "/(" << fraction.second << "√2)";
                     }
