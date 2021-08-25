@@ -271,11 +271,18 @@ TEST(DDComplexTest, NumberPrintingToString) {
 TEST(DDComplexTest, NumberPrintingFormattedFractions) {
     std::stringstream ss{};
 
-    ComplexValue::printFormatted(ss, 0, false);
+    ComplexValue::printFormatted(ss, 0.0, false);
     EXPECT_STREQ(ss.str().c_str(), "+0");
     ss.str("");
-    ComplexValue::printFormatted(ss, -0., false);
+    ComplexValue::printFormatted(ss, -0.0, false);
     EXPECT_STREQ(ss.str().c_str(), "-0");
+    ss.str("");
+
+    ComplexValue::printFormatted(ss, 0.0, true);
+    EXPECT_STREQ(ss.str().c_str(), "+0i");
+    ss.str("");
+    ComplexValue::printFormatted(ss, -0.0, true);
+    EXPECT_STREQ(ss.str().c_str(), "-0i");
     ss.str("");
 
     ComplexValue::printFormatted(ss, 0.25, false);
