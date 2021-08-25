@@ -10,6 +10,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 #include <random>
+#include <sstream>
 
 using namespace dd::literals;
 
@@ -872,3 +873,142 @@ TEST(DDPackageTest, DestructiveMeasurementOneArbitraryNormalization) {
     ASSERT_EQ(vAfter[1], static_cast<std::complex<dd::fp>>(dd::complex_zero));
     ASSERT_EQ(vAfter[3], static_cast<std::complex<dd::fp>>(dd::complex_zero));
 }
+
+TEST(DDPackageTest, ExportPolarMagnitudeFormatted) {
+    std::ostringstream magString;
+
+    // zero case
+    dd::printPolarFormatted(magString, 0);
+    EXPECT_STREQ(magString.str().c_str(), "");
+    magString.str("");
+
+    // one case
+    dd::printPolarFormatted(magString, 1);
+    EXPECT_STREQ(magString.str().c_str(), "1");
+    magString.str("");
+    // a/b fractions
+    dd::printPolarFormatted(magString, 0.5);
+    EXPECT_STREQ(magString.str().c_str(), "1/2");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 2);
+    EXPECT_STREQ(magString.str().c_str(), "2");
+    magString.str("");
+
+    // 1/sqrt(2) cases
+    dd::printPolarFormatted(magString, dd::SQRT2_2);
+    EXPECT_STREQ(magString.str().c_str(), "1/√2");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 0.5*dd::SQRT2_2);
+    EXPECT_STREQ(magString.str().c_str(), "1/(2√2)");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 0.75*dd::SQRT2_2);
+    EXPECT_STREQ(magString.str().c_str(), "3/(4√2)");
+    magString.str("");
+
+    // pi cases mhhh pie
+    dd::printPolarFormatted(magString, dd::PI);
+    EXPECT_STREQ(magString.str().c_str(), "π");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 0.5*dd::PI);
+    EXPECT_STREQ(magString.str().c_str(), "π/2");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 0.75*dd::PI);
+    EXPECT_STREQ(magString.str().c_str(), "3π/4");
+    magString.str("");
+
+    // general case
+    dd::printPolarFormatted(magString, 0.12345);
+    EXPECT_STREQ(magString.str().c_str(), "0.12345");
+    magString.str("");
+}
+
+
+
+TEST(DDPackageTest, ExportPolarPhaseFormatted) {
+    std::ostringstream phaseString;
+
+    // zero case
+    dd::printPolarFormatted(phaseString, 0, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "");
+    phaseString.str("");
+
+    // one cases
+    dd::printPolarFormatted(phaseString, 0.5, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "i");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, -0.5, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "-i");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 1, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, -1, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(-iπ)");
+    phaseString.str("");
+
+    // a/b fractions
+    dd::printPolarFormatted(phaseString, 2, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.25, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/4)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.75, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3/4)");
+    phaseString.str("");
+
+    // 1/sqrt(2) cases
+    dd::printPolarFormatted(phaseString, dd::SQRT2_2, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/√2)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 2*dd::SQRT2_2, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2/√2)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.5*dd::SQRT2_2, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/(2√2))");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.75*dd::SQRT2_2, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3/(4√2))");
+    phaseString.str("");
+
+    // pi cases mhhh pie
+    dd::printPolarFormatted(phaseString, dd::PI, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ π)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 2*dd::PI, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2π)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.5*dd::PI, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ π/2)");
+    phaseString.str("");
+
+    dd::printPolarFormatted(phaseString, 0.75*dd::PI, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3π/4)");
+    phaseString.str("");
+
+    // general case
+    dd::printPolarFormatted(phaseString, 0.12345, true);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 0.12345)");
+    phaseString.str("");
+}
+
+TEST(DDPackageTest, ExportAsPolar) {
+
+}
+
+
