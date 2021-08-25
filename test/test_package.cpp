@@ -900,11 +900,11 @@ TEST(DDPackageTest, ExportPolarMagnitudeFormatted) {
     EXPECT_STREQ(magString.str().c_str(), "1/√2");
     magString.str("");
 
-    dd::printPolarFormatted(magString, 0.5*dd::SQRT2_2);
+    dd::printPolarFormatted(magString, 0.5 * dd::SQRT2_2);
     EXPECT_STREQ(magString.str().c_str(), "1/(2√2)");
     magString.str("");
 
-    dd::printPolarFormatted(magString, 0.75*dd::SQRT2_2);
+    dd::printPolarFormatted(magString, 0.75 * dd::SQRT2_2);
     EXPECT_STREQ(magString.str().c_str(), "3/(4√2)");
     magString.str("");
 
@@ -913,11 +913,11 @@ TEST(DDPackageTest, ExportPolarMagnitudeFormatted) {
     EXPECT_STREQ(magString.str().c_str(), "π");
     magString.str("");
 
-    dd::printPolarFormatted(magString, 0.5*dd::PI);
+    dd::printPolarFormatted(magString, 0.5 * dd::PI);
     EXPECT_STREQ(magString.str().c_str(), "π/2");
     magString.str("");
 
-    dd::printPolarFormatted(magString, 0.75*dd::PI);
+    dd::printPolarFormatted(magString, 0.75 * dd::PI);
     EXPECT_STREQ(magString.str().c_str(), "3π/4");
     magString.str("");
 
@@ -926,8 +926,6 @@ TEST(DDPackageTest, ExportPolarMagnitudeFormatted) {
     EXPECT_STREQ(magString.str().c_str(), "0.12345");
     magString.str("");
 }
-
-
 
 TEST(DDPackageTest, ExportPolarPhaseFormatted) {
     std::ostringstream phaseString;
@@ -972,15 +970,15 @@ TEST(DDPackageTest, ExportPolarPhaseFormatted) {
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/√2)");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 2*dd::SQRT2_2, true);
+    dd::printPolarFormatted(phaseString, 2 * dd::SQRT2_2, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2/√2)");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 0.5*dd::SQRT2_2, true);
+    dd::printPolarFormatted(phaseString, 0.5 * dd::SQRT2_2, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/(2√2))");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 0.75*dd::SQRT2_2, true);
+    dd::printPolarFormatted(phaseString, 0.75 * dd::SQRT2_2, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3/(4√2))");
     phaseString.str("");
 
@@ -989,15 +987,15 @@ TEST(DDPackageTest, ExportPolarPhaseFormatted) {
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ π)");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 2*dd::PI, true);
+    dd::printPolarFormatted(phaseString, 2 * dd::PI, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2π)");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 0.5*dd::PI, true);
+    dd::printPolarFormatted(phaseString, 0.5 * dd::PI, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ π/2)");
     phaseString.str("");
 
-    dd::printPolarFormatted(phaseString, 0.75*dd::PI, true);
+    dd::printPolarFormatted(phaseString, 0.75 * dd::PI, true);
     EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3π/4)");
     phaseString.str("");
 
@@ -1008,7 +1006,13 @@ TEST(DDPackageTest, ExportPolarPhaseFormatted) {
 }
 
 TEST(DDPackageTest, ExportAsPolar) {
+    auto cn = std::make_unique<dd::ComplexNumbers>();
 
+    auto num = cn->getCached(-dd::SQRT2_2, -dd::SQRT2_2);
+    EXPECT_STREQ(dd::asPolar(num).c_str(), "ℯ(-iπ 3π/4)");
+
+    auto num2 = cn->getCached(-1, -1);
+    EXPECT_STREQ(dd::asPolar(num2).c_str(), "2/√2 ℯ(-iπ 3π/4)");
+
+    EXPECT_STREQ(dd::asPolar(num, false, 4).c_str(), "1 -2.356");
 }
-
-
