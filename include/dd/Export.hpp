@@ -188,7 +188,7 @@ namespace dd {
         }
 
         if (formatted) {
-            if (std::abs(std::abs(phase) - 1.0) < ComplexTable<>::tolerance()) {
+            if (std::abs(std::abs(phase) - dd::PI) < ComplexTable<>::tolerance()) {
                 ss << "-";
                 printPolarFormatted(ss, mag);
             } else {

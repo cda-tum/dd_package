@@ -909,16 +909,20 @@ TEST(DDPackageTest, ExportPolarMagnitudeFormatted) {
     magString.str("");
 
     // pi cases mhhh pie
-    dd::printPolarFormatted(magString, dd::PI);
-    EXPECT_STREQ(magString.str().c_str(), "π");
-    magString.str("");
-
     dd::printPolarFormatted(magString, 0.5 * dd::PI);
     EXPECT_STREQ(magString.str().c_str(), "π/2");
     magString.str("");
 
     dd::printPolarFormatted(magString, 0.75 * dd::PI);
     EXPECT_STREQ(magString.str().c_str(), "3π/4");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, dd::PI);
+    EXPECT_STREQ(magString.str().c_str(), "π");
+    magString.str("");
+
+    dd::printPolarFormatted(magString, 2 * dd::PI);
+    EXPECT_STREQ(magString.str().c_str(), "2π");
     magString.str("");
 
     // general case
@@ -1008,11 +1012,13 @@ TEST(DDPackageTest, ExportPolarPhaseFormatted) {
 TEST(DDPackageTest, ExportAsPolar) {
     auto cn = std::make_unique<dd::ComplexNumbers>();
 
-    auto num = cn->getCached(-dd::SQRT2_2, -dd::SQRT2_2);
+    const auto num = cn->getCached(-dd::SQRT2_2, -dd::SQRT2_2);
     EXPECT_STREQ(dd::asPolar(num).c_str(), "ℯ(-iπ 3π/4)");
+    EXPECT_STREQ(dd::asPolar(num, false, 4).c_str(), "1 -2.356");
 
-    auto num2 = cn->getCached(-1, -1);
+    const auto num2 = cn->getCached(-1, -1);
     EXPECT_STREQ(dd::asPolar(num2).c_str(), "2/√2 ℯ(-iπ 3π/4)");
 
-    EXPECT_STREQ(dd::asPolar(num, false, 4).c_str(), "1 -2.356");
+    const auto num3 = cn->getCached(-1, 0);
+    EXPECT_STREQ(dd::asPolar(num3).c_str(), "-1");
 }
