@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include <memory>
+#include <limits>
 
 using namespace dd;
 using CN = ComplexNumbers;
@@ -172,50 +173,69 @@ TEST(DDComplexTest, GarbageCollectSomeInBucket) {
 }
 
 TEST(DDComplexTest, LookupInNeighbouringBuckets) {
+    std::clog << "Current rounding mode: " << std::numeric_limits<fp>::round_style << "\n";
     auto                  cn      = std::make_unique<ComplexNumbers>();
     constexpr std::size_t NBUCKET = ComplexTable<>::MASK + 1;
+    auto preHash = [](const fp val){return val * ComplexTable<>::MASK;};
 
     // lower border of a bucket
-    fp bucketBorder = (0.25 * NBUCKET - 0.5) / (NBUCKET - 1);
+    const fp numBucketBorder = (0.25 * ComplexTable<>::MASK - 0.5) / (ComplexTable<>::MASK);
+    const auto hashBucketBorder = ComplexTable<>::hash(numBucketBorder);
+    std::cout.flush();
+    std::clog << "numBucketBorder          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBucketBorder << "\n";
+    std::clog << "preHash(numBucketBorder) = " << preHash(numBucketBorder) << "\n";
+    std::clog << "hashBucketBorder         = " << hashBucketBorder << "\n" << std::flush;
+    EXPECT_EQ(hashBucketBorder, NBUCKET/4);
 
     // insert a number slightly away from the border
-    fp num = bucketBorder + 2 * ComplexTable<>::tolerance();
-    cn->lookup(num, 0.0);
-    auto key = ComplexTable<>::hash(num);
+    const fp numAbove = numBucketBorder + 2 * ComplexTable<>::tolerance();
+    cn->lookup(numAbove, 0.0);
+    auto key = ComplexTable<>::hash(numAbove);
     EXPECT_EQ(key, NBUCKET / 4);
 
     // insert a number barely in the bucket below
-    fp num2 = bucketBorder - ComplexTable<>::tolerance() / 10;
-    cn->lookup(num2, 0.0);
-    auto key2 = ComplexTable<>::hash(num2);
-    EXPECT_EQ(key2, NBUCKET / 4);
+    const fp numBarelyBelow = numBucketBorder - ComplexTable<>::tolerance() / 10;
+    cn->lookup(numBarelyBelow, 0.0);
+    auto hashBarelyBelow = ComplexTable<>::hash(numBarelyBelow);
+    std::cout.flush();
+    std::clog << "numBarelyBelow          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBarelyBelow << "\n";
+    std::clog << "preHash(numBarelyBelow) = " << preHash(numBarelyBelow) << "\n";
+    std::clog << "hashBarelyBelow         = " << hashBarelyBelow << "\n" << std::flush;
+    EXPECT_EQ(hashBarelyBelow, NBUCKET / 4 - 1);
 
     // insert another number in the bucket below a bit farther away from the border
-    fp num3 = bucketBorder - 2 * ComplexTable<>::tolerance();
-    cn->lookup(num3, 0.0);
-    auto key3 = ComplexTable<>::hash(num3);
-    EXPECT_EQ(key3, NBUCKET / 4);
+    const fp numBelow = numBucketBorder - 2 * ComplexTable<>::tolerance();
+    cn->lookup(numBelow, 0.0);
+    auto hashBelow = ComplexTable<>::hash(numBelow);
+    std::cout.flush();
+    std::clog << "numBelow          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numBelow << "\n";
+    std::clog << "preHash(numBelow) = " << preHash(numBelow) << "\n";
+    std::clog << "hashBelow         = " << hashBelow << "\n" << std::flush;
+    EXPECT_EQ(hashBelow, NBUCKET / 4 - 1);
 
     // insert border number that is too far away from the number in the bucket, but is close enough to a number in the bucket below
-    fp   num4 = bucketBorder;
+    fp   num4 = numBucketBorder;
     auto c    = cn->lookup(num4, 0.0);
     auto key4 = ComplexTable<>::hash(num4 - ComplexTable<>::tolerance());
-    EXPECT_EQ(key2, key4);
-    EXPECT_NEAR(c.r->value, num2, ComplexTable<>::tolerance());
+    EXPECT_EQ(hashBarelyBelow, key4);
+    EXPECT_NEAR(c.r->value, numBarelyBelow, ComplexTable<>::tolerance());
 
     // insert a number in the higher bucket
-    fp nextBorder = bucketBorder + 1.0 / (NBUCKET - 1);
-    fp num5       = nextBorder;
-    cn->lookup(num5, 0.0);
-    auto key5 = ComplexTable<>::hash(num5);
-    EXPECT_EQ(key5, NBUCKET / 4 + 1);
+    const fp numNextBorder = numBucketBorder + 1.0 / (NBUCKET - 1) + ComplexTable<>::tolerance();
+    cn->lookup(numNextBorder, 0.0);
+    auto hashNextBorder = ComplexTable<>::hash(numNextBorder);
+    std::cout.flush();
+    std::clog << "numNextBorder          = " << std::setprecision(std::numeric_limits<fp>::max_digits10) << numNextBorder << "\n";
+    std::clog << "preHash(numNextBorder) = " << preHash(numNextBorder) << "\n";
+    std::clog << "hashNextBorder         = " << hashNextBorder << "\n" << std::flush;
+    EXPECT_EQ(hashNextBorder, NBUCKET / 4 + 1);
 
     // search for a number in the lower bucket that is ultimately close enough to a number in the upper bucket
-    fp   num6 = nextBorder - ComplexTable<>::tolerance() / 10;
+    fp   num6 = numNextBorder - ComplexTable<>::tolerance() / 10;
     auto d    = cn->lookup(num6, 0.0);
     auto key6 = ComplexTable<>::hash(num6 + ComplexTable<>::tolerance());
-    EXPECT_EQ(key5, key6);
-    EXPECT_NEAR(d.r->value, num5, ComplexTable<>::tolerance());
+    EXPECT_EQ(hashNextBorder, key6);
+    EXPECT_NEAR(d.r->value, numNextBorder, ComplexTable<>::tolerance());
 }
 
 TEST(DDComplexTest, ComplexValueEquals) {
