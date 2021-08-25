@@ -5,6 +5,7 @@
 
 #include "dd/ComplexNumbers.hpp"
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include <limits>
 #include <memory>
@@ -248,6 +249,16 @@ TEST(DDComplexTest, ComplexValueEquals) {
     ComplexValue b{0.0, 1.0};
     EXPECT_TRUE(a.approximatelyEquals(a_tol));
     EXPECT_FALSE(a.approximatelyEquals(b));
+}
+
+TEST(DDComplexTest, LowestFractions) {
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.0), ::testing::Pair(0, 1));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.2), ::testing::Pair(1, 5));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.25), ::testing::Pair(1, 4));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.5), ::testing::Pair(1, 2));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.75), ::testing::Pair(3, 4));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(1.5), ::testing::Pair(3, 2));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(2.0), ::testing::Pair(2, 1));
 }
 
 TEST(DDComplexTest, NumberPrintingToString) {

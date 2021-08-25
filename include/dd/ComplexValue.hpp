@@ -120,11 +120,7 @@ namespace dd {
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
                 if (imaginary) {
                     if (fraction.second == 1U) {
-                        if (fraction.first == 1U) {
-                            os << (std::signbit(num) ? "-" : "+") << "i";
-                        } else {
-                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i";
-                        }
+                        os << (std::signbit(num) ? "-" : "+") << fraction.first << "i";
                     } else {
                         if (fraction.first == 1U) {
                             os << (std::signbit(num) ? "-" : "+") << "i/" << fraction.second;
