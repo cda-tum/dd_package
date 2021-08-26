@@ -104,100 +104,64 @@ namespace dd {
                 return;
             }
 
-            if (std::log2(std::abs(num)) == 0) { // +-1
-                if (imaginary) {
-                    os << (std::signbit(num) ? "-" : "+") << "i";
-                } else
-                    os << (std::signbit(num) ? "-" : "") << 1;
-                return;
-            }
-
             const auto absnum   = std::abs(num);
             auto       fraction = getLowestFraction(absnum);
             auto       approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             auto       error    = std::abs(absnum - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
-                if (imaginary) {
-                    if (fraction.second == 1U) {
-                        os << (std::signbit(num) ? "-" : "+") << fraction.first << "i";
-                    } else {
-                        if (fraction.first == 1U) {
-                            os << (std::signbit(num) ? "-" : "+") << "i/" << fraction.second;
-                        } else {
-                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/" << fraction.second;
-                        }
-                    }
+                const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
+
+                if (fraction.first == 1U && fraction.second == 1U) {
+                    os << sign << (imaginary ? "i" : "1");
+                } else if (fraction.second == 1U) {
+                    os << sign << fraction.first << (imaginary ? "i" : "");
+                } else if (fraction.first == 1U) {
+                    os << sign << (imaginary ? "i" : "1") << "/" << fraction.second;
                 } else {
-                    if (fraction.second == 1U) {
-                        os << fraction.first;
-                    } else {
-                        os << fraction.first << "/" << fraction.second;
-                    }
+                    os << sign << fraction.first << (imaginary ? "i" : "") << "/" << fraction.second;
                 }
+
                 return;
             }
 
             const auto abssqrt = absnum / SQRT2_2;
-            if (std::abs(abssqrt - 1) < ComplexTable<>::tolerance()) { // +- 1/sqrt(2)
-                if (imaginary) {
-                    os << (std::signbit(num) ? "-" : "+") << "i/√2";
-                } else {
-                    os << (std::signbit(num) ? "-" : "") << "1/√2";
-                }
-                return;
-            }
-
             fraction = getLowestFraction(abssqrt);
             approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             error    = std::abs(abssqrt - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/(b * sqrt(2)) found
-                if (imaginary) {
-                    if (fraction.second == 1U) {
-                        if (fraction.first == 1U) {
-                            os << (std::signbit(num) ? "-" : "+") << "i/√2";
-                        } else {
-                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/√2";
-                        }
-                    } else {
-                        if (fraction.first == 1U) {
-                            os << (std::signbit(num) ? "-" : "+") << "i/(" << fraction.second << "√2)";
-                        } else {
-                            os << (std::signbit(num) ? "-" : "+") << fraction.first << "i/(" << fraction.second << "√2)";
-                        }
-                    }
+                const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
+
+                if (fraction.first == 1U && fraction.second == 1U) {
+                    os << sign << (imaginary ? "i" : "1") << "/√2";
+                } else if (fraction.second == 1U) {
+                    os << sign << fraction.first << (imaginary ? "i" : "") << "/√2";
+                } else if (fraction.first == 1U) {
+                    os << sign << (imaginary ? "i" : "1") << "/(" << fraction.second << "√2)";
                 } else {
-                    if (fraction.second == 1U) {
-                        os << fraction.first << "/√2";
-                    } else {
-                        os << fraction.first << "/(" << fraction.second << "√2)";
-                    }
+                    os << sign << fraction.first << (imaginary ? "i" : "") << "/(" << fraction.second << "√2)";
                 }
                 return;
             }
 
             const auto abspi = absnum / PI;
-            if (std::abs(abspi - 1) < ComplexTable<>::tolerance()) { // +- π
-                if (imaginary) {
-                    os << (std::signbit(num) ? "-" : "+") << "πi";
-                } else {
-                    os << (std::signbit(num) ? "-" : "") << "π";
-                }
-                return;
-            }
-
             fraction = getLowestFraction(abspi);
             approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             error    = std::abs(abspi - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b π found
-                if (fraction.second == 1U) {
-                    os << (imaginary && !std::signbit(num) ? "+" : "") << fraction.first << "π" << (imaginary ? "i" : "");
+                const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
+                const std::string imagUnit = imaginary ? "i" : "";
+
+                if (fraction.first == 1U && fraction.second == 1U) {
+                    os << sign << "π" << imagUnit;
+                } else if (fraction.second == 1U) {
+                    os << sign << fraction.first << "π" << imagUnit;
                 } else if (fraction.first == 1U) {
-                    os << (imaginary && !std::signbit(num) ? "+" : "") << "π" << (imaginary ? "i" : "") << "/" << fraction.second;
+                    os << sign << "π" << imagUnit << "/" << fraction.second;
                 } else {
-                    os << (imaginary && !std::signbit(num) ? "+" : "") << fraction.first << "π" << (imaginary ? "i" : "") << "/" << fraction.second;
+                    os << sign << fraction.first << "π" << imagUnit << "/" << fraction.second;
                 }
                 return;
             }

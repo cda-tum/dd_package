@@ -45,135 +45,68 @@ namespace dd {
         return 3.0 * std::max(dd::ComplexNumbers::mag(a), 0.10);
     }
 
-    static void printPolarFormatted(std::ostream& os, fp r, bool phase = false) {
+    static void printPhaseFormatted(std::ostream& os, fp r) {
         const auto tol = dd::ComplexTable<>::tolerance();
-        if (std::abs(r) < tol) {
-            return;
-        }
-        if (phase) {
-            // special case treatment for +-i
-            if (std::abs(r - 0.5) < tol) {
-                os << "i";
-                return;
-            } else if (std::abs(r + 0.5) < tol) {
-                os << "-i";
-                return;
-            }
 
-            os << "ℯ(";
-            if (std::signbit(r))
-                os << "-";
-            os << "iπ";
-        }
+        // special case treatment for +-i
+        os << "ℯ(" << (std::signbit(r) ? "-" : "") << "iπ";
 
-        auto absr = std::abs(r);
-
-        if (std::abs(absr - 1.) < tol) { // +-1
-            if (phase) {
-                os << ")";
-            } else {
-                os << (std::signbit(r) ? "-" : "") << 1;
-            }
-            return;
-        }
-
+        const auto absr = std::abs(r);
         auto fraction = ComplexValue::getLowestFraction(absr);
         auto approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
         auto error    = std::abs(absr - approx);
 
         if (error < tol) { // suitable fraction a/b found
-            if (phase) {
-                if (fraction.second == 1U) {
-                    os << " " << fraction.first << ")";
-                } else if (fraction.first == 1U) {
-                    os << "/" << fraction.second << ")";
-                } else {
-                    os << " " << fraction.first << "/" << fraction.second << ")";
-                }
+            if (fraction.first == 1U && fraction.second == 1U) {
+                os << ")";
+            } else if (fraction.second == 1U) {
+                os << " " << fraction.first << ")";
+            } else if (fraction.first == 1U) {
+                os << "/" << fraction.second << ")";
             } else {
-                if (fraction.second == 1U) {
-                    os << fraction.first;
-                } else {
-                    os << fraction.first << "/" << fraction.second;
-                }
+                os << " " << fraction.first << "/" << fraction.second << ")";
             }
             return;
         }
 
         auto abssqrt = absr / SQRT2_2;
-
-        if (std::abs(abssqrt - 1.) < tol) { // +- 1/sqrt(2)
-            if (phase) {
-                os << "/√2)";
-            } else {
-                os << (std::signbit(r) ? "-" : "") << "1/√2";
-            }
-            return;
-        }
-
         fraction = ComplexValue::getLowestFraction(abssqrt);
         approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
         error    = std::abs(abssqrt - approx);
 
         if (error < tol) { // suitable fraction a/(b * sqrt(2)) found
-            if (phase) {
-                if (fraction.second == 1U) {
-                    os << " " << fraction.first << "/√2)";
-                } else if (fraction.first == 1U) {
-                    os << "/(" << fraction.second << "√2))";
-                } else {
-                    os << " " << fraction.first << "/(" << fraction.second << "√2))";
-                }
+            if (fraction.first == 1U && fraction.second == 1U) {
+                os << "/√2)";
+            } else if (fraction.second == 1U) {
+                os << " " << fraction.first << "/√2)";
+            } else if (fraction.first == 1U) {
+                os << "/(" << fraction.second << "√2))";
             } else {
-                if (fraction.second == 1U) {
-                    os << fraction.first << "/√2";
-                } else {
-                    os << fraction.first << "/(" << fraction.second << "√2)";
-                }
+                os << " " << fraction.first << "/(" << fraction.second << "√2))";
             }
             return;
         }
 
         auto abspi = absr / PI;
-
-        if (std::abs(abspi - 1.) < tol) { // +- π
-            if (phase) {
-                os << " π)";
-            } else {
-                os << (std::signbit(r) ? "-" : "") << "π";
-            }
-            return;
-        }
-
         fraction = ComplexValue::getLowestFraction(abspi);
         approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
         error    = std::abs(abspi - approx);
 
         if (error < tol) { // suitable fraction a/b π found
-            if (phase) {
-                if (fraction.second == 1U) {
-                    os << " " << fraction.first << "π)";
-                } else if (fraction.first == 1U) {
-                    os << " π/" << fraction.second << ")";
-                } else {
-                    os << " " << fraction.first << "π/" << fraction.second << ")";
-                }
+            if (fraction.first == 1U && fraction.second == 1U) {
+                os << " π)";
+            } else if (fraction.second == 1U) {
+                os << " " << fraction.first << "π)";
+            } else if (fraction.first == 1U) {
+                os << " π/" << fraction.second << ")";
             } else {
-                if (fraction.second == 1U) {
-                    os << fraction.first << "π";
-                } else if (fraction.first == 1U) {
-                    os << "π/" << fraction.second;
-                } else {
-                    os << fraction.first << "π/" << fraction.second;
-                }
+                os << " " << fraction.first << "π/" << fraction.second << ")";
             }
             return;
         }
 
-        if (phase) { // default
-            os << " " << absr << ")";
-        } else
-            os << r;
+        // default
+        os << " " << absr << ")";
     }
 
     inline std::string asPolar(const Complex& a, bool formatted = true, int precision = -1) {
@@ -181,34 +114,50 @@ namespace dd {
         const auto         phase = ComplexNumbers::arg(a);
         std::ostringstream ss{};
 
-        if (precision >= 0) ss << std::setprecision(precision);
+        if (precision >= 0) {
+            ss << std::setprecision(precision);
+        }
 
         if (std::abs(mag) < ComplexTable<>::tolerance()) {
             return "0";
         }
 
-        if (formatted) {
-            if (std::abs(std::abs(phase) - dd::PI) < ComplexTable<>::tolerance()) {
-                ss << "-";
-                printPolarFormatted(ss, mag);
-            } else {
-                if (std::abs(mag - 1.0) > ComplexTable<>::tolerance()) {
-                    printPolarFormatted(ss, mag);
-                    if (std::abs(phase) > ComplexTable<>::tolerance()) {
-                        ss << " ";
-                    }
-                } else if (std::abs(phase) < ComplexTable<>::tolerance()) {
-                    ss << "1";
-                    return ss.str();
-                }
-                printPolarFormatted(ss, phase, true);
-            }
-        } else {
+        if (!formatted) {
             ss << mag;
             if (std::abs(phase) > ComplexTable<>::tolerance()) {
                 ss << " " << phase;
             }
+            return ss.str();
         }
+
+        // magnitude is (almost) 1
+        if (std::abs(mag - 1 ) < ComplexTable<>::tolerance()) {
+            if (std::abs(phase) < ComplexTable<>::tolerance()) {
+                return "1";
+            } else if (std::abs(phase - dd::PI_2) < ComplexTable<>::tolerance()) {
+                return "i";
+            } else if (std::abs(phase + dd::PI_2) < ComplexTable<>::tolerance()) {
+                return "-i";
+            } else if (std::abs(std::abs(phase) - dd::PI) < ComplexTable<>::tolerance()) {
+                return "-1";
+            }
+            printPhaseFormatted(ss, phase);
+            return ss.str();
+        }
+
+        if (std::abs(std::abs(phase) - dd::PI) < ComplexTable<>::tolerance()) {
+            ss << "-";
+            dd::ComplexValue::printFormatted(ss, mag);
+            return ss.str();
+        } else if (std::abs(phase) < ComplexTable<>::tolerance()) {
+            dd::ComplexValue::printFormatted(ss, mag);
+            return ss.str();
+        }
+
+        dd::ComplexValue::printFormatted(ss, mag);
+        ss << " ";
+        printPhaseFormatted(ss, phase);
+
         return ss.str();
     }
 
