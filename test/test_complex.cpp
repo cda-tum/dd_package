@@ -259,6 +259,7 @@ TEST(DDComplexTest, LowestFractions) {
     EXPECT_THAT(dd::ComplexValue::getLowestFraction(0.75), ::testing::Pair(3, 4));
     EXPECT_THAT(dd::ComplexValue::getLowestFraction(1.5), ::testing::Pair(3, 2));
     EXPECT_THAT(dd::ComplexValue::getLowestFraction(2.0), ::testing::Pair(2, 1));
+    EXPECT_THAT(dd::ComplexValue::getLowestFraction(2047.0 / 2048.0, 1024U), ::testing::Pair(1, 1));
 }
 
 TEST(DDComplexTest, NumberPrintingToString) {
