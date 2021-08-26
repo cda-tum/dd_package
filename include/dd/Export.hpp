@@ -51,10 +51,10 @@ namespace dd {
         // special case treatment for +-i
         os << "ℯ(" << (std::signbit(r) ? "-" : "") << "iπ";
 
-        const auto absr = std::abs(r);
-        auto fraction = ComplexValue::getLowestFraction(absr);
-        auto approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-        auto error    = std::abs(absr - approx);
+        const auto absr     = std::abs(r);
+        auto       fraction = ComplexValue::getLowestFraction(absr);
+        auto       approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+        auto       error    = std::abs(absr - approx);
 
         if (error < tol) { // suitable fraction a/b found
             if (fraction.first == 1U && fraction.second == 1U) {
@@ -70,9 +70,9 @@ namespace dd {
         }
 
         auto abssqrt = absr / SQRT2_2;
-        fraction = ComplexValue::getLowestFraction(abssqrt);
-        approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-        error    = std::abs(abssqrt - approx);
+        fraction     = ComplexValue::getLowestFraction(abssqrt);
+        approx       = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+        error        = std::abs(abssqrt - approx);
 
         if (error < tol) { // suitable fraction a/(b * sqrt(2)) found
             if (fraction.first == 1U && fraction.second == 1U) {
@@ -88,9 +88,9 @@ namespace dd {
         }
 
         auto abspi = absr / PI;
-        fraction = ComplexValue::getLowestFraction(abspi);
-        approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-        error    = std::abs(abspi - approx);
+        fraction   = ComplexValue::getLowestFraction(abspi);
+        approx     = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+        error      = std::abs(abspi - approx);
 
         if (error < tol) { // suitable fraction a/b π found
             if (fraction.first == 1U && fraction.second == 1U) {
@@ -131,7 +131,7 @@ namespace dd {
         }
 
         // magnitude is (almost) 1
-        if (std::abs(mag - 1 ) < ComplexTable<>::tolerance()) {
+        if (std::abs(mag - 1) < ComplexTable<>::tolerance()) {
             if (std::abs(phase) < ComplexTable<>::tolerance()) {
                 return "1";
             } else if (std::abs(phase - dd::PI_2) < ComplexTable<>::tolerance()) {

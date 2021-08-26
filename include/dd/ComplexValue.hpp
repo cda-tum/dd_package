@@ -110,7 +110,7 @@ namespace dd {
             auto       error    = std::abs(absnum - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
-                const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
+                const std::string sign = std::signbit(num) ? "-" : (imaginary ? "+" : "");
 
                 if (fraction.first == 1U && fraction.second == 1U) {
                     os << sign << (imaginary ? "i" : "1");
@@ -126,12 +126,12 @@ namespace dd {
             }
 
             const auto abssqrt = absnum / SQRT2_2;
-            fraction = getLowestFraction(abssqrt);
-            approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-            error    = std::abs(abssqrt - approx);
+            fraction           = getLowestFraction(abssqrt);
+            approx             = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            error              = std::abs(abssqrt - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/(b * sqrt(2)) found
-                const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
+                const std::string sign = std::signbit(num) ? "-" : (imaginary ? "+" : "");
 
                 if (fraction.first == 1U && fraction.second == 1U) {
                     os << sign << (imaginary ? "i" : "1") << "/√2";
@@ -146,9 +146,9 @@ namespace dd {
             }
 
             const auto abspi = absnum / PI;
-            fraction = getLowestFraction(abspi);
-            approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
-            error    = std::abs(abspi - approx);
+            fraction         = getLowestFraction(abspi);
+            approx           = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
+            error            = std::abs(abspi - approx);
 
             if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b π found
                 const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");

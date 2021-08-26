@@ -874,7 +874,6 @@ TEST(DDPackageTest, DestructiveMeasurementOneArbitraryNormalization) {
     ASSERT_EQ(vAfter[3], static_cast<std::complex<dd::fp>>(dd::complex_zero));
 }
 
-
 TEST(DDPackageTest, ExportPolarPhaseFormatted) {
     std::ostringstream phaseString;
 
