@@ -141,15 +141,25 @@ TEST(DDPackageTest, QFTState) {
     export2Dot(qft_state, "qft_state_memory.dot", false, true, true, true, false);
     dd::exportEdgeWeights(qft_state, std::cout);
 
-    export2Dot(qft_op, "qft_op_colored_labels.dot", true, true, false, false, false);
-    export2Dot(qft_op, "qft_op_colored_labels_classic.dot", true, true, true, false, false);
-    export2Dot(qft_op, "qft_op_mono_labels.dot", false, true, false, false, false);
-    export2Dot(qft_op, "qft_op_mono_labels_classic.dot", false, true, true, false, false);
-    export2Dot(qft_op, "qft_op_colored.dot", true, false, false, false, false);
-    export2Dot(qft_op, "qft_op_colored_classic.dot", true, false, true, false, false);
-    export2Dot(qft_op, "qft_op_mono.dot", false, false, false, false, false);
-    export2Dot(qft_op, "qft_op_mono_classic.dot", false, false, true, false, false);
-    export2Dot(qft_op, "qft_op_memory.dot", false, true, true, true, false);
+    export2Dot(qft_op, "qft_op_polar_colored_labels.dot", true, true, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored_labels_classic.dot", true, true, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_labels.dot", false, true, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_labels_classic.dot", false, true, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored.dot", true, false, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored_classic.dot", true, false, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono.dot", false, false, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_classic.dot", false, false, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_memory.dot", false, true, true, true, false, true);
+
+    export2Dot(qft_op, "qft_op_rectangular_colored_labels.dot", true, true, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored_labels_classic.dot", true, true, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_labels.dot", false, true, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_labels_classic.dot", false, true, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored.dot", true, false, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored_classic.dot", true, false, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono.dot", false, false, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_classic.dot", false, false, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_memory.dot", false, true, true, true, false, false);
 
     dd->statistics();
 }
@@ -952,17 +962,17 @@ TEST(DDPackageTest, ExportPolarPhaseFormatted) {
     phaseString.str("");
 }
 
-TEST(DDPackageTest, ExportAsPolar) {
+TEST(DDPackageTest, ExportConditionalFormat) {
     auto cn = std::make_unique<dd::ComplexNumbers>();
 
     const auto num = cn->getCached(-dd::SQRT2_2, -dd::SQRT2_2);
-    EXPECT_STREQ(dd::asPolar(num).c_str(), "ℯ(-iπ 3π/4)");
-    EXPECT_STREQ(dd::asPolar(num, false, 4).c_str(), "1 -2.356");
+    EXPECT_STREQ(dd::conditionalFormat(num).c_str(), "ℯ(-iπ 3π/4)");
+    EXPECT_STREQ(dd::conditionalFormat(num, false).c_str(), "-1/√2(1+i)");
 
-    EXPECT_STREQ(dd::asPolar(cn->getCached(-1, -1)).c_str(), "2/√2 ℯ(-iπ 3π/4)");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(-1, -1)).c_str(), "2/√2 ℯ(-iπ 3π/4)");
 
-    EXPECT_STREQ(dd::asPolar(cn->getCached(1, 0)).c_str(), "1");
-    EXPECT_STREQ(dd::asPolar(cn->getCached(0, 1)).c_str(), "i");
-    EXPECT_STREQ(dd::asPolar(cn->getCached(-1, 0)).c_str(), "-1");
-    EXPECT_STREQ(dd::asPolar(cn->getCached(0, -1)).c_str(), "-i");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(1, 0)).c_str(), "1");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(0, 1)).c_str(), "i");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(-1, 0)).c_str(), "-1");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(0, -1)).c_str(), "-i");
 }
