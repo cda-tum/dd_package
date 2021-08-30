@@ -391,7 +391,8 @@ namespace dd {
         };
 
         void print() {
-            std::cout << std::setprecision(std::numeric_limits<dd::fp>::max_digits10);
+            const auto precision = std::cout.precision();
+            std::cout.precision(std::numeric_limits<dd::fp>::max_digits10);
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto p = table[key];
                 if (p != nullptr)
@@ -406,6 +407,7 @@ namespace dd {
                 if (table[key] != nullptr)
                     std::cout << "\n";
             }
+            std::cout.precision(precision);
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
