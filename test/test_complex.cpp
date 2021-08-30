@@ -524,3 +524,22 @@ TEST(DDComplexTest, ComplexCacheAllocation) {
     cn->complexCache.clear();
     EXPECT_EQ(cn->complexCache.getAllocations(), allocs);
 }
+
+TEST(DDComplexTest, DoubleHitInFindOrInsert) {
+    auto cn = std::make_unique<ComplexNumbers>();
+
+    // insert a number somewhere in a bucket
+    fp   num1  = 0.5;
+    auto tnum1 = cn->complexTable.lookup(num1);
+    EXPECT_EQ(tnum1->value, num1);
+
+    // insert a second number that is farther away than the tolerance, but closer than twice the tolerance
+    fp   num2  = num1 + 1.5 * dd::ComplexTable<>::tolerance();
+    auto tnum2 = cn->complexTable.lookup(num2);
+    EXPECT_EQ(tnum2->value, num2);
+
+    // insert a third number that is close to both previously inserted numbers, but closer to the second
+    fp   num3  = num1 + 0.9 * dd::ComplexTable<>::tolerance();
+    auto tnum3 = cn->complexTable.lookup(num3);
+    EXPECT_EQ(tnum3->value, num2);
+}
