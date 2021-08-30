@@ -85,6 +85,7 @@ namespace dd {
         void reset() {
             clearUniqueTables();
             clearComputeTables();
+            cn.clear();
         }
 
         // getter for qubits
