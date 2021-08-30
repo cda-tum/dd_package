@@ -87,11 +87,11 @@ namespace dd {
         if (a == b)
             return 0;
 
-        std::size_t ulps = 1;
-        dd::fp      iter = std::nextafter(a, b);
-        while (iter != b) {
+        std::size_t ulps   = 1;
+        dd::fp      nextFP = std::nextafter(a, b);
+        while (nextFP != b) {
             ulps++;
-            iter = std::nextafter(iter, b);
+            nextFP = std::nextafter(nextFP, b);
         }
         return ulps;
     }
