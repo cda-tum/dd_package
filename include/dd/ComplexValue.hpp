@@ -77,7 +77,7 @@ namespace dd {
                 auto num    = lowerBound.first + upperBound.first;
                 auto den    = lowerBound.second + upperBound.second;
                 auto median = static_cast<fp>(num) / static_cast<fp>(den);
-                if (std::abs(x - median) < tol) {
+                if (std::abs(x - median) <= tol) {
                     if (den <= maxDenominator) {
                         return std::pair{num, den};
                     } else if (upperBound.second > lowerBound.second) {
@@ -99,7 +99,7 @@ namespace dd {
         }
 
         static void printFormatted(std::ostream& os, fp num, bool imaginary = false) {
-            if (std::abs(num) < ComplexTable<>::tolerance()) {
+            if (std::abs(num) <= ComplexTable<>::tolerance()) {
                 os << (std::signbit(num) ? "-" : "+") << "0" << (imaginary ? "i" : "");
                 return;
             }
@@ -109,7 +109,7 @@ namespace dd {
             auto       approx   = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             auto       error    = std::abs(absnum - approx);
 
-            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b found
+            if (error <= ComplexTable<>::tolerance()) { // suitable fraction a/b found
                 const std::string sign = std::signbit(num) ? "-" : (imaginary ? "+" : "");
 
                 if (fraction.first == 1U && fraction.second == 1U) {
@@ -130,7 +130,7 @@ namespace dd {
             approx             = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             error              = std::abs(abssqrt - approx);
 
-            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/(b * sqrt(2)) found
+            if (error <= ComplexTable<>::tolerance()) { // suitable fraction a/(b * sqrt(2)) found
                 const std::string sign = std::signbit(num) ? "-" : (imaginary ? "+" : "");
 
                 if (fraction.first == 1U && fraction.second == 1U) {
@@ -150,7 +150,7 @@ namespace dd {
             approx           = static_cast<fp>(fraction.first) / static_cast<fp>(fraction.second);
             error            = std::abs(abspi - approx);
 
-            if (error < ComplexTable<>::tolerance()) { // suitable fraction a/b π found
+            if (error <= ComplexTable<>::tolerance()) { // suitable fraction a/b π found
                 const std::string sign     = std::signbit(num) ? "-" : (imaginary ? "+" : "");
                 const std::string imagUnit = imaginary ? "i" : "";
 
@@ -179,27 +179,27 @@ namespace dd {
             if (precision >= 0) ss << std::setprecision(precision);
             const auto tol = ComplexTable<>::tolerance();
 
-            if (std::abs(real) < tol && std::abs(imag) < tol) return "0";
+            if (std::abs(real) <= tol && std::abs(imag) <= tol) return "0";
 
-            if (std::abs(real) >= tol) {
+            if (std::abs(real) > tol) {
                 if (formatted) {
                     printFormatted(ss, real);
                 } else {
                     ss << real;
                 }
             }
-            if (std::abs(imag) >= tol) {
+            if (std::abs(imag) > tol) {
                 if (formatted) {
-                    if (std::abs(real - imag) < tol) {
+                    if (std::abs(real - imag) <= tol) {
                         ss << "(1+i)";
                         return ss.str();
-                    } else if (std::abs(real + imag) < tol) {
+                    } else if (std::abs(real + imag) <= tol) {
                         ss << "(1-i)";
                         return ss.str();
                     }
                     printFormatted(ss, imag, true);
                 } else {
-                    if (std::abs(real) < tol) {
+                    if (std::abs(real) <= tol) {
                         ss << imag;
                     } else {
                         if (imag > 0.) {
