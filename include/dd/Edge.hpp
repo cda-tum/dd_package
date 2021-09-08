@@ -112,7 +112,7 @@ namespace dd {
             Node *alignedNode     = getAlignedDensityNode(e.p);
 
             //todo make this more elegant
-            if (alignedNode == nullptr) {
+            if (alignedNode == nullptr || alignedNode->v <= -1) {
                 e.p = getAlignedDensityNode(e.p);
                 return e;
             }
@@ -165,9 +165,9 @@ namespace dd {
 
         CachedEdge() = default;
         CachedEdge(Node* p, const ComplexValue& w):
-            p(p), w(w) {}
+                p(p), w(w) {}
         CachedEdge(Node* p, const Complex& c):
-            p(p) {
+                p(p) {
             w.r = CTEntry::val(c.r);
             w.i = CTEntry::val(c.i);
         }
