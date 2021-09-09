@@ -1279,7 +1279,7 @@ namespace dd {
                 return 0.;
             }
             const auto nq = e.p->v + 1;
-            if (probs.size() != (1 << nq)) {
+            if (probs.size() != (1U << nq)) {
                 throw std::runtime_error("Mismatch in sizes of DD and probability vector in fidelity function.");
             }
 
