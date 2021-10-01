@@ -807,7 +807,7 @@ namespace dd {
             //            auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto& computeTable = matrixDensityMultiplication;
             // todo lookup original ? -> difference between dm or matrix lookup!
-            auto r = computeTable.lookup(xCopy, yCopy, (long) xNode, (long) yNode, successorEdge);
+            auto r = computeTable.lookup(xCopy, yCopy, (long)xNode + firstPathEdge, (long)yNode + firstPathEdge, successorEdge);
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return ResultEdge::zero;
@@ -843,7 +843,7 @@ namespace dd {
                     } else {
                         e = yCopy;
                     }
-                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long)xNode + firstPathEdge, (long)yNode + firstPathEdge, successorEdge); //todo enable again
                     e.w = cn.mulCached(x.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
@@ -857,7 +857,7 @@ namespace dd {
                 // additionally check if y is the identity in case of matrix multiplication
                 if (y.p->ident) {
                     e = xCopy;
-                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long)xNode + firstPathEdge, (long)yNode + firstPathEdge, successorEdge); //todo enable again
                     e.w = cn.mulCached(x.w, y.w);
 
                     if (e.w.approximatelyZero()) {
@@ -928,7 +928,7 @@ namespace dd {
             }
             e = makeDDNode(var, edge, true);
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
+            computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long)xNode + firstPathEdge, (long)yNode + firstPathEdge, successorEdge); //todo enable again
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {

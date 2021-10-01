@@ -63,6 +63,7 @@ namespace dd {
             lookups++;
             const auto key   = hash(leftOperand, rightOperand, leftFlags, rightFlags, successorEdge);
             auto&      entry = table[key];
+//            return result;
             if (entry.result.p == nullptr) return result;
             if (entry.leftNodeFlags != leftFlags) return result;
             if (entry.rightNodeFlags != rightFlags) return result;
