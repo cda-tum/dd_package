@@ -61,7 +61,7 @@ namespace dd {
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
         explicit Package(std::size_t nq = defaultQubits):
-                cn(ComplexNumbers()), nqubits(nq) {
+            cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
         };
         ~Package()                      = default;
@@ -607,28 +607,28 @@ namespace dd {
         //            //            return multiply(tmp0, reinterpret_cast<dd::Package::dEdge&>(tmp1));
         //        }
 
-//        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
-//        dEdge makeDDNode(Qubit var, const std::array<Edge<dNode>, std::tuple_size_v<decltype(dNode::e)>>& edges, bool cached = false, bool generateDensityMatrix = true) {
-//            //todo solve this nicer
-//            //            auto& uniqueTable = getUniqueTable<dNode>();
-//            auto& uniqueTable = dUniqueTable;
-//            dEdge e{uniqueTable.getNode(), Complex::one};
-//            e.p->v = var;
-//            e.p->e = edges;
-//
-//            assert(e.p->ref == 0);
-//            for ([[maybe_unused]] const auto& edge: edges)
-//                assert(edge.p->v == var - 1 || edge.isTerminal());
-//
-//            // normalize it
-//            e = normalize(e, cached);
-//            assert(e.p->v == var || e.isTerminal());
-//
-//            // look it up in the unique tables
-//            auto l = uniqueTable.lookup(e, false);
-//            assert(l.p->v == var || l.isTerminal());
-//            return l;
-//        }
+        //        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        //        dEdge makeDDNode(Qubit var, const std::array<Edge<dNode>, std::tuple_size_v<decltype(dNode::e)>>& edges, bool cached = false, bool generateDensityMatrix = true) {
+        //            //todo solve this nicer
+        //            //            auto& uniqueTable = getUniqueTable<dNode>();
+        //            auto& uniqueTable = dUniqueTable;
+        //            dEdge e{uniqueTable.getNode(), Complex::one};
+        //            e.p->v = var;
+        //            e.p->e = edges;
+        //
+        //            assert(e.p->ref == 0);
+        //            for ([[maybe_unused]] const auto& edge: edges)
+        //                assert(edge.p->v == var - 1 || edge.isTerminal());
+        //
+        //            // normalize it
+        //            e = normalize(e, cached);
+        //            assert(e.p->v == var || e.isTerminal());
+        //
+        //            // look it up in the unique tables
+        //            auto l = uniqueTable.lookup(e, false);
+        //            assert(l.p->v == var || l.isTerminal());
+        //            return l;
+        //        }
 
         dEdge add2(Edge<dNode>& x, Edge<dNode>& y) {
             // Align the node pointers
@@ -757,33 +757,45 @@ namespace dd {
             return e;
         }
 
-        Edge<dNode> multiply2(const Edge<dNode>& xOriginal, const Edge<dNode>& yOriginal, Qubit var, Qubit start, bool generateDensityMatrix = false, bool firstPathEdge = false) {
+        Edge<dNode> multiply2(Edge<dNode>& xOriginal, Edge<dNode>& yOriginal, Qubit var, Qubit start, bool generateDensityMatrix = false, bool firstPathEdge = false, short successorEdge = 0) {
             using LEdge      = Edge<dNode>;
             using REdge      = Edge<dNode>;
             using ResultEdge = Edge<dNode>;
+            dEdge x          = xOriginal;
+            dEdge y          = yOriginal;
 
-            dEdge x = xOriginal;
-            dEdge y = yOriginal;
+            dNode* xNode = xOriginal.p;
+            dNode* yNode = yOriginal.p;
 
-            // Align the node pointers
-            if (Edge<Package::dNode>::isDensityMatrix(xOriginal.p)) {
-                dEdge newEdge{dUniqueTable.getNode(), x.w};
-                x = Edge<Package::dNode>::getAlignedDensityNodeCopy(x, newEdge);
+            Edge<Package::dNode>::applyDmChangesToEdges(&x, &y);
+
+            //            // Align the node pointers
+            //            if (Edge<Package::dNode>::isDensityMatrix(xOriginal.p)) {
+            //                dEdge newEdge{dUniqueTable.getNode(), x.w};
+            //                x = Edge<Package::dNode>::getAlignedDensityNodeCopy(x, newEdge);
+            //            }
+            //
+            //            if (Edge<Package::dNode>::isDensityMatrix(yOriginal.p)) {
+            //                dEdge newEdge{dUniqueTable.getNode(), y.w};
+            //                y = Edge<Package::dNode>::getAlignedDensityNodeCopy(y, newEdge);
+            //            }
+
+            if (x.p == nullptr) {
+                Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
+                return {nullptr, Complex::zero};
             }
-
-            if (Edge<Package::dNode>::isDensityMatrix(yOriginal.p)) {
-                dEdge newEdge{dUniqueTable.getNode(), y.w};
-                y = Edge<Package::dNode>::getAlignedDensityNodeCopy(y, newEdge);
+            if (y.p == nullptr) {
+                Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
+                return y;
             }
-
-            if (x.p == nullptr) return {nullptr, Complex::zero};
-            if (y.p == nullptr) return y;
 
             if (x.w == Complex::zero || y.w == Complex::zero) {
+                Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                 return ResultEdge::zero;
             }
 
             if (var == start - 1) {
+                Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                 return ResultEdge::terminal(cn.mulCached(x.w, y.w));
             }
 
@@ -795,7 +807,7 @@ namespace dd {
             //            auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto& computeTable = matrixDensityMultiplication;
             // todo lookup original ? -> difference between dm or matrix lookup!
-            auto  r            = computeTable.lookup(xCopy, yCopy);
+            auto r = computeTable.lookup(xCopy, yCopy, (long) xNode, (long) yNode, successorEdge);
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return ResultEdge::zero;
@@ -805,8 +817,11 @@ namespace dd {
                     ComplexNumbers::mul(e.w, e.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
+                        Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                         return ResultEdge::zero;
                     }
+                    Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
+                    //                    Edge<Package::dNode>::revertDmChangesToEdges(xNode, &e, nullptr, nullptr);
                     return e;
                 }
             }
@@ -828,25 +843,29 @@ namespace dd {
                     } else {
                         e = yCopy;
                     }
-//                    computeTable.insert(xCopy, yCopy, {e.p, e.w}); //todo enable again
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
                     e.w = cn.mulCached(x.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
+                        Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                         return ResultEdge::zero;
                     }
+                    Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                     return e;
                 }
 
                 // additionally check if y is the identity in case of matrix multiplication
                 if (y.p->ident) {
                     e = xCopy;
-//                    computeTable.insert(xCopy, yCopy, {e.p, e.w}); //todo enable again
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
                     e.w = cn.mulCached(x.w, y.w);
 
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
+                        Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                         return ResultEdge::zero;
                     }
+                    Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                     return e;
                 }
             }
@@ -877,12 +896,12 @@ namespace dd {
                         dEdge m;
 
                         if (!generateDensityMatrix) {
-                            m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
+                            m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, false, idx);
                         } else {
                             // todo access this information from the original edges
                             if (firstPathEdge || idx == 1) {
                                 // When firstPathEdge is true or I have the first edge I don't modify anything and set firstPathEdge for all child edges
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, true, true);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, true, true, idx);
                             } else if (idx == 2) {
                                 // When I have the second edge and firstPathEdge is set to false, then edge[2] == edge[1]
                                 if (k == 0) {
@@ -892,7 +911,7 @@ namespace dd {
                                 }
                                 continue;
                             } else {
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, true);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, true, firstPathEdge, idx);
                             }
                         }
 
@@ -909,7 +928,7 @@ namespace dd {
             }
             e = makeDDNode(var, edge, true);
 
-//            computeTable.insert(xCopy, yCopy, {e.p, e.w}); //todo enable again
+            computeTable.insert(xCopy, yCopy, {e.p, e.w}, (long) xNode, (long) yNode, successorEdge); //todo enable again
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {
@@ -920,9 +939,11 @@ namespace dd {
                 }
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
+                    Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
                     return ResultEdge::zero;
                 }
             }
+            Edge<Package::dNode>::revertDmChangesToEdges(xNode, &x, yNode, &y);
             return e;
         }
 
@@ -2304,11 +2325,10 @@ namespace dd {
         }
 
         ComplexValue getValueByPath(mEdge& originalEdge, const Complex& amp, std::size_t i, std::size_t j) {
-
             mEdge e = originalEdge;
             if (Edge<Package::dNode>::isDensityMatrix(reinterpret_cast<dNode*>(originalEdge.p))) {
                 dEdge newEdge{dUniqueTable.getNode(), originalEdge.w};
-                auto tmp = Edge<Package::dNode>::getAlignedDensityNodeCopy(reinterpret_cast<dEdge&>(e), newEdge);
+                auto  tmp = Edge<Package::dNode>::getAlignedDensityNodeCopy(reinterpret_cast<dEdge&>(e), newEdge);
                 e         = reinterpret_cast<mEdge&>(tmp);
             }
 
@@ -2830,39 +2850,39 @@ namespace dd {
         //            return reinterpret_cast<std::uintptr_t>(p) & 4ULL;
         //        }
         //
-        //        [[nodiscard]] static inline dd::Package::dNode* getAlignedDensityNode(const dd::Package::dNode* p) {
+        //        [[nodiscard]] static inline dd::Package::dNode* alignDensityNode(const dd::Package::dNode* p) {
         //            return reinterpret_cast<dd::Package::dNode*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
         //        }
         //
         //        [[nodiscard]] static inline dd::Package::dEdge* getAlignedDensityEdgeAlignSubEdges(dd::Package::dEdge* e) {
         //            if (isFirstEdgeDensityPath(e->p) && !isDensityConjugateSet(e->p)) {
         //                // Before I do anything else, i must aline the pointer
-        //                e->p = getAlignedDensityNode(e->p);
+        //                e->p = alignDensityNode(e->p);
         //
         //                // first edge paths are not modified I only have to remove the first edge property
-        //                e->p->e[0].p = getAlignedDensityNode(e->p->e[0].p);
-        //                e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
-        //                e->p->e[2].p = getAlignedDensityNode(e->p->e[2].p);
-        //                e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
+        //                e->p->e[0].p = alignDensityNode(e->p->e[0].p);
+        //                e->p->e[1].p = alignDensityNode(e->p->e[1].p);
+        //                e->p->e[2].p = alignDensityNode(e->p->e[2].p);
+        //                e->p->e[3].p = alignDensityNode(e->p->e[3].p);
         //            } else if (!isDensityConjugateSet(e->p)) {
         //                // Before I do anything else, i must aline the pointer
-        //                e->p = getAlignedDensityNode(e->p);
+        //                e->p = alignDensityNode(e->p);
         //
         //                // Conjugate the second edge (i.e. negate the complex part of the second edge)
-        //                e->p->e[2].p   = getAlignedDensityNode(e->p->e[2].p);
+        //                e->p->e[2].p   = alignDensityNode(e->p->e[2].p);
         //                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
         //
         //                // Unmark the first edge
-        //                e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
+        //                e->p->e[1].p = alignDensityNode(e->p->e[1].p);
         //            } else {
         //                // Before I do anything else, i must aline the pointer
-        //                e->p = getAlignedDensityNode(e->p);
+        //                e->p = alignDensityNode(e->p);
         //
         //                // Conjugate all edges
-        //                e->p->e[0].p = getAlignedDensityNode(e->p->e[0].p);
-        //                e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
-        //                e->p->e[2].p = getAlignedDensityNode(e->p->e[2].p);
-        //                e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
+        //                e->p->e[0].p = alignDensityNode(e->p->e[0].p);
+        //                e->p->e[1].p = alignDensityNode(e->p->e[1].p);
+        //                e->p->e[2].p = alignDensityNode(e->p->e[2].p);
+        //                e->p->e[3].p = alignDensityNode(e->p->e[3].p);
         //
         //                e->p->e[0].w.i = dd::CTEntry::flipPointerSign(e->p->e[0].w.i);
         //                e->p->e[1].w.i = dd::CTEntry::flipPointerSign(e->p->e[1].w.i);
@@ -2875,20 +2895,20 @@ namespace dd {
         //        }
         //
         //        [[nodiscard]] void alignSubEdges(const dd::Package::dEdge* oldEdge, dd::Package::dEdge* e) {
-        //            e->p->e[0].p = getAlignedDensityNode(e->p->e[0].p);
-        //            e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
-        //            e->p->e[2].p = getAlignedDensityNode(e->p->e[2].p);
-        //            e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
+        //            e->p->e[0].p = alignDensityNode(e->p->e[0].p);
+        //            e->p->e[1].p = alignDensityNode(e->p->e[1].p);
+        //            e->p->e[2].p = alignDensityNode(e->p->e[2].p);
+        //            e->p->e[3].p = alignDensityNode(e->p->e[3].p);
         //
         //            if (isFirstEdgeDensityPath(oldEdge->p) && !isDensityConjugateSet(oldEdge->p)) {
         //                // first edge paths are not modified I only have to remove the first edge property
         //                ;
         //            } else if (!isDensityConjugateSet(oldEdge->p)) {
         //                // Conjugate the second edge (i.e. negate the complex part of the second edge)
-        //                e->p->e[2].p   = getAlignedDensityNode(e->p->e[2].p);
+        //                e->p->e[2].p   = alignDensityNode(e->p->e[2].p);
         //                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
         //                // Unmark the first edge
-        //                e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
+        //                e->p->e[1].p = alignDensityNode(e->p->e[1].p);
         //            } else {
         //                // Conjugate all edges
         //                e->p->e[0].w.i = dd::CTEntry::flipPointerSign(e->p->e[0].w.i);
@@ -2902,13 +2922,13 @@ namespace dd {
         //
         //        [[nodiscard]] inline dd::Package::dEdge getAlignedDensityNodeCopy(dd::Package::dEdge e) {
         //            //todo make this more elegant
-        //            if (getAlignedDensityNode(e.p) == nullptr) {
-        //                e.p = getAlignedDensityNode(e.p);
+        //            if (alignDensityNode(e.p) == nullptr) {
+        //                e.p = alignDensityNode(e.p);
         //                return e;
         //            }
         //
         //            dEdge newEdge = e;
-        //            newEdge.p     = getAlignedDensityNode(newEdge.p);
+        //            newEdge.p     = alignDensityNode(newEdge.p);
         //            std::array<dEdge, 4> modifiedEdge{};
         //
         //            for (int i = 0; i < 4; i++) {
