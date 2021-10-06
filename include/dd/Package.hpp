@@ -1022,6 +1022,7 @@ namespace dd {
                 matrixKronecker.clear();
                 matrixVectorMultiplication.clear();
                 matrixMatrixMultiplication.clear();
+                matrixDensityMultiplication.clear();
                 toffoliTable.clear();
                 clearIdentityTable();
                 densityNoiseOperations.clear();
@@ -1031,6 +1032,7 @@ namespace dd {
             if (cCollect > 0) {
                 matrixVectorMultiplication.clear();
                 matrixMatrixMultiplication.clear();
+                matrixDensityMultiplication.clear();
                 matrixTranspose.clear();
                 conjugateMatrixTranspose.clear();
                 vectorInnerProduct.clear();
