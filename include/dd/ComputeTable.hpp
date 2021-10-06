@@ -81,8 +81,8 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            hits    = 0;
-            lookups = 0;
+//            hits    = 0;
+//            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }

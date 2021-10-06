@@ -267,6 +267,15 @@ namespace std {
             return dd::combineHash(h1, h2);
         }
     };
+
+//    template<> struct hash<dd::CachedEdge<dd::dNode>> {
+//        std::size_t operator()(dd::CachedEdge<Node> const& e) const noexcept {
+//            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
+//            auto h2 = std::hash<dd::ComplexValue>{}(e.w);
+//            return dd::combineHash(h1, h2);
+//        }
+//    };
+
 } // namespace std
 
 #endif //DD_PACKAGE_EDGE_HPP
