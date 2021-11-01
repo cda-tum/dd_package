@@ -28,9 +28,9 @@ namespace dd {
     };
 
     template<class Edge>
-    class NoiseOperationTable {
+    class StochasticNoiseOperationTable {
     public:
-        explicit NoiseOperationTable(std::size_t nvars):
+        explicit StochasticNoiseOperationTable(std::size_t nvars):
             nvars(nvars) { resize(nvars); };
 
         // access functions
