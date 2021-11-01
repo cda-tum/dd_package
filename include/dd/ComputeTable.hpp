@@ -28,46 +28,34 @@ namespace dd {
         struct Entry {
             LeftOperandType  leftOperand;
             RightOperandType rightOperand;
-            unsigned short   leftNodeFlags;
-            unsigned short   rightNodeFlags;
-            short            successorEdge;
             ResultType       result;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
 
-        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const unsigned long leftNodeFlags, const unsigned long rightNodeFlags, const short successorEdge) {
+        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
             const auto h1 = std::hash<LeftOperandType>{}(leftOperand);
             const auto h2 = std::hash<RightOperandType>{}(rightOperand);
             // todo improve the hashing scheme
-            const auto hash = dd::combineHash(h1, h2) ^ leftNodeFlags ^ ~rightNodeFlags ^ successorEdge + 32;
+            const auto hash = dd::combineHash(h1, h2);
             return hash & MASK;
         }
 
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, const unsigned long leftNodeFlags = 0, const unsigned long rightNodeFlags = 0, const short successorEdge = 0) {
-            unsigned short leftFlags  = leftNodeFlags & 7;
-            unsigned short rightFlags = rightNodeFlags & 7;
-
-            const auto key = hash(leftOperand, rightOperand, leftFlags, rightFlags, successorEdge);
-            table[key]     = {leftOperand, rightOperand, leftFlags, rightFlags, successorEdge, result};
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
+            const auto key = hash(leftOperand, rightOperand);
+            table[key]     = {leftOperand, rightOperand, result};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const unsigned long leftNodeFlags = 0, const unsigned long rightNodeFlags = 0, const short successorEdge = 0) {
-            unsigned short leftFlags  = leftNodeFlags & 7;
-            unsigned short rightFlags = rightNodeFlags & 7;
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
             ResultType     result{};
             lookups++;
-            const auto key   = hash(leftOperand, rightOperand, leftFlags, rightFlags, successorEdge);
+            const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
-//            return result;
             if (entry.result.p == nullptr) return result;
-            if (entry.leftNodeFlags != leftFlags) return result;
-            if (entry.rightNodeFlags != rightFlags) return result;
-            if (entry.successorEdge != successorEdge) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
 

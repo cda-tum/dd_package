@@ -27,7 +27,7 @@ namespace dd {
         struct Entry {
             OperandType              operand;
             ResultType               result;
-            ComplexValue             result_weight{};
+//            ComplexValue             result_weight{};
             std::vector<signed char> usedQubit;
         };
 
@@ -48,14 +48,12 @@ namespace dd {
             const auto key        = hash(operand, usedQubit);
             auto&      entry      = table[key];
             entry.result          = result;
-            entry.result_weight.r = result.w.r->value;
-            entry.result_weight.i = result.w.i->value;
             entry.operand         = operand;
             entry.usedQubit       = usedQubit;
             ++count;
         }
 
-        ResultType lookup(const OperandType& operand, const Complex value, const std::vector<signed char>& usedQubit) {
+        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubit) {
             ResultType result{};
             lookups++;
             const auto key   = hash(operand, usedQubit);
@@ -64,9 +62,6 @@ namespace dd {
             if (entry.operand != operand) return result;
             if (entry.usedQubit != usedQubit) return result;
             hits++;
-            value.r->value = entry.result_weight.r;
-            value.i->value = entry.result_weight.i;
-            entry.result.w = value;
             return entry.result;
         }
 

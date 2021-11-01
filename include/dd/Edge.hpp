@@ -50,24 +50,25 @@ namespace dd {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL);
         }
 
-        [[nodiscard]] static inline bool isDensityConjugateSet(const Node* p) {
-            return reinterpret_cast<std::uintptr_t>(p) & 1ULL;
+        [[nodiscard]] static inline bool isDensityConjugateSet(const long p) {
+            return p & 1ULL;
         }
 
-        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const Node* p) {
-            return reinterpret_cast<std::uintptr_t>(p) & 2ULL;
+        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const long p) {
+            return p & 2ULL;
         }
 
-        [[nodiscard]] static inline bool isDensityMatrix(const Node* p) {
-            return reinterpret_cast<std::uintptr_t>(p) & 4ULL;
+        [[nodiscard]] static inline bool isDensityMatrix(const long p) {
+            return p & 4ULL;
         }
 
         [[nodiscard]] static inline Node* getAlignedDensityNode(const Node* p) {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
         }
 
-        static inline void getAlignedDensityEdgeAlignSubEdges(Node* node, Edge<Node>* e) {
-            if (isFirstEdgeDensityPath(node) && !isDensityConjugateSet(node)) {
+        static inline void getAlignedEdgeRevertModificationsOnSubEdges(Edge<Node>* e) {
+
+            if (isFirstEdgeDensityPath(e->p->flags) && !isDensityConjugateSet(e->p->flags)) {
                 // Before I do anything else, i must aline the pointer
                 e->p = getAlignedDensityNode(e->p);
 
@@ -76,7 +77,7 @@ namespace dd {
                 e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
                 e->p->e[2].p = getAlignedDensityNode(e->p->e[2].p);
                 e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
-            } else if (!isDensityConjugateSet(node)) {
+            } else if (!isDensityConjugateSet(e->p->flags)) {
                 // Before I do anything else, i must aline the pointer
                 e->p = getAlignedDensityNode(e->p);
 
@@ -105,36 +106,45 @@ namespace dd {
             e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
         }
 
-        static inline void revertDmChangesToEdges(Node* xNode, Edge<Node>* x, Node* yNode, Edge<Node>* y) {
+        static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers
-            if (isDensityMatrix(xNode)) {
-                getAlignedDensityEdgeAlignSubEdges(xNode, x);
+            if (x != nullptr && isDensityMatrix((long)x->p->flags)) {
+                getAlignedEdgeRevertModificationsOnSubEdges(x);
+                x->p->flags = 0;
             }
-            if (isDensityMatrix(yNode)) {
-                getAlignedDensityEdgeAlignSubEdges(yNode, y);
+            if (y != nullptr && isDensityMatrix((long)y->p->flags)) {
+                getAlignedEdgeRevertModificationsOnSubEdges(y);
+                y->p->flags = 0;
             }
         }
 
         static inline void applyDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers
-            if (isDensityMatrix(x->p)) {
-                alignDensityNode(x);
+            if (x != nullptr && isDensityMatrix((long)x->p)) {
+                auto tmp= alignDensityNode(x);
+                x->p->flags = tmp;
+            } else if (x != nullptr){
+                x->p->flags = 0;
             }
-            if (isDensityMatrix(y->p)) {
-                alignDensityNode(y);
+            if (y != nullptr && isDensityMatrix((long)y->p)) {
+                auto tmp= alignDensityNode(y);
+                y->p->flags = tmp;
+            } else if (y != nullptr){
+                y->p->flags = 0;
             }
         }
 
-        // todo make arguments const
-        static inline void alignDensityNode(Edge<Node>* e) {
-            Node* alignedNode = getAlignedDensityNode(e->p);
+        [[nodiscard]] static inline short int alignDensityNode(Edge<Node>* e) {
+            Node*     alignedNode = getAlignedDensityNode(e->p);
+            short int flags       = (long)e->p & (7ULL);
 
             //todo make this more elegant
             if (alignedNode == nullptr || alignedNode->v <= -1) {
-                e->p = getAlignedDensityNode(e->p);
+                e->p = alignedNode;
+                return 0;
             }
 
-            if (isFirstEdgeDensityPath(e->p) && !isDensityConjugateSet(e->p)) {
+            if (isFirstEdgeDensityPath((long)e->p) && !isDensityConjugateSet((long)e->p)) {
                 e->p = alignedNode;
 
                 // first edge paths are not modified and the property is inherited by all child paths
@@ -142,7 +152,7 @@ namespace dd {
                 e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
                 e->p->e[2].p = setFirstEdgeDensityPathTrue(e->p->e[2].p);
                 e->p->e[3].p = setFirstEdgeDensityPathTrue(e->p->e[3].p);
-            } else if (!isDensityConjugateSet(e->p)) {
+            } else if (!isDensityConjugateSet((long)e->p)) {
                 e->p = alignedNode;
 
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
@@ -169,6 +179,8 @@ namespace dd {
             e->p->e[1].p = setDensityMatrixTrue(e->p->e[1].p);
             e->p->e[2].p = setDensityMatrixTrue(e->p->e[2].p);
             e->p->e[3].p = setDensityMatrixTrue(e->p->e[3].p);
+
+            return flags;
         }
 
         // todo make arguments const
@@ -187,13 +199,13 @@ namespace dd {
             newEdge.p->e[2] = alignedNode->e[2];
             newEdge.p->e[3] = alignedNode->e[3];
 
-            if (isFirstEdgeDensityPath(e.p) && !isDensityConjugateSet(e.p)) {
+            if (isFirstEdgeDensityPath((long)e.p) && !isDensityConjugateSet((long)e.p)) {
                 // first edge paths are not modified and the property is inherited by all child paths
                 newEdge.p->e[0].p = setFirstEdgeDensityPathTrue(newEdge.p->e[0].p);
                 newEdge.p->e[1].p = setFirstEdgeDensityPathTrue(newEdge.p->e[1].p);
                 newEdge.p->e[2].p = setFirstEdgeDensityPathTrue(newEdge.p->e[2].p);
                 newEdge.p->e[3].p = setFirstEdgeDensityPathTrue(newEdge.p->e[3].p);
-            } else if (!isDensityConjugateSet(e.p)) {
+            } else if (!isDensityConjugateSet((long)e.p)) {
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 newEdge.p->e[2].w.i = dd::CTEntry::flipPointerSign(newEdge.p->e[2].w.i);
                 newEdge.p->e[2].p   = setDensityConjugateTrue(newEdge.p->e[2].p);
@@ -267,15 +279,6 @@ namespace std {
             return dd::combineHash(h1, h2);
         }
     };
-
-//    template<> struct hash<dd::CachedEdge<dd::dNode>> {
-//        std::size_t operator()(dd::CachedEdge<Node> const& e) const noexcept {
-//            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
-//            auto h2 = std::hash<dd::ComplexValue>{}(e.w);
-//            return dd::combineHash(h1, h2);
-//        }
-//    };
-
 } // namespace std
 
 #endif //DD_PACKAGE_EDGE_HPP
