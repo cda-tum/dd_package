@@ -9,9 +9,9 @@
 #include <complex>
 #include <cstdint>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-#include <unordered_map>
 
 namespace dd {
     // integer type used for indexing qubits
