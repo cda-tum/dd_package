@@ -1037,7 +1037,9 @@ TEST(DDPackageTest, FidelityOfMeasurementOutcomes) {
 
     auto ghz_state = dd->multiply(cx_gate2, dd->multiply(cx_gate1, dd->multiply(h_gate, zero_state)));
 
-    std::vector<dd::fp> probs    = {0.5, 0., 0., 0., 0., 0., 0., 0.5};
-    auto                fidelity = dd->fidelityOfMeasurementOutcomes(ghz_state, probs);
+    dd::ProbabilityVector probs{};
+    probs[0]      = 0.5;
+    probs[7]      = 0.5;
+    auto fidelity = dd->fidelityOfMeasurementOutcomes(ghz_state, probs);
     EXPECT_NEAR(fidelity, 1.0, dd::ComplexTable<>::tolerance());
 }
