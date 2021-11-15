@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace dd {
     // integer type used for indexing qubits
@@ -52,6 +53,9 @@ namespace dd {
 
     using CVec = std::vector<std::complex<dd::fp>>;
     using CMat = std::vector<CVec>;
+
+    // use hash maps for representing sparse vectors of probabilities
+    using ProbabilityVector = std::unordered_map<std::uint_least64_t, fp>;
 
     static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
 

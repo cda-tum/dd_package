@@ -1274,22 +1274,21 @@ namespace dd {
             return fid.r * fid.r + fid.i * fid.i;
         }
 
-        dd::fp fidelityOfMeasurementOutcomes(const vEdge& e, const std::vector<dd::fp>& probs) {
+        dd::fp fidelityOfMeasurementOutcomes(const vEdge& e, const ProbabilityVector& probs) {
             if (e.w.approximatelyZero()) {
                 return 0.;
             }
-            const auto nq = e.p->v + 1;
-            if (probs.size() != (1U << nq)) {
-                throw std::runtime_error("Mismatch in sizes of DD and probability vector in fidelity function.");
-            }
-
             return fidelityOfMeasurementOutcomesRecursive(e, probs, 0);
         }
 
-        dd::fp fidelityOfMeasurementOutcomesRecursive(const vEdge& e, const std::vector<dd::fp>& probs, const std::size_t i) {
+        dd::fp fidelityOfMeasurementOutcomesRecursive(const vEdge& e, const ProbabilityVector& probs, const std::size_t i) {
             const auto topw = dd::ComplexNumbers::mag(e.w);
             if (e.isTerminal()) {
-                return topw * std::sqrt(probs[i]);
+                if (auto it = probs.find(i); it != probs.end()) {
+                    return topw * std::sqrt(it->second);
+                } else {
+                    return 0.;
+                }
             }
 
             std::size_t leftIdx          = i;
@@ -1298,7 +1297,7 @@ namespace dd {
                 leftContribution = fidelityOfMeasurementOutcomesRecursive(e.p->e[0], probs, leftIdx);
             }
 
-            std::size_t rightIdx          = i | (1 << e.p->v);
+            std::size_t rightIdx          = i | (1ULL << e.p->v);
             auto        rightContribution = 0.;
             if (!e.p->e[1].w.approximatelyZero()) {
                 rightContribution = fidelityOfMeasurementOutcomesRecursive(e.p->e[1], probs, rightIdx);
