@@ -1882,7 +1882,7 @@ namespace dd {
                 return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
-            bool one = i & (1 << e.p->v);
+            bool one = i & (1ULL << e.p->v);
 
             ComplexValue r{};
             if (!one && !e.p->e[0].w.approximatelyZero()) {
@@ -1907,8 +1907,8 @@ namespace dd {
                 return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
-            bool row = i & (1 << e.p->v);
-            bool col = j & (1 << e.p->v);
+            bool row = i & (1ULL << e.p->v);
+            bool col = j & (1ULL << e.p->v);
 
             ComplexValue r{};
             if (!row && !col && !e.p->e[0].w.approximatelyZero()) {
@@ -1925,7 +1925,7 @@ namespace dd {
         }
 
         CVec getVector(const vEdge& e) {
-            std::size_t dim = 1 << (e.p->v + 1);
+            std::size_t dim = 1ULL << (e.p->v + 1);
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
             getVector(e, Complex::one, 0, vec);
@@ -1942,7 +1942,7 @@ namespace dd {
                 return;
             }
 
-            std::size_t x = i | (1 << e.p->v);
+            std::size_t x = i | (1ULL << e.p->v);
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero())
@@ -1953,11 +1953,11 @@ namespace dd {
         }
 
         void printVector(const vEdge& e) {
-            unsigned long long element = 2u << e.p->v;
-            for (unsigned long long i = 0; i < element; i++) {
+            auto element = 2ULL << e.p->v;
+            for (auto i = 0ULL; i < element; i++) {
                 auto amplitude = getValueByPath(e, i);
                 for (Qubit j = e.p->v; j >= 0; j--) {
-                    std::cout << ((i >> j) & 1u);
+                    std::cout << ((i >> j) & 1ULL);
                 }
                 constexpr auto precision = 3;
                 // set fixed width to maximum of a printed number
@@ -1969,9 +1969,9 @@ namespace dd {
         }
 
         void printMatrix(const mEdge& e) {
-            unsigned long long element = 2u << e.p->v;
-            for (unsigned long long i = 0; i < element; i++) {
-                for (unsigned long long j = 0; j < element; j++) {
+            auto element = 2ULL << e.p->v;
+            for (auto i = 0ULL; i < element; i++) {
+                for (auto j = 0ULL; j < element; j++) {
                     auto           amplitude = getValueByPath(e, i, j);
                     constexpr auto precision = 3;
                     // set fixed width to maximum of a printed number
@@ -1985,7 +1985,7 @@ namespace dd {
         }
 
         CMat getMatrix(const mEdge& e) {
-            std::size_t dim = 1 << (e.p->v + 1);
+            std::size_t dim = 1ULL << (e.p->v + 1);
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
             getMatrix(e, Complex::one, 0, 0, mat);
