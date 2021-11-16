@@ -2002,8 +2002,8 @@ namespace dd {
                 return;
             }
 
-            std::size_t x = i | (1 << e.p->v);
-            std::size_t y = j | (1 << e.p->v);
+            std::size_t x = i | (1ULL << e.p->v);
+            std::size_t y = j | (1ULL << e.p->v);
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero())
@@ -2021,7 +2021,7 @@ namespace dd {
             if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     if (binary) {
                         amp.writeBinary(oss);
                     } else {
@@ -2061,7 +2061,7 @@ namespace dd {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
                 idx <<= level;
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     amplitudes[idx++] = std::complex<dd::fp>{dd::ComplexTable<>::Entry::val(amp.r), dd::ComplexTable<>::Entry::val(amp.i)};
                 }
 
@@ -2090,7 +2090,7 @@ namespace dd {
 
             if (edge.isTerminal()) {
                 idx <<= level;
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     auto temp         = std::complex<dd::fp>{amp.r + amplitudes[idx].real(), amp.i + amplitudes[idx].imag()};
                     amplitudes[idx++] = temp;
                 }
