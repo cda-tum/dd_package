@@ -1462,6 +1462,11 @@ namespace dd {
             assert(before == after);
             return {CTEntry::val(res.w.r), CTEntry::val(res.w.i)};
         }
+        bool isCloseToIdentity(const mEdge& m, dd::fp tol = 1e-10) {
+            std::unordered_set<decltype(m.p)> visited{};
+            visited.reserve(mUniqueTable.getActiveNodeCount());
+            return isCloseToIdentityRecursive(m, visited, tol);
+        }
 
     private:
         /// TODO: introduce a compute table for the trace?
@@ -1525,6 +1530,50 @@ namespace dd {
                 }
                 return r;
             }
+        }
+
+        bool isCloseToIdentityRecursive(const mEdge& m, std::unordered_set<decltype(m.p)>& visited, dd::fp tol) {
+            // immediately return if this node has already been visited
+            if (visited.find(m.p) != visited.end())
+                return true;
+
+            // immediately return of this node is identical to the identity
+            if (m.p->ident)
+                return true;
+
+            // check whether any of the middle successors is non-zero, i.e., m = [ x 0 0 y ]
+            const auto mag1 = dd::ComplexNumbers::mag2(m.p->e[1].w);
+            const auto mag2 = dd::ComplexNumbers::mag2(m.p->e[2].w);
+            if (mag1 > tol || mag2 > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // check whether  m = [ ~1 0 0 y ]
+            const auto mag0 = dd::ComplexNumbers::mag2(m.p->e[0].w);
+            if (std::abs(mag0 - 1.0) > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // check whether m = [ x 0 0 ~1 ] or m = [ x 0 0 ~0 ] (the last case is true for an ancillary qubit)
+            const auto mag3 = dd::ComplexNumbers::mag2(m.p->e[3].w);
+            if (std::abs(mag3 - 1.0) > tol && mag3 > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // m either has the form [ ~1 0 0 ~1 ] or [ ~1 0 0 ~0 ]
+            const auto ident0 = isCloseToIdentityRecursive(m.p->e[0], visited, tol);
+            if (!ident0) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // m either has the form [ I 0 0 ~1 ] or [ I 0 0 ~0 ]
+            const auto ident3 = isCloseToIdentityRecursive(m.p->e[3], visited, tol);
+            visited.insert(m.p);
+            return ident3;
         }
 
         ///
