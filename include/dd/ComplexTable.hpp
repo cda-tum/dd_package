@@ -70,14 +70,26 @@ namespace dd {
                 return left == right || approximatelyEquals(val(left), val(right));
             }
             [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
-                return left == right || std::abs(left - right) <= TOLERANCE;
+                if (left == right)
+                    return true;
+
+                const auto diff = std::abs(left - right);
+
+                if (diff < ABSOLUTE_TOLERANCE) {
+                    return true;
+                }
+                const auto absl    = std::abs(left);
+                const auto absr    = std::abs(right);
+                const auto largest = absl > absr ? absl : absr;
+
+                return diff <= largest * TOLERANCE;
             }
 
             [[nodiscard]] static constexpr bool approximatelyZero(const Entry* e) {
                 return e == &zero || approximatelyZero(val(e));
             }
             [[nodiscard]] static constexpr bool approximatelyZero(const fp e) {
-                return std::abs(e) <= TOLERANCE;
+                return std::abs(e) <= ABSOLUTE_TOLERANCE;
             }
 
             [[nodiscard]] static constexpr bool approximatelyOne(const Entry* e) {
@@ -484,7 +496,8 @@ namespace dd {
         std::size_t upperNeighbors   = 0;
 
         // numerical tolerance to be used for floating point values
-        static inline fp TOLERANCE = 1e-13;
+        static inline fp TOLERANCE          = std::numeric_limits<dd::fp>::epsilon() * 4;
+        static inline fp ABSOLUTE_TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 4;
 
         Entry*                                available{};
         std::vector<std::vector<Entry>>       chunks{};

@@ -1027,6 +1027,17 @@ TEST(DDPackageTest, BasicNumericStabilityTest) {
     EXPECT_EQ(rightWeight, oss.str());
 }
 
+TEST(DDPackageTest, NormalizationNumericStabilityTest) {
+    auto dd = std::make_unique<dd::Package>(1);
+    for (std::size_t x = 23; x <= 45; ++x) {
+        const auto lambda = dd::PI / static_cast<dd::fp>(1ULL << x);
+        auto       p      = dd->makeGateDD(dd::Phasemat(lambda), 1, 0);
+        auto       pdag   = dd->makeGateDD(dd::Phasemat(-lambda), 1, 0);
+        auto       result = dd->multiply(p, pdag);
+        EXPECT_TRUE(result.p->ident);
+    }
+}
+
 TEST(DDPackageTest, FidelityOfMeasurementOutcomes) {
     auto dd = std::make_unique<dd::Package>(3);
 
