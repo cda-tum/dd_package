@@ -1059,3 +1059,30 @@ TEST(DDPackageTest, FidelityOfMeasurementOutcomes) {
     auto fidelity = dd->fidelityOfMeasurementOutcomes(ghz_state, probs);
     EXPECT_NEAR(fidelity, 1.0, dd::ComplexTable<>::tolerance());
 }
+
+TEST(DDPackageTest, CloseToIdentity) {
+    auto dd = std::make_unique<dd::Package>(3);
+    auto id = dd->makeIdent(1);
+    EXPECT_TRUE(dd->isCloseToIdentity(id));
+    dd::Package::mEdge close{};
+    close.p  = id.p;
+    close.w  = dd->cn.lookup(1e-11, 0);
+    auto id2 = dd->makeDDNode(1, std::array{id, dd::Package::mEdge::zero, dd::Package::mEdge::zero, close});
+    EXPECT_TRUE(dd->isCloseToIdentity(id2));
+
+    auto noId = dd->makeDDNode(1, std::array{dd::Package::mEdge::zero, id, dd::Package::mEdge::zero, close});
+    EXPECT_FALSE(dd->isCloseToIdentity(noId));
+
+    dd::Package::mEdge notClose{};
+    notClose.p = id.p;
+    notClose.w = dd->cn.lookup(1e-9, 0);
+    auto noId2 = dd->makeDDNode(1, std::array{notClose, dd::Package::mEdge::zero, dd::Package::mEdge::zero, close});
+    EXPECT_FALSE(dd->isCloseToIdentity(noId2));
+
+    auto noId3 = dd->makeDDNode(1, std::array{close, dd::Package::mEdge::zero, dd::Package::mEdge::zero, notClose});
+    EXPECT_FALSE(dd->isCloseToIdentity(noId3));
+
+    auto notClose2 = dd->makeDDNode(0, std::array{dd::Package::mEdge::zero, dd::Package::mEdge::one, dd::Package::mEdge::one, dd::Package::mEdge::zero});
+    auto notClose3 = dd->makeDDNode(1, std::array{notClose2, dd::Package::mEdge::zero, dd::Package::mEdge::zero, notClose2});
+    EXPECT_FALSE(dd->isCloseToIdentity(notClose3));
+}
