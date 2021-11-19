@@ -1006,7 +1006,8 @@ TEST(DDPackageTest, BasicNumericInstabilityTest) {
 TEST(DDPackageTest, BasicNumericStabilityTest) {
     using limits = std::numeric_limits<dd::fp>;
 
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd  = std::make_unique<dd::Package>(1);
+    auto tol = dd::ComplexTable<>::tolerance();
     dd::ComplexNumbers::setTolerance(limits::epsilon());
     auto state  = dd->makeZeroState(1);
     auto h      = dd->makeGateDD(dd::Hmat, 1, 0);
@@ -1025,16 +1026,20 @@ TEST(DDPackageTest, BasicNumericStabilityTest) {
     oss.str("");
     oss << -dd::SQRT2_2;
     EXPECT_EQ(rightWeight, oss.str());
+    // restore tolerance
+    dd::ComplexNumbers::setTolerance(tol);
 }
 
 TEST(DDPackageTest, NormalizationNumericStabilityTest) {
     auto dd = std::make_unique<dd::Package>(1);
-    for (std::size_t x = 23; x <= 45; ++x) {
+    for (std::size_t x = 23; x <= 50; ++x) {
         const auto lambda = dd::PI / static_cast<dd::fp>(1ULL << x);
-        auto       p      = dd->makeGateDD(dd::Phasemat(lambda), 1, 0);
-        auto       pdag   = dd->makeGateDD(dd::Phasemat(-lambda), 1, 0);
-        auto       result = dd->multiply(p, pdag);
+        std::cout << std::setprecision(17) << "x: " << x << " | lambda: " << lambda << " | cos(lambda): " << std::cos(lambda) << " | sin(lambda): " << std::sin(lambda) << std::endl;
+        auto p      = dd->makeGateDD(dd::Phasemat(lambda), 1, 0);
+        auto pdag   = dd->makeGateDD(dd::Phasemat(-lambda), 1, 0);
+        auto result = dd->multiply(p, pdag);
         EXPECT_TRUE(result.p->ident);
+        dd->cn.complexTable.clear();
     }
 }
 
