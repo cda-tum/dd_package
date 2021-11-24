@@ -18,13 +18,14 @@ namespace dd {
     struct Edge {
         Node*   p;
         Complex w;
-        LimEntry* l;
+        LimTable<>::Entry* l; //
 
         /// Comparing two DD edges with another involves comparing the respective pointers
         /// and checking whether the corresponding weights are "close enough" according to a given tolerance
         /// this notion of equivalence is chosen to counter floating point inaccuracies
         constexpr bool operator==(const Edge& other) const {
-            return p == other.p && w.approximatelyEquals(other.w);
+            // TODO lim check only works for looked up pauli strings
+            return p == other.p && l == other.l && w.approximatelyEquals(other.w);
         }
         constexpr bool operator!=(const Edge& other) const {
             return !operator==(other);
@@ -33,10 +34,10 @@ namespace dd {
         [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
 
         // edges pointing to zero and one terminals
-        static inline Edge one{Node::terminal, Complex::one};
-        static inline Edge zero{Node::terminal, Complex::zero};
+        static inline Edge one{Node::terminal, Complex::one, nullptr};
+        static inline Edge zero{Node::terminal, Complex::zero, nullptr};
 
-        [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }
+        [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w, nullptr}; }
         [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == Complex::zero; }
         [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == Complex::one; }
     };

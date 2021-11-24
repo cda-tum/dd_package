@@ -259,16 +259,16 @@ namespace dd {
                         f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
                         break;
                     case BasisStates::plus:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(dd::SQRT2_2, 0)}}});
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0), nullptr}, {f.p, cn.lookup(dd::SQRT2_2, 0), nullptr}}});
                         break;
                     case BasisStates::minus:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(-dd::SQRT2_2, 0)}}});
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0), nullptr}, {f.p, cn.lookup(-dd::SQRT2_2, 0), nullptr}}});
                         break;
                     case BasisStates::right:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, dd::SQRT2_2)}}});
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0), nullptr}, {f.p, cn.lookup(0, dd::SQRT2_2), nullptr}}});
                         break;
                     case BasisStates::left:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, -dd::SQRT2_2)}}});
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0), nullptr}, {f.p, cn.lookup(0, -dd::SQRT2_2), nullptr}}});
                         break;
                 }
             }
@@ -595,7 +595,7 @@ namespace dd {
         template<class Node>
         Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
             auto&      uniqueTable = getUniqueTable<Node>();
-            Edge<Node> e{uniqueTable.getNode(), Complex::one};
+            Edge<Node> e{uniqueTable.getNode(), Complex::one, nullptr};
             e.p->v = var;
             e.p->e = edges;
 
@@ -944,7 +944,7 @@ namespace dd {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
-                    return {r.p, cn.getCached(r.w)};
+                    return {r.p, cn.getCached(r.w), nullptr};
                 }
             }
 
@@ -971,7 +971,7 @@ namespace dd {
                 } else {
                     e1 = x;
                     if (y.p->e[i].p == nullptr) {
-                        e1 = {nullptr, Complex::zero};
+                        e1 = {nullptr, Complex::zero, nullptr};
                     }
                 }
                 Edge<Node> e2{};
@@ -984,7 +984,7 @@ namespace dd {
                 } else {
                     e2 = y;
                     if (x.p->e[i].p == nullptr) {
-                        e2 = {nullptr, Complex::zero};
+                        e2 = {nullptr, Complex::zero, nullptr};
                     }
                 }
 
@@ -1117,7 +1117,7 @@ namespace dd {
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;
 
-            if (x.p == nullptr) return {nullptr, Complex::zero};
+            if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
             if (x.w == Complex::zero || y.w == Complex::zero) {
@@ -1139,7 +1139,7 @@ namespace dd {
                 if (r.w.approximatelyZero()) {
                     return ResultEdge::zero;
                 } else {
-                    auto e = ResultEdge{r.p, cn.getCached(r.w)};
+                    auto e = ResultEdge{r.p, cn.getCached(r.w), nullptr};
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
                     if (e.w.approximatelyZero()) {
@@ -1411,7 +1411,7 @@ namespace dd {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
-                    return {r.p, cn.getCached(r.w)};
+                    return {r.p, cn.getCached(r.w), nullptr};
                 }
             }
 
@@ -2550,13 +2550,13 @@ namespace dd {
         }
     };
 
-    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}},
                                                        nullptr,
                                                        0,
                                                        -1};
 
     inline Package::mNode Package::mNode::terminalNode{
-            {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+            {{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}},
             nullptr,
             0,
             -1,

@@ -113,7 +113,7 @@ namespace dd {
                     for ([[maybe_unused]] const auto& edge: e.p->e)
                         assert(edge.p->v == v - 1 || edge.isTerminal());
 
-                    return {p, e.w};
+                    return {p, e.w, nullptr};
                 }
                 collisions++;
                 p = p->next;
