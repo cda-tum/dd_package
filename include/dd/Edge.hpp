@@ -8,6 +8,7 @@
 
 #include "Complex.hpp"
 #include "ComplexValue.hpp"
+#include "LimTable.hpp"
 
 #include <cstddef>
 #include <utility>
@@ -17,6 +18,7 @@ namespace dd {
     struct Edge {
         Node*   p;
         Complex w;
+        LimEntry* l;
 
         /// Comparing two DD edges with another involves comparing the respective pointers
         /// and checking whether the corresponding weights are "close enough" according to a given tolerance
