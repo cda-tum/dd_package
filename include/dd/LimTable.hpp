@@ -89,38 +89,11 @@ namespace dd {
         }
 
         LimEntry lookup(const LimEntry& pauliOperand) {
-            lookups++;
-            const auto key = hash(pauliOperand);
-
-            LimEntry* p = table[key];
-            while (p != nullptr) {
-                if (pauliOperand == *p) {
-                    // Match found
-                    if (pauliOperand != *p) {
-                        // put node pointed to by e.p on available chain
-                        returnPauliString(pauliOperand);
-                    }
-                    hits++;
-                    return *p;
-                }
-                collisions++;
-                p = p->next;
-            }
-
-            // pauli string was not found -> add it to front of unique table bucket
-            pauliOperand.next = table[key];
-            table[key]        = pauliOperand;
-            uniquePauliStringsCount++;
-            peakUniquePauliStringsCount = std::max(peakUniquePauliStringsCount, uniquePauliStringsCount);
-            return pauliOperand;
+                //todo assert that pauliOperand is not from the LimTable (otherwise I need to free the pauliOperand)
+                return lookup(pauliOperand.paulis);
         }
 
         LimEntry lookup(const std::bitset<LimEntry::pauliBits>& pauliString) {
-            //            auto &pauliOperand = reinterpret_cast<LimEntry&>(available->next);
-            //            available->next = pauliOperand.next;
-            //            pauliOperand.paulis = pauliString;
-            //            lookup(pauliOperand);
-
             lookups++;
             const auto key = hash(pauliString);
 
@@ -128,10 +101,6 @@ namespace dd {
             while (p != nullptr) {
                 if (pauliString == p->paulis) {
                     // Match found
-                    if (pauliOperand != *p) {
-                        // put node pointed to by e.p on available chain
-                        returnPauliString(pauliOperand);
-                    }
                     hits++;
                     return *p;
                 }
@@ -140,6 +109,10 @@ namespace dd {
             }
 
             // pauli string was not found -> add it to front of unique table bucket
+            auto & pauliOperand  = reinterpret_cast<LimEntry&>(available->next);
+            available->next     = pauliOperand.next;
+            pauliOperand.paulis = pauliString;
+
             pauliOperand.next = table[key];
             table[key]        = pauliOperand;
             uniquePauliStringsCount++;
