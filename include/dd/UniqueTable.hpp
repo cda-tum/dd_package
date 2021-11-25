@@ -162,7 +162,9 @@ namespace dd {
         // and recursively increment reference counter for
         // each child if this is the first reference
         void incRef(const Edge<Node>& e) {
+            // TODO limdd
             dd::ComplexNumbers::incRef(e.w);
+            dd::LimTable<>::incRef(e.l);
             if (e.p == nullptr || e.isTerminal())
                 return;
 
@@ -190,7 +192,9 @@ namespace dd {
         // and recursively decrement reference counter for
         // each child if this is the last reference
         void decRef(const Edge<Node>& e) {
+            // TODO limdd
             dd::ComplexNumbers::decRef(e.w);
+            dd::LimTable<>::decRef(e.l);
             if (e.p == nullptr || e.isTerminal()) return;
             if (e.p->ref == std::numeric_limits<decltype(e.p->ref)>::max()) return;
 

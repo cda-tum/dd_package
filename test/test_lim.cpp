@@ -1,4 +1,3 @@
-
 #include "dd/LimTable.hpp"
 
 #include "gmock/gmock.h"

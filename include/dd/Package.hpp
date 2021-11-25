@@ -16,6 +16,7 @@
 #include "Definitions.hpp"
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
+#include "LimTable.hpp"
 #include "NoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
@@ -112,7 +113,9 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
+
         vEdge normalize(const vEdge& e, bool cached) {
+
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -203,6 +206,7 @@ namespace dd {
         }
 
         // generate |0...0> with n qubits
+        // TODO limdd: add identities to zero state?
         vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
             if (n + start > nqubits) {
                 throw std::runtime_error("Requested state with " +
@@ -237,7 +241,7 @@ namespace dd {
             return f;
         }
         // generate general basis state with n qubits
-        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0) {
+        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0){
             if (n + start > nqubits) {
                 throw std::runtime_error("Requested state with " +
                                          std::to_string(n + start) +
@@ -296,6 +300,7 @@ namespace dd {
         using mCachedEdge = CachedEdge<mNode>;
 
         mEdge normalize(const mEdge& e, bool cached) {
+            //todo limdd: search for isomorphic nodes
             auto argmax = -1;
 
             auto zero = std::array{e.p->e[0].w.approximatelyZero(),
@@ -498,6 +503,7 @@ namespace dd {
     private:
         // check whether node represents a symmetric matrix or the identity
         void checkSpecialMatrices(mNode* p) {
+            // TODO limdd: anything to mark as special in LIMDDs?
             if (p->v == -1)
                 return;
 
@@ -517,7 +523,7 @@ namespace dd {
         }
 
         ///
-        /// Unique tables, Reference counting and garbage collection
+        /// Unique tables, LIM table, Reference counting and garbage collection
         ///
     public:
         // unique tables
@@ -535,8 +541,10 @@ namespace dd {
 
         UniqueTable<vNode> vUniqueTable{nqubits};
         UniqueTable<mNode> mUniqueTable{nqubits};
+        LimTable<> limTable{};
 
         bool garbageCollect(bool force = false) {
+            // TODO Limdd: add GC for limTable
             // return immediately if no table needs collection
             if (!force &&
                 !vUniqueTable.possiblyNeedsCollection() &&
@@ -589,11 +597,13 @@ namespace dd {
         void clearUniqueTables() {
             vUniqueTable.clear();
             mUniqueTable.clear();
+            limTable.clear();
         }
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
         Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
+            // TODO Limdd: add LIMs to makeDDNode
             auto&      uniqueTable = getUniqueTable<Node>();
             Edge<Node> e{uniqueTable.getNode(), Complex::one, nullptr};
             e.p->v = var;
@@ -692,6 +702,7 @@ namespace dd {
         ///
     public:
         std::string measureAll(vEdge& rootEdge, const bool collapse, std::mt19937_64& mt, fp epsilon = 0.001) {
+            // TODO limdd
             if (std::abs(ComplexNumbers::mag2(rootEdge.w) - 1.0L) > epsilon) {
                 if (rootEdge.w.approximatelyZero()) {
                     throw std::runtime_error("Numerical instabilities led to a 0-vector! Abort simulation!");
@@ -752,6 +763,7 @@ namespace dd {
 
     private:
         double assignProbabilities(const vEdge& edge, std::unordered_map<vNode*, fp>& probs) {
+            // TODO limdd
             auto it = probs.find(edge.p);
             if (it != probs.end()) {
                 return ComplexNumbers::mag2(edge.w) * it->second;
@@ -770,6 +782,7 @@ namespace dd {
 
     public:
         std::pair<dd::fp, dd::fp> determineMeasurementProbabilities(const vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization) {
+            // TODO limdd
             std::map<vNode*, fp> probsMone;
             std::set<vNode*>     visited;
             std::queue<vNode*>   q;
@@ -844,6 +857,7 @@ namespace dd {
         }
 
         char measureOneCollapsing(vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization, std::mt19937_64& mt, fp epsilon = 0.001) {
+            // TODO limdd
             const auto& [pzero, pone] = determineMeasurementProbabilities(root_edge, index, assumeProbabilityNormalization);
             const fp sum              = pzero + pone;
             if (std::abs(sum - 1) > epsilon) {
@@ -896,6 +910,7 @@ namespace dd {
 
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
+            // TODO limdd
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             auto result = add2(x, y);
@@ -914,6 +929,7 @@ namespace dd {
     public:
         template<class Node>
         Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y) {
+            // TODO limdd
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -1087,6 +1103,7 @@ namespace dd {
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0) {
+            // TODO limdd
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             Qubit var = -1;
@@ -1113,6 +1130,7 @@ namespace dd {
     private:
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0) {
+            // TODO limdd
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;
@@ -1853,6 +1871,7 @@ namespace dd {
         /// \return the complex amplitude of the specified element
         template<class Edge>
         ComplexValue getValueByPath(const Edge& e, const std::string& elements) {
+            // TODO limdd
             if (e.isTerminal()) {
                 return {CTEntry::val(e.w.r), CTEntry::val(e.w.i)};
             }
@@ -1926,6 +1945,7 @@ namespace dd {
         }
 
         CVec getVector(const vEdge& e) {
+            // TODO limdd
             std::size_t dim = 1 << (e.p->v + 1);
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
@@ -2342,6 +2362,7 @@ namespace dd {
     public:
         template<class Node>
         void debugnode(const Node* p) const {
+            // TODO limdd
             if (Node::isTerminal(p)) {
                 std::clog << "terminal\n";
                 return;
@@ -2493,6 +2514,7 @@ namespace dd {
     public:
         // print information on package and its members
         static void printInformation() {
+            // TODO limdd
             std::cout << "\n  compiled: " << __DATE__ << " " << __TIME__
                       << "\n  Complex size: " << sizeof(Complex) << " bytes (aligned " << alignof(Complex) << " bytes)"
                       << "\n  ComplexValue size: " << sizeof(ComplexValue) << " bytes (aligned " << alignof(ComplexValue) << " bytes)"
@@ -2518,6 +2540,7 @@ namespace dd {
 
         // print unique and compute table statistics
         void statistics() {
+            // TODO limdd
             std::cout << "DD statistics:" << std::endl
                       << "[vUniqueTable] ";
             vUniqueTable.printStatistics();
@@ -2568,6 +2591,8 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
+
+    //TODO limdd: make a getlimUniqueTable
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }

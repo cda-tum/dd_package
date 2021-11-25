@@ -61,7 +61,7 @@ namespace dd {
         /// and checking whether the corresponding weights are "close enough" according to a given tolerance
         /// this notion of equivalence is chosen to counter floating point inaccuracies
         bool operator==(const CachedEdge& other) const {
-            return p == other.p && w.approximatelyEquals(other.w);
+            return p == other.p && l == other.l && w.approximatelyEquals(other.w);
         }
         bool operator!=(const CachedEdge& other) const {
             return !operator==(other);
