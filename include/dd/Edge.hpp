@@ -18,7 +18,7 @@ namespace dd {
     struct Edge {
         Node*   p;
         Complex w;
-        LimTable<>::Entry* l; //
+        LimTable<>::Entry* l; // might be nullptr for all identity
 
         /// Comparing two DD edges with another involves comparing the respective pointers
         /// and checking whether the corresponding weights are "close enough" according to a given tolerance
@@ -46,12 +46,13 @@ namespace dd {
     struct CachedEdge {
         Node*        p{};
         ComplexValue w{};
+        LimTable<>::Entry* l{}; // might be nullptr for all identity
 
         CachedEdge() = default;
-        CachedEdge(Node* p, const ComplexValue& w):
-            p(p), w(w) {}
+        CachedEdge(Node* p, const ComplexValue& w, LimEntry<>* l):
+            p(p), w(w), l(l) {}
         CachedEdge(Node* p, const Complex& c):
-            p(p) {
+            p(p), l(l) {
             w.r = CTEntry::val(c.r);
             w.i = CTEntry::val(c.i);
         }
@@ -74,7 +75,8 @@ namespace std {
         std::size_t operator()(dd::Edge<Node> const& e) const noexcept {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::Complex>{}(e.w);
-            return dd::combineHash(h1, h2);
+            auto h3 = dd::murmur64(reinterpret_cast<std::size_t>(e.l));
+            return dd::combineHash(h1, dd::combineHash(h2, h3));
         }
     };
 
@@ -83,7 +85,8 @@ namespace std {
         std::size_t operator()(dd::CachedEdge<Node> const& e) const noexcept {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::ComplexValue>{}(e.w);
-            return dd::combineHash(h1, h2);
+            auto h3 = dd::murmur64(reinterpret_cast<std::size_t>(e.l));
+            return dd::combineHash(h1, dd::combineHash(h2, h3));
         }
     };
 } // namespace std

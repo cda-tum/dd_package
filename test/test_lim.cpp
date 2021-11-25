@@ -64,6 +64,7 @@ TEST(LimTest, SimpleTableDefault) {
 }
 
 TEST(LimTest, SimpleTable8) {
+    /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
     auto limtable = std::make_unique<dd::LimTable<8, 32>>();
     std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
     std::cout << "LimEntry size " << sizeof(dd::LimEntry<8>) << " byte \n";
@@ -93,6 +94,7 @@ TEST(LimTest, SimpleTable8) {
 }
 
 TEST(LimTest, SimpleTable127) {
+    /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
     auto limtable = std::make_unique<dd::LimTable<127>>();
     std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
     std::cout << "LimEntry size " << sizeof(dd::LimEntry<127>) << " byte \n";
