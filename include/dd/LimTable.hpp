@@ -32,7 +32,11 @@ namespace dd {
          * @param qubit
          * @return char of {I, X, Y, Z}
          */
-        [[nodiscard]] char getQubit(dd::Qubit qubit) const {
+        static char getQubit(const LimEntry<NUM_QUBITS> *lim, dd::Qubit qubit) {
+            if (lim == nullptr) {
+                return 'I';
+            }
+            const auto paulis = lim->paulis;
             if (!paulis.test(2 * qubit + 1) && !paulis.test(2 * qubit)) {
                 return 'I';
             } else if (!paulis.test(2 * qubit + 1) && paulis.test(2 * qubit)) {
@@ -47,19 +51,24 @@ namespace dd {
         /**
          * @return a string of {I, X, Y, Y}**n with left in the string corresponding to the top of the decision diagram.
          */
-        [[nodiscard]] std::string to_string() const {
-            std::ostringstream os;
+        static std::string to_string(const LimEntry<NUM_QUBITS> *lim) {
+            if (lim == nullptr) {
+                return std::string(NUM_QUBITS, 'I');
+            }
 
+            std::ostringstream os;
+            const auto paulis = lim->paulis;
             for (auto i = static_cast<dd::Qubit>(paulis.size() / 2 - 1); i >= 0; --i) {
-                os << getQubit(i);
+                os << getQubit(lim, i);
             }
             return os.str();
         }
 
-        bool operator==(const LimEntry& other) const {
+        // TODO: static versions as well to cover nullptr case?
+        bool operator==(const LimEntry<NUM_QUBITS>& other) const {
             return paulis == other.paulis;
         }
-        bool operator!=(const LimEntry& other) const {
+        bool operator!=(const LimEntry<NUM_QUBITS>& other) const {
             //todo shouldn't it be enough to define the == operator?
             return paulis != other.paulis;
         }
@@ -195,7 +204,7 @@ namespace dd {
                 auto* p = table[key];
 
                 while (p != nullptr) {
-                    std::cout << "[" << key << "]\t" << p->to_string() << " " << " " << p->refCount << "\n";
+                    std::cout << "[" << key << "]\t" << Entry::to_string(p) << " " << " " << p->refCount << "\n";
                     p = p->next;
                 }
             }

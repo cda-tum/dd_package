@@ -9,20 +9,25 @@ TEST(LimTest, SinglePauliOps) {
     dd::LimEntry<1> x{0b010};
     dd::LimEntry<1> y{0b011};
 
-    EXPECT_EQ(id.getQubit(0), 'I');
-    EXPECT_EQ(x.getQubit(0), 'X');
-    EXPECT_EQ(y.getQubit(0), 'Y');
-    EXPECT_EQ(z.getQubit(0), 'Z');
+    EXPECT_EQ(dd::LimEntry<1>::getQubit(&id, 0), 'I');
+    EXPECT_EQ(dd::LimEntry<1>::getQubit(&x, 0), 'X');
+    EXPECT_EQ(dd::LimEntry<1>::getQubit(&y, 0), 'Y');
+    EXPECT_EQ(dd::LimEntry<1>::getQubit(&z, 0), 'Z');
 }
 
 TEST(LimTest, PauliToString) {
     dd::LimEntry<5> limEntry{0b011011000u}; // ...IIIYXZI. Bit order!
 
-    auto str = limEntry.to_string();
+    auto str = dd::LimEntry<5>::to_string(&limEntry);
 
     std::cout << str << "\n";
 
-    ASSERT_STREQ(str.c_str(), "IYZXI");
+    EXPECT_STREQ(str.c_str(), "IYZXI");
+
+    auto str_default = dd::LimEntry<5>::to_string(nullptr);
+    std::cout << str_default << "\n";
+
+    EXPECT_STREQ(str_default.c_str(), "IIIII");
 }
 
 TEST(LimTest, SimpleTableDefault) {

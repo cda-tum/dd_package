@@ -165,12 +165,12 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << thicknessFromMagnitude(e.w) << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << "\"";
+        os << "[penwidth=\"" << thicknessFromMagnitude(e.w) << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "\"";
         if (!e.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "</font>>";
         }
 
         os << "]\n";
@@ -192,9 +192,9 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << "\",color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "\",color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "</font>>";
         }
         os << "]\n";
         return os;
@@ -387,12 +387,12 @@ namespace dd {
         }
 
         auto mag = thicknessFromMagnitude(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "\"";
         if (!to.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "</font>>";
         }
         os << "]\n";
 
@@ -411,12 +411,12 @@ namespace dd {
         }
 
         auto mag = thicknessFromMagnitude(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "\"";
         if (!to.w.approximatelyOne()) {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "</font>>";
         }
         os << "]\n";
 
@@ -473,9 +473,9 @@ namespace dd {
 
         auto mag   = thicknessFromMagnitude(to.w);
         auto color = colorFromPhase(to.w);
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << "\" color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "\" color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "</font>>";
         }
         os << "]\n";
 
