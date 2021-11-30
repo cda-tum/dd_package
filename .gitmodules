@@ -6,5 +6,5 @@
 [submodule "extern/benchmark"]
 	path = extern/benchmark
 	url = https://github.com/google/benchmark.git
-	branch = master
+	branch = main
 	shallow = true
