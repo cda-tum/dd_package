@@ -51,7 +51,7 @@ namespace dd {
     static constexpr fp PI_2    = 1.570796326794896619231321691639751442098584699687552910487L;
     static constexpr fp PI_4    = 0.785398163397448309615660845819875721049292349843776455243L;
 
-    using CVec = std::vector<std::complex<dd::fp>>;
+    using CVec = std::vector<std::complex<fp>>;
     using CMat = std::vector<CVec>;
 
     // use hash maps for representing sparse vectors of probabilities
@@ -87,12 +87,12 @@ namespace dd {
     //    }
 
     // calculates the Units in Last Place (ULP) distance of two floating point numbers
-    [[maybe_unused]] static std::size_t ulpDistance(dd::fp a, dd::fp b) {
+    [[maybe_unused]] static std::size_t ulpDistance(fp a, fp b) {
         if (a == b)
             return 0;
 
         std::size_t ulps   = 1;
-        dd::fp      nextFP = std::nextafter(a, b);
+        fp          nextFP = std::nextafter(a, b);
         while (nextFP != b) {
             ulps++;
             nextFP = std::nextafter(nextFP, b);
