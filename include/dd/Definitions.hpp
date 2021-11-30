@@ -55,7 +55,7 @@ namespace dd {
     using CMat = std::vector<CVec>;
 
     // use hash maps for representing sparse vectors of probabilities
-    using ProbabilityVector = std::unordered_map<std::uint_least64_t, fp>;
+    using ProbabilityVector = std::unordered_map<std::size_t, fp>;
 
     static constexpr std::uint_least64_t SERIALIZATION_VERSION = 1;
 
