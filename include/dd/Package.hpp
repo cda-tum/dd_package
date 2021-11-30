@@ -2002,7 +2002,7 @@ namespace dd {
         }
 
         void printVector(const vEdge& e) {
-            auto element = 2ULL << e.p->v;
+            unsigned long long element = 2ULL << e.p->v;
             for (auto i = 0ULL; i < element; i++) {
                 auto amplitude = getValueByPath(e, i);
                 for (Qubit j = e.p->v; j >= 0; j--) {
@@ -2018,7 +2018,7 @@ namespace dd {
         }
 
         void printMatrix(const mEdge& e) {
-            auto element = 2ULL << e.p->v;
+            unsigned long long element = 2ULL << e.p->v;
             for (auto i = 0ULL; i < element; i++) {
                 for (auto j = 0ULL; j < element; j++) {
                     auto           amplitude = getValueByPath(e, i, j);
@@ -2034,7 +2034,7 @@ namespace dd {
         }
 
         CMat getMatrix(const mEdge& e) {
-            std::size_t dim = 1ULL << (e.p->v + 1);
+            unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
             getMatrix(e, Complex::one, 0, 0, mat);
