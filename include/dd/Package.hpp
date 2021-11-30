@@ -2119,7 +2119,7 @@ namespace dd {
 
             auto a = cn.mulCached(amplitude, edge.w);
             exportAmplitudesRec(edge.p->e[0], amplitudes, a, level - 1, idx << 1);
-            exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1);
+            exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1ULL);
             cn.returnToCache(a);
         }
         void exportAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
@@ -2148,7 +2148,7 @@ namespace dd {
             }
 
             addAmplitudesRec(edge.p->e[0], amplitudes, amp, level - 1, idx << 1);
-            addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1);
+            addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1ULL);
         }
         void addAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
             if (edge.isTerminal()) {
