@@ -181,6 +181,9 @@ namespace dd {
         }
 
         static void incRef(Entry* p) {
+            if (p == nullptr) {
+                return;
+            }
             if (p->refCount == std::numeric_limits<RefCount>::max()) {
                 std::clog << "[WARN] MAXREFCNT reached for " << p->paulis << ". Number will never be collected." << std::endl;
                 return;
@@ -189,6 +192,9 @@ namespace dd {
         }
 
         static void decRef(Entry* p) {
+            if (p == nullptr) {
+                return;
+            }
             if (p->refCount == std::numeric_limits<RefCount>::max()) {
                 return;
             }

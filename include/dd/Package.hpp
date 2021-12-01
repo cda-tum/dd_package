@@ -98,6 +98,8 @@ namespace dd {
         ///
         /// Vector nodes, edges and quantum states
         ///
+
+        // TODO limdd: Add LIMs for Stabilizer Groups to nodes
     public:
         struct vNode {
             std::array<Edge<vNode>, RADIX> e{};    // edges out of this node
@@ -1286,6 +1288,7 @@ namespace dd {
             return ip;
         }
         fp fidelity(const vEdge& x, const vEdge& y) {
+            // TODO limdd
             const auto fid = innerProduct(x, y);
             return fid.r * fid.r + fid.i * fid.i;
         }
