@@ -36,7 +36,6 @@ TEST(LimTest, SimpleTableDefault) {
     std::cout << "LimEntry size " << sizeof(dd::LimEntry<>) << " byte \n";
     std::cout << "LimBitSt size " << sizeof(dd::LimEntry<>::paulis) << " byte \n";
 
-
     limtable->lookup(1);
     limtable->lookup(2);
     limtable->lookup(3);
@@ -73,7 +72,6 @@ TEST(LimTest, SimpleTable8) {
     std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
     std::cout << "LimEntry size " << sizeof(dd::LimEntry<8>) << " byte \n";
     std::cout << "LimBitSt size " << sizeof(dd::LimEntry<8>::paulis) << " byte \n";
-
 
     limtable->lookup(1);
     limtable->lookup(2);

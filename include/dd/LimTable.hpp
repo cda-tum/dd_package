@@ -17,10 +17,9 @@ namespace dd {
         static_assert(NUM_QUBITS > 0, "Have at least on qubit");
         static_assert(NUM_QUBITS <= std::numeric_limits<dd::Qubit>::max(), "Too many qubits for LimEntry");
 
-
         std::bitset<2 * NUM_QUBITS> paulis{};
-        LimEntry*              next{};
-        RefCount               refCount{};
+        LimEntry*                   next{};
+        RefCount                    refCount{};
 
         /**
          * 2 bits per qubit
@@ -32,7 +31,7 @@ namespace dd {
          * @param qubit
          * @return char of {I, X, Y, Z}
          */
-        static char getQubit(const LimEntry<NUM_QUBITS> *lim, dd::Qubit qubit) {
+        static char getQubit(const LimEntry<NUM_QUBITS>* lim, dd::Qubit qubit) {
             if (lim == nullptr) {
                 return 'I';
             }
@@ -51,13 +50,13 @@ namespace dd {
         /**
          * @return a string of {I, X, Y, Y}**n with left in the string corresponding to the top of the decision diagram.
          */
-        static std::string to_string(const LimEntry<NUM_QUBITS> *lim) {
+        static std::string to_string(const LimEntry<NUM_QUBITS>* lim) {
             if (lim == nullptr) {
                 return std::string(NUM_QUBITS, 'I');
             }
 
             std::ostringstream os;
-            const auto paulis = lim->paulis;
+            const auto         paulis = lim->paulis;
             for (auto i = static_cast<dd::Qubit>(paulis.size() / 2 - 1); i >= 0; --i) {
                 os << getQubit(lim, i);
             }
@@ -90,8 +89,8 @@ namespace dd {
     template<std::size_t NUM_QUBITS = 32, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 4096, std::size_t INITIAL_GC_LIMIT = 65536>
     class LimTable {
     public:
-        using Entry                                 = LimEntry<NUM_QUBITS>;
-        using PauliBitSet                           = std::bitset<2 * NUM_QUBITS>;
+        using Entry       = LimEntry<NUM_QUBITS>;
+        using PauliBitSet = std::bitset<2 * NUM_QUBITS>;
 
         LimTable():
             chunkID(0), allocationSize(ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
@@ -109,7 +108,7 @@ namespace dd {
             return hash(a.paulis);
         }
 
-        static std::size_t hash(const PauliBitSet & a) {
+        static std::size_t hash(const PauliBitSet& a) {
             return std::hash<PauliBitSet>{}(a) % NBUCKET - 1;
         }
 
@@ -204,7 +203,8 @@ namespace dd {
                 auto* p = table[key];
 
                 while (p != nullptr) {
-                    std::cout << "[" << key << "]\t" << Entry::to_string(p) << " " << " " << p->refCount << "\n";
+                    std::cout << "[" << key << "]\t" << Entry::to_string(p) << " "
+                              << " " << p->refCount << "\n";
                     p = p->next;
                 }
             }

@@ -113,9 +113,7 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
-
         vEdge normalize(const vEdge& e, bool cached) {
-
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -241,7 +239,7 @@ namespace dd {
             return f;
         }
         // generate general basis state with n qubits
-        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0){
+        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0) {
             if (n + start > nqubits) {
                 throw std::runtime_error("Requested state with " +
                                          std::to_string(n + start) +
@@ -541,7 +539,7 @@ namespace dd {
 
         UniqueTable<vNode> vUniqueTable{nqubits};
         UniqueTable<mNode> mUniqueTable{nqubits};
-        LimTable<> limTable{};
+        LimTable<>         limTable{};
 
         bool garbageCollect(bool force = false) {
             // TODO Limdd: add GC for limTable

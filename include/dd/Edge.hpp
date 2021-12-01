@@ -16,8 +16,8 @@
 namespace dd {
     template<class Node>
     struct Edge {
-        Node*   p;
-        Complex w;
+        Node*              p;
+        Complex            w;
         LimTable<>::Entry* l; // might be nullptr for all identity
 
         /// Comparing two DD edges with another involves comparing the respective pointers
@@ -44,8 +44,8 @@ namespace dd {
 
     template<typename Node>
     struct CachedEdge {
-        Node*        p{};
-        ComplexValue w{};
+        Node*              p{};
+        ComplexValue       w{};
         LimTable<>::Entry* l{}; // might be nullptr for all identity
 
         CachedEdge() = default;
