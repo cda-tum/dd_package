@@ -3,12 +3,14 @@
 
 #include "Definitions.hpp"
 
+#include <array>
 #include <bitset>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace dd {
 
