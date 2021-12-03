@@ -955,7 +955,7 @@ namespace dd {
             }
 
             auto& computeTable = getAddComputeTable<Node>();
-            auto  r            = computeTable.lookup({x.p, x.w}, {y.p, y.w});
+            auto  r            = computeTable.lookup({x.p, x.w, x.l}, {y.p, y.w, y.l});
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
@@ -1016,7 +1016,7 @@ namespace dd {
             }
 
             auto e = makeDDNode(w, edge, true);
-            computeTable.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w});
+            computeTable.insert({x.p, x.w, x.l}, {y.p, y.w, y.l}, {e.p, e.w, e.l});
             return e;
         }
 
@@ -1183,7 +1183,7 @@ namespace dd {
                     } else {
                         e = yCopy;
                     }
-                    computeTable.insert(xCopy, yCopy, {e.p, e.w});
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l});
                     e.w = cn.mulCached(x.w, y.w);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
@@ -1196,7 +1196,7 @@ namespace dd {
                     // additionally check if y is the identity in case of matrix multiplication
                     if (y.p->ident) {
                         e = xCopy;
-                        computeTable.insert(xCopy, yCopy, {e.p, e.w});
+                        computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l});
                         e.w = cn.mulCached(x.w, y.w);
 
                         if (e.w.approximatelyZero()) {
@@ -1246,7 +1246,7 @@ namespace dd {
             }
             e = makeDDNode(var, edge, true);
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w});
+            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l});
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {
@@ -1445,7 +1445,7 @@ namespace dd {
                     }
 
                     e.w = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                    computeTable.insert(x, y, {e.p, e.w});
+                    computeTable.insert(x, y, {e.p, e.w, e.l});
                     return e;
                 }
             }
@@ -1458,7 +1458,7 @@ namespace dd {
             auto idx = incIdx ? static_cast<Qubit>(y.p->v + x.p->v + 1) : x.p->v;
             auto e   = makeDDNode(idx, edge, true);
             ComplexNumbers::mul(e.w, e.w, x.w);
-            computeTable.insert(x, y, {e.p, e.w});
+            computeTable.insert(x, y, {e.p, e.w, e.l});
             return e;
         }
 

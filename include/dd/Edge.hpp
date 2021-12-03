@@ -51,7 +51,7 @@ namespace dd {
         CachedEdge() = default;
         CachedEdge(Node* p, const ComplexValue& w, LimEntry<>* l):
             p(p), w(w), l(l) {}
-        CachedEdge(Node* p, const Complex& c):
+        CachedEdge(Node* p, const Complex& c, LimEntry<>* l):
             p(p), l(l) {
             w.r = CTEntry::val(c.r);
             w.i = CTEntry::val(c.i);
