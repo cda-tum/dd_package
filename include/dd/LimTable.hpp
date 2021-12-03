@@ -93,6 +93,7 @@ namespace dd {
     public:
         using Entry       = LimEntry<NUM_QUBITS>;
         using PauliBitSet = std::bitset<2 * NUM_QUBITS>;
+        static constexpr auto MASK = NBUCKET-1;
 
         LimTable():
             chunkID(0), allocationSize(ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
@@ -111,7 +112,7 @@ namespace dd {
         }
 
         static std::size_t hash(const PauliBitSet& a) {
-            return std::hash<PauliBitSet>{}(a) % NBUCKET - 1;
+            return std::hash<PauliBitSet>{}(a) & MASK;
         }
 
         constexpr std::size_t getNumQubits() {
