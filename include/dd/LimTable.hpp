@@ -91,9 +91,9 @@ namespace dd {
     template<std::size_t NUM_QUBITS = 32, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 4096, std::size_t INITIAL_GC_LIMIT = 65536>
     class LimTable {
     public:
-        using Entry       = LimEntry<NUM_QUBITS>;
-        using PauliBitSet = std::bitset<2 * NUM_QUBITS>;
-        static constexpr auto MASK = NBUCKET-1;
+        using Entry                = LimEntry<NUM_QUBITS>;
+        using PauliBitSet          = std::bitset<2 * NUM_QUBITS>;
+        static constexpr auto MASK = NBUCKET - 1;
 
         LimTable():
             chunkID(0), allocationSize(ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
@@ -112,7 +112,7 @@ namespace dd {
         }
 
         static std::size_t hash(const PauliBitSet& a) {
-            return std::hash<PauliBitSet>{}(a) & MASK;
+            return std::hash<PauliBitSet>{}(a)&MASK;
         }
 
         constexpr std::size_t getNumQubits() {
