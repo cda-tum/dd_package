@@ -54,7 +54,7 @@ namespace dd {
          */
         static std::string to_string(const LimEntry<NUM_QUBITS>* lim) {
             if (lim == nullptr) {
-                return {NUM_QUBITS, 'I'};
+                return std::string(NUM_QUBITS, 'I');
             }
 
             std::ostringstream os;
