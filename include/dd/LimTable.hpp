@@ -23,6 +23,43 @@ namespace dd {
         LimEntry*                   next{};
         RefCount                    refCount{};
 
+        // explicit definition of constructors
+        LimEntry():
+            paulis{0} {}
+        explicit LimEntry(std::bitset<2 * NUM_QUBITS> paulis):
+            paulis{paulis} {}
+        explicit LimEntry(std::string pauliString):
+            paulis{0} {
+            paulis = bitsetFromString(pauliString);
+        }
+
+        static std::bitset<2 * NUM_QUBITS> bitsetFromString(std::string pauliString) {
+            std::bitset<2 * NUM_QUBITS> res{0};
+            for (std::string::size_type i = 0; i < pauliString.size(); i++) {
+                switch (pauliString[i]) {
+                    case 'I':
+                        res[2 * NUM_QUBITS - (2 * i + 2)] = 0;
+                        res[2 * NUM_QUBITS - (2 * i + 1)] = 0;
+                        break;
+                    case 'X':
+                        res[2 * NUM_QUBITS - (2 * i + 2)] = 0;
+                        res[2 * NUM_QUBITS - (2 * i + 1)] = 1;
+                        break;
+                    case 'Z':
+                        res[2 * NUM_QUBITS - (2 * i + 2)] = 1;
+                        res[2 * NUM_QUBITS - (2 * i + 1)] = 0;
+                        break;
+                    case 'Y':
+                        res[2 * NUM_QUBITS - (2 * i + 2)] = 1;
+                        res[2 * NUM_QUBITS - (2 * i + 1)] = 1;
+                        break;
+                    default:
+                        throw std::runtime_error("Unrecognized symbol in Pauli string\n");
+                }
+            }
+            return res;
+        }
+
         /**
          * 2 bits per qubit
          * 00 identity
@@ -145,6 +182,14 @@ namespace dd {
             auto entry = &(*chunkIt);
             ++chunkIt;
             return entry;
+        }
+
+        Entry* lookup_str(const std::string pauliString) {
+            // different name from lookup because 0 can apparently be seen as a
+            // string (and therefor overloading lookup on input type is an issue)
+            // TODO: maybe find a way to overload lookup() cleanly?
+            PauliBitSet bitSet = LimEntry<NUM_QUBITS>::bitsetFromString(pauliString);
+            return lookup(bitSet);
         }
 
         Entry* lookup(const Entry& pauliOperand) {
