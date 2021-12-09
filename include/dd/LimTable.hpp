@@ -298,6 +298,18 @@ namespace dd {
             return collected;
         }
 
+        std::ostream& printStatistics(std::ostream& os = std::cout) {
+            // clang-format off
+            os << "hits: " << hits
+               << ", collisions: " << collisions
+               << ", looks: " << lookups
+               << ", gc calls: " << gcCalls
+               << ", gc runs: " << gcRuns
+               << "\n";
+            // clang-format on
+            return os;
+        }
+
     private:
         std::array<Entry*, NBUCKET> table{};
         // compute table lookup statistics

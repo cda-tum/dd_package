@@ -2413,7 +2413,6 @@ namespace dd {
     public:
         template<class Node>
         void debugnode(const Node* p) const {
-            // TODO limdd
             if (Node::isTerminal(p)) {
                 std::clog << "terminal\n";
                 return;
@@ -2423,7 +2422,9 @@ namespace dd {
                 std::clog << "  " << std::hexfloat
                           << std::setw(22) << CTEntry::val(edge.w.r) << " "
                           << std::setw(22) << CTEntry::val(edge.w.i) << std::defaultfloat
-                          << "i --> " << debugnode_line(edge.p) << "\n";
+                          << "i --> " << debugnode_line(edge.p)
+                          << "lim=" << LimEntry<>::to_string(edge.l)
+                          << "\n";
             }
             std::clog << std::flush;
         }
@@ -2438,6 +2439,7 @@ namespace dd {
                 << "[v=" << static_cast<std::int_fast64_t>(p->v)
                 << " ref=" << p->ref
                 << " hash=" << UniqueTable<Node>::hash(p)
+                << " lim=" << "TODO" // TODO limdd
                 << "]";
             return sst.str();
         }
@@ -2570,6 +2572,7 @@ namespace dd {
                       << "\n  Complex size: " << sizeof(Complex) << " bytes (aligned " << alignof(Complex) << " bytes)"
                       << "\n  ComplexValue size: " << sizeof(ComplexValue) << " bytes (aligned " << alignof(ComplexValue) << " bytes)"
                       << "\n  ComplexNumbers size: " << sizeof(ComplexNumbers) << " bytes (aligned " << alignof(ComplexNumbers) << " bytes)"
+                      << "\n  LimEntry<> size: " << sizeof(LimEntry<>) << " bytes (aligned " << alignof(LimEntry<>) << " bytes)"
                       << "\n  vEdge size: " << sizeof(vEdge) << " bytes (aligned " << alignof(vEdge) << " bytes)"
                       << "\n  vNode size: " << sizeof(vNode) << " bytes (aligned " << alignof(vNode) << " bytes)"
                       << "\n  mEdge size: " << sizeof(mEdge) << " bytes (aligned " << alignof(mEdge) << " bytes)"
@@ -2591,7 +2594,6 @@ namespace dd {
 
         // print unique and compute table statistics
         void statistics() {
-            // TODO limdd
             std::cout << "DD statistics:" << std::endl
                       << "[vUniqueTable] ";
             vUniqueTable.printStatistics();
@@ -2621,6 +2623,8 @@ namespace dd {
             noiseOperationTable.printStatistics();
             std::cout << "[ComplexTable] ";
             cn.complexTable.printStatistics();
+            std::cout << "[LimTable] ";
+            limTable.printStatistics();
         }
     };
 
@@ -2642,8 +2646,6 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
-
-    //TODO limdd: make a getlimUniqueTable
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }
