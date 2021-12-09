@@ -103,12 +103,11 @@ TEST(LimTest, NodeLims) {
     std::cout << "LimEntry size " << sizeof(dd::LimEntry<8>) << " byte \n";
     std::cout << "LimBitSt size " << sizeof(dd::LimEntry<8>::paulis) << " byte \n";
 
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd        = std::make_unique<dd::Package>(1);
     auto root_edge = dd->makeZeroState(1);
 
     auto* y = limtable->lookup(3);
     auto* i = limtable->lookup(1);
-
 
     root_edge.p->v_lim.push_back(reinterpret_cast<dd::LimEntry<32>* const>(y));
     root_edge.p->v_lim.push_back(reinterpret_cast<dd::LimEntry<32>* const>(y));

@@ -2439,7 +2439,8 @@ namespace dd {
                 << "[v=" << static_cast<std::int_fast64_t>(p->v)
                 << " ref=" << p->ref
                 << " hash=" << UniqueTable<Node>::hash(p)
-                << " lim=" << "TODO" // TODO limdd
+                << " lim="
+                << "TODO" // TODO limdd
                 << "]";
             return sst.str();
         }
