@@ -5,7 +5,7 @@
 #include "gtest/gtest.h"
 
 TEST(LimTest, SinglePauliOps) {
-    dd::LimEntry<1> id{0b000};
+    dd::LimEntry<1> id{(int)0b000};
     dd::LimEntry<1> z{0b001};
     dd::LimEntry<1> x{0b010};
     dd::LimEntry<1> y{0b011};
@@ -29,6 +29,22 @@ TEST(LimTest, PauliToString) {
     std::cout << str_default << "\n";
 
     EXPECT_STREQ(str_default.c_str(), "IIIII");
+}
+
+TEST(LimTest, BitSetFromString) {
+    // bitsetFromString function
+    auto bitSet = dd::LimEntry<6>::bitsetFromString("XIIYYZ");
+    EXPECT_EQ(bitSet.to_ulong(), 0b100000111101); // XIIYYZ
+
+    // LimEntry constructor
+    dd::LimEntry<7>  limEntry{"YXXZIIZ"};
+    dd::LimEntry<10> limEntry2{"XX"};
+
+    auto str1 = dd::LimEntry<7>::to_string(&limEntry);
+    auto str2 = dd::LimEntry<10>::to_string(&limEntry2);
+
+    EXPECT_STREQ(str1.c_str(), "YXXZIIZ");
+    EXPECT_STREQ(str2.c_str(), "XXIIIIIIII"); // NOTE: trailing I's on the right
 }
 
 TEST(LimTest, SimpleTableDefault) {
@@ -171,4 +187,24 @@ TEST(LimTest, SimpleTable127) {
     EXPECT_EQ(count, 2); // Collect Z and X
 
     limtable->print();
+}
+
+TEST(LimTest, LookupFromStrings) {
+    auto limtable = std::make_unique<dd::LimTable<>>();
+    std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
+    std::cout << "LimEntry size " << sizeof(dd::LimEntry<>) << " byte \n";
+    std::cout << "LimBitSt size " << sizeof(dd::LimEntry<>::paulis) << " byte \n";
+
+    auto* insert1 = limtable->lookup_str("XZXZ");
+    auto* insert2 = limtable->lookup_str("IIYY");
+
+    EXPECT_NE(insert1, insert2);
+
+    limtable->print();
+
+    auto* get1 = limtable->lookup_str("XZXZ");
+    auto* get2 = limtable->lookup_str("IIYY");
+
+    EXPECT_EQ(insert1, get1);
+    EXPECT_EQ(insert2, get2);
 }
