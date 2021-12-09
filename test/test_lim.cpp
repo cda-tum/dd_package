@@ -104,9 +104,9 @@ TEST(LimTest, NodeLims) {
     auto* y = dd->getLimTable().lookup(3);
     auto* i = dd->getLimTable().lookup(1);
 
-    root_edge.p->v_lim.push_back(y);
-    root_edge.p->v_lim.push_back(y);
-    root_edge.p->v_lim.push_back(i);
+    root_edge.p->limVector.push_back(y);
+    root_edge.p->limVector.push_back(y);
+    root_edge.p->limVector.push_back(i);
 
     dd->incRef(root_edge);
     dd->getLimTable().print();
@@ -126,6 +126,22 @@ TEST(LimTest, NodeLims) {
     EXPECT_EQ(count, 2);
 
     dd->getLimTable().print();
+}
+
+TEST(LimTest, LimHashing) {
+    // Todo check that two nodes with different lims have different hashes (to test this I need the makeDDNode function)
+    /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
+    auto dd        = std::make_unique<dd::Package>(2);
+    auto root_edge = dd->makeZeroState(2);
+
+    auto* y = dd->getLimTable().lookup(3);
+    auto* i = dd->getLimTable().lookup(1);
+
+    root_edge.p->limVector.push_back(y);
+    root_edge.p->limVector.push_back(y);
+    root_edge.p->limVector.push_back(i);
+
+    EXPECT_EQ(dd->vUniqueTable.hash(root_edge.p), dd->vUniqueTable.hash(root_edge.p));
 }
 
 TEST(LimTest, SimpleTable127) {

@@ -176,7 +176,7 @@ namespace dd {
 
             // Incrementing the ref counter of the unique node and it's lims
             e.p->ref++;
-            for (auto const& lim: e.p->v_lim) {
+            for (auto const& lim: e.p->limVector) {
                 dd::LimTable<>::incRef(lim);
             }
 
@@ -208,7 +208,7 @@ namespace dd {
 
             // Decrementing the ref counter of the unique node and it's lims
             e.p->ref--;
-            for (auto const& lim: e.p->v_lim) {
+            for (auto const& lim: e.p->limVector) {
                 dd::LimTable<>::decRef(lim);
             }
 
