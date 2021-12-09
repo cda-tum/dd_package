@@ -541,6 +541,8 @@ namespace dd {
             getUniqueTable<Node>().decRef(e);
         }
 
+        [[nodiscard]] LimTable<>& getLimTable();
+
         UniqueTable<vNode> vUniqueTable{nqubits};
         UniqueTable<mNode> mUniqueTable{nqubits};
         LimTable<>         limTable{};
@@ -2647,6 +2649,8 @@ namespace dd {
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
+
+    [[nodiscard]] inline LimTable<>& Package::getLimTable() { return limTable; }
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }

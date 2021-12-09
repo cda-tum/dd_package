@@ -98,39 +98,34 @@ TEST(LimTest, SimpleTable8) {
 
 TEST(LimTest, NodeLims) {
     /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
-    auto limtable = std::make_unique<dd::LimTable<8, 32>>();
-    std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
-    std::cout << "LimEntry size " << sizeof(dd::LimEntry<8>) << " byte \n";
-    std::cout << "LimBitSt size " << sizeof(dd::LimEntry<8>::paulis) << " byte \n";
-
     auto dd        = std::make_unique<dd::Package>(1);
     auto root_edge = dd->makeZeroState(1);
 
-    auto* y = limtable->lookup(3);
-    auto* i = limtable->lookup(1);
+    auto* y = dd->getLimTable().lookup(3);
+    auto* i = dd->getLimTable().lookup(1);
 
-    root_edge.p->v_lim.push_back(reinterpret_cast<dd::LimEntry<32>* const>(y));
-    root_edge.p->v_lim.push_back(reinterpret_cast<dd::LimEntry<32>* const>(y));
-    root_edge.p->v_lim.push_back(reinterpret_cast<dd::LimEntry<32>* const>(i));
+    root_edge.p->v_lim.push_back(y);
+    root_edge.p->v_lim.push_back(y);
+    root_edge.p->v_lim.push_back(i);
 
     dd->incRef(root_edge);
-    limtable->print();
+    dd->getLimTable().print();
 
     EXPECT_EQ(y->refCount, 2);
     EXPECT_EQ(i->refCount, 1);
 
     dd->decRef(root_edge);
-    limtable->print();
+    dd->getLimTable().print();
 
     EXPECT_EQ(y->refCount, 0);
     EXPECT_EQ(i->refCount, 0);
 
     std::cout << "Garbage Collection\n";
 
-    auto count = limtable->garbageCollect(true);
+    auto count = dd->getLimTable().garbageCollect(true);
     EXPECT_EQ(count, 2);
 
-    limtable->print();
+    dd->getLimTable().print();
 }
 
 TEST(LimTest, SimpleTable127) {
