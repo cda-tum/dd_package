@@ -99,13 +99,14 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
 
-        // TODO limdd: Add LIMs for Stabilizer Groups to nodes
+        // Done limdd: Add LIMs for Stabilizer Groups to nodes
     public:
         struct vNode {
-            std::array<Edge<vNode>, RADIX> e{};    // edges out of this node
-            vNode*                         next{}; // used to link nodes in unique table
-            RefCount                       ref{};  // reference count
-            Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
+            std::array<Edge<vNode>, RADIX>  e{};     // edges out of this node
+            vNode*                          next{};  // used to link nodes in unique table
+            RefCount                        ref{};   // reference count
+            Qubit                           v{};     // variable index (nonterminal) value (-1 for terminal)
+            std::vector<LimTable<>::Entry*> v_lim{}; // a vector of pointers to lims, might be nullptr for all identity
 
             static vNode            terminalNode;
             constexpr static vNode* terminal{&terminalNode};
@@ -284,12 +285,13 @@ namespace dd {
         ///
     public:
         struct mNode {
-            std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
-            mNode*                         next{};        // used to link nodes in unique table
-            RefCount                       ref{};         // reference count
-            Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
-            bool                           symm  = false; // node is symmetric
-            bool                           ident = false; // node resembles identity
+            std::array<Edge<mNode>, NEDGE>  e{};           // edges out of this node
+            mNode*                          next{};        // used to link nodes in unique table
+            RefCount                        ref{};         // reference count
+            Qubit                           v{};           // variable index (nonterminal) value (-1 for terminal)
+            bool                            symm  = false; // node is symmetric
+            bool                            ident = false; // node resembles identity
+            std::vector<LimTable<>::Entry*> v_lim{};       // a vector of pointers to lims, might be nullptr for all identity
 
             static mNode            terminalNode;
             constexpr static mNode* terminal{&terminalNode};
@@ -544,7 +546,7 @@ namespace dd {
         LimTable<>         limTable{};
 
         bool garbageCollect(bool force = false) {
-            // TODO Limdd: add GC for limTable
+            // TODO Limdd: add GC for limTable, modify GC for edges and nodes so that the lims are removed
             // return immediately if no table needs collection
             if (!force &&
                 !vUniqueTable.possiblyNeedsCollection() &&

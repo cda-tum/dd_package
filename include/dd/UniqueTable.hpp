@@ -174,7 +174,11 @@ namespace dd {
                 return;
             }
 
+            // Incrementing the ref counter of the unique node and it's lims
             e.p->ref++;
+            for(auto const& lim: e.p->v_lim) {
+                dd::LimTable<>::incRef(lim);
+            }
 
             if (e.p->ref == 1) {
                 for (const auto& edge: e.p->e) {
@@ -202,7 +206,11 @@ namespace dd {
                 throw std::runtime_error("In decref: ref==0 before decref\n");
             }
 
+            // Decrementing the ref counter of the unique node and it's lims
             e.p->ref--;
+            for(auto const& lim: e.p->v_lim) {
+                dd::LimTable<>::decRef(lim);
+            }
 
             if (e.p->ref == 0) {
                 for (const auto& edge: e.p->e) {
