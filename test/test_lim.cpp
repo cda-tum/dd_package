@@ -145,19 +145,21 @@ TEST(LimTest, NodeLims) {
 }
 
 TEST(LimTest, LimHashing) {
-    // Todo check that two nodes with different lims have different hashes (to test this I need the makeDDNode function)
-    /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
     auto dd        = std::make_unique<dd::Package>(2);
     auto root_edge = dd->makeZeroState(2);
+
+    auto hash1 = dd->vUniqueTable.hash(root_edge.p);
 
     auto* y = dd->getLimTable().lookup(3);
     auto* i = dd->getLimTable().lookup(1);
 
-    root_edge.p->limVector.push_back(y);
-    root_edge.p->limVector.push_back(y);
-    root_edge.p->limVector.push_back(i);
+    root_edge.p->e[0].p->limVector.push_back(y);
+    root_edge.p->e[0].p->limVector.push_back(y);
+    root_edge.p->e[0].p->limVector.push_back(i);
 
-    EXPECT_EQ(dd->vUniqueTable.hash(root_edge.p), dd->vUniqueTable.hash(root_edge.p));
+    auto hash2 = dd->vUniqueTable.hash(root_edge.p);
+
+    EXPECT_NE(hash1, hash2);
 }
 
 TEST(LimTest, SimpleTable127) {

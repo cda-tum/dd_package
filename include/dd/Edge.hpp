@@ -78,7 +78,7 @@ namespace std {
             auto h3 = dd::murmur64(reinterpret_cast<std::size_t>(e.l));
             auto h4 = dd::combineHash(h1, dd::combineHash(h2, h3));
             for (auto const& lim: e.p->limVector) {
-                dd::combineHash(h4, dd::murmur64(reinterpret_cast<std::size_t>(lim)));
+                h4 = dd::combineHash(h4, dd::murmur64(reinterpret_cast<std::size_t>(lim)));
             }
             return h4;
         }
@@ -92,7 +92,7 @@ namespace std {
             auto h3 = dd::murmur64(reinterpret_cast<std::size_t>(e.l));
             auto h4 = dd::combineHash(h1, dd::combineHash(h2, h3));
             for (auto const& lim: e.p->limVector) {
-                dd::combineHash(h4, dd::murmur64(reinterpret_cast<std::size_t>(lim)));
+                h4 = dd::combineHash(h4, dd::murmur64(reinterpret_cast<std::size_t>(lim)));
             }
             return h4;
         }
