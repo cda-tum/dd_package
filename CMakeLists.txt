@@ -26,7 +26,7 @@ endif ()
 
 # add main library code
 include(GNUInstallDirs)
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME} INTERFACE include/dd/PauliAlgebra.hpp)
 target_sources(${PROJECT_NAME} INTERFACE
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Complex.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexCache.hpp>

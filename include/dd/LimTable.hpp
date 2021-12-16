@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+// todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
 
     template<std::size_t NUM_QUBITS = 32>
@@ -109,6 +110,32 @@ namespace dd {
         bool operator!=(const LimEntry<NUM_QUBITS>& other) const {
             //todo shouldn't it be enough to define the == operator?
             return paulis != other.paulis;
+        }
+
+        // Right-Multiply two Pauli operators
+        // todo this operation should also take into account the phase;
+        //   but let's do that after we implement the phase in the data structure
+        void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
+            paulis.operator^=(other.paulis);
+        }
+
+
+        void operator*=(const LimEntry<NUM_QUBITS>& other) {
+            multiplyBy(other);
+        }
+
+        // Returns I, the Identity operator
+        // (Some subroutines start with an identity operator, and then apply mutations to it;
+        //  however, if you need the identity operator as such, then use a null pointer)
+        static LimEntry<>* getIdentityOperator() {
+            LimEntry<>* Id = new LimEntry<>();
+            return Id;
+        }
+
+        // Returns -I
+        // i.e., -1 times the Identity operator
+        static LimEntry<>* getMinusIdentityOperator() {
+            throw std::runtime_error("Error; in getMinusIdentityOperator: not implemented.\n");
         }
     };
 } // namespace dd

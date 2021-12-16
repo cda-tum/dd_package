@@ -18,6 +18,7 @@
 #include "GateMatrixDefinitions.hpp"
 #include "LimTable.hpp"
 #include "NoiseOperationTable.hpp"
+#include "PauliAlgebra.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
 #include "UniqueTable.hpp"
@@ -116,6 +117,7 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
+
         vEdge normalize(const vEdge& e, bool cached) {
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
@@ -202,6 +204,53 @@ namespace dd {
             if (min.w == Complex::zero) {
                 min = vEdge::zero;
             }
+
+            return r;
+        }
+
+        // Returns an edge to a node isomorphic to e.p
+        // The edge is labeled with a LIM
+        // the node e.p is canonical, according to <Z>-LIMDD reduction rules
+        vEdge normalizeZLIMDD(const vEdge& e, bool cached) {
+            // Step 1: obtain 'normalized' weights for the low and high edge
+            auto r = normalize(e, cached);
+
+            // TODO limdd <Z>-LIMDD part
+            auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
+
+            // Case 1 ("Low Knife"):  high edge = 0, low edge is nonzero
+            if (zero[1]) {
+                // Step 1: Set the root edge label to 'Identity tensor R'
+                r.l = r.p->e[0].l;
+                // Step 2: Set the low edge label to 'Identity'
+                r.p->e[0].l = nullptr;
+                return r;
+            }
+            // Case 2 ("High Knife"):  low edge = 0, high edge is nonzero
+            if (zero[0]) {
+                // Step 1: Set the root edge pointer to 'Identity tensor R'
+                r.l = r.p->e[1].l;
+                // Step 2: Set the low edge label to 'Identity'
+                r.p->e[1].l = nullptr;  // the right edge is the identity
+                return r;
+            }
+
+            // Case 3 ("Fork"):  both edges of e are non-zero
+            vNode oldNode = *(e.p);
+            LimEntry<>* lowLim = e.p->e[0].l;
+            LimEntry<>* higLim = e.p->e[1].l;
+            // Make the right LIM multiplied by the left LIM
+            higLim = Pauli::multiply(lowLim, higLim);
+            // Make the left LIM Identity
+            r.p->e[0].l = nullptr;
+            // Choose a canonical right LIM
+            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, higLim);
+            // Find an isomorphism 'iso' which maps the new node to the old node
+            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
+            // Root label := root label * (Id tensor (A)) * K
+            // Use R as the LIM for the incoming edge e
+            r.l = Pauli::multiply(r.l, lowLim);
+            r.l = Pauli::multiply(r.l, iso);
 
             return r;
         }
@@ -300,6 +349,7 @@ namespace dd {
         };
         using mEdge       = Edge<mNode>;
         using mCachedEdge = CachedEdge<mNode>;
+
 
         mEdge normalize(const mEdge& e, bool cached) {
             //todo limdd: search for isomorphic nodes
@@ -603,6 +653,40 @@ namespace dd {
             mUniqueTable.clear();
             limTable.clear();
         }
+
+        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        template<class Node>
+        Edge<Node> makeLIMDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
+            // TODO Limdd: add LIMs to makeDDNode
+            auto&      uniqueTable = getUniqueTable<Node>();
+            Edge<Node> e{uniqueTable.getNode(), Complex::one, nullptr};
+            e.p->v = var;
+            e.p->e = edges;
+
+            assert(e.p->ref == 0);
+            for ([[maybe_unused]] const auto& edge: edges)
+                assert(edge.p->v == var - 1 || edge.isTerminal());
+
+            // normalize it
+            e = normalizeZLIMDD(e, cached);
+            assert(e.p->v == var || e.isTerminal());
+
+            // Consturct the Stabilizer Genetor set
+            e.p->limVector = constructStabilizerGeneratorSet(e.p);
+
+            // look it up in the unique tables
+            auto l = uniqueTable.lookup(e, false);
+            assert(l.p->v == var || l.isTerminal());
+
+            // set specific node properties for matrices
+            if constexpr (std::tuple_size_v<decltype(Node::e)> == NEDGE) {
+                if (l.p == e.p)
+                    checkSpecialMatrices(l.p);
+            }
+
+            return l;
+        }
+
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
