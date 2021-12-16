@@ -17,17 +17,18 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS = 32>
     struct LimEntry {
-        static_assert(NUM_QUBITS > 0, "Have at least on qubit");
+        static_assert(NUM_QUBITS > 0, "Have at least one qubit");
         static_assert(NUM_QUBITS <= std::numeric_limits<dd::Qubit>::max(), "Too many qubits for LimEntry");
 
-        std::bitset<2 * NUM_QUBITS> paulis{};
-        LimEntry*                   next{};
-        RefCount                    refCount{};
+        constexpr static std::size_t NUM_BITSETBITS = 2 * NUM_QUBITS + 2;
+        std::bitset<NUM_BITSETBITS>  paulis{};
+        LimEntry*                    next{};
+        RefCount                     refCount{};
 
         // explicit definition of constructors
         LimEntry():
             paulis{0} {}
-        explicit LimEntry(std::bitset<2 * NUM_QUBITS> paulis):
+        explicit LimEntry(std::bitset<NUM_BITSETBITS> paulis):
             paulis{paulis} {}
         explicit LimEntry(std::string pauliString):
             paulis{0} {
@@ -36,8 +37,8 @@ namespace dd {
         explicit LimEntry(const LimEntry<NUM_QUBITS>* l):
             paulis(l->paulis) {}
 
-        static std::bitset<2 * NUM_QUBITS> bitsetFromString(std::string pauliString) {
-            std::bitset<2 * NUM_QUBITS> res{0};
+        static std::bitset<NUM_BITSETBITS> bitsetFromString(std::string pauliString) {
+            std::bitset<NUM_BITSETBITS> res{0};
             for (std::string::size_type i = 0; i < pauliString.size(); i++) {
                 switch (pauliString[i]) {
                     case 'I':
@@ -98,8 +99,7 @@ namespace dd {
             }
 
             std::ostringstream os;
-            const auto         paulis = lim->paulis;
-            for (auto i = static_cast<dd::Qubit>(paulis.size() / 2 - 1); i >= 0; --i) {
+            for (int i = NUM_QUBITS - 1; i >= 0; --i) {
                 os << getQubit(lim, i);
             }
             return os.str();
@@ -130,7 +130,6 @@ namespace dd {
             paulis.set(2*NUM_QUBITS, new_phase & 0x1);
             paulis.set(2*NUM_QUBITS, new_phase & 0x2);
         }
-
 
         void operator*=(const LimEntry<NUM_QUBITS>& other) {
             multiplyBy(other);
@@ -177,7 +176,7 @@ namespace std {
     template<std::size_t NUM_QUBITS>
     struct hash<dd::LimEntry<NUM_QUBITS>> {
         std::size_t operator()(dd::LimEntry<NUM_QUBITS> const& e) const noexcept {
-            return std::hash<std::bitset<NUM_QUBITS>>{}(e.paulis);
+            return std::hash<std::bitset<dd::LimEntry<NUM_QUBITS>::NUM_BITSETBITS> >{}(e.paulis);
         }
     };
 
@@ -189,7 +188,7 @@ namespace dd {
     class LimTable {
     public:
         using Entry                = LimEntry<NUM_QUBITS>;
-        using PauliBitSet          = std::bitset<2 * NUM_QUBITS>;
+        using PauliBitSet          = std::bitset<Entry::NUM_BITSETBITS>;
         static constexpr auto MASK = NBUCKET - 1;
 
         LimTable():

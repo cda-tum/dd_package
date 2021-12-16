@@ -17,6 +17,7 @@
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
 #include "LimTable.hpp"
+#include "Nodes.hpp"
 #include "NoiseOperationTable.hpp"
 #include "PauliAlgebra.hpp"
 #include "ToffoliTable.hpp"
@@ -102,24 +103,17 @@ namespace dd {
 
         // Done limdd: Add LIMs for Stabilizer Groups to nodes
     public:
-        struct vNode {
-            std::array<Edge<vNode>, RADIX>  e{};         // edges out of this node
-            vNode*                          next{};      // used to link nodes in unique table
-            RefCount                        ref{};       // reference count
-            Qubit                           v{};         // variable index (nonterminal) value (-1 for terminal)
-            std::vector<LimTable<>::Entry*> limVector{}; // a vector of pointers to lims, might be nullptr for all identity
-
-            static vNode            terminalNode;
-            constexpr static vNode* terminal{&terminalNode};
-
-            static constexpr bool isTerminal(const vNode* p) { return p == terminal; }
-        };
+        typedef struct vNode vNode;
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
+<<<<<<< HEAD
         // The "old" normalize function of QMDD
         // is now renamed to normalizeWeights, as opposed to the normalize() function, which also normalizes the LIMs on the edges
         vEdge normalizeWeights(const vEdge& e, bool cached) {
+=======
+        vEdge normalize(const vEdge& e, bool cached) {
+>>>>>>> 42864d1e78dd13960b042c4d83ae35e5adf9bc6a
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -232,14 +226,14 @@ namespace dd {
                 // Step 1: Set the root edge pointer to 'Identity tensor R'
                 r.l = r.p->e[1].l;
                 // Step 2: Set the low edge label to 'Identity'
-                r.p->e[1].l = nullptr;  // the right edge is the identity
+                r.p->e[1].l = nullptr; // the right edge is the identity
                 return r;
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            vNode oldNode = *(e.p);
-            LimEntry<>* lowLim = e.p->e[0].l;
-            LimEntry<>* higLim = e.p->e[1].l;
+            vNode       oldNode = *(e.p);
+            LimEntry<>* lowLim  = e.p->e[0].l;
+            LimEntry<>* higLim  = e.p->e[1].l;
             // Make the right LIM multiplied by the left LIM
             higLim = Pauli::multiply(*lowLim, *higLim);
             // Make the left LIM Identity
@@ -334,23 +328,9 @@ namespace dd {
         /// Matrix nodes, edges and quantum gates
         ///
     public:
-        struct mNode {
-            std::array<Edge<mNode>, NEDGE>  e{};           // edges out of this node
-            mNode*                          next{};        // used to link nodes in unique table
-            RefCount                        ref{};         // reference count
-            Qubit                           v{};           // variable index (nonterminal) value (-1 for terminal)
-            bool                            symm  = false; // node is symmetric
-            bool                            ident = false; // node resembles identity
-            std::vector<LimTable<>::Entry*> limVector{};   // a vector of pointers to lims, might be nullptr for all identity
-
-            static mNode            terminalNode;
-            constexpr static mNode* terminal{&terminalNode};
-
-            static constexpr bool isTerminal(const mNode* p) { return p == terminal; }
-        };
+        typedef struct mNode mNode;
         using mEdge       = Edge<mNode>;
         using mCachedEdge = CachedEdge<mNode>;
-
 
         mEdge normalize(const mEdge& e, bool cached) {
             //todo limdd: search for isomorphic nodes
@@ -687,7 +667,6 @@ namespace dd {
 
             return l;
         }
-
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
