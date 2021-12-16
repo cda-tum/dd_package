@@ -117,8 +117,9 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
-
-        vEdge normalize(const vEdge& e, bool cached) {
+        // The "old" normalize function of QMDD
+        // is now renamed to normalizeWeights, as opposed to the normalize() function, which also normalizes the LIMs on the edges
+        vEdge normalizeWeights(const vEdge& e, bool cached) {
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -211,7 +212,7 @@ namespace dd {
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
-        vEdge normalizeZLIMDD(const vEdge& e, bool cached) {
+        vEdge normalize(const vEdge& e, bool cached) {
             // Step 1: obtain 'normalized' weights for the low and high edge
             auto r = normalize(e, cached);
 
@@ -240,7 +241,7 @@ namespace dd {
             LimEntry<>* lowLim = e.p->e[0].l;
             LimEntry<>* higLim = e.p->e[1].l;
             // Make the right LIM multiplied by the left LIM
-            higLim = Pauli::multiply(lowLim, higLim);
+            higLim = Pauli::multiply(*lowLim, *higLim);
             // Make the left LIM Identity
             r.p->e[0].l = nullptr;
             // Choose a canonical right LIM
@@ -249,8 +250,8 @@ namespace dd {
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
             // Root label := root label * (Id tensor (A)) * K
             // Use R as the LIM for the incoming edge e
-            r.l = Pauli::multiply(r.l, lowLim);
-            r.l = Pauli::multiply(r.l, iso);
+            r.l = Pauli::multiply(*r.l, *lowLim);
+            r.l = Pauli::multiply(*r.l, *iso);
 
             return r;
         }
@@ -656,7 +657,7 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
-        Edge<Node> makeLIMDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
+        Edge<Node> makeNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
             // TODO Limdd: add LIMs to makeDDNode
             auto&      uniqueTable = getUniqueTable<Node>();
             Edge<Node> e{uniqueTable.getNode(), Complex::one, nullptr};
@@ -668,7 +669,7 @@ namespace dd {
                 assert(edge.p->v == var - 1 || edge.isTerminal());
 
             // normalize it
-            e = normalizeZLIMDD(e, cached);
+            e = normalize(e, cached);
             assert(e.p->v == var || e.isTerminal());
 
             // Consturct the Stabilizer Genetor set

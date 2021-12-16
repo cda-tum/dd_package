@@ -118,7 +118,17 @@ namespace dd {
         // todo this operation should also take into account the phase;
         //   but let's do that after we implement the phase in the data structure
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
+            // Multiply the Pauli gates
             paulis.operator^=(other.paulis);
+        }
+
+        // Given a 'phase' in 0,1,2,3,
+        // multiply this LIM's phase by that amount
+        void multiplyPhaseBy(uint8_t phase) {
+            uint8_t current_phase = (paulis.test(2*NUM_QUBITS)) | (paulis.test(2*NUM_QUBITS) << 1);
+            uint8_t new_phase = current_phase + (phase & 0x3);
+            paulis.set(2*NUM_QUBITS, new_phase & 0x1);
+            paulis.set(2*NUM_QUBITS, new_phase & 0x2);
         }
 
 
@@ -140,10 +150,25 @@ namespace dd {
             throw std::runtime_error("Error; in getMinusIdentityOperator: not implemented.\n");
         }
 
-        // TODO retrieve the phase of the LIM,
-        //  which is stored in the last (?) two bits of the pointer
+        // returns the phase of the LIM, in two bits, which have the following meaning:
+        // 00: +1    01: i    10: -1    11: -i
         static uint32_t getPhase(LimEntry<>* l) {
-            throw std::runtime_error("Error; in getPhase: not implemented.\n");
+            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS) << 1);
+            return phase;
+        }
+
+        // Returns whether a < b in the lexicographic order
+        static bool leq(LimEntry<>* a, LimEntry<>* b) {
+            // Note the length of the vectors is 2*NUM_QUBITS+2
+            for (unsigned int i=0; i<2*NUM_QUBITS+2; i++) {
+                if (!a->paulis.test(i) and b->paulis.test(i)) {
+                    return true;
+                }
+                if (a->paulis.test(i) and !b->paulis.test(i)) {
+                    return false;
+                }
+            }
+            return true; // in this case, vectors are equal
         }
     };
 } // namespace dd
