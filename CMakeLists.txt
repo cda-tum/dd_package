@@ -40,6 +40,7 @@ target_sources(${PROJECT_NAME} INTERFACE
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Edge.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Export.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/GateMatrixDefinitions.hpp>
+               $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Nodes.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/NoiseOperationTable.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Package.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ToffoliTable.hpp>
