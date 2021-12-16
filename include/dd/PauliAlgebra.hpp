@@ -67,6 +67,33 @@ public:
         return intersection;
     }
 
+    // Performs Gaussian elimination on G
+    // TODO this procedure has an inefficiency: it produces many LIMs, each of which is separately allocated
+    // It would be better if this was done 'in place', without allocating new memory
+    // There is also a memory leak
+    static void GaussianElimination(StabilizerGroup& G) {
+        if (G.size() <= 1) return;
+
+    }
+
+    // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
+    // Returns the reduced vector
+    template<std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<>* x) {
+        LimEntry<>* y = new LimEntry<>(x);
+        if (G.size() == 0) return y;
+        std::size_t height = 2*NUM_QUBITS;
+        for (unsigned int h=0; h<height; h++) {
+            // Look for a vector with a '1' in place h
+            for (unsigned int v=0; v<G.size(); v++) {
+                if (G[v]->paulis.test(h)) {
+                    y = Pauli::multiply(y, G[v]);
+                }
+            }
+        }
+        return y;
+    }
+
 };
 
 

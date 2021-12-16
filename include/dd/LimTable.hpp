@@ -33,6 +33,8 @@ namespace dd {
             paulis{0} {
             paulis = bitsetFromString(pauliString);
         }
+        explicit LimEntry(const LimEntry<NUM_QUBITS>* l):
+            paulis(l->paulis) {}
 
         static std::bitset<2 * NUM_QUBITS> bitsetFromString(std::string pauliString) {
             std::bitset<2 * NUM_QUBITS> res{0};
@@ -136,6 +138,12 @@ namespace dd {
         // i.e., -1 times the Identity operator
         static LimEntry<>* getMinusIdentityOperator() {
             throw std::runtime_error("Error; in getMinusIdentityOperator: not implemented.\n");
+        }
+
+        // TODO retrieve the phase of the LIM,
+        //  which is stored in the last (?) two bits of the pointer
+        static uint32_t getPhase(LimEntry<>* l) {
+            throw std::runtime_error("Error; in getPhase: not implemented.\n");
         }
     };
 } // namespace dd
