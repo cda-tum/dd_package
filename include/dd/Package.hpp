@@ -107,13 +107,9 @@ namespace dd {
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
 
-<<<<<<< HEAD
-        // The "old" normalize function of QMDD
-        // is now renamed to normalizeWeights, as opposed to the normalize() function, which also normalizes the LIMs on the edges
-        vEdge normalizeWeights(const vEdge& e, bool cached) {
-=======
+        // TODO limdd: rename this normalizeWeights?
+        // (original rename undone because of some errors in tests)
         vEdge normalize(const vEdge& e, bool cached) {
->>>>>>> 42864d1e78dd13960b042c4d83ae35e5adf9bc6a
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -206,7 +202,8 @@ namespace dd {
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
-        vEdge normalize(const vEdge& e, bool cached) {
+        // TODO limdd: rename to just normalize() ?
+        vEdge normalizeLIMDD(const vEdge& e, bool cached) {
             // Step 1: obtain 'normalized' weights for the low and high edge
             auto r = normalize(e, cached);
 
