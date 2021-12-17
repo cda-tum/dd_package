@@ -210,3 +210,45 @@ TEST(LimTest, LookupFromStrings) {
     EXPECT_EQ(insert1, get1);
     EXPECT_EQ(insert2, get2);
 }
+
+TEST(LimTest, MultiplyPauliStrings) {
+    // TODO: also include phase in test
+    dd::LimEntry<1> x{"X"};
+    dd::LimEntry<1> y{"Y"};
+    dd::LimEntry<1> z{"Z"};
+
+    // XZ = iY
+    dd::LimEntry<1> xz{"X"};
+    xz.multiplyBy(z);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xz).c_str(), "Y");
+
+    // ZX = -iY
+    dd::LimEntry<1> zx{"Z"};
+    zx.multiplyBy(x);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xz).c_str(), "Y");
+
+    // XY = iZ
+    dd::LimEntry<1> xy{"X"};
+    xy.multiplyBy(y);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xy).c_str(), "Z");
+
+    // YX = -iZ
+    dd::LimEntry<1> yx{"Y"};
+    yx.multiplyBy(x);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yx).c_str(), "Z");
+
+    // ZY = -iX
+    dd::LimEntry<1> zy{"Z"};
+    zy.multiplyBy(y);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&zy).c_str(), "X");
+
+    // YZ = iX
+    dd::LimEntry<1> yz{"Y"};
+    yz.multiplyBy(z);
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yz).c_str(), "X");
+
+    dd::LimEntry<5> lim1{"IIXYZ"};
+    dd::LimEntry<5> lim2{"XIZZZ"};
+    lim1.multiplyBy(lim2);
+    EXPECT_STREQ(dd::LimEntry<5>::to_string(&lim1).c_str(), "XIYXI");
+}
