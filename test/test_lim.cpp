@@ -252,3 +252,75 @@ TEST(LimTest, MultiplyPauliStrings) {
     lim1.multiplyBy(lim2);
     EXPECT_STREQ(dd::LimEntry<5>::to_string(&lim1).c_str(), "XIYXI");
 }
+
+TEST(LimTest, GaussianElimination1) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<32> zi{"ZI"};
+    dd::LimEntry<32> zz{"ZZ"};
+    G.push_back(&zi);
+    G.push_back(&zz);
+    std::cout << "Group before Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::GaussianElimination(G);
+    std::cout << "Group after Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::StabilizerGroup expectedGroup;
+    dd::LimEntry<32> iz("IZ");
+    expectedGroup.push_back(&zi);
+    expectedGroup.push_back(&iz);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}
+
+TEST(LimTest, GaussianElimination2) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<> zzi{"ZZI"};
+    dd::LimEntry<> zzi2{"ZZI"};
+    dd::LimEntry<> ziz{"ZIZ"};
+    dd::LimEntry<> izz{"IZZ"};
+    G.push_back(&zzi);
+    G.push_back(&zzi2);
+    G.push_back(&ziz);
+    G.push_back(&izz);
+    std::cout << "Group before Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::GaussianElimination(G);
+    std::cout << "Group after Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+
+    // build expected group
+    dd::LimEntry<> zzi_exp{"ZZI"};
+    dd::LimEntry<> iii_exp{"III"};
+    dd::LimEntry<> izz_exp{"IZZ"};
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(&zzi_exp);
+    expectedGroup.push_back(&iii_exp);
+    expectedGroup.push_back(&izz_exp);
+    expectedGroup.push_back(&iii_exp);
+//    std::cout << "Expected group:\n";
+//    dd::Pauli::printStabilizerGroup(expectedGroup);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}
+
+TEST(LimTest, columnEchelonForm1) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<> zzi{"ZZI"};
+    dd::LimEntry<> zzi2{"ZZI"};
+    dd::LimEntry<> ziz{"ZIZ"};
+    dd::LimEntry<> izz{"IZZ"};
+    G.push_back(&zzi);
+    G.push_back(&zzi2);
+    G.push_back(&ziz);
+    G.push_back(&izz);
+    std::cout << "Group before column echelon form:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::toColumnEchelonForm(G);
+    std::cout << "Group after column echelon form:\n";
+    dd::Pauli::printStabilizerGroup(G);
+
+    dd::LimEntry<> zzi_exp{"ZZI"};
+    dd::LimEntry<> izz_exp{"IZZ"};
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(&zzi_exp);
+    expectedGroup.push_back(&izz_exp);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}

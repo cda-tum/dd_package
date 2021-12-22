@@ -14,6 +14,12 @@
 
 // todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
+    enum pauli_op {
+        pauli_id = 0,
+        pauli_z  = 1,
+        pauli_x  = 2,
+        pauli_y  = 3
+    };
 
     template<std::size_t NUM_QUBITS = 32>
     struct LimEntry {
@@ -74,11 +80,7 @@ namespace dd {
          * @param qubit
          * @return char of {I, X, Y, Z}
          */
-        static char getQubit(const LimEntry<NUM_QUBITS>* lim, dd::Qubit qubit) {
-            if (lim == nullptr) {
-                return 'I';
-            }
-            const auto paulis = lim->paulis;
+        char getQubit(dd::Qubit qubit) const {
             if (!paulis.test(2 * qubit + 1) && !paulis.test(2 * qubit)) {
                 return 'I';
             } else if (!paulis.test(2 * qubit + 1) && paulis.test(2 * qubit)) {
@@ -88,6 +90,13 @@ namespace dd {
             } else {
                 return 'Y';
             }
+        }
+
+        static char getQubit(const LimEntry<NUM_QUBITS>* lim, dd::Qubit qubit) {
+            if (lim == nullptr) {
+                return 'I';
+            }
+            return lim->getQubit(qubit);
         }
 
         /**
@@ -114,25 +123,71 @@ namespace dd {
             return paulis != other.paulis;
         }
 
+        // Given a 'phase' in 0,1,2,3,
+        // multiply this LIM's phase by that amount
+        void multiplyPhaseBy(uint8_t phase) {
+            uint8_t current_phase = (paulis.test(2*NUM_QUBITS)) | (paulis.test(2*NUM_QUBITS) << 1);
+            uint8_t new_phase = current_phase + (phase & 0x3);
+            paulis.set(2*NUM_QUBITS  , new_phase & 0x1);
+            paulis.set(2*NUM_QUBITS+1, new_phase & 0x2);
+        }
+
         // Right-Multiply two Pauli operators
         // todo this operation should also take into account the phase;
         //   but let's do that after we implement the phase in the data structure
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             // Multiply the Pauli gates
             paulis.operator^=(other.paulis);
-        }
+            char op1, op2;
+            for (unsigned int i=0; i<NUM_QUBITS; i++) {
+                // Step 1: handle the phase, if the operators do not commute
+                op1 =       getQubit(i) ;
+                op2 = other.getQubit(i);
+                if      (op1 == pauli_x && op2 == pauli_y)
+                    multiplyPhaseBy(1);    // multiply by i
+                else if (op1 == pauli_x && op2 == pauli_z)
+                    multiplyPhaseBy(3);    // multiply by -i
+                else if (op1 == pauli_y && op2 == pauli_x)
+                    multiplyPhaseBy(3);    // multiply by -i
+                else if (op1 == pauli_y && op2 == pauli_z)
+                    multiplyPhaseBy(1);    // multiply by i
+                else if (op1 == pauli_z && op2 == pauli_x)
+                    multiplyPhaseBy(1);    // multiply by i
+                else if (op1 == pauli_z && op2 == pauli_y)
+                    multiplyPhaseBy(3);    // multiply by -i
 
-        // Given a 'phase' in 0,1,2,3,
-        // multiply this LIM's phase by that amount
-        void multiplyPhaseBy(uint8_t phase) {
-            uint8_t current_phase = (paulis.test(2*NUM_QUBITS)) | (paulis.test(2*NUM_QUBITS) << 1);
-            uint8_t new_phase = current_phase + (phase & 0x3);
-            paulis.set(2*NUM_QUBITS, new_phase & 0x1);
-            paulis.set(2*NUM_QUBITS, new_phase & 0x2);
+                // Step 2: XOR the bits
+                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
+                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
+            }
         }
 
         void operator*=(const LimEntry<NUM_QUBITS>& other) {
             multiplyBy(other);
+        }
+
+        void setOperator(unsigned int v, char op) {
+            if (v >= NUM_QUBITS) return;
+            switch(op) {
+                case 'I':
+                    paulis.set(2*v,   0);
+                    paulis.set(2*v+1, 0);
+                    break;
+                case 'X':
+                    paulis.set(2*v,   0);
+                    paulis.set(2*v+1, 1);
+                    break;
+                case 'Y':
+                    paulis.set(2*v,   1);
+                    paulis.set(2*v+1, 0);
+                    break;
+                case 'Z':
+                    paulis.set(2*v,   1);
+                    paulis.set(2*v+1, 1);
+                    break;
+//                default:
+                    // TODO throw an exception?
+            }
         }
 
         // Returns I, the Identity operator
@@ -154,6 +209,20 @@ namespace dd {
         static uint32_t getPhase(LimEntry<>* l) {
             uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS) << 1);
             return phase;
+        }
+
+        // Returns whether this vector is the identity operator, i.e., has all bits set to zero
+        // TODO there is probably a faster way to check whether a bitvector is all-zero,
+        //   using bit tricks. --Lieuwe
+        bool isAllZeroVector() const {
+            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
+                if (paulis.test(i)) return false;
+            }
+            return true;
+        }
+
+        bool isIdentityOperator() const {
+            return isAllZeroVector();
         }
 
         // Returns whether a < b in the lexicographic order

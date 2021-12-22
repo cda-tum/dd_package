@@ -26,7 +26,7 @@ endif ()
 
 # add main library code
 include(GNUInstallDirs)
-add_library(${PROJECT_NAME} INTERFACE include/dd/PauliAlgebra.hpp)
+add_library(${PROJECT_NAME} INTERFACE)
 target_sources(${PROJECT_NAME} INTERFACE
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Complex.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexCache.hpp>
@@ -43,6 +43,7 @@ target_sources(${PROJECT_NAME} INTERFACE
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Nodes.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/NoiseOperationTable.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Package.hpp>
+               $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/PauliAlgebra.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ToffoliTable.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/UnaryComputeTable.hpp>
                $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/UniqueTable.hpp>)
