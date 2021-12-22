@@ -231,18 +231,23 @@ namespace dd {
             vNode       oldNode = *(e.p);
             LimEntry<>* lowLim  = e.p->e[0].l;
             LimEntry<>* higLim  = e.p->e[1].l;
-            // Make the right LIM multiplied by the left LIM
+            // Step 1: Make the right LIM multiplied by the left LIM
             higLim = Pauli::multiply(*lowLim, *higLim);
-            // Make the left LIM Identity
+            // Step 2: Make the left LIM Identity
             r.p->e[0].l = nullptr;
-            // Choose a canonical right LIM
+            // Step 3: Choose a canonical right LIM
             r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, higLim);
-            // Find an isomorphism 'iso' which maps the new node to the old node
+            // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
             // Root label := root label * (Id tensor (A)) * K
-            // Use R as the LIM for the incoming edge e
+            // Step 5: Use R as the LIM for the incoming edge e
             r.l = Pauli::multiply(*r.l, *lowLim);
             r.l = Pauli::multiply(*r.l, *iso);
+            // Step 6.1: Lastly, to make the edge canonical, multiply the weight r.w by the phase of the Lim r.l
+            //   TODO
+            // Step 6.2: Make the phase of r.l '+1'
+            r.l->setPhase(phases::phase_one);
+
 
             return r;
         }

@@ -20,6 +20,12 @@ namespace dd {
         pauli_x  = 2,
         pauli_y  = 3
     };
+    enum phases {
+        phase_one       = 0,
+        phase_i         = 1,
+        phase_minus_one = 2,
+        phase_minus_i   = 3
+    };
 
     template<std::size_t NUM_QUBITS = 32>
     struct LimEntry {
@@ -205,8 +211,13 @@ namespace dd {
         // returns the phase of the LIM, in two bits, which have the following meaning:
         // 00: +1    01: i    10: -1    11: -i
         static uint32_t getPhase(LimEntry<>* l) {
-            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS) << 1);
+            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS+1) << 1);
             return phase;
+        }
+
+        void setPhase(char newPhase) {
+            paulis.set(2*NUM_QUBITS, (char) 0x1);
+            paulis.set(2*NUM_QUBITS, (char) 0x2);
         }
 
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero
