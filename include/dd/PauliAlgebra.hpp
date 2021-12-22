@@ -33,6 +33,16 @@ public:
         return true;
     }
 
+    // Returns whether the group G is sorted descending,
+    // i.e., whether all the zeros are in the top right quadrant
+    static bool stabilizerGroupIsSorted(const StabilizerGroup& G) {
+        for (unsigned int i=0; i<G.size()-1; i++) {
+            if (LimEntry<>::leneq(G[i], G[i+1]))
+                return false;
+        }
+        return true;
+    }
+
     static void printStabilizerGroup(const StabilizerGroup& G) {
         std::cout << "Stabilizer group (" << G.size() << " elements)\n";
         for (unsigned int i=0; i<G.size(); i++) {
@@ -146,15 +156,15 @@ public:
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<>* x) {
-        LimEntry<>* y = new LimEntry<>(x);
+    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) return y;
         std::size_t height = 2*NUM_QUBITS;
         for (unsigned int h=0; h<height; h++) {
             // Look for a vector with a '1' in place h
             for (unsigned int v=0; v<G.size(); v++) {
                 if (G[v]->paulis.test(h)) {
-                    y = Pauli::multiply(y, G[v]);
+                    y = Pauli::multiply(*y, *G[v]);
                 }
             }
         }
@@ -206,19 +216,27 @@ public:
     // If the coset <G> intersect (b + <H>) is empty, nullptr is returned
     // TODO implement this function
     static LimEntry<>* getCosetIntersectionElementZ(const StabilizerGroup& G, const StabilizerGroup& H, const LimEntry<>* b) {
+        if (!stabilizerGroupIsSorted(G)) return nullptr;
+        if (!stabilizerGroupIsSorted(H)) return nullptr;
+
+        LimEntry<>* b2;
+        LimEntry<>* bOrth;
+        b2 = new LimEntry<>(b);
+        b2 = GramSchmidt(H, b2);
+        bOrth = new LimEntry<>(b2);
+        bOrth = GramSchmidt(H, bOrth);
+        if (bOrth->isIdentityOperator()) {
+            bOrth->multiplyBy(*b2);
+        }
         return nullptr;
 //        if (!G.isSorted()) return nullptr; // TODO throw exception
 //        if (!H.isSorted()) return nullptr; // TODO replace by assertions so that in Release, this doesn't happen?
-//        LimEntry<>* a2, aOrth, b2, bOrth;
-//        b2 = new LimEntry<>(b);
-//        b2 = GramSchmidt<32>(H, b2);
-//        bOrth = new LimEntry<>(b2);
 //
     }
 
     // For now, we assume that only vNodes are passed
 //    template <class Node>
-    static StabilizerGroup constructStabilizerGeneratorSet(const vNode node) {
+    static StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
         //empty
         Edge<vNode> low, high;
         low  = node.e[0];
@@ -269,21 +287,98 @@ public:
         return stabgenset;
     }
 
-    // Choose the label on the High edge, in the Z group
-    template <class Node>
-    static LimEntry<>* highLabelZ(const Node* u, const Node* v, LimEntry<>* vLabel) {
-        LimEntry<>* l = LimEntry<>::getIdentityOperator();
-        unsigned int nqubits = u->v;
-        StabilizerGroup intersect = intersectGroupsZ(u->limVector, v->limVector, nqubits);
-
-        return l;
-    }
-
-    template <class Node>
-    static LimEntry<>* getIsomorphismZ(const Node* u, const Node* v) {
+    // Returns an isomorphism between u and v,
+    // or -1 if u and v are not isomorphic
+    // Assumes that the low edges of u and v have an Identity LIM
+    // TODO should we add assertions that u and v do not represent zero vectors?
+    // TODO this function does not take into account the different phases... but maybe it doesn't need to...
+    static LimEntry<>* getIsomorphismZ(const vNode* u, const vNode* v) {
         LimEntry<>* iso = nullptr;
+//         TODO add assertion that the nodes are on the same number of qubits u->v == v->v
+//        assert (u->v == v->v);
+        Edge<vNode> uLow  = u->e[0];
+        Edge<vNode> uHigh = u->e[1];
+        Edge<vNode> vLow  = v->e[0];
+        Edge<vNode> vHigh = v->e[1];
+        assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
+        assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
+        assert (uLow.l == nullptr && vLow.l == nullptr);
+        // Case 0.1: the nodes are equal
+        if (u == v) {
+            // In this case, we return the Identity operator, which is represented by a null pointer
+            return nullptr;
+        }
+        // Case 0.2: The leaf case.
+        // TODO this case should already be covered by case 0.1, since in this case v is also the terminal node
+        //   Do we need this extra check?
+        else if (vNode::isTerminal(u)) {
+            // Return the identity operator, which is represented by a null pointer
+            return nullptr;
+        }
+        // Case 1 ("Left knife"): Left child is nonzero, right child is zero
+        else if (uHigh.isZeroTerminal()) {
+            if (!vHigh.isZeroTerminal()) return (LimEntry<>*)-1;
+            if (uHigh.p != vHigh.p) return (LimEntry<>*) -1;
+            return multiply(*uHigh.l, *vHigh.l);
+        }
+        // Case 2 ("Right knife"): Left child is zero, right child is nonzero
+        else if (uLow.isZeroTerminal()) {
+            if (!vLow.isZeroTerminal()) return (LimEntry<>*)-1; // not isomorphic
+            if (uLow.p != vLow.p) return (LimEntry<>*) -1;
+            return nullptr;  // return the Identity isomorphism
+        }
+        // Case 3 ("Fork"): Both children are nonzero
+        else {
+            // Step 1: check if the amplitudes are equal, up to a sign
+            if (!uLow.w.approximatelyEquals(vLow.w) || !uHigh.w.approximatelyEquals(vHigh.w)) return (LimEntry<>*) -1;
+            // TODO check if the amplitudes satisfy uHigh = -1 * vHigh
+            bool amplitudeOppositeSign = false;
+            // Step 2: Check if nodes u and v have the same children
+            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return (LimEntry<>*) -1;
+            // Step 3: check if the automorphism groups are equal
+            if (!stabilizerGroupsEqual(u->limVector, v->limVector)) {
+                return (LimEntry<>*) -1;
+            }
+            // Step 4: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
+            LimEntry<>* isoHigh = multiply(*uHigh.l, *vHigh.l);
+            if (amplitudeOppositeSign) {
+                isoHigh->multiplyPhaseBy(2); // multiply by -1
+            }
+            iso = getCosetIntersectionElementZ(u->limVector, v->limVector, isoHigh);
+            if (iso != nullptr) {
+                return iso;
+            }
+            // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
+            isoHigh->multiplyPhaseBy(2);
+            iso = getCosetIntersectionElementZ(u->limVector, v->limVector, isoHigh);
+            if (iso != nullptr) {
+                return iso;
+            }
+            else
+                return (LimEntry<>*) -1;
+        }
 
         return iso;
+    }
+
+    // Choose the label on the High edge, in the Z group
+//    template <class Node>
+    static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel) {
+        StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
+        toColumnEchelonForm(GH);
+        LimEntry<>* newHighLabel = GramSchmidt(GH, vLabel);
+        // Set the new label's "-1 bit" to 'true'
+        // This is the vector's last bit
+        newHighLabel->paulis.set(LimEntry<>::NUM_BITSETBITS-1, 1);
+        return newHighLabel;
+    }
+
+    static LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
+        throw std::exception();
+    }
+
+    static LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
+        throw std::exception();
     }
 
 };

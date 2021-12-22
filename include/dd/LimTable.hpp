@@ -223,10 +223,10 @@ namespace dd {
             return isAllZeroVector();
         }
 
-        // Returns whether a < b in the lexicographic order
+        // Returns whether a <= b in the lexicographic order
         static bool leq(LimEntry<>* a, LimEntry<>* b) {
             // Note the length of the vectors is 2*NUM_QUBITS+2
-            for (unsigned int i=0; i<2*NUM_QUBITS+2; i++) {
+            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
                 if (!a->paulis.test(i) and b->paulis.test(i)) {
                     return true;
                 }
@@ -235,6 +235,19 @@ namespace dd {
                 }
             }
             return true; // in this case, vectors are equal
+        }
+
+        // Returns whether a < b in the lexicographic order
+        static bool leneq(LimEntry<>* a, LimEntry<>* b) {
+            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
+                if (!a->paulis.test(i) and b->paulis.test(i)) {
+                    return true;
+                }
+                if (a->paulis.test(i) and !b->paulis.test(i)) {
+                    return false;
+                }
+            }
+            return false; // the vectors are equal, so return false, since a is not less than b
         }
     };
 } // namespace dd
