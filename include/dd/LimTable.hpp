@@ -136,8 +136,6 @@ namespace dd {
         // todo this operation should also take into account the phase;
         //   but let's do that after we implement the phase in the data structure
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
-            // Multiply the Pauli gates
-            paulis.operator^=(other.paulis);
             char op1, op2;
             for (unsigned int i=0; i<NUM_QUBITS; i++) {
                 // Step 1: handle the phase, if the operators do not commute

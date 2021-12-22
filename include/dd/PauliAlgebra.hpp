@@ -139,7 +139,7 @@ public:
     static void toColumnEchelonForm(StabilizerGroup& G) {
         GaussianElimination(G);
         pruneZeroColumns(G);
-        // prune all-zero columns
+        // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
         std::sort(G.begin(), G.end(), LimEntry<>::leq);
     }
 
