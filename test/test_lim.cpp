@@ -253,10 +253,35 @@ TEST(LimTest, MultiplyPauliStrings) {
     EXPECT_STREQ(dd::LimEntry<5>::to_string(&lim1).c_str(), "XIYXI");
 }
 
+TEST(LimTest, CreateNode) {
+    //Todo Design decision: When do we decide if a qmdd node or a limd node is to be created. In the makeddnode function or the normalize function?
+    auto dd  = std::make_unique<dd::Package>(1);
+    auto lim = dd->limTable.lookup('X');
+
+    dd::Edge<dd::vNode> e{dd->vUniqueTable.getNode(), dd::Complex::one, lim};
+    e.p->v = 0;
+    e.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+
+    e = dd->normalizeLIMDD(e, false);
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 0);
+
+    auto l = dd->vUniqueTable.lookup(e, false);
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
+
+    dd->incRef(l);
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 1);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
+}
+
 TEST(LimTest, GaussianElimination1) {
     dd::StabilizerGroup G;
-    dd::LimEntry<32> zi{"ZI"};
-    dd::LimEntry<32> zz{"ZZ"};
+    dd::LimEntry<32>    zi{"ZI"};
+    dd::LimEntry<32>    zz{"ZZ"};
     G.push_back(&zi);
     G.push_back(&zz);
     std::cout << "Group before Gaussian elimination:\n";
@@ -265,7 +290,7 @@ TEST(LimTest, GaussianElimination1) {
     std::cout << "Group after Gaussian elimination:\n";
     dd::Pauli::printStabilizerGroup(G);
     dd::StabilizerGroup expectedGroup;
-    dd::LimEntry<32> iz("IZ");
+    dd::LimEntry<32>    iz("IZ");
     expectedGroup.push_back(&zi);
     expectedGroup.push_back(&iz);
     EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
@@ -273,10 +298,10 @@ TEST(LimTest, GaussianElimination1) {
 
 TEST(LimTest, GaussianElimination2) {
     dd::StabilizerGroup G;
-    dd::LimEntry<> zzi{"ZZI"};
-    dd::LimEntry<> zzi2{"ZZI"};
-    dd::LimEntry<> ziz{"ZIZ"};
-    dd::LimEntry<> izz{"IZZ"};
+    dd::LimEntry<>      zzi{"ZZI"};
+    dd::LimEntry<>      zzi2{"ZZI"};
+    dd::LimEntry<>      ziz{"ZIZ"};
+    dd::LimEntry<>      izz{"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -288,25 +313,25 @@ TEST(LimTest, GaussianElimination2) {
     dd::Pauli::printStabilizerGroup(G);
 
     // build expected group
-    dd::LimEntry<> zzi_exp{"ZZI"};
-    dd::LimEntry<> iii_exp{"III"};
-    dd::LimEntry<> izz_exp{"IZZ"};
+    dd::LimEntry<>      zzi_exp{"ZZI"};
+    dd::LimEntry<>      iii_exp{"III"};
+    dd::LimEntry<>      izz_exp{"IZZ"};
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(&zzi_exp);
     expectedGroup.push_back(&iii_exp);
     expectedGroup.push_back(&izz_exp);
     expectedGroup.push_back(&iii_exp);
-//    std::cout << "Expected group:\n";
-//    dd::Pauli::printStabilizerGroup(expectedGroup);
+    //    std::cout << "Expected group:\n";
+    //    dd::Pauli::printStabilizerGroup(expectedGroup);
     EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
 }
 
 TEST(LimTest, columnEchelonForm1) {
     dd::StabilizerGroup G;
-    dd::LimEntry<> zzi{"ZZI"};
-    dd::LimEntry<> zzi2{"ZZI"};
-    dd::LimEntry<> ziz{"ZIZ"};
-    dd::LimEntry<> izz{"IZZ"};
+    dd::LimEntry<>      zzi{"ZZI"};
+    dd::LimEntry<>      zzi2{"ZZI"};
+    dd::LimEntry<>      ziz{"ZIZ"};
+    dd::LimEntry<>      izz{"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -317,8 +342,8 @@ TEST(LimTest, columnEchelonForm1) {
     std::cout << "Group after column echelon form:\n";
     dd::Pauli::printStabilizerGroup(G);
 
-    dd::LimEntry<> zzi_exp{"ZZI"};
-    dd::LimEntry<> izz_exp{"IZZ"};
+    dd::LimEntry<>      zzi_exp{"ZZI"};
+    dd::LimEntry<>      izz_exp{"IZZ"};
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(&zzi_exp);
     expectedGroup.push_back(&izz_exp);
