@@ -253,8 +253,25 @@ TEST(LimTest, MultiplyPauliStrings) {
     EXPECT_STREQ(dd::LimEntry<5>::to_string(&lim1).c_str(), "XIYXI");
 }
 
+TEST(LimTest, createDDNode) {
+    auto dd  = std::make_unique<dd::Package>(1);
+    auto lim = dd->limTable.lookup('X');
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 0);
+
+    auto l = dd->makeDDNode(1, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, lim);
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
+
+    dd->incRef(l);
+
+    EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 1);
+    EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
+}
+
 TEST(LimTest, CreateNode) {
-    //Todo Design decision: When do we decide if a qmdd node or a limd node is to be created. In the makeddnode function or the normalize function?
     auto dd  = std::make_unique<dd::Package>(1);
     auto lim = dd->limTable.lookup('X');
 

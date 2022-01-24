@@ -259,7 +259,6 @@ namespace dd {
             std::cout << "[normalizeLIMDD] Step 6: Set the phase to 1.\n"; std::cout.flush();
             r.l->setPhase(phases::phase_one);
 
-
             return r;
         }
 
@@ -683,10 +682,10 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
-        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false) {
-            // TODO Limdd: add LIMs to makeDDNode
-            auto&      uniqueTable = getUniqueTable<Node>();
-            Edge<Node> e{uniqueTable.getNode(), Complex::one, nullptr};
+        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
+            auto& uniqueTable = getUniqueTable<Node>();
+
+            Edge<Node> e{uniqueTable.getNode(), Complex::one, lim};
             e.p->v = var;
             e.p->e = edges;
 
@@ -694,21 +693,28 @@ namespace dd {
             for ([[maybe_unused]] const auto& edge: edges)
                 assert(edge.p->v == var - 1 || edge.isTerminal());
 
-            // normalize it
-            e = normalize(e, cached);
-            assert(e.p->v == var || e.isTerminal());
-
-            // look it up in the unique tables
-            auto l = uniqueTable.lookup(e, false);
-            assert(l.p->v == var || l.isTerminal());
-
             // set specific node properties for matrices
             if constexpr (std::tuple_size_v<decltype(Node::e)> == NEDGE) {
+                // normalize it
+                e = normalize(e, cached);
+                assert(e.p->v == var || e.isTerminal());
+
+                // look it up in the unique tables
+                auto l = uniqueTable.lookup(e, false);
+                assert(l.p->v == var || l.isTerminal());
                 if (l.p == e.p)
                     checkSpecialMatrices(l.p);
-            }
+                return l;
+            } else if constexpr (std::tuple_size_v<decltype(Node::e)> == RADIX) {
+                // normalize it
+                e = normalizeLIMDD(e, cached);
+                assert(e.p->v == var || e.isTerminal());
 
-            return l;
+                // look it up in the unique tables
+                auto l = uniqueTable.lookup(e, false);
+                assert(l.p->v == var || l.isTerminal());
+                return l;
+            }
         }
 
         template<class Node>
