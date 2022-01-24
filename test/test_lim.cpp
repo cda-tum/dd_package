@@ -278,6 +278,32 @@ TEST(LimTest, CreateNode) {
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
 }
 
+TEST(LimTest, CreateNode2) {
+    // This test:
+    //  Create a node for |+> |+>, i.e., the state [1 1 1 1].
+    //  Create two nodes for |+>, and then a node both of whose edges point to |+>.
+    auto dd  = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode2.\n"; std::cout.flush();
+
+    // Create |+>
+    dd::Edge<dd::vNode> e1{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e1.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+
+    // Create another |+>
+    dd::Edge<dd::vNode> e2{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e2.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+
+    dd::Edge<dd::vNode> e3{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e3.p->e = {e1,e2};
+
+    e3 = dd->normalizeLIMDD(e3, false);
+
+    // Assert: identity label on low edge
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e3.p->e[0].l), true);
+    // Assert: identity label on high edge
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e3.p->e[1].l), true);
+}
+
 TEST(LimTest, GaussianElimination1) {
     dd::StabilizerGroup G;
     dd::LimEntry<32>    zi{"ZI"};

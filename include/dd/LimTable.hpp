@@ -46,8 +46,10 @@ namespace dd {
             paulis{0} {
             paulis = bitsetFromString(pauliString);
         }
-        explicit LimEntry(const LimEntry<NUM_QUBITS>* l):
-            paulis(l->paulis) {}
+        explicit LimEntry(const LimEntry<NUM_QUBITS>* l) {
+            if (l != nullptr)
+                paulis = l->paulis;
+        }
 
         static std::bitset<NUM_BITSETBITS> bitsetFromString(std::string pauliString) {
             std::bitset<NUM_BITSETBITS> res{0};
@@ -129,6 +131,14 @@ namespace dd {
             return paulis != other.paulis;
         }
 
+        static bool isIdentity(const LimEntry<NUM_QUBITS>* l) {
+            if (l == nullptr) return true;
+            for (unsigned int i=0; i<LimEntry<NUM_QUBITS>::NUM_BITSETBITS; i++) {
+                if (l->paulis[i] != 0) return false;
+            }
+            return true;
+        }
+
         // Given a 'phase' in 0,1,2,3,
         // multiply this LIM's phase by that amount
         void multiplyPhaseBy(uint8_t phase) {
@@ -164,6 +174,11 @@ namespace dd {
                 paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
                 paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
             }
+        }
+
+        void multiplyBy(const LimEntry<NUM_QUBITS>* other) {
+            if (other == nullptr) return; // multiply by identity
+            multiplyBy(*other);
         }
 
         void operator*=(const LimEntry<NUM_QUBITS>& other) {
@@ -216,8 +231,8 @@ namespace dd {
         }
 
         void setPhase(char newPhase) {
-            paulis.set(2*NUM_QUBITS, (char) 0x1);
-            paulis.set(2*NUM_QUBITS, (char) 0x2);
+            paulis.set(2*NUM_QUBITS, (char) 0x1 & newPhase);
+            paulis.set(2*NUM_QUBITS+1, (char) 0x2 & newPhase);
         }
 
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero

@@ -228,24 +228,35 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            vNode       oldNode = *(e.p);
+            std::cout << "[normalizeLIMDD] Setting data.\n"; std::cout.flush();
+            vNode       oldNode = *(e.p);       // make a copy of the old node
             LimEntry<>* lowLim  = e.p->e[0].l;
             LimEntry<>* higLim  = e.p->e[1].l;
-            // Step 1: Make the right LIM multiplied by the left LIM
-            higLim = Pauli::multiply(*lowLim, *higLim);
+            // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
+            std::cout << "[normalizeLIMDD] Step 1: multiply.\n"; std::cout.flush();
+            higLim = Pauli::multiply(lowLim, higLim);
             // Step 2: Make the left LIM Identity
+            std::cout << "[normalizeLIMDD] Step 2: Set nullptr.\n"; std::cout.flush();
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
+            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n"; std::cout.flush();
             r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, higLim);
+            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(higLim) << "\n"; std::cout.flush();
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
+            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n"; std::cout.flush();
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
+            assert (iso != (LimEntry<>*)-1);
+            // TODO the getIsomorphismZ doesn't find the isomorphism (!) even though there is guaranteed to be one in test CreateNode2.
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
-            r.l = Pauli::multiply(*r.l, *lowLim);
-            r.l = Pauli::multiply(*r.l, *iso);
+            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n"; std::cout.flush();
+            r.l = Pauli::multiply(r.l, lowLim);
+            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n"; std::cout.flush();
+            r.l = Pauli::multiply(r.l, iso);
             // Step 6.1: Lastly, to make the edge canonical, multiply the weight r.w by the phase of the Lim r.l
             //   TODO
             // Step 6.2: Make the phase of r.l '+1'
+            std::cout << "[normalizeLIMDD] Step 6: Set the phase to 1.\n"; std::cout.flush();
             r.l->setPhase(phases::phase_one);
 
 
