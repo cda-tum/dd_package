@@ -23,7 +23,7 @@ TEST(LimTest, PauliToString) {
 
     std::cout << str << "\n";
 
-    EXPECT_STREQ(str.c_str(), "IYZXI");
+    EXPECT_STREQ(str.c_str(), "IXZYI");
 
     auto str_default = dd::LimEntry<5>::to_string(nullptr);
     std::cout << str_default << "\n";
@@ -34,7 +34,7 @@ TEST(LimTest, PauliToString) {
 TEST(LimTest, BitSetFromString) {
     // bitsetFromString function
     auto bitSet = dd::LimEntry<6>::bitsetFromString("XIIYYZ");
-    EXPECT_EQ(bitSet.to_ulong(), 0b100000111101); // XIIYYZ
+    EXPECT_EQ(bitSet.to_ulong(), 0b011111000010); // XIIYYZ
 
     // LimEntry constructor
     dd::LimEntry<7>  limEntry{"YXXZIIZ"};
