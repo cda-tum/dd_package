@@ -478,6 +478,12 @@ TEST(LimTest, CreateNode7) {
     // Create edge I|0>|zeroZero0> + |0>|zeroZero1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e = {zeroZero0, zeroZero1};
+    e = dd->normalizeLIMDD(e, false);
+
+    std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e.l), true);
+    std::cout << "high label: (should be I): " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
 }
 
 TEST(LimTest, GaussianElimination1) {
@@ -500,10 +506,10 @@ TEST(LimTest, GaussianElimination1) {
 
 TEST(LimTest, GaussianElimination2) {
     dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi{"ZZI"};
+    dd::LimEntry<>      zzi {"ZZI"};
     dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz{"ZIZ"};
-    dd::LimEntry<>      izz{"IZZ"};
+    dd::LimEntry<>      ziz {"ZIZ"};
+    dd::LimEntry<>      izz {"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -515,11 +521,11 @@ TEST(LimTest, GaussianElimination2) {
     dd::Pauli::printStabilizerGroup(G);
 
     // build expected group
-    dd::LimEntry<>      zzi_exp{"ZZI"};
+    dd::LimEntry<>      ziz_exp{"ZIZ"};
     dd::LimEntry<>      iii_exp{"III"};
     dd::LimEntry<>      izz_exp{"IZZ"};
     dd::StabilizerGroup expectedGroup;
-    expectedGroup.push_back(&zzi_exp);
+    expectedGroup.push_back(&ziz_exp);
     expectedGroup.push_back(&iii_exp);
     expectedGroup.push_back(&izz_exp);
     expectedGroup.push_back(&iii_exp);
@@ -530,10 +536,10 @@ TEST(LimTest, GaussianElimination2) {
 
 TEST(LimTest, columnEchelonForm1) {
     dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi{"ZZI"};
+    dd::LimEntry<>      zzi {"ZZI"};
     dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz{"ZIZ"};
-    dd::LimEntry<>      izz{"IZZ"};
+    dd::LimEntry<>      ziz {"ZIZ"};
+    dd::LimEntry<>      izz {"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -544,10 +550,10 @@ TEST(LimTest, columnEchelonForm1) {
     std::cout << "Group after column echelon form:\n";
     dd::Pauli::printStabilizerGroup(G);
 
-    dd::LimEntry<>      zzi_exp{"ZZI"};
+    dd::LimEntry<>      ziz_exp{"ZIZ"};
     dd::LimEntry<>      izz_exp{"IZZ"};
     dd::StabilizerGroup expectedGroup;
-    expectedGroup.push_back(&zzi_exp);
+    expectedGroup.push_back(&ziz_exp);
     expectedGroup.push_back(&izz_exp);
     EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
 }

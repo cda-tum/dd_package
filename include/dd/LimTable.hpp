@@ -56,20 +56,20 @@ namespace dd {
             for (std::string::size_type i = 0; i < pauliString.size() && i < NUM_QUBITS; i++) {
                 switch (pauliString[i]) {
                     case 'I':
-                        res[2 * NUM_QUBITS - (2 * i + 2)] = 0;
-                        res[2 * NUM_QUBITS - (2 * i + 1)] = 0;
+                        res[2 * i    ] = 0;
+                        res[2 * i + 1] = 0;
                         break;
                     case 'X':
-                        res[2 * NUM_QUBITS - (2 * i + 2)] = 0;
-                        res[2 * NUM_QUBITS - (2 * i + 1)] = 1;
+                        res[2 * i    ] = 0;
+                        res[2 * i + 1] = 1;
                         break;
                     case 'Z':
-                        res[2 * NUM_QUBITS - (2 * i + 2)] = 1;
-                        res[2 * NUM_QUBITS - (2 * i + 1)] = 0;
+                        res[2 * i    ] = 1;
+                        res[2 * i + 1] = 0;
                         break;
                     case 'Y':
-                        res[2 * NUM_QUBITS - (2 * i + 2)] = 1;
-                        res[2 * NUM_QUBITS - (2 * i + 1)] = 1;
+                        res[2 * i    ] = 1;
+                        res[2 * i + 1] = 1;
                         break;
                     default:
                         throw std::runtime_error("Unrecognized symbol in Pauli string\n");
@@ -110,6 +110,7 @@ namespace dd {
         /**
          * @return a string of {I, X, Y, Y}**n with left in the string corresponding to the top of the decision diagram.
          */
+        // TODO refactor to reverse order
         static std::string to_string(const LimEntry<NUM_QUBITS>* lim) {
             if (lim == nullptr) {
                 return std::string(NUM_QUBITS, 'I');
@@ -124,7 +125,7 @@ namespace dd {
             if (lim->paulis[NUM_BITSETBITS-2] == 1 && lim->paulis[NUM_BITSETBITS-1] == 1)
                 os << "-i";
             // Write the Pauli operators
-            for (int i = NUM_QUBITS - 1; i >= 0; --i) {
+            for (unsigned int i = 0; i < NUM_QUBITS; i++) {
                 os << getQubit(lim, i);
             }
             return os.str();

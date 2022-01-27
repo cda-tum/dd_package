@@ -158,7 +158,7 @@ public:
         GaussianElimination(G);
         pruneZeroColumns(G);
         // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
-        std::sort(G.begin(), G.end(), LimEntry<>::leq);
+        std::sort(G.begin(), G.end(), LimEntry<>::geq);
         std::cout << "[toColumnEchelonForm] After CEF, group is:\n"; std::cout.flush();
         printStabilizerGroup(G);
     }
