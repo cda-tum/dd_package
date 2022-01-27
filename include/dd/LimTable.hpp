@@ -53,7 +53,7 @@ namespace dd {
 
         static std::bitset<NUM_BITSETBITS> bitsetFromString(std::string pauliString) {
             std::bitset<NUM_BITSETBITS> res{0};
-            for (std::string::size_type i = 0; i < pauliString.size(); i++) {
+            for (std::string::size_type i = 0; i < pauliString.size() && i < NUM_QUBITS; i++) {
                 switch (pauliString[i]) {
                     case 'I':
                         res[2 * NUM_QUBITS - (2 * i + 2)] = 0;
@@ -116,6 +116,14 @@ namespace dd {
             }
 
             std::ostringstream os;
+            // Write the phase
+            if (lim->paulis[NUM_BITSETBITS-2] == 0 && lim->paulis[NUM_BITSETBITS-1] == 1)
+                os << 'i';
+            if (lim->paulis[NUM_BITSETBITS-2] == 1 && lim->paulis[NUM_BITSETBITS-1] == 0)
+                os << '-';
+            if (lim->paulis[NUM_BITSETBITS-2] == 1 && lim->paulis[NUM_BITSETBITS-1] == 1)
+                os << "-i";
+            // Write the Pauli operators
             for (int i = NUM_QUBITS - 1; i >= 0; --i) {
                 os << getQubit(lim, i);
             }
@@ -129,6 +137,15 @@ namespace dd {
         bool operator!=(const LimEntry<NUM_QUBITS>& other) const {
             //todo shouldn't it be enough to define the == operator?
             return paulis != other.paulis;
+        }
+
+        // Returns whether two LIMs are equal.
+        // Handles the nullptr case: a nullptr is interpreted as the Identity operator
+        static bool Equal(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+            if (isIdentity(a) && isIdentity(b)) return true;
+            if (a == nullptr) return false;
+            if (b == nullptr) return false;
+            return (*a == *b);
         }
 
         static bool isIdentity(const LimEntry<NUM_QUBITS>* l) {
@@ -245,12 +262,22 @@ namespace dd {
             return true;
         }
 
+        // Returns the index of the first nonzero entry in the checkvector
+        unsigned int pivotPosition() const {
+            for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+                if (paulis.test(i)) return i;
+            }
+            return (unsigned int) -1;
+        }
+
         bool isIdentityOperator() const {
             return isAllZeroVector();
         }
 
         // Returns whether a <= b in the lexicographic order
         static bool leq(LimEntry<>* a, LimEntry<>* b) {
+            if (a == nullptr) return true;
+            if (b == nullptr) return a->isIdentityOperator();
             // Note the length of the vectors is 2*NUM_QUBITS+2
             for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
                 if (!a->paulis.test(i) and b->paulis.test(i)) {
@@ -261,6 +288,10 @@ namespace dd {
                 }
             }
             return true; // in this case, vectors are equal
+        }
+
+        static bool geq(LimEntry<>* a, LimEntry<>* b) {
+            return leq(b, a);
         }
 
         // Returns whether a < b in the lexicographic order
@@ -274,6 +305,10 @@ namespace dd {
                 }
             }
             return false; // the vectors are equal, so return false, since a is not less than b
+        }
+
+        static bool geneq(LimEntry<>* a, LimEntry<>* b) {
+            return leneq(b, a);
         }
     };
 } // namespace dd

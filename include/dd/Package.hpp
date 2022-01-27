@@ -229,19 +229,21 @@ namespace dd {
 
             // Case 3 ("Fork"):  both edges of e are non-zero
             std::cout << "[normalizeLIMDD] Setting data.\n"; std::cout.flush();
-            vNode       oldNode = *(e.p);       // make a copy of the old node
-            LimEntry<>* lowLim  = e.p->e[0].l;
-            LimEntry<>* higLim  = e.p->e[1].l;
+            LimEntry<>* lowLim  = r.p->e[0].l;
+            LimEntry<>* higLim  = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             std::cout << "[normalizeLIMDD] Step 1: multiply.\n"; std::cout.flush();
-            higLim = Pauli::multiply(lowLim, higLim);
+            // TODO multiply by the inverse of lowLim, instead of by lowLim
+            // TODO multiply the phase of R with the inverse of the phase on the low edge
+            r.p->e[1].l = Pauli::multiply(lowLim, higLim);
             // Step 2: Make the left LIM Identity
             std::cout << "[normalizeLIMDD] Step 2: Set nullptr.\n"; std::cout.flush();
             r.p->e[0].l = nullptr;
+            vNode       oldNode = *(r.p);       // make a copy of the old node
             // Step 3: Choose a canonical right LIM
             std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n"; std::cout.flush();
-            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, higLim);
-            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(higLim) << "\n"; std::cout.flush();
+            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l);
+            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n"; std::cout.flush();
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n"; std::cout.flush();
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);

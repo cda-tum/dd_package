@@ -4,3 +4,10 @@ cmake-build-*/
 *.dot
 *.dot.svg
 todo.txt
+.cproject
+.project
+bell_matrix.dd
+bell_matrix_binary.dd
+bell_state.dd
+bell_state_binary.dd
+test-output.txt

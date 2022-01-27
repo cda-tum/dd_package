@@ -271,7 +271,7 @@ TEST(LimTest, createDDNode) {
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
 }
 
-TEST(LimTest, CreateNode) {
+TEST(LimTest, CreateNode0) {
     auto dd  = std::make_unique<dd::Package>(1);
     auto lim = dd->limTable.lookup('X');
 
@@ -295,12 +295,12 @@ TEST(LimTest, CreateNode) {
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
 }
 
-TEST(LimTest, CreateNode2) {
+TEST(LimTest, CreateNode1) {
     // This test:
     //  Create a node for |+> |+>, i.e., the state [1 1 1 1].
     //  Create two nodes for |+>, and then a node both of whose edges point to |+>.
     auto dd  = std::make_unique<dd::Package>(1);
-    std::cout << "Test CreateNode2.\n"; std::cout.flush();
+    std::cout << "Test CreateNode1.\n"; std::cout.flush();
 
     // Create |+>
     dd::Edge<dd::vNode> e1{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
@@ -319,6 +319,165 @@ TEST(LimTest, CreateNode2) {
     EXPECT_EQ(dd::LimEntry<>::isIdentity(e3.p->e[0].l), true);
     // Assert: identity label on high edge
     EXPECT_EQ(dd::LimEntry<>::isIdentity(e3.p->e[1].l), true);
+}
+
+TEST(LimTest, CreateNode2) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode2.\n";
+
+    // Create node |+>
+    dd::vNode* plus = dd->vUniqueTable.getNode();
+    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v = 0;
+
+    // Create edge I|+>
+    dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, nullptr};
+
+    // Create edge Z|+>
+    dd::LimEntry<>* l = new dd::LimEntry<>("Z");
+    dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, l};
+
+    // Create edge |0>|e0> + |1>|e1>
+    dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e.p->e = {e0, e1};
+    // normalize the edge / node
+    e = dd->normalizeLIMDD(e, false);
+    std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.l), true);
+    std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
+}
+
+TEST(LimTest, CreateNode3) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode3.\n";
+
+    // Create node |+>
+    dd::vNode* plus = dd->vUniqueTable.getNode();
+    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v = 0;
+
+    // Create edge Z|+>
+    dd::LimEntry<>* l = new dd::LimEntry<>("Z");
+    dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, l};
+
+    // Create edge I|+>
+    dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, nullptr};
+
+    // Create edge |0>|e0> + |1>|e1>
+    dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e.p->e = {e0, e1};
+    // normalize the edge / node
+    e = dd->normalizeLIMDD(e, false);
+    std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::Equal(e.l, l), true);
+    std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
+}
+
+TEST(LimTest, CreateNode4) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode4.\n";
+
+    dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
+    // Create node |0>
+    dd::vNode* zeroState = dd->vUniqueTable.getNode();
+    zeroState->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    // Add Z to the stabilizer group of zeroState
+    zeroState->limVector.push_back(lim);
+
+
+    // Create node |+>
+    dd::vNode* plus = dd->vUniqueTable.getNode();
+    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v = 0;
+
+    // Create edge I|0>
+    dd::Edge<dd::vNode> e0 = {zeroState, dd::Complex::one, nullptr};
+
+    // Create edge Z|+>
+    dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, lim};
+
+
+    // Create edge |0>|e0> + |1>|e1>
+    dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e.p->e = {e0, e1};
+    // normalize the edge / node
+    e = dd->normalizeLIMDD(e, false);
+    std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::Equal(e.l, lim), true);
+    std::cout << "high label: (should be I):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
+}
+
+TEST(LimTest, CreateNode6) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode6.\n";
+
+    // Create node |0>
+    dd::vNode* zeroState = dd->vUniqueTable.getNode();
+    zeroState->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    // Add stabilizer Z
+    dd::LimEntry<>* limZ = new dd::LimEntry<>("Z");
+    zeroState->limVector.push_back(limZ);
+
+    // Create node |0>|0>
+    dd::vNode* zeroZero = dd->vUniqueTable.getNode();
+    dd::Edge<dd::vNode> e0 = {zeroState, dd::Complex::one, nullptr};
+    zeroZero->e = {e0, dd::Package::vEdge::zero};
+    // Add stabilizers ZI and IZ
+    dd::LimEntry<>* limIZ = new dd::LimEntry<>("IZ");
+    zeroZero->limVector.push_back(limZ);
+    zeroZero->limVector.push_back(limIZ);
+
+    // Create edge I |0>|0>
+    dd::Edge<dd::vNode> zeroZeroEdge = {zeroZero, dd::Complex::one, nullptr};
+
+    // Create edge ZZ |0>|0>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("ZZ");
+    dd::Edge<dd::vNode> zeroZeroZEdge= {zeroZero, dd::Complex::one, lim};
+
+    // Create node |0>|zeroZeroEdge> + |1>|zeroZeroZEdge>
+    dd::vNode* v = dd->vUniqueTable.getNode();
+    v->e = {zeroZeroEdge, zeroZeroZEdge};
+
+    // Create edge to v
+    dd::Edge<dd::vNode> e = {v, dd::Complex::one, nullptr};
+
+    // normalize the edge / node
+    e = dd->normalizeLIMDD(e, false);
+    std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.l), true);
+    std::cout << "high label: (should be I):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
+}
+
+TEST(LimTest, CreateNode7) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode7\n";
+
+    // Create edge I|0>
+    dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    zero.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    // Construct stabilizer group of |0>
+    zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
+
+    // Create edge II |0>|0>
+    dd::Edge<dd::vNode> zeroZero0 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    zeroZero0.p->e = {zero, dd::Package::vEdge::zero};
+    // Construct stabilizer group
+    zeroZero0.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+    zeroZero0.p->limVector.push_back(new dd::LimEntry<>("IZ"));
+    // Create a second edge II |0>|0>
+    dd::Edge<dd::vNode> zeroZero1 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    zeroZero1.p->e = {zero, dd::Package::vEdge::zero};
+    zeroZero1.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+    zeroZero1.p->limVector.push_back(new dd::LimEntry<>("IZ"));
+
+
+    // Create edge I|0>|zeroZero0> + |0>|zeroZero1>
+    dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    e.p->e = {zeroZero0, zeroZero1};
 }
 
 TEST(LimTest, GaussianElimination1) {

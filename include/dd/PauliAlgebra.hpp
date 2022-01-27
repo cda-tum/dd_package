@@ -44,9 +44,9 @@ public:
     }
 
     static void printStabilizerGroup(const StabilizerGroup& G) {
-        std::cout << "Stabilizer group (" << G.size() << " elements)\n";
+        std::cout << "Stabilizer group (" << G.size() << " elements)\n";  std::cout.flush();
         for (unsigned int i=0; i<G.size(); i++) {
-            std::cout << LimEntry<>::to_string(G[i]) << std::endl;
+            std::cout << LimEntry<>::to_string(G[i]) << std::endl;  std::cout.flush();
         }
         std::cout.flush();
     }
@@ -110,15 +110,16 @@ public:
     // In more detail: the elements of G are modified in place
     // Therefore, the LimEntry objects should NOT be stored in the LimTable;
     template <std::size_t NUM_QUBITS>
-    static void GaussianElimination(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+    static void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
         for (unsigned int h=0; h<pauli_height; h++) {
             // Step 1: Find a column with a '1' at position h
+            // TODO AND position h should be the pivot of that column. Right?
             reducingColId = -1;
             for (unsigned int i=0; i<G.size(); i++) {
-                if (G[i]->paulis.test(h)) {
+                if (G[i]->pivotPosition() == h) {
                     reducingColId = i;
                     break;
                 }
@@ -128,7 +129,7 @@ public:
             for (unsigned int reduceColId =0; reduceColId < G.size(); reduceColId++) {
                 if (reduceColId == reducingColId) continue;
                 if (G[reduceColId]->paulis.test(h)) {
-                    G[reduceColId]->multiplyBy(*G[reducingColId]);
+                    G[reduceColId] = Pauli::multiply(G[reduceColId], G[reducingColId]);
                 }
             }
         }
@@ -158,20 +159,28 @@ public:
         pruneZeroColumns(G);
         // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
         std::sort(G.begin(), G.end(), LimEntry<>::leq);
+        std::cout << "[toColumnEchelonForm] After CEF, group is:\n"; std::cout.flush();
+        printStabilizerGroup(G);
     }
 
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
+    // TODO this is not correct; the procedure should check on line 7, whether v has its FIRST '1' entry at position h, not just any '1'
     template<std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+        std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
         LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) return y;
         std::size_t height = 2*NUM_QUBITS;
         for (unsigned int h=0; h<height; h++) {
-            // Look for a vector with a '1' in place h
-            for (unsigned int v=0; v<G.size(); v++) {
-                if (G[v]->paulis.test(h)) {
-                    y = Pauli::multiply(*y, *G[v]);
+            if (y->paulis[h]) {
+                std::cout << "[GramSchmidt] h=" << h << ".\n";
+                // Look for a vector whose first '1' entry is at position h
+                for (unsigned int v=0; v<G.size(); v++) {
+                    if (G[v]->pivotPosition() == h) {
+                        std::cout << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
+                        y = Pauli::multiply(*y, *G[v]);
+                    }
                 }
             }
         }
@@ -224,20 +233,29 @@ public:
     // TODO this function always returns nullptr??
     // TODO I'm not convinced this function works...
     static LimEntry<>* getCosetIntersectionElementZ(const StabilizerGroup& G, const StabilizerGroup& H, const LimEntry<>* b) {
-        std::cout << "[coset elZ] start; b = " << LimEntry<>::to_string(b) << "\n"; std::cout.flush();
+        std::cout << "[coset elZ] start; |G|=" << G.size() << " |H|=" << G.size() << " b = " << LimEntry<>::to_string(b) << "\n"; std::cout.flush();
         // TODO handle the case b == nullptr (so b is identity)
-        if (!stabilizerGroupIsSorted(G)) return nullptr;
-        if (!stabilizerGroupIsSorted(H)) return nullptr;
+        if (!stabilizerGroupIsSorted(G)) {
+            std::cout << "[coset elZ] group G is not sorted. Quitting G = \n";
+            printStabilizerGroup(G);
+            return nullptr;
+        }
+        if (!stabilizerGroupIsSorted(H)) {
+            std::cout << "[coset elZ] group H is not sorted. Quitting.\n";
+            printStabilizerGroup(H);
+            return nullptr;
+        }
         std::cout << "[coset elZ] both groups are sorted.\n"; std::cout.flush();
         LimEntry<>* b2;
         LimEntry<>* bOrth;
         b2 = new LimEntry<>(b);
         std::cout << "[coset elZ] Made b2.\n"; std::cout.flush();
         b2 = GramSchmidt(H, b2);
-        std::cout << "[coset elZ] performed Gram-Schmidt.\n"; std::cout.flush();
+        std::cout << "[coset elZ] performed Gram-Schmidt; b2 = " << LimEntry<>::to_string(b2) << ".\n"; std::cout.flush();
         bOrth = new LimEntry<>(b2);
+        // TODO maybe use an 'elementIsInGroupZ' function, instead of GramSchmidt and then checking identity? maybe not; doesn't work for Pauli group
         bOrth = GramSchmidt(G, bOrth);
-        std::cout << "[coset elZ] performed Gram-Schmidt\n"; std::cout.flush();
+        std::cout << "[coset elZ] performed Gram-Schmidt; borth = " << LimEntry<>::to_string(bOrth) << "\n"; std::cout.flush();
         if (bOrth->isIdentityOperator()) {
 //            bOrth->multiplyBy(b2);
 //            std::cout << "[coset elZ] multiplied by b2.\n"; std::cout.flush();
@@ -318,6 +336,7 @@ public:
         Edge<vNode> vHigh = v->e[1];
         assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
+        // TODO this assertion is not necessarily true; in the normalizeLIMDD function, we hve vLow.l != nullptr
         assert (uLow.l == nullptr && vLow.l == nullptr);
         // Case 0.1: the nodes are equal
         if (u == v) {
@@ -367,11 +386,11 @@ public:
             LimEntry<>* isoHigh = multiply(uHigh.l, vHigh.l);
             std::cout << "[getIsomorphismZ] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
             if (amplitudeOppositeSign) {
-                std::cout << "[getIsomorphismZ] multiplying Phase by ... 2?\n"; std::cout.flush();
-                isoHigh->multiplyPhaseBy(2); // multiply by -1
-                std::cout << "[getIsomorphismZ] multiplied phase by 2.\n"; std::cout.flush();
+                std::cout << "[getIsomorphismZ] multiplying Phase by -1?\n"; std::cout.flush();
+                isoHigh->multiplyPhaseBy(phases::phase_minus_one); // multiply by -1
+                std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             }
-            iso = getCosetIntersectionElementZ(u->limVector, v->limVector, isoHigh);
+            iso = getCosetIntersectionElementZ(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismZ] completed coset intersection element.\n"; std::cout.flush();
             if (iso != nullptr) {
                 std::cout << "[getIsomorphismZ] The coset was non-empty; returning element.\n"; std::cout.flush();
@@ -381,8 +400,8 @@ public:
             std::cout << "[getIsomorphismZ] multiplying phase by 2.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(2);
             std::cout << "[getIsomorphismZ] multiplied phase by 2.\n"; std::cout.flush();
-            iso = getCosetIntersectionElementZ(u->limVector, v->limVector, isoHigh);
-            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
+            iso = getCosetIntersectionElementZ(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
             if (iso != nullptr) {
                 std::cout << "[getIsomorphismZ] Coset was not empty; returning result.\n"; std::cout.flush();
                 return iso;
@@ -399,9 +418,11 @@ public:
     // Choose the label on the High edge, in the Z group
 //    template <class Node>
     static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel) {
-        std::cout << "[highLabelZ] Start.\n"; std::cout.flush();
+        std::cout << "[highLabelZ] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; std::cout.flush();
         StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
+        std::cout << "[highLabelZ] Concatenated; |GH| = " << GH.size() << std::endl;
         toColumnEchelonForm(GH);
+        std::cout << "[highLabelZ] to CEF'ed; now |GH| = " << GH.size() << std::endl;
         LimEntry<>* newHighLabel = GramSchmidt(GH, vLabel);
         // Set the new phase to +1
         newHighLabel->setPhase(phases::phase_one);
