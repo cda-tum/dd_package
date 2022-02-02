@@ -47,6 +47,29 @@ TEST(LimTest, BitSetFromString) {
     EXPECT_STREQ(str2.c_str(), "XXIIIIIIII"); // NOTE: trailing I's on the right
 }
 
+TEST(LimTest, PauliToStringWithPhase) {
+    dd::LimEntry<5> lim0 {"ZXY"};
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim0), dd::phases::phase_one);
+    EXPECT_EQ(lim0.getQubit(0), 'Z');
+    EXPECT_EQ(lim0.getQubit(1), 'X');
+
+    dd::LimEntry<5> lim1 {"-ZI"};
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim1), dd::phases::phase_minus_one);
+    EXPECT_EQ(lim1.getQubit(0), 'Z');
+    EXPECT_EQ(lim1.getQubit(1), 'I');
+
+    dd::LimEntry<5> lim2 {"iZI"};
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim2), dd::phases::phase_i);
+    EXPECT_EQ(lim2.getQubit(0), 'Z');
+    EXPECT_EQ(lim2.getQubit(1), 'I');
+
+    dd::LimEntry<5> lim3 {"-iIZX"};
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim3), dd::phases::phase_minus_i);
+    EXPECT_EQ(lim3.getQubit(0), 'I');
+    EXPECT_EQ(lim3.getQubit(1), 'Z');
+    EXPECT_EQ(lim3.getQubit(2), 'X');
+}
+
 TEST(LimTest, SimpleTableDefault) {
     auto limtable = std::make_unique<dd::LimTable<>>();
     std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
@@ -486,6 +509,31 @@ TEST(LimTest, CreateNode7) {
     EXPECT_EQ(dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
 }
 
+TEST(LimTest, CreateNode8) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode7\n";
+
+    // Create edge I|0>
+    dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    zero.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    // Construct stabilizer group of |0>
+    zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
+
+    // Create edge II |0>|0>
+    dd::Edge<dd::vNode> zeroZero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+    zeroZero.p->e = {zero, dd::Package::vEdge::zero};
+    // Construct stabilizer group
+    zeroZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+    zeroZero.p->limVector.push_back(new dd::LimEntry<>("IZ"));
+
+    // Create edge ZI |1>|0>
+    dd::Edge<dd::vNode> oneZero = {dd->vUniqueTable.getNode(), dd::Complex::one, new dd::LimEntry<>("IZ")};
+    oneZero.p->e = {dd::Package::vEdge::zero, zero};
+    // Construct stabilizer group
+    oneZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+    oneZero.p->limVector.push_back(new dd::LimEntry<>("-IZ"));
+}
+
 TEST(LimTest, GaussianElimination1) {
     dd::StabilizerGroup G;
     dd::LimEntry<32>    zi{"ZI"};
@@ -557,3 +605,190 @@ TEST(LimTest, columnEchelonForm1) {
     expectedGroup.push_back(&izz_exp);
     EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
 }
+
+TEST(LimTest, constructStabilizerGroup2) {
+//    auto dd = std::make_unique<dd::Package>(1);
+//    std::cout << "Test CreateNode7\n";
+//
+//    // Create edge I|0>
+//    dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+//    zero.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+//    // Construct stabilizer group of |0>
+//    zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
+//
+//    // Create edge II |0>|0>
+//    dd::Edge<dd::vNode> zeroZero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
+//    zeroZero.p->e = {zero, dd::Package::vEdge::zero};
+//    // Construct stabilizer group
+//    zeroZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+//    zeroZero.p->limVector.push_back(new dd::LimEntry<>("IZ"));
+//
+//    // Create edge ZI |1>|0>
+//    dd::Edge<dd::vNode> oneZero = {dd->vUniqueTable.getNode(), dd::Complex::one, new dd::LimEntry<>("IZ")};
+//    oneZero.p->e = {dd::Package::vEdge::zero, zero};
+//    // Construct stabilizer group
+//    oneZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
+//    oneZero.p->limVector.push_back(new dd::LimEntry<>("-IZ"));
+
+    auto dd  = std::make_unique<dd::Package>(1);
+
+    auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    std::cout << "Stabilizer group of |0>:\n"; std::cout.flush();
+    dd::Pauli::printStabilizerGroup(l.p->limVector);
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("Z"));
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(l.p->limVector, expectedGroup), true);
+}
+
+TEST(LimTest, constructStabilizergroup3) {
+    auto dd  = std::make_unique<dd::Package>(1);
+
+    auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    std::cout << "Stabilizer group of |1>:\n";
+    dd::Pauli::printStabilizerGroup(l.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("-Z"));
+    std::cout << "Expected group: \n";
+    dd::Pauli::printStabilizerGroup(expectedGroup);
+
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(l.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup4) {
+    auto dd  = std::make_unique<dd::Package>(1);
+
+    dd::ComplexValue twocn = dd::ComplexValue{2.0, 0.0};
+    dd::Complex twoc = dd->cn.lookup(twocn);
+    dd::Edge<dd::vNode> two = {dd->vUniqueTable.getNode(), twoc, nullptr};
+    two.p = dd::vNode::terminal;
+    auto e = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, two}, false, nullptr);
+    std::cout << "Stabilizer group of |0> + 2|1> :\n";
+    dd::Pauli::printStabilizerGroup(e.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup5) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make e0 = |0>
+    std::cout << "[constructStabilizerGroup5 test] making edge |0> by calling MakeDDNode.\n";
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make e1 = |0>|0>
+    std::cout << "[constructStabilizerGroup5 test] making edge |0>|0> by calling MakeDDNode.\n";
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    std::cout << "[constructStabilizergroup5 test]Stabilizer group of |0>|0>:\n"; std::cout.flush();
+    dd::Pauli::printStabilizerGroup(e1.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("ZI"));
+    std::cout << "[constructStabilizergroup5 test] added ZI to expected group.\n"; std::cout.flush();
+    expectedGroup.push_back(new dd::LimEntry<>("IZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e1.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup6) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make e0 = |1>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+
+    // make e1 = |0>|1>
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    std::cout << "[constructStabilizergroup6 test] Stabilizer group of |0>|1>:\n";
+    dd::Pauli::printStabilizerGroup(e1.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("-ZI"));
+    expectedGroup.push_back(new dd::LimEntry<>("IZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e1.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup7) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge e0 = |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    //make edge e1 = |1>|0>
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, nullptr);
+    std::cout << "[constructStabilizergroup7 test] Stabilizer group of |0>|1>:\n";
+    dd::Pauli::printStabilizerGroup(e1.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("ZI"));
+    expectedGroup.push_back(new dd::LimEntry<>("-IZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e1.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup8) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |1>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge |1>|1>
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, nullptr);
+    std::cout << "[constructStabilizergroup7 test] Stabilizer group of |0>|1>:\n";
+    dd::Pauli::printStabilizerGroup(e1.p->limVector);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("-ZI"));
+    expectedGroup.push_back(new dd::LimEntry<>("-IZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e1.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup9) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make edge |1>
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge |00> + |11>
+    std::cout << "[constructStabilizerGroup9] making node |00> + |11>\n"; std::cout.flush();
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("ZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e2.p->limVector, expectedGroup));
+}
+
+TEST(LimTest, constructStabilizerGroup10) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make edge 2|1>
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
+    dd::Complex twoc = dd->cn.lookup(twocv);
+    e1.w = twoc;
+
+    // make edge |00> + 2|11>
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+
+    dd::StabilizerGroup expectedGroup;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e2.p->limVector, expectedGroup));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

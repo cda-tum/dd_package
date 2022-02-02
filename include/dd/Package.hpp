@@ -715,6 +715,11 @@ namespace dd {
                 // look it up in the unique tables
                 auto l = uniqueTable.lookup(e, false);
                 assert(l.p->v == var || l.isTerminal());
+                // TODO skip constructing the stabilizer generator set if it has already been found,
+                //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
+                l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
+                std::cout << "[makeDDNode] constructed Stabgenset:\n"; std::cout.flush();
+                Pauli::printStabilizerGroup(l.p->limVector);
                 return l;
             }
         }

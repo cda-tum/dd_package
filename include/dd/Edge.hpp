@@ -25,7 +25,7 @@ namespace dd {
         /// this notion of equivalence is chosen to counter floating point inaccuracies
         constexpr bool operator==(const Edge& other) const {
             // TODO lim check only works for looked up pauli strings
-            return p == other.p && l == other.l && w.approximatelyEquals(other.w);
+            return p == other.p && LimEntry<>::Equal(l, other.l) && w.approximatelyEquals(other.w);
         }
         constexpr bool operator!=(const Edge& other) const {
             return !operator==(other);

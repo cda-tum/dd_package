@@ -53,8 +53,31 @@ namespace dd {
 
         static std::bitset<NUM_BITSETBITS> bitsetFromString(std::string pauliString) {
             std::bitset<NUM_BITSETBITS> res{0};
-            for (std::string::size_type i = 0; i < pauliString.size() && i < NUM_QUBITS; i++) {
-                switch (pauliString[i]) {
+            if (pauliString.size() == 0) return res;
+            std::string::size_type i = 0;  // iterates over the checkvector 'res'
+            std::size_t cursor = 0;        // iterates over 'pauliString'
+            // Step 1: process the phase in front of the string: either "-",  "i",  or "-i"
+            if (pauliString[0] == '-') {
+                if (pauliString.size() >= 2 && pauliString[1] == 'i') {
+                    // Set phase -i
+                    res[NUM_BITSETBITS-1] = phases::phase_minus_i & 0x2;
+                    res[NUM_BITSETBITS-2] = phases::phase_minus_i & 0x1;
+                    cursor = 2;  // Start at the character at position 2, skipping the characters '-i'
+                }
+                else {
+                    res[NUM_BITSETBITS-1] = phases::phase_minus_one & 0x2;
+                    res[NUM_BITSETBITS-2] = phases::phase_minus_one & 0x1;
+                    cursor = 1;  // Start at the character at position 1, skipping the character '-'
+                }
+            }
+            else if (pauliString[0] == 'i') {
+                res[NUM_BITSETBITS-1] = phases::phase_i & 0x2;
+                res[NUM_BITSETBITS-2] = phases::phase_i & 0x1;
+                cursor = 1; // Start at character 1, skipping the character 'i' that indicated the phase
+            }
+            // Step 2: Process all the qubits
+            for (; cursor < pauliString.size() && i < NUM_QUBITS; cursor++) {
+                switch (pauliString[cursor]) {
                     case 'I':
                         res[2 * i    ] = 0;
                         res[2 * i + 1] = 0;
@@ -74,6 +97,7 @@ namespace dd {
                     default:
                         throw std::runtime_error("Unrecognized symbol in Pauli string\n");
                 }
+                i++;
             }
             return res;
         }
@@ -118,11 +142,11 @@ namespace dd {
 
             std::ostringstream os;
             // Write the phase
-            if (lim->paulis[NUM_BITSETBITS-2] == 0 && lim->paulis[NUM_BITSETBITS-1] == 1)
+            if (lim->paulis[NUM_BITSETBITS-1] == 0 && lim->paulis[NUM_BITSETBITS-2] == 1)
                 os << 'i';
-            if (lim->paulis[NUM_BITSETBITS-2] == 1 && lim->paulis[NUM_BITSETBITS-1] == 0)
+            if (lim->paulis[NUM_BITSETBITS-1] == 1 && lim->paulis[NUM_BITSETBITS-2] == 0)
                 os << '-';
-            if (lim->paulis[NUM_BITSETBITS-2] == 1 && lim->paulis[NUM_BITSETBITS-1] == 1)
+            if (lim->paulis[NUM_BITSETBITS-1] == 1 && lim->paulis[NUM_BITSETBITS-2] == 1)
                 os << "-i";
             // Write the Pauli operators
             for (unsigned int i = 0; i < NUM_QUBITS; i++) {
@@ -154,6 +178,17 @@ namespace dd {
             for (unsigned int i=0; i<LimEntry<NUM_QUBITS>::NUM_BITSETBITS; i++) {
                 if (l->paulis[i] != 0) return false;
             }
+            return true;
+        }
+
+        // Returns whether the subsequence [start ... range) is all-zero
+        bool isZeroInRange(unsigned int start, unsigned int end) const {
+            std::cout << "[isZeroInRange] start=" << start << " end=" << end << "\n"; std::cout.flush();
+            for (unsigned int i=start; i<end && i<NUM_BITSETBITS; i++) {
+                std::cout << "[isZeroInRange] checking i=" << i << "\n"; std::cout.flush();
+                if (paulis.test(i)) return false;
+            }
+            std::cout << "[isZeroInRange] yes, is zero.\n"; std::cout.flush();
             return true;
         }
 
@@ -216,11 +251,11 @@ namespace dd {
                     break;
                 case 'Y':
                     paulis.set(2*v,   1);
-                    paulis.set(2*v+1, 0);
+                    paulis.set(2*v+1, 1);
                     break;
                 case 'Z':
                     paulis.set(2*v,   1);
-                    paulis.set(2*v+1, 1);
+                    paulis.set(2*v+1, 0);
                     break;
 //                default:
                     // TODO throw an exception?
@@ -230,20 +265,22 @@ namespace dd {
         // Returns I, the Identity operator
         // (Some subroutines start with an identity operator, and then apply mutations to it;
         //  however, if you need the identity operator as such, then use a null pointer)
-        static LimEntry<>* getIdentityOperator() {
-            LimEntry<>* Id = new LimEntry<>();
+        static LimEntry<NUM_QUBITS>* getIdentityOperator() {
+            LimEntry<NUM_QUBITS>* Id = new LimEntry<NUM_QUBITS>();
             return Id;
         }
 
         // Returns -I
         // i.e., -1 times the Identity operator
-        static LimEntry<>* getMinusIdentityOperator() {
-            throw std::runtime_error("Error; in getMinusIdentityOperator: not implemented.\n");
+        static LimEntry<NUM_QUBITS>* getMinusIdentityOperator() {
+            LimEntry<NUM_QUBITS>* Id = getIdentityOperator();
+            Id->setPhase(phases::phase_minus_one);
+            return Id;
         }
 
         // returns the phase of the LIM, in two bits, which have the following meaning:
         // 00: +1    01: i    10: -1    11: -i
-        static uint32_t getPhase(LimEntry<>* l) {
+        static uint32_t getPhase(LimEntry<NUM_QUBITS>* l) {
             uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS+1) << 1);
             return phase;
         }

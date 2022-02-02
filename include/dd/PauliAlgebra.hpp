@@ -26,10 +26,12 @@ public:
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
     static bool stabilizerGroupsEqual(const StabilizerGroup& G, const StabilizerGroup& H) {
+        std::cout << "[stabilizerGroupsEqual] start.\n";  std::cout.flush();
         if (G.size() != H.size()) return false;
         for (unsigned int i=0; i<G.size(); i++) {
             if (G[i]->operator!=(*H[i])) return false;
         }
+        std::cout << "[stabilizerGroupsEqual] groups are equal.\n"; std::cout.flush();
         return true;
     }
 
@@ -90,17 +92,20 @@ public:
     // Appends an Identity matrix below the group G, i.e., returns the matrix
     //   [ G  ]
     //   [ Id ]
+    //   here Id has a '1' in every other row, to avoid getting 'Y' and 'X' entries, which can mess up multiplication
+    // TODO this is not very space-efficient, so we may want to improve this
+    // (Returns a fresh Stabilizergroup object; the group G is unchanged)
     static StabilizerGroup appendIdentityMatrix(const StabilizerGroup& G, unsigned int height) {
         StabilizerGroup GI = deepcopy(G);
         for (unsigned int i=0; i<G.size(); i++) {
             // Make column G[i][height ... height + width-1] into the column [0 ...0 1 0 ... 0]
-            for (unsigned int h=height; h<height + i; h++) {
+            for (unsigned int h=height; h<G.size(); h++) {
                 GI[i]->paulis.set(h, 0);
             }
-            GI[i]->paulis.set(height+i, 1);
-            for (unsigned int h=height+i+1; h<G.size(); h++) {
-                GI[i]->paulis.set(h, 0);
-            }
+//            for (unsigned int h=height+i+1; h<G.size(); h++) {
+//                GI[i]->paulis.set(h, 0);
+//            }
+            GI[i]->paulis.set(height+2*i, 1);
         }
         return GI;
     }
@@ -155,6 +160,8 @@ public:
     //   2. prunes the all-zero columns
     //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
     static void toColumnEchelonForm(StabilizerGroup& G) {
+        std::cout << "[toColumnEchelonForm] Before CEF, group is:\n"; std::cout.flush();
+        printStabilizerGroup(G);
         GaussianElimination(G);
         pruneZeroColumns(G);
         // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
@@ -190,26 +197,44 @@ public:
     // Interprets G as a 0/1 matrix, where each operator (i.e., LimEntry object) forms a column
     // returns the kernel of G in column echelon form
     // TODO this method requires LimEntry objects of length 4*NUM_QUBITS,
+    // TODO bug: this method doesn't deal correctly with the groups G={Z}  H={-Z}
     //    but the LimEntry objects only give it vectors of length 2*NUM_QUBITS
     //    so right now, we can 'only' do simulations of up to 15 qubits
     static StabilizerGroup getKernelZ(const StabilizerGroup& G, unsigned int nqubits) {
+        std::cout << "[get Kernel Z] start  |G| = " << G.size() << "\n"; std::cout.flush();
         StabilizerGroup kernel;
         unsigned int width = G.size();  // minor note: size of G may change during toColumnEchelonForm(G)
-        StabilizerGroup GI = appendIdentityMatrix(G, nqubits);
+        // TODO the next line used to say "(G, nqubits)", but now says "(G, 2*nqubits)". Is this right? since there are both Z and X bits
+        StabilizerGroup GI = appendIdentityMatrix(G, 2*nqubits);
         toColumnEchelonForm(GI);
+        LimEntry<>* kernelColumn;
         for (unsigned int i=0; i<GI.size(); i++) {
-            // Copy bits [2*nqubits ... 2*nqubits + width -1] to kernel[i][0 ... width-1]
-            kernel.push_back(new LimEntry<>());
-            for (unsigned int b=0; b<width; b++) {
-                kernel[i]->paulis.set(b, GI[i]->paulis.test(2*nqubits+b));
+            // Check if GI[i] is an all-zero column
+            std::cout << "[getKernel Z] testing GI column " << i << "\n"; std::cout.flush();
+            // TODO && LimEntry<>::getPhase(GI[i])==phases::phase_one
+            if (!LimEntry<>::isIdentity(GI[i]) && GI[i]->isZeroInRange(0, 2*nqubits)) {
+                // Copy bits [2*nqubits ... 2*nqubits + width -1] to kernel[i][0 ... width-1]
+                std::cout << "[getKernel Z] Adding column " << i << " to kernel.\n"; std::cout.flush();
+                kernelColumn = new LimEntry<>();
+                for (unsigned int b=0; b<width; b++) {  // TODO should this be b<GI.size() ?
+                    std::cout << "[getKernel Z] In column " << i << ", setting bit " << b << "\n"; std::cout.flush();
+                    kernelColumn->paulis.set(b, GI[i]->paulis.test(2*nqubits+2*b));
+                }
+                kernel.push_back(kernelColumn);
             }
         }
+        std::cout << "[get kernel Z] putting kernel in CEF.\n"; std::cout.flush();
         toColumnEchelonForm(kernel);
         return kernel;
     }
 
     static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H, unsigned int nqubits) {
+        std::cout << "[intersectGroups Z] start  |G|=" << G.size() << "  |H| = " << H.size() << std::endl;
         StabilizerGroup intersection;
+        std::cout << "[intersectGroups Z] Group G:\n";
+        printStabilizerGroup(G);
+        std::cout << "[intersectGroups Z] Group H:\n";
+        printStabilizerGroup(H);
         StabilizerGroup concat = groupConcatenate(G, H);
         StabilizerGroup kernel = getKernelZ(concat, nqubits);
         LimEntry<>* g;
@@ -222,6 +247,8 @@ public:
             }
             intersection.push_back(g);
         }
+        std::cout << "[intersectGroups Z] Found intersection: \n";
+        printStabilizerGroup(intersection);
 
         return intersection;
     }
@@ -283,23 +310,32 @@ public:
         }
         // Case 1: right child is zero
         else if (high.isZeroTerminal()) {
+            std::cout << "[stab genZ] |0> knife case  n = " << n << ". Low stabilizer group is:\n";
             stabgenset = low.p->limVector; // copies the stabilizer group of the left child
+            printStabilizerGroup(stabgenset);
             LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
             idZ->setOperator(n, 'Z');
             stabgenset.push_back(idZ);
+            std::cout << "[stab genZ] Added Z. Now stab gen set is:\n";
+            printStabilizerGroup(stabgenset);
             // the matrix set is already in column echelon form,
             // so we do not need to perform that step here
         }
         // Case 2: left child is zero
         else if (low.isZeroTerminal()) {
+            std::cout << "[stab genZ] |1> knife case. n = " << n << ". High stabilizer group is:\n";
             stabgenset = high.p->limVector;
+            printStabilizerGroup(stabgenset);
             LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
             minusIdZ->setOperator(n, 'Z');
             stabgenset.push_back(minusIdZ);
+            std::cout << "[stab genZ] Added -Z. now stab gen set is:\n";
+            printStabilizerGroup(stabgenset);
         }
         // Case 3: the node is a 'fork': both its children are nonzero
         else {
             // Gather the stabilizer groups of the two children
+            std::cout << "[constructStabilizerGeneratorSet] Case fork.\n";
             StabilizerGroup* stabLow  = &(low. p->limVector);
             StabilizerGroup* stabHigh = &(high.p->limVector);
             // Step 1: Compute the intersection
