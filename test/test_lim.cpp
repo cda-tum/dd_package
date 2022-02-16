@@ -4,6 +4,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using namespace dd::literals;
+
 TEST(LimTest, SinglePauliOps) {
     dd::LimEntry<1> id{(int)0b000};
     dd::LimEntry<1> z{0b001};
@@ -391,4 +393,42 @@ TEST(LimTest, columnEchelonForm1) {
     expectedGroup.push_back(&zzi_exp);
     expectedGroup.push_back(&izz_exp);
     EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}
+
+TEST(LimTest, simpleMultiplicationBellState) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
+    auto zero_state = dd->makeZeroState(2);
+
+    auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+
+    auto result = dd->getVector(bell_state);
+    dd->printVector(bell_state);
+
+    EXPECT_TRUE(abs(result[0].real() - 0.707) < 0.001 && abs(result[0].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[1].real()) < 0.001 && abs(result[1].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[2].real()) < 0.001 && abs(result[2].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[3].real() - 0.707) < 0.001 && abs(result[3].imag()) < 0.001);
+}
+
+TEST(LimTest, simpleCliffordCircuit) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto state = dd->makeZeroState(2);
+
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 0_pc, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 0), state);
+
+    auto result = dd->getVector(state);
+
+    EXPECT_TRUE(dd->getVector(state) == dd->getVector(dd->makeZeroState(2)));
 }
