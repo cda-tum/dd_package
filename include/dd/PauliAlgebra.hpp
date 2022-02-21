@@ -22,6 +22,16 @@ typedef std::vector<LimEntry<>*> StabilizerGroup;
 class Pauli {
 public:
 
+
+    // todo find an appropriate place for this utility function
+    template <std::size_t N, std::size_t M>
+    static void bitsetCopySegment(std::bitset<N>& x, const std::bitset<M> y, unsigned int begin_x, unsigned int begin_y, unsigned int end_y) {
+        assert(end_y <= N && end_y <= M);
+        for (unsigned int i=begin_y; i<end_y; i++) {
+            x.set(i+begin_x-begin_y, y.test(i));
+        }
+    }
+
     // Returns whether the two groups have the same vector of generators
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
@@ -53,32 +63,22 @@ public:
         std::cout.flush();
     }
 
+    template <std::size_t NUM_QUBITS>
+    static void printStabilizerGroup(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        if (G.size() == 0) {
+            std::cout << "  (empty group)\n";
+        }
+        for (unsigned int i=0; i<G.size(); i++) {
+            std::cout << *G[i] << std::endl; std::cout.flush();
+        }
+    }
+
     static StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup concat = G;
         for (unsigned int i=0; i<H.size(); i++) {
             concat.push_back(H[i]);
         }
         return concat;
-    }
-
-    // This function does nothing; it just 'catches' the mNode case
-//    static LimEntry<>* highLabelZ(const mNode u, const mNode v, LimEntry<>* vLabel) {
-//        return vlabel;
-//    }
-
-    static LimEntry<>* multiply(const LimEntry<>* a, const LimEntry<>* b) {
-        LimEntry<>* c = LimEntry<>::getIdentityOperator();
-        c->multiplyBy(a);
-        c->multiplyBy(b);
-        return c;
-    }
-
-    // Returns the LIM a * b
-    static LimEntry<>* multiply(const LimEntry<>& a, const LimEntry<>& b) {
-        LimEntry<>* c = LimEntry<>::getIdentityOperator();
-        c->multiplyBy(a);
-        c->multiplyBy(b);
-        return c;
     }
 
     static StabilizerGroup deepcopy(const StabilizerGroup& G) {
@@ -95,6 +95,7 @@ public:
     //   here Id has a '1' in every other row, to avoid getting 'Y' and 'X' entries, which can mess up multiplication
     // TODO this is not very space-efficient, so we may want to improve this
     // (Returns a fresh Stabilizergroup object; the group G is unchanged)
+    // todo is this function obsolete, given appendIdentityMatrixBitset?
     static StabilizerGroup appendIdentityMatrix(const StabilizerGroup& G, unsigned int height) {
         StabilizerGroup GI = deepcopy(G);
         for (unsigned int i=0; i<G.size(); i++) {
@@ -110,18 +111,45 @@ public:
         return GI;
     }
 
+    template <std::size_t NUM_QUBITS>
+    static std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+        std::vector<LimBitset<NUM_QUBITS>*> GI;
+        LimBitset<NUM_QUBITS>* col;
+        for (unsigned int i=0; i<G.size(); i++) {
+            col = new LimBitset<NUM_QUBITS>();
+            col->lim = *G[i];
+            col->bits.set(i, 1);
+            GI.push_back(col);
+        }
+        return GI;
+    }
+
+    // Turns M into an Identity matrix of size x size rows and columns
+    // assumes that M is empty
+    // todo this method is obsolete; delete
+//    static void setIdentityMatrix(std::vector<std::vector<bool> >& M, unsigned int size) {
+//        std::vector<bool> col;
+//        for (unsigned int i=0; i<size; i++) {
+//            col = std::vector<bool>(size, 0);
+//            col.set(i, 1);
+//            M.push_back(col);
+//       }
+//    }
+
     // Performs Gaussian elimination on G
     // We assume that G is not stored in the LimTable.
     // In more detail: the elements of G are modified in place
     // Therefore, the LimEntry objects should NOT be stored in the LimTable;
+    // todo use the phase information
+    // todo this algorithm allocates many new LIMs; by modifying in place, less memory can be allocated, and we solve a memory leak
     template <std::size_t NUM_QUBITS>
     static void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
+        std::cout << "[Gaussian Elimination] start. |G| = " << G.size() << ".\n"; std::cout.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
         for (unsigned int h=0; h<pauli_height; h++) {
             // Step 1: Find a column with a '1' at position h
-            // TODO AND position h should be the pivot of that column. Right?
             reducingColId = -1;
             for (unsigned int i=0; i<G.size(); i++) {
                 if (G[i]->pivotPosition() == h) {
@@ -134,7 +162,83 @@ public:
             for (unsigned int reduceColId =0; reduceColId < G.size(); reduceColId++) {
                 if (reduceColId == reducingColId) continue;
                 if (G[reduceColId]->paulis.test(h)) {
-                    G[reduceColId] = Pauli::multiply(G[reduceColId], G[reducingColId]);
+                    std::cout << "[Gaussian Elimination] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; std::cout.flush();
+                    G[reduceColId] = LimEntry<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+                }
+            }
+        }
+    }
+
+    // does not initialize 'decomposition' to an identity matrix
+    // todo use phase
+    // todo don't reallocate so much memory
+    // todo is this procedure ever used?
+    template <std::size_t NUM_QUBITS>
+    static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        if (G.size() <= 1) return;
+        std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; std::cout.flush();
+        unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
+        unsigned int reducingColId;
+        for (unsigned int h=0; h<pauli_height; h++) {
+            // Step 1: Find a column with a '1' at position h
+            reducingColId = -1;
+            for (unsigned int i=0; i<G.size(); i++) {
+                if (G[i]->lim.pivotPosition() == h) {
+                    reducingColId = i;
+                    break;
+                }
+            }
+            if (reducingColId == (unsigned int)-1) continue;
+            // Step 2: Reduce all other columns via G[reducingColId]
+            for (unsigned int reduceColId =0; reduceColId < G.size(); reduceColId++) {
+                if (reduceColId == reducingColId) continue;
+                if (G[reduceColId]->lim.paulis.test(h)) {
+                    std::cout << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; std::cout.flush();
+                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+                }
+            }
+        }
+        // the pauli's are done; handle the phase
+        reducingColId = -1;
+        for (unsigned int i=0; i<G.size(); i++) {
+            if (G[i]->lim.pivotPosition() == pauli_height) {
+                reducingColId = i;
+                break;
+            }
+        }
+        if (reducingColId == (unsigned int) -1) return;
+        for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
+            if (reduceColId == reducingColId) continue;
+            if (G[reduceColId]->lim.getPhase() == phases::phase_minus_one || G[reduceColId]->lim.getPhase() == phases::phase_minus_i) {
+                G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+            }
+        }
+    }
+
+    // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
+    // todo it is possible to write a faster procedure, if we are allowed to assume that G is sorted
+    template <std::size_t NUM_QUBITS>
+    static void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        if (G.size() <= 1) return;
+        std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; std::cout.flush();
+        unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
+        unsigned int reducingColId;
+        for (unsigned int row=0; row<pauli_height; row++) {
+            // Step 1: Find a column with a '1' at position row
+            reducingColId = -1;
+            for (unsigned int i=0; i<G.size(); i++) {
+                if (G[i]->lim.pivotPosition() == row) {
+                    reducingColId = i;
+                    break;
+                }
+            }
+            if (reducingColId == (unsigned int)-1) continue;
+            // Step 2: Reduce all other columns via G[reducingColId]
+            for (unsigned int reduceColId =0; reduceColId < G.size(); reduceColId++) {
+                if (reduceColId == reducingColId) continue;
+                if (G[reduceColId]->lim.paulis.test(row)) {
+                    std::cout << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; std::cout.flush();
+                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
                 }
             }
         }
@@ -155,6 +259,36 @@ public:
         }
     }
 
+    template <std::size_t NUM_QUBITS>
+    static void pruneZeroColumns(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        unsigned int i=0;
+        while (i<G.size()) {
+            if (G[i]->lim.isAllZeroVector()) {
+                // Remove this all-zero vector from the matrix
+                // Step 1: replace it with the last vector in the matrix
+                G[i] = G[G.size()-1];
+                G.pop_back();
+            } else {
+                i++;
+            }
+        }
+    }
+
+    template <std::size_t NUM_QUBITS>
+    static void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        unsigned int i=0;
+        while (i<G.size()) {
+            if (G[i]->lim.isIdentityModuloPhase()) {
+                // Remove this all-zero vector from the matrix
+                // Step 1: replace it with the last vector in the matrix
+                G[i] = G[G.size()-1];
+                G.pop_back();
+            } else {
+                i++;
+            }
+        }
+    }
+
     // Puts the stabilizer group in column echelon form; specifically:
     //   1. performs Gaussian elimination on G
     //   2. prunes the all-zero columns
@@ -163,6 +297,8 @@ public:
         std::cout << "[toColumnEchelonForm] Before CEF, group is:\n"; std::cout.flush();
         printStabilizerGroup(G);
         GaussianElimination(G);
+        std::cout << "[toColumnEchelonForm] After Gaussian Elimination, before pruning zero col's, group is:\n";std::cout.flush();
+        printStabilizerGroup(G);
         pruneZeroColumns(G);
         // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
         std::sort(G.begin(), G.end(), LimEntry<>::geq);
@@ -170,12 +306,26 @@ public:
         printStabilizerGroup(G);
     }
 
+    template <std::size_t NUM_QUBITS>
+    static void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        std::cout << "[toColumnEchelonForm] start, |G| = " << G.size() << "\n";
+        GaussianElimination(G);
+        pruneZeroColumns(G);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+    }
+
+    template <std::size_t NUM_QUBITS>
+    static void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>* >& G) {
+        GaussianEliminationModuloPhase(G);
+        pruneZeroColumnsModuloPhase(G);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+    }
+
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
-    // TODO this is not correct; the procedure should check on line 7, whether v has its FIRST '1' entry at position h, not just any '1'
     template<std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
-        std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
+        std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; std::cout.flush();
         LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) return y;
         std::size_t height = 2*NUM_QUBITS;
@@ -186,7 +336,7 @@ public:
                 for (unsigned int v=0; v<G.size(); v++) {
                     if (G[v]->pivotPosition() == h) {
                         std::cout << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
-                        y = Pauli::multiply(*y, *G[v]);
+                        y = LimEntry<NUM_QUBITS>::multiply(*y, *G[v]);
                     }
                 }
             }
@@ -194,37 +344,123 @@ public:
         return y;
     }
 
+    // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
+    // todo this version of GramSchmidt is used; but we should refactor that use case into Gramschmidt(Group, LimEntry, bitset)
+    // todo this version uses right multiplication; refactor to left multiplication
+    template <std::size_t NUM_QUBITS>
+    static LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
+        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
+        if (G.size() == 0) return y;
+        std::size_t height = 2*NUM_QUBITS;
+        std::cout << "[Gram Schmidt] start y = " << *y << "\n";
+        for (unsigned int h=0; h<height; h++) {
+            if (y->lim.paulis[h]) {
+                std::cout << "[GramSchmidt] h=" << h << ".\n";
+                // Look for a vector whose first '1' entry is at position h
+                for (unsigned int v=0; v<G.size(); v++) {
+                    if (G[v]->lim.pivotPosition() == h) {
+                        std::cout << "[Gram Schmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << *G[v] << "\n";
+                        y->multiplyBy(*G[v]);
+                        std::cout << "[Gram Schmidt] after multiplication, y = " << *y << "\n";
+                    }
+                }
+            }
+        }
+        return y;
+    }
+
+    // Performs the GramSchmidt algorithm,, i.e.,
+    //   given a group G and a vector x,
+    //   reduces the vector x via G, and returns this reduced vector
+    //   The decomposition that is found, is recorded in the bitset 'indicator'
+    // todo this algorithm can be sped up if the group G is sorted
+    template <std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
+        std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
+        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
+        std::size_t height = 2*NUM_QUBITS;
+        for (unsigned int i=0; i<height && i<NUM_QUBITS; i++) {
+            indicator.set(i, 0);
+        }
+        if (G.size() == 0) return y;
+        for (unsigned int h=0; h<height; h++) {
+            if (y->paulis[h]) {
+                std::cout << "[GramSchmidt] h=" << h << ".\n";
+                // Look for a vector whose first '1' entry is at position h
+                for (unsigned int v=0; v<G.size(); v++) {
+                    if (G[v]->pivotPosition() == h) {
+                        std::cout << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
+                        y = LimEntry<NUM_QUBITS>::multiply(*G[v], *y);
+                        std::cout << "[GramSchmidt] after multiplication, y = " << *y << std::endl;
+                        indicator.set(v, 1);
+                    }
+                }
+            }
+        }
+        return y;
+    }
+
+    // Given a group G and a 0/1 indicator vector,
+    //   returns the product of the indicated elements of G
+    //   e.g., with G={ZIZ, IZZ, IXY} and indicator = '110', we return IZI
+    template<std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
+        LimEntry<NUM_QUBITS>* g = LimEntry<NUM_QUBITS>::getIdentityOperator();
+        assert(G.size() <= NUM_QUBITS);
+        for (unsigned int i=0; i<G.size(); i++) {
+            if (indicator.test(i)) {
+                g->multiplyBy(G[i]);
+            }
+        }
+        return g;
+    }
+
     // Interprets G as a 0/1 matrix, where each operator (i.e., LimEntry object) forms a column
     // returns the kernel of G in column echelon form
     // TODO this method requires LimEntry objects of length 4*NUM_QUBITS,
-    // TODO bug: this method doesn't deal correctly with the groups G={Z}  H={-Z}
     //    but the LimEntry objects only give it vectors of length 2*NUM_QUBITS
     //    so right now, we can 'only' do simulations of up to 15 qubits
+    // TODO bug: this method doesn't deal correctly with the groups G={Z}  H={-Z}
     static StabilizerGroup getKernelZ(const StabilizerGroup& G, unsigned int nqubits) {
         std::cout << "[get Kernel Z] start  |G| = " << G.size() << "\n"; std::cout.flush();
         StabilizerGroup kernel;
         unsigned int width = G.size();  // minor note: size of G may change during toColumnEchelonForm(G)
         // TODO the next line used to say "(G, nqubits)", but now says "(G, 2*nqubits)". Is this right? since there are both Z and X bits
-        StabilizerGroup GI = appendIdentityMatrix(G, 2*nqubits);
-        toColumnEchelonForm(GI);
+        StabilizerGroup G_Id = appendIdentityMatrix(G, 2*nqubits);
+        toColumnEchelonForm(G_Id);
         LimEntry<>* kernelColumn;
-        for (unsigned int i=0; i<GI.size(); i++) {
+        for (unsigned int i=0; i<G_Id.size(); i++) {
             // Check if GI[i] is an all-zero column
             std::cout << "[getKernel Z] testing GI column " << i << "\n"; std::cout.flush();
-            // TODO && LimEntry<>::getPhase(GI[i])==phases::phase_one
-            if (!LimEntry<>::isIdentity(GI[i]) && GI[i]->isZeroInRange(0, 2*nqubits)) {
+            if (!LimEntry<>::isIdentity(G_Id[i]) && G_Id[i]->isZeroInRange(0, 2*nqubits) && LimEntry<>::getPhase(G_Id[i])==phases::phase_one) {
                 // Copy bits [2*nqubits ... 2*nqubits + width -1] to kernel[i][0 ... width-1]
                 std::cout << "[getKernel Z] Adding column " << i << " to kernel.\n"; std::cout.flush();
                 kernelColumn = new LimEntry<>();
                 for (unsigned int b=0; b<width; b++) {  // TODO should this be b<GI.size() ?
                     std::cout << "[getKernel Z] In column " << i << ", setting bit " << b << "\n"; std::cout.flush();
-                    kernelColumn->paulis.set(b, GI[i]->paulis.test(2*nqubits+2*b));
+                    kernelColumn->paulis.set(b, G_Id[i]->paulis.test(2*nqubits+2*b));
                 }
                 kernel.push_back(kernelColumn);
             }
         }
         std::cout << "[get kernel Z] putting kernel in CEF.\n"; std::cout.flush();
         toColumnEchelonForm(kernel);
+        return kernel;
+    }
+
+    // Returns the kernel of the group G modulo phase, as a vector<bitset>
+    // todo I don't think we need the nqubits argument
+    template <std::size_t NUM_QUBITS>
+    static std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+        std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
+        GaussianEliminationModuloPhase(G_Id);
+        std::vector<std::bitset<NUM_QUBITS> > kernel;
+        for (unsigned i=0; i<G_Id.size(); i++) {
+            if (G_Id[i]->lim.isIdentityModuloPhase()) {
+                kernel.push_back(G_Id[i]->bits);
+            }
+        }
+        // todo free and deallocate GI and its elements
         return kernel;
     }
 
@@ -253,43 +489,106 @@ public:
         return intersection;
     }
 
-    // Returns an element in the coset <G> intersect (b + <H>)
-    // Here <G> is the group generated by G; likewise for H
-    // Note that b + <H> is therefore a coset.
-    // If the coset <G> intersect (b + <H>) is empty, nullptr is returned
-    // TODO this function always returns nullptr??
-    // TODO I'm not convinced this function works...
-    static LimEntry<>* getCosetIntersectionElementZ(const StabilizerGroup& G, const StabilizerGroup& H, const LimEntry<>* b) {
-        std::cout << "[coset elZ] start; |G|=" << G.size() << " |H|=" << G.size() << " b = " << LimEntry<>::to_string(b) << "\n"; std::cout.flush();
-        // TODO handle the case b == nullptr (so b is identity)
-        if (!stabilizerGroupIsSorted(G)) {
-            std::cout << "[coset elZ] group G is not sorted. Quitting G = \n";
-            printStabilizerGroup(G);
-            return nullptr;
+    // Returns a generating set J for the intersection of G and H, so <J>= <G> intersect <H>
+    //    J is not necessarily in Column Echelon Form
+    //    J may contain elements that are equal up to phase
+    // todo verify: does this method work for Pauli groups? it certainly works for Z groups
+    static StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
+        std::cout << "[intersectGroups mod phase] start  |G|=" << G.size() << "  |H| = " << H.size() << std::endl;
+        std::cout << "[intersectGroups mod phase] Group G:\n";
+        printStabilizerGroup(G);
+        std::cout << "[intersectGroups mod phase] Group H:\n";
+        printStabilizerGroup(H);
+        StabilizerGroup intersection;
+        StabilizerGroup concat = groupConcatenate(G, H);
+        std::vector<std::bitset<32> > kernel = getKernelModuloPhase(concat);
+        std::cout << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
+        LimEntry<>* g;
+        for (unsigned int i=0; i<kernel.size(); i++) {
+            g = LimEntry<>::getIdentityOperator();
+            for (unsigned int j=0; j<G.size(); j++) {
+                if (kernel[i].test(j)) {
+                    g->multiplyBy(*G[j]);
+                }
+            }
+            intersection.push_back(g);
         }
-        if (!stabilizerGroupIsSorted(H)) {
-            std::cout << "[coset elZ] group H is not sorted. Quitting.\n";
-            printStabilizerGroup(H);
-            return nullptr;
+        std::cout << "[intersectGroups mod phase] Found intersection: \n";
+        printStabilizerGroup(intersection);
+
+        return intersection;
+    }
+
+    // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
+    // Searches for an element in the set '<G> intersect (<H>+a)'
+    // Note that '<G>' is a group, and '<H>+a' is a coset
+    // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
+    template <std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+        std::cout << "[coset intersection P] a = " << *a << "\n"; std::cout.flush();
+        std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
+        std::vector<LimBitset<NUM_QUBITS>*> GHI = appendIdentityMatrixBitset(GH);
+        toColumnEchelonFormModuloPhase(GHI);
+        std::cout << "[coset intersection P] Found GH +Id to column echelon mod phase:\n";
+        printStabilizerGroup(GHI);
+        std::bitset<NUM_QUBITS> decomposition;   // decomposition of 'a'
+        std::cout << "[coset intersection P] Doing Gram-Schmidt with GH, a.\n"; std::cout.flush();
+        LimBitset<NUM_QUBITS> a_bitset(a);
+        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
+        a_bitset = GramSchmidt(GHI, &a_bitset);
+        std::cout << "[coset intersection P] after Gram-Schmidt, a_bitset = " << a_bitset << "\n";
+        std::cout << "[coset intersection P] a.bits[0] = " << a_bitset.bits.test(0) << ", a.bits[1] = " << a_bitset.bits.test(1) << "\n";
+        std::cout << "[coset intersection P] computing product of elements (GH, decomposition).\n"; std::cout.flush();
+//        LimEntry<NUM_QUBITS>* c = getProductOfElements(GH, decomposition);
+//        std::cout << "[coset intersection P] Computed product of elements.\n"; std::cout.flush();
+        std::bitset<NUM_QUBITS> decomposition_G, decomposition_H;  // these bitsets are initialized to 00...0, according to the C++ reference
+//        std::cout << "[coset intersection P] copying bit segment 1...\n"; std::cout.flush();
+        bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
+        bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size()+H.size());
+//        bitsetCopySegment<NUM_QUBITS, 2*NUM_QUBITS+2>(decomposition_G, c->paulis, 0, 2*nqubits, 2*nqubits+G.size());
+//        std::cout << "[coset intersection P] copying bit segment 2...\n"; std::cout.flush();
+//        bitsetCopySegment(decomposition_H, c->paulis, 0, 2*nqubits + G.size(), 2*nqubits+G.size() + H.size());
+        std::cout << "[coset intersection P] copy successful! Getting product of elements.\n"; std::cout.flush();
+        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
+//        std::cout << "[coset intersection P] got first product. Computing second product.\n"; std::cout.flush();
+        LimEntry<NUM_QUBITS>* a_H = getProductOfElements(H, decomposition_H);
+        LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
+        phases phase_diff = (phases) ((a->getPhase() + a_prime->getPhase()) & 0x3);
+        std::cout << "[coset intersection P] a_G = " << *a_G << "\n";
+        std::cout << "[coset intersection P] a_H = " << *a_H << "\n";
+        std::cout << "[coset intersection P] decomposition G = " << decomposition_G << "\n";
+        std::cout << "[coset intersection P] decomposition H = " << decomposition_H << "\n";
+        std::cout << "[coset intersection P] aprime = " << *a_prime << "\n"; std::cout.flush();
+        // todo replace this check with the more 'elegant' checking whether the vector returned by GramSchmidt, above, is identity modulo phase
+        //   that has the advantage that the check can be done earlier
+        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
+            return LimEntry<NUM_QUBITS>::noLIM;
         }
-        std::cout << "[coset elZ] both groups are sorted.\n"; std::cout.flush();
-        LimEntry<>* b2;
-        LimEntry<>* bOrth;
-        b2 = new LimEntry<>(b);
-        std::cout << "[coset elZ] Made b2.\n"; std::cout.flush();
-        b2 = GramSchmidt(H, b2);
-        std::cout << "[coset elZ] performed Gram-Schmidt; b2 = " << LimEntry<>::to_string(b2) << ".\n"; std::cout.flush();
-        bOrth = new LimEntry<>(b2);
-        // TODO maybe use an 'elementIsInGroupZ' function, instead of GramSchmidt and then checking identity? maybe not; doesn't work for Pauli group
-        bOrth = GramSchmidt(G, bOrth);
-        std::cout << "[coset elZ] performed Gram-Schmidt; borth = " << LimEntry<>::to_string(bOrth) << "\n"; std::cout.flush();
-        if (bOrth->isIdentityOperator()) {
-//            bOrth->multiplyBy(b2);
-//            std::cout << "[coset elZ] multiplied by b2.\n"; std::cout.flush();
-            std::cout << "[coset elZ] the coset contains an element: " << LimEntry<>::to_string(b2) << "\n";
-            return b2;
+        if (phase_diff == phases::phase_one) {
+            return a_G;
         }
-        return nullptr;
+        else if (phase_diff == phases::phase_i || phase_diff == phases::phase_minus_i) {
+            return LimEntry<NUM_QUBITS>::noLIM;
+        }
+        // phase_diff must be -1  (i.e., must be phases::phase_minus_one)
+        std::cout << "[coset intersection P] Phase difference is -1. Computing intersection...\n"; std::cout.flush();
+        // todo is it necessary to write a separate function intersectGroupsModuloPhase for the Pauli group? or does the following function call suffice?
+        const std::vector<LimEntry<NUM_QUBITS>*> intersection = intersectGroupsModuloPhase(G, H);
+        LimEntry<NUM_QUBITS>* k_G;
+        LimEntry<NUM_QUBITS>* k_H;
+        for (unsigned int i=0; i<intersection.size(); i++) {
+            // todo this is not how it's supposed to be! Why did I program this?
+            GramSchmidt(G, intersection[i], decomposition_G);
+            GramSchmidt(H, intersection[i], decomposition_H);
+            k_G = getProductOfElements(G, decomposition_G);
+            k_H = getProductOfElements(H, decomposition_H);
+            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phases::phase_minus_one) {
+                a_G->multiplyBy(k_G);
+                return a_G;
+            }
+        }
+        std::cout << "[coset intersection P] no element in coset; returning noLIM.\n"; std::cout.flush();
+        return LimEntry<NUM_QUBITS>::noLIM;
     }
 
     // For now, we assume that only vNodes are passed
@@ -335,7 +634,7 @@ public:
         // Case 3: the node is a 'fork': both its children are nonzero
         else {
             // Gather the stabilizer groups of the two children
-            std::cout << "[constructStabilizerGeneratorSet] Case fork.\n";
+            std::cout << "[constructStabilizerGeneratorSet] Case fork n = " << n << ".\n";
             StabilizerGroup* stabLow  = &(low. p->limVector);
             StabilizerGroup* stabHigh = &(high.p->limVector);
             // Step 1: Compute the intersection
@@ -343,15 +642,32 @@ public:
 
             // Step 2:
             LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
-            LimEntry<>* m = getCosetIntersectionElementZ(*stabLow, *stabHigh, minus);
-            if (m != nullptr) {
+            LimEntry<>* m = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
+            if (m != LimEntry<>::noLIM) {
                 m->setOperator(n, 'Z');
                 stabgenset.push_back(m);
             }
-            // The matrix is now guaranteed to be in column echelon form
+            // todo deallocate minus, m
         }
 
         return stabgenset;
+    }
+
+    // Returns true iff a == -b, approximately
+    // todo move to file 'Complex.hpp'
+    static bool isTimesMinusOne(Complex a, Complex b) {
+        bool rflip = false, iflip = false;
+        std::cout << "[isTimesMinusOne] a=" << a.toString() << " b = " << b.toString() << std::endl;
+        // check if Real(a) = -Real(b)
+        if (ComplexTable<>::Entry::approximatelyEquals(a.r, ComplexTable<>::Entry::flipPointerSign(b.r))) {
+            rflip = true;
+        }
+        // Check if Im(a) = -Im(b)
+        if (ComplexTable<>::Entry::approximatelyEquals(a.i, ComplexTable<>::Entry::flipPointerSign(b.i))) {
+            iflip = true;
+        }
+        std::cout << "[isTimesMinusOne] answer: real " << rflip << " im: " << iflip << std::endl;
+        return rflip && iflip;
     }
 
     // Returns an isomorphism between u and v,
@@ -391,42 +707,43 @@ public:
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
         else if (uHigh.isZeroTerminal()) {
             std::cout << "[getIsomorphismZ] Case uHigh is terminal\n";
-            if (!vHigh.isZeroTerminal()) return (LimEntry<>*)-1;
-            if (uHigh.p != vHigh.p) return (LimEntry<>*) -1;
-            return multiply(*uHigh.l, *vHigh.l);
+            if (!vHigh.isZeroTerminal()) return LimEntry<>::noLIM;
+            if (uHigh.p != vHigh.p) return LimEntry<>::noLIM;
+            return LimEntry<>::multiply(*uHigh.l, *vHigh.l);
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
         else if (uLow.isZeroTerminal()) {
             std::cout << "[getIsomorphismZ] case uLow is terminal.\n";
-            if (!vLow.isZeroTerminal()) return (LimEntry<>*)-1; // not isomorphic
-            if (uLow.p != vLow.p) return (LimEntry<>*) -1;
+            if (!vLow.isZeroTerminal()) return LimEntry<>::noLIM; // not isomorphic
+            if (uLow.p != vLow.p) return LimEntry<>::noLIM;
             return nullptr;  // return the Identity isomorphism
         }
         // Case 3 ("Fork"): Both children are nonzero
         else {
             std::cout << "[getIsomorphismZ] case Fork.\n"; std::cout.flush();
-            // Step 1: check if the amplitudes are equal, up to a sign
-            if (!uLow.w.approximatelyEquals(vLow.w) || !uHigh.w.approximatelyEquals(vHigh.w)) return (LimEntry<>*) -1;
-            std::cout << "[getIsomorphismZ] children are approximately equal.\n"; std::cout.flush();
-            // TODO check if the amplitudes satisfy uHigh = -1 * vHigh
-            bool amplitudeOppositeSign = false;
+            std::cout << "[getIsomorphismZ] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl;
+            // Step 1.2: check if the amplitudes satisfy uHigh = -1 * vHigh
+            bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
+            // Step 1.1:  check if the amplitudes are equal, up to a sign
+            if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimEntry<>::noLIM;
+            std::cout << "[getIsomorphismZ] edge weights are approximately equal.\n"; std::cout.flush();
             // Step 2: Check if nodes u and v have the same children
-            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return (LimEntry<>*) -1;
+            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimEntry<>::noLIM;
             std::cout << "[getIsomorphismZ] children of u and v are the same nodes.\n"; std::cout.flush();
             // Step 3: check if the automorphism groups are equal
             if (!stabilizerGroupsEqual(u->limVector, v->limVector)) {
-                return (LimEntry<>*) -1;
+                return LimEntry<>::noLIM;
             }
             std::cout << "[getIsomorphismZ] the stabilizer Groups of u and v are equal.\n"; std::cout.flush();
             // Step 4: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
-            LimEntry<>* isoHigh = multiply(uHigh.l, vHigh.l);
+            LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
             std::cout << "[getIsomorphismZ] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
             if (amplitudeOppositeSign) {
-                std::cout << "[getIsomorphismZ] multiplying Phase by -1?\n"; std::cout.flush();
+                std::cout << "[getIsomorphismZ] multiplying Phase by -1\n"; std::cout.flush();
                 isoHigh->multiplyPhaseBy(phases::phase_minus_one); // multiply by -1
                 std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             }
-            iso = getCosetIntersectionElementZ(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismZ] completed coset intersection element.\n"; std::cout.flush();
             if (iso != nullptr) {
                 std::cout << "[getIsomorphismZ] The coset was non-empty; returning element.\n"; std::cout.flush();
@@ -436,7 +753,7 @@ public:
             std::cout << "[getIsomorphismZ] multiplying phase by 2.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(2);
             std::cout << "[getIsomorphismZ] multiplied phase by 2.\n"; std::cout.flush();
-            iso = getCosetIntersectionElementZ(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
 //            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
             if (iso != nullptr) {
                 std::cout << "[getIsomorphismZ] Coset was not empty; returning result.\n"; std::cout.flush();
@@ -444,7 +761,7 @@ public:
             }
             else {
                 std::cout << "[getIsomorphismZ] Coset was empty; returning -1.\n"; std::cout.flush();
-                return (LimEntry<>*) -1;
+                return LimEntry<>::noLIM;
             }
         }
 

@@ -205,9 +205,13 @@ namespace dd {
         // TODO limdd: rename to just normalize() ?
         vEdge normalizeLIMDD(const vEdge& e, bool cached) {
             // Step 1: obtain 'normalized' weights for the low and high edge
+            if (!(LimEntry<>::getPhase(e.p->e[0].l) == phases::phase_one &&
+                  LimEntry<>::getPhase(e.p->e[1].l) == phases::phase_one)) {
+                throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
+            }
+
             auto r = normalize(e, cached);
 
-            // TODO limdd <Z>-LIMDD part
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // Case 1 ("Low Knife"):  high edge = 0, low edge is nonzero
@@ -228,16 +232,20 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            std::cout << "[normalizeLIMDD] Setting data.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] case Fork. Setting data.\n"; std::cout.flush();
+            Complex loww = r.p->e[0].w;
+            Complex highw = r.p->e[1].w;
+            std::cout << "[normalizeLIMDD} low weight: " << loww << "  high weight: " << highw << std::endl;
             LimEntry<>* lowLim  = r.p->e[0].l;
             LimEntry<>* higLim  = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             std::cout << "[normalizeLIMDD] Step 1: multiply.\n"; std::cout.flush();
             // TODO multiply by the inverse of lowLim, instead of by lowLim
             // TODO multiply the phase of R with the inverse of the phase on the low edge
-            r.p->e[1].l = Pauli::multiply(lowLim, higLim);
+            // TODO make a test for this
+            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
             // Step 2: Make the left LIM Identity
-            std::cout << "[normalizeLIMDD] Step 2: Set nullptr.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n"; std::cout.flush();
             r.p->e[0].l = nullptr;
             vNode       oldNode = *(r.p);       // make a copy of the old node
             // Step 3: Choose a canonical right LIM
@@ -247,19 +255,21 @@ namespace dd {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n"; std::cout.flush();
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
-            assert (iso != (LimEntry<>*)-1);
-            // TODO the getIsomorphismZ doesn't find the isomorphism (!) even though there is guaranteed to be one in test CreateNode2.
+            assert (iso != LimEntry<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
             std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n"; std::cout.flush();
-            r.l = Pauli::multiply(r.l, lowLim);
+            r.l = LimEntry<>::multiply(r.l, lowLim);
             std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n"; std::cout.flush();
-            r.l = Pauli::multiply(r.l, iso);
-            // Step 6.1: Lastly, to make the edge canonical, multiply the weight r.w by the phase of the Lim r.l
-            //   TODO
-            // Step 6.2: Make the phase of r.l '+1'
-            std::cout << "[normalizeLIMDD] Step 6: Set the phase to 1.\n"; std::cout.flush();
-            r.l->setPhase(phases::phase_one);
+            r.l = LimEntry<>::multiply(r.l, iso);
+            // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
+            std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n"; std::cout.flush();
+            if (r.l->getPhase() == phases::phase_minus_one) {
+                // Step 6.1: multiply the weight 'r.w' by -1
+                r.w.multiplyByMinusOne();
+                // Step 6.2: Make the phase of r.l '+1'
+                r.l->setPhase(phases::phase_one);
+            }
 
             return r;
         }

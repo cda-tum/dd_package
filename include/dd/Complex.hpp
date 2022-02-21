@@ -48,6 +48,19 @@ namespace dd {
             return !operator==(other);
         }
 
+        // TODO this function is only used in debugging; we could move it to a more suitable place
+        static Complex minusOne() {
+            Complex min = one;
+            min.r = ComplexTable<>::Entry::flipPointerSign(min.r);
+            return min;
+        }
+
+        // Sets this complex value z to '-z'
+        void multiplyByMinusOne() {
+            r = CTEntry::flipPointerSign(r);
+            i = CTEntry::flipPointerSign(i);
+        }
+
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
             return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }

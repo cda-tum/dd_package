@@ -70,6 +70,22 @@ TEST(LimTest, PauliToStringWithPhase) {
     EXPECT_EQ(lim3.getQubit(2), 'X');
 }
 
+TEST(LimTest, muliplyByMinusOne) {
+    dd::Complex z = dd::Complex::one;
+    z.multiplyByMinusOne();
+    EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(z.r), -1));
+
+    dd::Complex m = dd::Complex::minusOne();
+    EXPECT_TRUE(z.approximatelyEquals(m));
+
+    EXPECT_FALSE(z.approximatelyEquals(dd::Complex::one));
+
+    dd::Complex s{&dd::ComplexTable<>::sqrt2_2, &dd::ComplexTable<>::one};
+    s.multiplyByMinusOne();
+    EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.r), -dd::SQRT2_2));
+    EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.i), -1));
+}
+
 TEST(LimTest, SimpleTableDefault) {
     auto limtable = std::make_unique<dd::LimTable<>>();
     std::cout << "Limtable size " << sizeof(*limtable) << " byte\n";
@@ -240,40 +256,408 @@ TEST(LimTest, MultiplyPauliStrings) {
     dd::LimEntry<1> y{"Y"};
     dd::LimEntry<1> z{"Z"};
 
-    // XZ = iY
+    // XZ = -iY
     dd::LimEntry<1> xz{"X"};
     xz.multiplyBy(z);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xz).c_str(), "Y");
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xz).c_str(), "-iY");
 
-    // ZX = -iY
+    // ZX = iY
     dd::LimEntry<1> zx{"Z"};
     zx.multiplyBy(x);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xz).c_str(), "Y");
+    std::cout << "zx[2] = " << zx.paulis.test(2) << ", zx[3] = " << zx.paulis.test(3) << ".\n";
+    std::cout << "zx = " << zx << std::endl;
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&zx).c_str(), "iY");
 
     // XY = iZ
     dd::LimEntry<1> xy{"X"};
     xy.multiplyBy(y);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xy).c_str(), "Z");
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&xy).c_str(), "iZ");
 
     // YX = -iZ
     dd::LimEntry<1> yx{"Y"};
     yx.multiplyBy(x);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yx).c_str(), "Z");
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yx).c_str(), "-iZ");
 
     // ZY = -iX
     dd::LimEntry<1> zy{"Z"};
     zy.multiplyBy(y);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&zy).c_str(), "X");
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&zy).c_str(), "-iX");
 
     // YZ = iX
     dd::LimEntry<1> yz{"Y"};
     yz.multiplyBy(z);
-    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yz).c_str(), "X");
+    EXPECT_STREQ(dd::LimEntry<1>::to_string(&yz).c_str(), "iX");
 
+    // (IX).(II).(XZ).(YZ).(ZZ) = (X).(I).(-iY).(iX).(I) = XIYXI
+    //   here '.' is the tensor product
     dd::LimEntry<5> lim1{"IIXYZ"};
     dd::LimEntry<5> lim2{"XIZZZ"};
     lim1.multiplyBy(lim2);
     EXPECT_STREQ(dd::LimEntry<5>::to_string(&lim1).c_str(), "XIYXI");
+}
+
+TEST(LimTest, bitsetXOR) {
+    std::bitset<3> bits0;
+    std::bitset<3> bits1;
+    std::cout << "[bitsetXOR] bits0 = " << bits0 << "  bits1 = " << bits1 << "\n";
+    bits0.set(0,1);
+    bits1 ^= bits0;
+    std::cout << "[bitsetXOR] after XORing, bits0 = " << bits0 << "  bits1 = "  << bits1 << "\n";
+    EXPECT_TRUE(bits1.test(0));
+}
+
+TEST(LimTest, GramSchmidt1) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("Z"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("I");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt2) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("Z"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("Z");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt3) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("Z"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("ZZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt4) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("Z"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("-iXZ");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt5) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt6) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("YZ"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt7) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("YI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt8) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("IZ"));
+    G.push_back(new dd::LimEntry<>("YI"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("II");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt9) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("IZ"));
+    G.push_back(new dd::LimEntry<>("YX"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("-IX");
+    std::cout << "[GramSchmidt9 test] y = " << *y << std::endl;
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt10) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("IYZ"));
+    G.push_back(new dd::LimEntry<>("ZIZ"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt11) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("IYZ"));
+    G.push_back(new dd::LimEntry<>("ZXZ"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("-IXI");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, GramSchmidt12) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("ZZZ"));
+    G.push_back(new dd::LimEntry<>("IZZ"));
+    G.push_back(new dd::LimEntry<>("IIZ"));
+    dd::LimEntry<>* x = new dd::LimEntry<>("ZZI");
+    std::bitset<32> bits;
+    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("I");
+    EXPECT_EQ(*y, *expected);
+}
+
+TEST(LimTest, CosetElementZ1) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("Z"));
+    H.push_back(new dd::LimEntry<>("-Z"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("-I");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[CosetElementZ1 test] Found coset intersection element: " << dd::LimEntry<>::to_string(x) << "\n";
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("I");
+    dd::LimEntry<>* expected2 = new dd::LimEntry<>("Z");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1) || dd::LimEntry<>::Equal(x, expected2));
+}
+
+TEST(LimTest, CosetElementZ2) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZI"));
+    H.push_back(new dd::LimEntry<>("ZZ"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("IZ");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[CosetElementZ1 test] Found coset intersection element: " << dd::LimEntry<>::to_string(x) << "\n";
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("ZI");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1));
+}
+
+TEST(LimTest, CosetElementPauli1) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("I");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[CosetElementZ1 test] Found coset intersection element: " << dd::LimEntry<>::to_string(x) << "\n";
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("I");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1));
+}
+
+TEST(LimTest, CosetElementPauli2) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("I");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[CosetElementZ1 test] Found coset intersection element: " << dd::LimEntry<>::to_string(x) << "\n";
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("I");
+    dd::LimEntry<>* expected2 = new dd::LimEntry<>("X");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1) || dd::LimEntry<>::Equal(x, expected2));
+}
+
+TEST(LimTest, CosetElementPauli3) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("X");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[CosetElementZ1 test] Found coset intersection element: " << dd::LimEntry<>::to_string(x) << "\n";
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("I");
+    dd::LimEntry<>* expected2 = new dd::LimEntry<>("X");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1) || dd::LimEntry<>::Equal(x, expected2));
+}
+
+TEST(LimTest, CosetElementPauli4) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("-iX");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli5) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("X");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    std::cout << "[coset element pauli test 5] found element: " << *x << "\n";
+    dd::LimEntry<>* expected = new dd::LimEntry<>("X");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli6) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("iX");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli7) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Y"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("-X");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli8) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("Y"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("-iZ");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli9) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("Y"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("Z");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli10) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("Y"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("iZ");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("Y");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, CosetElementPauli11) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XZ"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    H.push_back(new dd::LimEntry<>("XZ"));
+    H.push_back(new dd::LimEntry<>("XY"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("II");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected1 = new dd::LimEntry<>("II");
+    dd::LimEntry<>* expected2 = new dd::LimEntry<>("XZ");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1) || dd::LimEntry<>::Equal(x, expected2));
+}
+
+TEST(LimTest, CosetElementPauli12) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XZ"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    H.push_back(new dd::LimEntry<>("ZI"));
+    H.push_back(new dd::LimEntry<>("IX"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("YX");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
+TEST(LimTest, GaussianElimination1) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<32>    zi{"ZI"};
+    dd::LimEntry<32>    zz{"ZZ"};
+    G.push_back(&zi);
+    G.push_back(&zz);
+    std::cout << "Group before Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::GaussianElimination(G);
+    std::cout << "Group after Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::StabilizerGroup expectedGroup;
+    dd::LimEntry<32>    iz("IZ");
+    expectedGroup.push_back(&zi);
+    expectedGroup.push_back(&iz);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}
+
+TEST(LimTest, GaussianElimination2) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<>      zzi {"ZZI"};
+    dd::LimEntry<>      zzi2{"ZZI"};
+    dd::LimEntry<>      ziz {"ZIZ"};
+    dd::LimEntry<>      izz {"IZZ"};
+    G.push_back(&zzi);
+    G.push_back(&zzi2);
+    G.push_back(&ziz);
+    G.push_back(&izz);
+    std::cout << "Group before Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::GaussianElimination(G);
+    std::cout << "Group after Gaussian elimination:\n";
+    dd::Pauli::printStabilizerGroup(G);
+
+    // build expected group
+    dd::LimEntry<>      ziz_exp{"ZIZ"};
+    dd::LimEntry<>      iii_exp{"III"};
+    dd::LimEntry<>      izz_exp{"IZZ"};
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(&ziz_exp);
+    expectedGroup.push_back(&iii_exp);
+    expectedGroup.push_back(&izz_exp);
+    expectedGroup.push_back(&iii_exp);
+    //    std::cout << "Expected group:\n";
+    //    dd::Pauli::printStabilizerGroup(expectedGroup);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+}
+
+TEST(LimTest, columnEchelonForm1) {
+    dd::StabilizerGroup G;
+    dd::LimEntry<>      zzi {"ZZI"};
+    dd::LimEntry<>      zzi2{"ZZI"};
+    dd::LimEntry<>      ziz {"ZIZ"};
+    dd::LimEntry<>      izz {"IZZ"};
+    G.push_back(&zzi);
+    G.push_back(&zzi2);
+    G.push_back(&ziz);
+    G.push_back(&izz);
+    std::cout << "Group before column echelon form:\n";
+    dd::Pauli::printStabilizerGroup(G);
+    dd::Pauli::toColumnEchelonForm(G);
+    std::cout << "Group after column echelon form:\n";
+    dd::Pauli::printStabilizerGroup(G);
+
+    dd::LimEntry<>      ziz_exp{"ZIZ"};
+    dd::LimEntry<>      izz_exp{"IZZ"};
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(&ziz_exp);
+    expectedGroup.push_back(&izz_exp);
+    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
 }
 
 TEST(LimTest, createDDNode) {
@@ -457,8 +841,8 @@ TEST(LimTest, CreateNode6) {
     dd::Edge<dd::vNode> zeroZeroEdge = {zeroZero, dd::Complex::one, nullptr};
 
     // Create edge ZZ |0>|0>
-    dd::LimEntry<>* lim = new dd::LimEntry<>("ZZ");
-    dd::Edge<dd::vNode> zeroZeroZEdge= {zeroZero, dd::Complex::one, lim};
+    dd::LimEntry<>* limZZ = new dd::LimEntry<>("ZZ");
+    dd::Edge<dd::vNode> zeroZeroZEdge= {zeroZero, dd::Complex::one, limZZ};
 
     // Create node |0>|zeroZeroEdge> + |1>|zeroZeroZEdge>
     dd::vNode* v = dd->vUniqueTable.getNode();
@@ -469,10 +853,9 @@ TEST(LimTest, CreateNode6) {
 
     // normalize the edge / node
     e = dd->normalizeLIMDD(e, false);
-    std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.l), true);
-    std::cout << "high label: (should be I):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
+    std::cout << "root label:                " << dd::LimEntry<>::to_string(e.l) << '\n';
+    std::cout << "high label: (should be I): " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_TRUE( dd::LimEntry<>::isIdentity(e.p->e[1].l) );
 }
 
 TEST(LimTest, CreateNode7) {
@@ -532,78 +915,49 @@ TEST(LimTest, CreateNode8) {
     // Construct stabilizer group
     oneZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     oneZero.p->limVector.push_back(new dd::LimEntry<>("-IZ"));
+    // todo finish this test
 }
 
-TEST(LimTest, GaussianElimination1) {
-    dd::StabilizerGroup G;
-    dd::LimEntry<32>    zi{"ZI"};
-    dd::LimEntry<32>    zz{"ZZ"};
-    G.push_back(&zi);
-    G.push_back(&zz);
-    std::cout << "Group before Gaussian elimination:\n";
-    dd::Pauli::printStabilizerGroup(G);
-    dd::Pauli::GaussianElimination(G);
-    std::cout << "Group after Gaussian elimination:\n";
-    dd::Pauli::printStabilizerGroup(G);
-    dd::StabilizerGroup expectedGroup;
-    dd::LimEntry<32>    iz("IZ");
-    expectedGroup.push_back(&zi);
-    expectedGroup.push_back(&iz);
-    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+TEST(LimTest, CreateNode9) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge e0 = |+>
+    std::cout << "[CreateNode9 test] making edge |0> by calling MakeDDNode.\n";
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge e1 = -|+>
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    //  set the phase of this edge to -1
+    // somehow these weights are both set to -1/sqrt(2) when "e2 = dd->makeDDNode(...)" is called?
+    e1.w = dd::Complex::minusOne();
+    e0.w = dd::Complex::one;
+
+    // make e2 = |0>|e0> + |1>|e1>
+    std::cout << "[CreateNode9 test] making edge |0>|+> - |1>|+> by calling MakeDDNode.\n";
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+
+    // Expected: root label is IZ
+    std::cout << "[CreateNode9 test] root label (IZ expected): " << *(e2.l) << "\n";
+    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
+    // Expected: high label Identity
+    std::cout << "[CreateNode9 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
+    EXPECT_TRUE(dd::LimEntry<>::isIdentity(e2.p->e[1].l));
 }
 
-TEST(LimTest, GaussianElimination2) {
-    dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi {"ZZI"};
-    dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz {"ZIZ"};
-    dd::LimEntry<>      izz {"IZZ"};
-    G.push_back(&zzi);
-    G.push_back(&zzi2);
-    G.push_back(&ziz);
-    G.push_back(&izz);
-    std::cout << "Group before Gaussian elimination:\n";
-    dd::Pauli::printStabilizerGroup(G);
-    dd::Pauli::GaussianElimination(G);
-    std::cout << "Group after Gaussian elimination:\n";
-    dd::Pauli::printStabilizerGroup(G);
+TEST(LimTest, CreateNode10) {
+    auto dd = std::make_unique<dd::Package>(1);
 
-    // build expected group
-    dd::LimEntry<>      ziz_exp{"ZIZ"};
-    dd::LimEntry<>      iii_exp{"III"};
-    dd::LimEntry<>      izz_exp{"IZZ"};
-    dd::StabilizerGroup expectedGroup;
-    expectedGroup.push_back(&ziz_exp);
-    expectedGroup.push_back(&iii_exp);
-    expectedGroup.push_back(&izz_exp);
-    expectedGroup.push_back(&iii_exp);
-    //    std::cout << "Expected group:\n";
-    //    dd::Pauli::printStabilizerGroup(expectedGroup);
-    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
-}
+    // make edge e1 = -|+>, and set this phase in the LIM incoming to the edge
+    dd::LimEntry<>* lim = dd::LimEntry<>::getIdentityOperator();
+    lim->setPhase(dd::phases::phase_minus_one);
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
 
-TEST(LimTest, columnEchelonForm1) {
-    dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi {"ZZI"};
-    dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz {"ZIZ"};
-    dd::LimEntry<>      izz {"IZZ"};
-    G.push_back(&zzi);
-    G.push_back(&zzi2);
-    G.push_back(&ziz);
-    G.push_back(&izz);
-    std::cout << "Group before column echelon form:\n";
-    dd::Pauli::printStabilizerGroup(G);
-    dd::Pauli::toColumnEchelonForm(G);
-    std::cout << "Group after column echelon form:\n";
-    dd::Pauli::printStabilizerGroup(G);
-
-    dd::LimEntry<>      ziz_exp{"ZIZ"};
-    dd::LimEntry<>      izz_exp{"IZZ"};
-    dd::StabilizerGroup expectedGroup;
-    expectedGroup.push_back(&ziz_exp);
-    expectedGroup.push_back(&izz_exp);
-    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+    std::cout << "[CreateNode10 test] amplitude of edge: " << e1.w.toString() << std::endl;
+    std::cout << "[CreateNode10 test] amplitude low: " << e1.p->e[0].w << " amplitude high: " << e1.p->e[1].w << std::endl;
+//    EXPECT_EQ(e1.w, dd::Complex::minusOne());
+    // TODO I wish to check whether the weight on the incoming edge is appropriate, without imposing or assuming a specific weight normalization scheme. How do I do that?
+    EXPECT_EQ(dd::LimEntry<>::getPhase(e1.l), dd::phases::phase_one);
 }
 
 TEST(LimTest, constructStabilizerGroup2) {
@@ -775,6 +1129,7 @@ TEST(LimTest, constructStabilizerGroup10) {
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("ZZ"));
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e2.p->limVector, expectedGroup));
 }
 
