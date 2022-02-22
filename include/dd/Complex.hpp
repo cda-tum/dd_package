@@ -65,6 +65,28 @@ namespace dd {
             return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }
 
+        // todo this function is required once we implement Pauli functionality; now we only have <Z> functionality
+//        bool lexSmallerThan(const Complex& other) const {
+//        }
+
+        // Returns whether z=a+bi is lexicographically smaller than -z
+        //   which is true iff
+        //   b > 0, or b=0 and a>0
+        //   i.e., iff z != 0 and z=r e^(it) with 0 <= t < pi
+        bool lexSmallerThanxMinusOne() const {
+            if (!ComplexTable<>::Entry::approximatelyZero(i)) {
+                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
+//                return !ComplexTable<>::Entry::isNegativePointer(i);
+                return ComplexTable<>::Entry::val(i) > 0;
+            }
+            if (!ComplexTable<>::Entry::approximatelyZero(r)) {
+                std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
+//                return !ComplexTable<>::Entry::isNegativePointer(r);
+                return ComplexTable<>::Entry::val(r) > 0;
+            }
+            return false;
+        }
+
         void writeBinary(std::ostream& os) const {
             CTEntry::writeBinary(r, os);
             CTEntry::writeBinary(i, os);

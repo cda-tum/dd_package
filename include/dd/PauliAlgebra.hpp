@@ -89,28 +89,6 @@ public:
         return copy;
     }
 
-    // Appends an Identity matrix below the group G, i.e., returns the matrix
-    //   [ G  ]
-    //   [ Id ]
-    //   here Id has a '1' in every other row, to avoid getting 'Y' and 'X' entries, which can mess up multiplication
-    // TODO this is not very space-efficient, so we may want to improve this
-    // (Returns a fresh Stabilizergroup object; the group G is unchanged)
-    // todo is this function obsolete, given appendIdentityMatrixBitset?
-    static StabilizerGroup appendIdentityMatrix(const StabilizerGroup& G, unsigned int height) {
-        StabilizerGroup GI = deepcopy(G);
-        for (unsigned int i=0; i<G.size(); i++) {
-            // Make column G[i][height ... height + width-1] into the column [0 ...0 1 0 ... 0]
-            for (unsigned int h=height; h<G.size(); h++) {
-                GI[i]->paulis.set(h, 0);
-            }
-//            for (unsigned int h=height+i+1; h<G.size(); h++) {
-//                GI[i]->paulis.set(h, 0);
-//            }
-            GI[i]->paulis.set(height+2*i, 1);
-        }
-        return GI;
-    }
-
     template <std::size_t NUM_QUBITS>
     static std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
         std::vector<LimBitset<NUM_QUBITS>*> GI;
@@ -123,18 +101,6 @@ public:
         }
         return GI;
     }
-
-    // Turns M into an Identity matrix of size x size rows and columns
-    // assumes that M is empty
-    // todo this method is obsolete; delete
-//    static void setIdentityMatrix(std::vector<std::vector<bool> >& M, unsigned int size) {
-//        std::vector<bool> col;
-//        for (unsigned int i=0; i<size; i++) {
-//            col = std::vector<bool>(size, 0);
-//            col.set(i, 1);
-//            M.push_back(col);
-//       }
-//    }
 
     // Performs Gaussian elimination on G
     // We assume that G is not stored in the LimTable.
@@ -172,7 +138,8 @@ public:
     // does not initialize 'decomposition' to an identity matrix
     // todo use phase
     // todo don't reallocate so much memory
-    // todo is this procedure ever used?
+    // TODO there is a faster version if the group is sorted
+    //    (calls from getKernel do not sort their group before calling)
     template <std::size_t NUM_QUBITS>
     static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
@@ -180,7 +147,7 @@ public:
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
         for (unsigned int h=0; h<pauli_height; h++) {
-            // Step 1: Find a column with a '1' at position h
+            // Step 1: Find a column whose first '1' is at position h
             reducingColId = -1;
             for (unsigned int i=0; i<G.size(); i++) {
                 if (G[i]->lim.pivotPosition() == h) {
@@ -201,7 +168,7 @@ public:
         // the pauli's are done; handle the phase
         reducingColId = -1;
         for (unsigned int i=0; i<G.size(); i++) {
-            if (G[i]->lim.pivotPosition() == pauli_height) {
+            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phases::phase_minus_one) {
                 reducingColId = i;
                 break;
             }
@@ -415,41 +382,21 @@ public:
         return g;
     }
 
-    // Interprets G as a 0/1 matrix, where each operator (i.e., LimEntry object) forms a column
-    // returns the kernel of G in column echelon form
-    // TODO this method requires LimEntry objects of length 4*NUM_QUBITS,
-    //    but the LimEntry objects only give it vectors of length 2*NUM_QUBITS
-    //    so right now, we can 'only' do simulations of up to 15 qubits
-    // TODO bug: this method doesn't deal correctly with the groups G={Z}  H={-Z}
-    static StabilizerGroup getKernelZ(const StabilizerGroup& G, unsigned int nqubits) {
-        std::cout << "[get Kernel Z] start  |G| = " << G.size() << "\n"; std::cout.flush();
-        StabilizerGroup kernel;
-        unsigned int width = G.size();  // minor note: size of G may change during toColumnEchelonForm(G)
-        // TODO the next line used to say "(G, nqubits)", but now says "(G, 2*nqubits)". Is this right? since there are both Z and X bits
-        StabilizerGroup G_Id = appendIdentityMatrix(G, 2*nqubits);
-        toColumnEchelonForm(G_Id);
-        LimEntry<>* kernelColumn;
+    template <std::size_t NUM_QUBITS>
+    static std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+        std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
+        GaussianElimination(G_Id);
+        std::vector<std::bitset<NUM_QUBITS> > kernel;
         for (unsigned int i=0; i<G_Id.size(); i++) {
-            // Check if GI[i] is an all-zero column
-            std::cout << "[getKernel Z] testing GI column " << i << "\n"; std::cout.flush();
-            if (!LimEntry<>::isIdentity(G_Id[i]) && G_Id[i]->isZeroInRange(0, 2*nqubits) && LimEntry<>::getPhase(G_Id[i])==phases::phase_one) {
-                // Copy bits [2*nqubits ... 2*nqubits + width -1] to kernel[i][0 ... width-1]
-                std::cout << "[getKernel Z] Adding column " << i << " to kernel.\n"; std::cout.flush();
-                kernelColumn = new LimEntry<>();
-                for (unsigned int b=0; b<width; b++) {  // TODO should this be b<GI.size() ?
-                    std::cout << "[getKernel Z] In column " << i << ", setting bit " << b << "\n"; std::cout.flush();
-                    kernelColumn->paulis.set(b, G_Id[i]->paulis.test(2*nqubits+2*b));
-                }
-                kernel.push_back(kernelColumn);
+            if (G_Id[i]->lim.isIdentityOperator()) {
+                kernel.push_back(G_Id[i]->bits);
             }
         }
-        std::cout << "[get kernel Z] putting kernel in CEF.\n"; std::cout.flush();
-        toColumnEchelonForm(kernel);
+        // TODO free / deallocate G_Id and its elements
         return kernel;
     }
 
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
-    // todo I don't think we need the nqubits argument
     template <std::size_t NUM_QUBITS>
     static std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
@@ -460,32 +407,26 @@ public:
                 kernel.push_back(G_Id[i]->bits);
             }
         }
-        // todo free and deallocate GI and its elements
+        // TODO free / deallocate G_Id and its elements
         return kernel;
     }
 
-    static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H, unsigned int nqubits) {
-        std::cout << "[intersectGroups Z] start  |G|=" << G.size() << "  |H| = " << H.size() << std::endl;
+    // Given two groups G, H, computes the intersection, <G> intersect <H>
+    static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup intersection;
-        std::cout << "[intersectGroups Z] Group G:\n";
-        printStabilizerGroup(G);
-        std::cout << "[intersectGroups Z] Group H:\n";
-        printStabilizerGroup(H);
-        StabilizerGroup concat = groupConcatenate(G, H);
-        StabilizerGroup kernel = getKernelZ(concat, nqubits);
+        StabilizerGroup GH = groupConcatenate(G, H);
+        std::vector<std::bitset<32> > kernel = getKernelZ(GH);
         LimEntry<>* g;
         for (unsigned int i=0; i<kernel.size(); i++) {
             g = LimEntry<>::getIdentityOperator();
+            // TODO refactor to getProductOfElements
             for (unsigned int j=0; j<G.size(); j++) {
-                if (kernel[i]->paulis.test(j)) {
+                if (kernel[i].test(j)) {
                     g->multiplyBy(*G[j]);
                 }
             }
             intersection.push_back(g);
         }
-        std::cout << "[intersectGroups Z] Found intersection: \n";
-        printStabilizerGroup(intersection);
-
         return intersection;
     }
 
@@ -638,15 +579,17 @@ public:
             StabilizerGroup* stabLow  = &(low. p->limVector);
             StabilizerGroup* stabHigh = &(high.p->limVector);
             // Step 1: Compute the intersection
-            stabgenset = intersectGroupsZ(*stabLow, *stabHigh, n);
+            stabgenset = intersectGroupsZ(*stabLow, *stabHigh);
 
-            // Step 2:
+            // Step 2: if some element v is in the set <G> intersect (<H> * -I),
+            //   then add Z tensor v to the stabgenset
             LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
             LimEntry<>* m = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
             if (m != LimEntry<>::noLIM) {
                 m->setOperator(n, 'Z');
                 stabgenset.push_back(m);
             }
+            toColumnEchelonForm(stabgenset);
             // todo deallocate minus, m
         }
 
@@ -654,7 +597,7 @@ public:
     }
 
     // Returns true iff a == -b, approximately
-    // todo move to file 'Complex.hpp'
+    // todo move to file 'Complex.hpp'?
     static bool isTimesMinusOne(Complex a, Complex b) {
         bool rflip = false, iflip = false;
         std::cout << "[isTimesMinusOne] a=" << a.toString() << " b = " << b.toString() << std::endl;
@@ -745,7 +688,7 @@ public:
             }
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismZ] completed coset intersection element.\n"; std::cout.flush();
-            if (iso != nullptr) {
+            if (iso != LimEntry<>::noLIM) {
                 std::cout << "[getIsomorphismZ] The coset was non-empty; returning element.\n"; std::cout.flush();
                 return iso;
             }
@@ -769,19 +712,24 @@ public:
     }
 
     // Choose the label on the High edge, in the Z group
-//    template <class Node>
-    static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel) {
-        std::cout << "[highLabelZ] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; std::cout.flush();
+    static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
+        // We assert that the LIM has phase +1  (we expect normalizeLIMDD to guarantee this)
+        assert(LimEntry<>::getPhase(vLabel) == phases::phase_one);
+        std::cout << "[highLabelZWeight] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; std::cout.flush();
         StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
-        std::cout << "[highLabelZ] Concatenated; |GH| = " << GH.size() << std::endl;
+        std::cout << "[highLabelZWeight] Concatenated; |GH| = " << GH.size() << std::endl;
         toColumnEchelonForm(GH);
-        std::cout << "[highLabelZ] to CEF'ed; now |GH| = " << GH.size() << std::endl;
+        std::cout << "[highLabelZWeight] to CEF'ed; now |GH| = " << GH.size() << std::endl;
         LimEntry<>* newHighLabel = GramSchmidt(GH, vLabel);
         // Set the new phase to +1
         newHighLabel->setPhase(phases::phase_one);
-        // TODO we used to set the phase to -1, why? was that a mistake?
-//        newHighLabel->paulis.set(LimEntry<>::NUM_BITSETBITS-1, 0);
-        std::cout << "[highLabelZ] end.\n"; std::cout.flush();
+        s = false;
+        if (!weight.lexSmallerThanxMinusOne()) {
+            std::cout << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
+            weight.multiplyByMinusOne();
+            s = true;
+        }
+        std::cout << "[highLabelZWeight] end.\n"; std::cout.flush();
         return newHighLabel;
     }
 

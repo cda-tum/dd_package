@@ -157,16 +157,6 @@ namespace dd {
             paulis.set(2*NUM_QUBITS+1, (char) 0x2 & newPhase);
         }
 
-        // Returns whether this vector is the identity operator, i.e., has all bits set to zero
-        // TODO there is probably a faster way to check whether a bitvector is all-zero,
-        //   using bit tricks supported by the std::array data structure. --Lieuwe
-        bool isAllZeroVector() const {
-            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
-                if (paulis.test(i)) return false;
-            }
-            return true;
-        }
-
         /**
          * @return a string of {I, X, Y, Y}**n with left in the string corresponding to the top of the decision diagram.
          */
@@ -233,13 +223,24 @@ namespace dd {
             return true;
         }
 
+        // Returns whether this vector is the identity operator, i.e., has all bits set to zero
+        // TODO there is probably a faster way to check whether a bitvector is all-zero,
+        //   using bit tricks supported by the std::array data structure. --Lieuwe
+        bool isAllZeroVector() const {
+            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
+                if (paulis.test(i)) return false;
+            }
+            return true;
+        }
+
+        bool isIdentityOperator() const {
+            return isAllZeroVector();
+        }
+
         static bool isIdentity(const LimEntry<NUM_QUBITS>* l) {
             assert(l != noLIM);
             if (l == nullptr) return true;
-            for (unsigned int i=0; i<LimEntry<NUM_QUBITS>::NUM_BITSETBITS; i++) {
-                if (l->paulis[i] != 0) return false;
-            }
-            return true;
+            return l->isIdentityOperator();
         }
 
         bool isIdentityModuloPhase() const {
@@ -383,10 +384,6 @@ namespace dd {
                 if (paulis.test(i)) return i;
             }
             return (unsigned int) -1;
-        }
-
-        bool isIdentityOperator() const {
-            return isAllZeroVector();
         }
 
         // Returns whether a <= b in the lexicographic order

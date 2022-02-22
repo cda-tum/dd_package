@@ -240,9 +240,6 @@ namespace dd {
             LimEntry<>* higLim  = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             std::cout << "[normalizeLIMDD] Step 1: multiply.\n"; std::cout.flush();
-            // TODO multiply by the inverse of lowLim, instead of by lowLim
-            // TODO multiply the phase of R with the inverse of the phase on the low edge
-            // TODO make a test for this
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
             // Step 2: Make the left LIM Identity
             std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n"; std::cout.flush();
@@ -250,7 +247,8 @@ namespace dd {
             vNode       oldNode = *(r.p);       // make a copy of the old node
             // Step 3: Choose a canonical right LIM
             std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n"; std::cout.flush();
-            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l);
+            bool s = false;
+            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
             std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n"; std::cout.flush();
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n"; std::cout.flush();
@@ -270,6 +268,16 @@ namespace dd {
                 // Step 6.2: Make the phase of r.l '+1'
                 r.l->setPhase(phases::phase_one);
             }
+            // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
+            if (s) {
+                LimEntry<>* Z = new LimEntry<>();
+                Z->setOperator(r.p->v, 'Z');
+                r.l->multiplyBy(Z);
+                // TODO free / deallocate Z
+            }
+
+            // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
+            // Should we *not* call normalize at the beginning of the procedure?
 
             return r;
         }
