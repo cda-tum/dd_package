@@ -40,6 +40,14 @@ namespace dd {
             return CTEntry::approximatelyOne(r) && CTEntry::approximatelyZero(i);
         }
 
+        static inline bool approximatelyEqual(const std::complex<fp>& x, const std::complex<fp>& y) {
+            return CTEntry::approximatelyEquals(x.real(), y.real()) && CTEntry::approximatelyEquals(x.imag(), y.imag());
+        }
+
+        static inline bool approximatelyZero(const std::complex<fp> x) {
+            return CTEntry::approximatelyZero(x.real()) && CTEntry::approximatelyZero(x.imag());
+        }
+
         inline bool operator==(const Complex& other) const {
             return r == other.r && i == other.i;
         }

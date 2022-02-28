@@ -5,7 +5,6 @@
 #include "gtest/gtest.h"
 
 using namespace dd::literals;
-
 TEST(LimTest, SinglePauliOps) {
     dd::LimEntry<1> id{(int)0b000};
     dd::LimEntry<1> z{0b001};
@@ -308,6 +307,251 @@ TEST(LimTest, bitsetXOR) {
     EXPECT_TRUE(bits1.test(0));
 }
 
+TEST(LimTest, getVectorLIMDD1) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge e0 = Z|0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    auto vec = dd->getVectorLIMDD(e0);
+    dd::CVec expectedVec;
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD2) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge Z|+>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
+
+    auto vec = dd->getVectorLIMDD(e0);
+    dd::CVec expectedVec;
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD3) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge Z|1>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim);
+
+    std::cout << "[getVector3] constructing amplitude vector.\n"; std::cout.flush();
+    auto vec = dd->getVectorLIMDD(e0);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD4) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |1>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge ZI|1>|1>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD5) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge Z|1>
+    dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim0);
+
+    // make edge ZI|1>|1>
+    dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD6) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make edge ZI|1>|0>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD7) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |+>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge ZI|1>|+>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD8) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge Z|+>
+    dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim0);
+
+    // make edge ZI|1>Z|+>
+    dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
+    std::cout << "[getVector8] lim1 = " << dd::LimEntry<>::to_string(lim1) << "\n";
+    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({1.0,0.0});
+
+    dd->printCVec(vec);
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD9) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |+>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge ZI|0>|+>
+    dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, lim);
+
+    auto vec = dd->getVectorLIMDD(e1);
+    dd::CVec expectedVec;
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD10) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make edge Z|+>
+    dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim1);
+
+    // make edge ZZ(|0>|0> + |1>Z|+>)
+    dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+
+    auto vec = dd->getVectorLIMDD(e2);
+    dd::CVec expectedVec;
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD11) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    // make edge |+>
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge ZZ(|0>|0> + |1>|+>)
+    dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+
+    auto vec = dd->getVectorLIMDD(e2);
+    dd::CVec expectedVec;
+    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({1.0,0.0});
+
+//    std::cout << "[getVector1] vec: " << vec << '\n';
+//    std::cout << "[getVector1] expected: " << expectedVec << '\n';
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+TEST(LimTest, getVectorLIMDD12) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge |+>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+
+    // make edge Z|1>
+    dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim1);
+
+    // make edge ZZ(|0>|+> + |1>Z|1>)
+    dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
+    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+
+    auto vec = dd->getVectorLIMDD(e2);
+    dd::CVec expectedVec;
+    expectedVec.push_back({ 1.0,0.0});
+    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({ 0.0,0.0});
+    expectedVec.push_back({ 1.0,0.0});
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
+}
+
+
 TEST(LimTest, GramSchmidt1) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
@@ -437,8 +681,7 @@ TEST(LimTest, GramSchmidt12) {
 }
 
 TEST(LimTest, intersectGroupsZ1) {
-    dd::StabilizerGroup G;
-    dd::StabilizerGroup H;
+    dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>( "ZI"));
     G.push_back(new dd::LimEntry<>( "IZ"));
     H.push_back(new dd::LimEntry<>("-ZI"));
@@ -450,6 +693,351 @@ TEST(LimTest, intersectGroupsZ1) {
     dd::Pauli::printStabilizerGroup(intersection);
     std::cout << "interssectGroupsZ1 test] expected intersection:\n";
     dd::Pauli::printStabilizerGroup(expectedIntersection);
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ2) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZII"));
+    G.push_back(new dd::LimEntry<>("IZI"));
+    G.push_back(new dd::LimEntry<>("IIZ"));
+    H.push_back(new dd::LimEntry<>("-ZII"));
+    H.push_back(new dd::LimEntry<>("IZI"));
+    H.push_back(new dd::LimEntry<>("-IIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("ZIZ"));
+    expectedIntersection.push_back(new dd::LimEntry<>("IZI"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ3) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZIZ"));
+    G.push_back(new dd::LimEntry<>("IZZ"));
+    H.push_back(new dd::LimEntry<>("IZI"));
+    H.push_back(new dd::LimEntry<>("IIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ4) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("IZZ"));
+    G.push_back(new dd::LimEntry<>("IIZ"));
+    H.push_back(new dd::LimEntry<>("IZI"));
+    H.push_back(new dd::LimEntry<>("IIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IZI"));
+    expectedIntersection.push_back(new dd::LimEntry<>("IIZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ5) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZIIZ"));
+    G.push_back(new dd::LimEntry<>("IZZZ"));
+    H.push_back(new dd::LimEntry<>("IIZI"));
+    H.push_back(new dd::LimEntry<>("IIIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ6) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZIZ"));
+    G.push_back(new dd::LimEntry<>("-IZI"));
+    H.push_back(new dd::LimEntry<>("-ZIZ"));
+    H.push_back(new dd::LimEntry<>("IZI"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-ZZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ7) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZZIZ"));
+    G.push_back(new dd::LimEntry<>("IIZZ"));
+    H.push_back(new dd::LimEntry<>("-ZZZZ"));
+    H.push_back(new dd::LimEntry<>("-IIZZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ8) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZIZI"));
+    G.push_back(new dd::LimEntry<>("IZZI"));
+    G.push_back(new dd::LimEntry<>("IIIZ"));
+    H.push_back(new dd::LimEntry<>("-ZIII"));
+    H.push_back(new dd::LimEntry<>("IZZZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IZZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsZ9) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZIZI"));
+    G.push_back(new dd::LimEntry<>("-IZZI"));
+    G.push_back(new dd::LimEntry<>("-IIIZ"));
+    H.push_back(new dd::LimEntry<>("-ZIII"));
+    H.push_back(new dd::LimEntry<>("IZZZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
+    dd::Pauli::toColumnEchelonForm(intersection);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IZZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli1) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("X"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("X"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli2) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("Z"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli3) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("-X"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli4) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("iX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli5) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    H.push_back(new dd::LimEntry<>("-iX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli6) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    G.push_back(new dd::LimEntry<>("Z"));
+    H.push_back(new dd::LimEntry<>("-iY"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-iY"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli7) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("X"));
+    G.push_back(new dd::LimEntry<>("-Z"));
+    H.push_back(new dd::LimEntry<>("iY"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("iY"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli8) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZZ"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("XX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("XX"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli9) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("YY"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("XX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("XX"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli10) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("YY"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("YY"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("YY"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli11) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XX"));
+    G.push_back(new dd::LimEntry<>("YY"));
+    H.push_back(new dd::LimEntry<>("-ZZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-ZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli12) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XX"));
+    G.push_back(new dd::LimEntry<>("YY"));
+    H.push_back(new dd::LimEntry<>("ZI"));
+    H.push_back(new dd::LimEntry<>("-IZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-ZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli13) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XX"));
+    G.push_back(new dd::LimEntry<>("YY"));
+    H.push_back(new dd::LimEntry<>("-ZI"));
+    H.push_back(new dd::LimEntry<>("IZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-ZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli14) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("-YY"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("-iZI"));
+    H.push_back(new dd::LimEntry<>("iIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("ZZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli15) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZZ"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("-YY"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("-YY"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli16) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZZ"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("-YI"));
+    H.push_back(new dd::LimEntry<>("iXZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("ZZ"));
+    expectedIntersection.push_back(new dd::LimEntry<>("XX"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli17) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZZ"));
+    G.push_back(new dd::LimEntry<>("XX"));
+    H.push_back(new dd::LimEntry<>("-YY"));
+    H.push_back(new dd::LimEntry<>("XX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("ZZ"));
+    expectedIntersection.push_back(new dd::LimEntry<>("XX"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+// Removed because this functionality is not necessary
+//TEST(LimTest, intersectGroupsPauli18) {
+//    dd::StabilizerGroup G, H;
+//    G.push_back(new dd::LimEntry<>("-I"));
+//    H.push_back(new dd::LimEntry<>("X"));
+//    H.push_back(new dd::LimEntry<>("Y"));
+//    H.push_back(new dd::LimEntry<>("Z"));
+//    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+//    dd::StabilizerGroup expectedIntersection;
+//    expectedIntersection.push_back(new dd::LimEntry<>("-I"));
+//    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+//}
+//
+//TEST(LimTest, intersectGroupsPauli19) {
+//    dd::StabilizerGroup G, H;
+//    G.push_back(new dd::LimEntry<>("iI"));
+//    H.push_back(new dd::LimEntry<>("X"));
+//    H.push_back(new dd::LimEntry<>("Y"));
+//    H.push_back(new dd::LimEntry<>("Z"));
+//    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+//    dd::StabilizerGroup expectedIntersection;
+//    expectedIntersection.push_back(new dd::LimEntry<>("-I"));
+//    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+//}
+
+TEST(LimTest, intersectGroupsPauli20) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XZ"));
+    G.push_back(new dd::LimEntry<>("ZX"));
+    H.push_back(new dd::LimEntry<>("iYZ"));
+    H.push_back(new dd::LimEntry<>("IX"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("YY"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli21) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("XIZ"));
+    G.push_back(new dd::LimEntry<>("YIZ"));
+    G.push_back(new dd::LimEntry<>("IIZ"));
+    H.push_back(new dd::LimEntry<>("ZIZ"));
+    H.push_back(new dd::LimEntry<>("IYI"));
+    H.push_back(new dd::LimEntry<>("IIZ"));
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IYZ"));
+    expectedIntersection.push_back(new dd::LimEntry<>("IIZ"));
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
 }
 
@@ -607,6 +1195,16 @@ TEST(LimTest, CosetElementPauli12) {
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
 
+TEST(LimTest, CosetElementPauli13) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("Z"));
+    H.push_back(new dd::LimEntry<>("-Z"));
+    dd::LimEntry<>* a = new dd::LimEntry<>("-I");
+    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* expected = new dd::LimEntry<>("Z");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
+}
+
 TEST(LimTest, GaussianElimination1) {
     dd::StabilizerGroup G;
     dd::LimEntry<32>    zi{"ZI"};
@@ -676,7 +1274,20 @@ TEST(LimTest, columnEchelonForm1) {
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(&ziz_exp);
     expectedGroup.push_back(&izz_exp);
-    EXPECT_EQ(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup), true);
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup));
+}
+
+TEST(LimTest, columnEchelonForm2) {
+    dd::StabilizerGroup G;
+    G.push_back(new dd::LimEntry<>("ZI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    G.push_back(new dd::LimEntry<>("ZI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::StabilizerGroup expectedGroup;
+    expectedGroup.push_back(new dd::LimEntry<>("ZI"));
+    expectedGroup.push_back(new dd::LimEntry<>("IZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(G, expectedGroup));
 }
 
 TEST(LimTest, createDDNode) {
@@ -1640,7 +2251,12 @@ TEST(LimTest, simpleCliffordCircuit) {
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 0), state);
 
-    auto result = dd->getVector(state);
+    auto result = dd->getVectorLIMDD(state);
 
-    EXPECT_TRUE(dd->getVector(state) == dd->getVector(dd->makeZeroState(2)));
+    std::vector<bool> expectedBasisState;
+    expectedBasisState.push_back(0);
+    expectedBasisState.push_back(1);
+    auto expected = dd->getVector(dd->makeBasisState(2, expectedBasisState));
+
+    EXPECT_TRUE(dd->vectorsApproximatelyEqual(result, expected));
 }

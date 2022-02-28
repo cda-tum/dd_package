@@ -2134,6 +2134,100 @@ namespace dd {
             cn.returnToCache(c);
         }
 
+        CVec getVectorLIMDD(const vEdge& e) {
+            std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n"; std::cout.flush();
+            const std::size_t dim = 2ULL << e.p->v;
+            // allocate resulting vector
+            auto vec = CVec(dim, {0.0, 0.0});
+            LimEntry<> id;
+            getVectorLIMDD(e, Complex::one, 0, vec, id);
+            std::cout << "[getVectorLIMDD] complete; constructed vector.\n"; std::cout.flush();
+            return vec;
+        }
+        void getVectorLIMDD(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim) {
+            std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n"; std::cout.flush();
+            auto c = cn.mulCached(e.w, amp);
+
+            // base case
+            if (e.isTerminal()) {
+                vec.at(i) = {CTEntry::val(c.r), CTEntry::val(c.i)};
+                cn.returnToCache(c);
+                return;
+            }
+            const std::size_t x = i | (1ULL << e.p->v);
+
+            // recursive case
+            if (!e.p->e[0].w.approximatelyZero()) {
+                // we assume that this edge is labeled with the Identity LIM
+                std::cout << "[getVectorLIMDD rec] entering low edge.\n"; std::cout.flush();
+                LimEntry<> lim2(e.l);
+                lim2.multiplyBy(lim);
+                getVectorLIMDD(e.p->e[0], c, i, vec, lim2);
+            }
+            if (!e.p->e[1].w.approximatelyZero()) {
+                std::cout << "[getVectorLIMDD rec] high case.\n"; std::cout.flush();
+                // if lim has Pauli Z operator, then multiply by -1
+                auto d = c;
+                LimEntry<> lim2(e.l);
+                lim2.multiplyBy(lim);
+                std::cout << "[getVectorLIMDD rec] eccumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
+                if (lim2.getQubit(e.p->v) == 'Z') {
+                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n"; std::cout.flush();
+                    d.multiplyByMinusOne();
+                }
+                // calculate the new accumulated LIM
+                std::cout << "[getVectorLIMDD rec] entering high edge.\n"; std::cout.flush();
+                getVectorLIMDD(e.p->e[1], d, x, vec, lim2);
+            }
+            cn.returnToCache(c);
+        }
+
+        // Returns whether v ~ w, up to a complex multiplicative factor
+        bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
+            std::cout << "[vectors approximately equal] start.\n"; std::cout.flush();
+            if (v.size() != w.size()) return false;
+            // find the factor d with which the vectors differ
+            std::complex<fp> d = 0;
+            bool vz, wz;
+            unsigned int i;
+            for (i=0; i<v.size(); i++) {
+                vz = Complex::approximatelyZero(v[i]);
+                wz = Complex::approximatelyZero(w[i]);
+                if (!vz && !wz) {
+                    d = v[i] / w[i];
+                    i++;
+                    break;
+                }
+                else if (!(vz && wz))
+                    return false;
+            }
+            std::cout << "[vectors approximately equal] found factor d = " << d << "\n"; std::cout.flush();
+            std::complex<fp> vc;
+            // check whether the remainder of the two vectors v,w, differ by factor d
+            for (; i<v.size(); i++) {
+                vz = Complex::approximatelyZero(v[i]);
+                wz = Complex::approximatelyZero(w[i]);
+                if (!vz && !wz) {
+                    vc = v[i] * d;
+                    if (!Complex::approximatelyEqual(vc, w[i])) {
+                        return false;
+                    }
+                }
+                else if (!(vz && wz))
+                    return false;
+            }
+
+            return true;
+        }
+
+        void printCVec(const std::vector<std::complex<fp> >& vec) {
+            std::cout << "[";
+            for (unsigned int i=0; i<vec.size(); i++) {
+                std::cout << vec[i] << ", ";
+            }
+            std::cout << "]";
+        }
+
         void printVector(const vEdge& e) {
             const unsigned long long element = 2ULL << e.p->v;
             for (auto i = 0ULL; i < element; i++) {

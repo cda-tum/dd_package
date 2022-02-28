@@ -73,6 +73,16 @@ public:
         }
     }
 
+    template <std::size_t NUM_QUBITS>
+    static void printKernel(const std::vector<std::bitset<NUM_QUBITS> >& kernel) {
+        for (unsigned int i=0; i<kernel.size(); i++) {
+            for (unsigned int j=0; j<NUM_QUBITS; j++) {
+                std::cout << kernel[i].test(j);
+            }
+            std::cout << '\n';
+        }
+    }
+
     static StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup concat = G;
         for (unsigned int i=0; i<H.size(); i++) {
@@ -136,10 +146,9 @@ public:
     }
 
     // does not initialize 'decomposition' to an identity matrix
-    // todo use phase
-    // todo don't reallocate so much memory
+    // TODO don't reallocate so much memory
     // TODO there is a faster version if the group is sorted
-    //    (calls from getKernel do not sort their group before calling)
+    //    (calls to GaussianElimination from getKernel do not sort their group before calling)
     template <std::size_t NUM_QUBITS>
     static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
@@ -386,6 +395,8 @@ public:
     static std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
         GaussianElimination(G_Id);
+        std::cout << "[getKernelZ] after Gaussian elimination, G_Id:\n";
+        printStabilizerGroup(G_Id);
         std::vector<std::bitset<NUM_QUBITS> > kernel;
         for (unsigned int i=0; i<G_Id.size(); i++) {
             if (G_Id[i]->lim.isIdentityOperator()) {
@@ -393,6 +404,8 @@ public:
             }
         }
         // TODO free / deallocate G_Id and its elements
+        std::cout << "[getKernelZ] found kernel:\n";
+        printKernel(kernel);
         return kernel;
     }
 
@@ -418,16 +431,24 @@ public:
         std::vector<std::bitset<32> > kernel = getKernelZ(GH);
         LimEntry<>* g;
         for (unsigned int i=0; i<kernel.size(); i++) {
-            g = LimEntry<>::getIdentityOperator();
-            // TODO refactor to getProductOfElements
-            for (unsigned int j=0; j<G.size(); j++) {
-                if (kernel[i].test(j)) {
-                    g->multiplyBy(*G[j]);
-                }
-            }
+            g = getProductOfElements(G, kernel[i]);
+//            g = LimEntry<>::getIdentityOperator();
+//            // TODO refactor to getProductOfElements
+//            for (unsigned int j=0; j<G.size(); j++) {
+//                if (kernel[i].test(j)) {
+//                    g->multiplyBy(*G[j]);
+//                }
+//            }
             intersection.push_back(g);
         }
+        std::cout << "[intersectGroupsZ] found intersection:\n";
+        printStabilizerGroup(intersection);
         return intersection;
+    }
+
+    // Not yet implemented
+    static StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
+        return intersectGroupsZ(G, H);
     }
 
     // Returns a generating set J for the intersection of G and H, so <J>= <G> intersect <H>

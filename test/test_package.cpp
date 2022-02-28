@@ -1024,7 +1024,7 @@ TEST(DDPackageTest, BasicNumericStabilityTest) {
     oss << std::setprecision(limits::max_digits10) << dd::SQRT2_2;
     EXPECT_EQ(leftWeight, oss.str());
     oss.str("");
-    oss << -dd::SQRT2_2;
+    oss << dd::SQRT2_2; // changed from -dd::SQRT2_2, due to edge weight normalization used by LIMDD
     EXPECT_EQ(rightWeight, oss.str());
     // restore tolerance
     dd::ComplexNumbers::setTolerance(tol);
