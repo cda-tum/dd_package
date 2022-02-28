@@ -104,10 +104,10 @@ namespace dd {
             RefCount                       ref{};  // reference count
             Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
 
-            static vNode            terminalNode;
-            constexpr static vNode* terminal{&terminalNode};
+            static vNode  terminalNode;
+            static vNode* terminal;
 
-            static constexpr bool isTerminal(const vNode* p) { return p == terminal; }
+            inline static bool isTerminal(const vNode* p) { return p == terminal; }
         };
         using vEdge       = Edge<vNode>;
         using vCachedEdge = CachedEdge<vNode>;
@@ -287,10 +287,10 @@ namespace dd {
             bool                           symm  = false; // node is symmetric
             bool                           ident = false; // node resembles identity
 
-            static mNode            terminalNode;
-            constexpr static mNode* terminal{&terminalNode};
+            static mNode  terminalNode;
+            static mNode* terminal;
 
-            static constexpr bool isTerminal(const mNode* p) { return p == terminal; }
+            inline static bool isTerminal(const mNode* p) { return p == terminal; }
         };
         using mEdge       = Edge<mNode>;
         using mCachedEdge = CachedEdge<mNode>;
@@ -2612,18 +2612,20 @@ namespace dd {
         }
     };
 
-    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
+    inline Package::vNode  Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
                                                        nullptr,
                                                        0,
                                                        -1};
+    inline Package::vNode* Package::vNode::terminal{&terminalNode};
 
-    inline Package::mNode Package::mNode::terminalNode{
+    inline Package::mNode  Package::mNode::terminalNode{
             {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
             nullptr,
             0,
             -1,
             true,
             true};
+    inline Package::mNode* Package::mNode::terminal{&terminalNode};
 
     template<>
     [[nodiscard]] inline UniqueTable<Package::vNode>& Package::getUniqueTable() { return vUniqueTable; }
