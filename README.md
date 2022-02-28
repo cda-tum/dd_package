@@ -83,7 +83,7 @@ You can link against the library built by this project in other CMake project us
 
 If you use the DD package for your research, we will be thankful if you refer to it by citing the following publication:
 
-```
+```bibtex
 @article{zulehner2019package,
     title={How to Efficiently Handle Complex Values? Implementing Decision Diagrams for Quantum Computing},
     author={Zulehner, Alwin and Hillmich, Stefan and Wille, Robert},
