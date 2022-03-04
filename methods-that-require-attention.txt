@@ -1,0 +1,77 @@
+The following methods require attention from Thomas and Stefan
+
+Package.hpp: makeDDNode
+    Please read this method and verify whether things more or less make sense
+
+Package.hpp: normalizeLIMDD()
+    0. please read this method and verify whether things more or less make sense
+    1. two LIMs are multiplied in the following line in Step 1,
+            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
+       This may introduce a memory leak; ideally, these LIMs are put in the table
+       The same question for LimEntry<>::multiply in Step 5 and Step 7
+    2. in Step 3, the procedure highLabelZ may change the weight on the high edge, by multiplying it by -1.
+       Is this a violation of the normalization rules?
+    3. In Step 6, the root edge weight is multiplied by -1.
+       Can this have unintended consequences if the same weights are used elsewhere in the diagram?
+
+PauliAlgebra.hpp: implement several algorithms without a memory leak:
+    - GramSchmidt
+        Can be implemented with almost no reallocation of memory
+        e.g., the 'y' object can be a local variable, instead of a pointer
+    - GaussianElimination(LimEntry)
+       the following line may introduce a memory leak, by allocating a new LimEntry without deallocating the previous content of G[reduceColId]
+        G[reduceColId] = LimEntry<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+    - GaussianEliminationModuloPhase
+       the same as above
+    - GaussianElimination(LimBitset)
+       the same as above
+    - almost any place where two LIMs are multiplied
+    
+PauliAlgebra.hpp: highLabelZWeight
+    Here a weight is multiplied by -1, in the function
+            weight.multiplyByMinusOne();
+    Can this have unintended consequences if the CTEntry is also used by another weight elsewhere in the diagram?
+    If so, we should refactor this line to have no unintended consequences
+
+PauliAlgebra.hpp: constuctStabilizerGeneratorSetZ
+    deallocate 'm' and 'minus'
+
+PauliAlgebra.hpp: pruneZeroColumns
+    This procedure removes LimEntry* pointers from a vector, without properly deallocating the LimEntry objects
+    this procedure should reduce the refcount of the LimEntry objects it removes from G
+
+PauliAlgebra.hpp: appendIdentityMatrixBitset
+    allocates new LimBitset, but these objects are never deallocated.
+    Solution: deallocate immediately after use, since they are temporary objects used locally in a function
+
+PauliAlgebra.hpp: getKernelZ
+    This procedure allocates LimBitset objects in the G_Id variable,
+    but these objects are not deallocated.
+
+in PauliAlgebra.hpp: getCosetIntersectionElementPauli
+    The following local variables are allocated on the heap but not deallocated, causing memory leaks:
+        GH
+        GH_Id
+        a_H
+        a_prime
+        k_G
+        k_H
+
+PauliAlgebra.hpp: constructStabilizerGeneratorSetZ
+    put LimEntry pointers 'idZ' and 'minusIdZ' into the LimTable?
+    deallocate 'minus' and 'm'
+
+PauliAlgebra.hpp: isTimesMinusOne
+    Should this method be moved to Complex.hpp?
+
+PauliAlgebra.hpp: getIsomorphismZ
+    'isoHigh' is allocated, but not deallocated.
+    Put this object in the LimTable, or deallocate appropriately in some other way, e.g.,
+    refactor into a local variable (on the stack)
+
+PauliAlgebra.hpp: highLabelZ
+    GH is not deallocated properly
+
+in LimTable.hpp: LimEntry::multiply
+    put the new LimEntry in the LimTable?
+    otherwise, in the places that call this function, make sure that the LimEntry is put in the LimTable?
