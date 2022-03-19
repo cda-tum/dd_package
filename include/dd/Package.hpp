@@ -782,10 +782,7 @@ namespace dd {
             xCopy.w        = Complex::one;
             auto yCopy     = y;
             yCopy.w        = Complex::one;
-            xCopy.p->flags = xCopy.p->flags + (predecessorEdgeIdx << (short int)3) + (firstPathEdge << (short int)7);
-            yCopy.p->flags = yCopy.p->flags + (predecessorEdgeIdx << (short int)3) + (firstPathEdge << (short int)7);
 
-            //            auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto& computeTable = matrixDensityMultiplication;
             // todo lookup original ? -> difference between dm or matrix lookup!
             auto r = computeTable.lookup(xCopy, yCopy);
@@ -869,7 +866,7 @@ namespace dd {
                     }
                 }
             }
-            e = makeDDNode(var, edge, true);
+            e = makeDDNode(var, edge, true, firstPathEdge);
 
 //            auto delMe = computeTable.lookup(xCopy, yCopy);
 //            if (delMe.p != nullptr) {
@@ -997,6 +994,32 @@ namespace dd {
             mUniqueTable.clear();
             dUniqueTable.clear();
         }
+
+
+        // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        Edge<dNode> makeDDNode(Qubit var, const std::array<Edge<dNode>, std::tuple_size_v<decltype(dNode::e)>>& edges, bool cached = false, bool firstPathEdge = false) {
+            auto&      uniqueTable = dUniqueTable;
+            Edge<dNode> e{uniqueTable.getNode(), Complex::one};
+            e.p->v = var;
+            e.p->e = edges;
+            e.p->flags = firstPathEdge;
+
+            assert(e.p->ref == 0);
+            for ([[maybe_unused]] const auto& edge: edges)
+                // an error here indicates that cached nodes are assigned multiple times. Check if garbage collect correctly resets the cache tables!
+                assert(edge.p->v == var - 1 || edge.isTerminal());
+
+            // normalize it
+            e = normalize(e, cached);
+            assert(e.p->v == var || e.isTerminal());
+
+            // look it up in the unique tables
+            auto l = uniqueTable.lookup(e, false);
+            assert(l.p->v == var || l.isTerminal());
+
+            return l;
+        }
+
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
@@ -3163,9 +3186,7 @@ namespace std {
         std::size_t operator()(dd::Edge<dd::Package::dNode> const& e) const noexcept {
             auto h1  = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2  = std::hash<dd::Complex>{}(e.w);
-            if (dd::Edge<dd::Package::dNode>::isDensityMatrix((long)e.p)){
-                printf("TADASDADA\n");
-            }
+            assert((dd::Edge<dd::Package::dNode>::isDensityMatrix((long)e.p))== false);
             auto h3  = std::hash<short int>{}(e.p->flags);
             auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);

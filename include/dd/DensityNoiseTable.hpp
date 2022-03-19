@@ -25,10 +25,10 @@ namespace dd {
         DensityNoiseTable() = default;
 
         struct Entry {
-            OperandType              operand;
-            ResultType               result;
-//            ComplexValue             result_weight{};
+            OperandType operand;
+            ResultType  result;
             std::vector<signed char> usedQubit;
+            signed char              flags = 0;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -45,11 +45,12 @@ namespace dd {
         }
 
         void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubit) {
-            const auto key        = hash(operand, usedQubit);
-            auto&      entry      = table[key];
-            entry.result          = result;
-            entry.operand         = operand;
-            entry.usedQubit       = usedQubit;
+            const auto key   = hash(operand, usedQubit);
+            auto&      entry = table[key];
+            entry.result     = result;
+            entry.operand    = operand;
+            entry.usedQubit  = usedQubit;
+            entry.flags  = result.p->flags;
             ++count;
         }
 
@@ -61,6 +62,8 @@ namespace dd {
             if (entry.result.p == nullptr) return result;
             if (entry.operand != operand) return result;
             if (entry.usedQubit != usedQubit) return result;
+            if (entry.result.p->flags != operand.p->flags) return result;
+
             hits++;
             return entry.result;
         }
