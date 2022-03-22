@@ -1,12 +1,13 @@
 #include "dd/LimTable.hpp"
 #include "dd/Package.hpp"
+#include "dd/PauliAlgebra.hpp"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 using namespace dd::literals;
 TEST(LimTest, SinglePauliOps) {
-    dd::LimEntry<1> id{(int)0b000};
+    dd::LimEntry<1> id{0b000};
     dd::LimEntry<1> z{0b001};
     dd::LimEntry<1> x{0b010};
     dd::LimEntry<1> y{0b011};
@@ -49,22 +50,22 @@ TEST(LimTest, BitSetFromString) {
 }
 
 TEST(LimTest, PauliToStringWithPhase) {
-    dd::LimEntry<5> lim0 {"ZXY"};
+    dd::LimEntry<5> lim0{"ZXY"};
     EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim0), dd::phases::phase_one);
     EXPECT_EQ(lim0.getQubit(0), 'Z');
     EXPECT_EQ(lim0.getQubit(1), 'X');
 
-    dd::LimEntry<5> lim1 {"-ZI"};
+    dd::LimEntry<5> lim1{"-ZI"};
     EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim1), dd::phases::phase_minus_one);
     EXPECT_EQ(lim1.getQubit(0), 'Z');
     EXPECT_EQ(lim1.getQubit(1), 'I');
 
-    dd::LimEntry<5> lim2 {"iZI"};
+    dd::LimEntry<5> lim2{"iZI"};
     EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim2), dd::phases::phase_i);
     EXPECT_EQ(lim2.getQubit(0), 'Z');
     EXPECT_EQ(lim2.getQubit(1), 'I');
 
-    dd::LimEntry<5> lim3 {"-iIZX"};
+    dd::LimEntry<5> lim3{"-iIZX"};
     EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim3), dd::phases::phase_minus_i);
     EXPECT_EQ(lim3.getQubit(0), 'I');
     EXPECT_EQ(lim3.getQubit(1), 'Z');
@@ -301,9 +302,9 @@ TEST(LimTest, bitsetXOR) {
     std::bitset<3> bits0;
     std::bitset<3> bits1;
     std::cout << "[bitsetXOR] bits0 = " << bits0 << "  bits1 = " << bits1 << "\n";
-    bits0.set(0,1);
+    bits0.set(0, 1);
     bits1 ^= bits0;
-    std::cout << "[bitsetXOR] after XORing, bits0 = " << bits0 << "  bits1 = "  << bits1 << "\n";
+    std::cout << "[bitsetXOR] after XORing, bits0 = " << bits0 << "  bits1 = " << bits1 << "\n";
     EXPECT_TRUE(bits1.test(0));
 }
 
@@ -313,10 +314,10 @@ TEST(LimTest, getVectorLIMDD1) {
     // make edge e0 = Z|0>
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
 
-    auto vec = dd->getVectorLIMDD(e0);
+    auto     vec = dd->getVectorLIMDD(e0);
     dd::CVec expectedVec;
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -326,12 +327,12 @@ TEST(LimTest, getVectorLIMDD2) {
 
     // make edge Z|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
+    auto            e0  = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
 
-    auto vec = dd->getVectorLIMDD(e0);
+    auto     vec = dd->getVectorLIMDD(e0);
     dd::CVec expectedVec;
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -341,33 +342,34 @@ TEST(LimTest, getVectorLIMDD3) {
 
     // make edge Z|1>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim);
+    auto            e0  = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim);
 
-    std::cout << "[getVector3] constructing amplitude vector.\n"; std::cout.flush();
-    auto vec = dd->getVectorLIMDD(e0);
+    std::cout << "[getVector3] constructing amplitude vector.\n";
+    std::cout.flush();
+    auto     vec = dd->getVectorLIMDD(e0);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
 
 TEST(LimTest, getVectorLIMDD4) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(2);
 
     // make edge |1>
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge ZI|1>|1>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -377,18 +379,18 @@ TEST(LimTest, getVectorLIMDD5) {
 
     // make edge Z|1>
     dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim0);
+    auto            e0   = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim0);
 
     // make edge ZI|1>|1>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
+    auto            e1   = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -401,14 +403,14 @@ TEST(LimTest, getVectorLIMDD6) {
 
     // make edge ZI|1>|0>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -421,14 +423,14 @@ TEST(LimTest, getVectorLIMDD7) {
 
     // make edge ZI|1>|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -438,19 +440,19 @@ TEST(LimTest, getVectorLIMDD8) {
 
     // make edge Z|+>
     dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim0);
+    auto            e0   = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim0);
 
     // make edge ZI|1>Z|+>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
     std::cout << "[getVector8] lim1 = " << dd::LimEntry<>::to_string(lim1) << "\n";
     auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({1.0, 0.0});
 
     dd->printCVec(vec);
 
@@ -465,14 +467,14 @@ TEST(LimTest, getVectorLIMDD9) {
 
     // make edge ZI|0>|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, lim);
 
-    auto vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({0.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -485,18 +487,18 @@ TEST(LimTest, getVectorLIMDD10) {
 
     // make edge Z|+>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim1);
+    auto            e1   = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim1);
 
     // make edge ZZ(|0>|0> + |1>Z|+>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
-    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+    auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
 
-    auto vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVectorLIMDD(e2);
     dd::CVec expectedVec;
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -512,17 +514,17 @@ TEST(LimTest, getVectorLIMDD11) {
 
     // make edge ZZ(|0>|0> + |1>|+>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
-    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+    auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
 
-    auto vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVectorLIMDD(e2);
     dd::CVec expectedVec;
-    expectedVec.push_back({1.0,0.0});
-    expectedVec.push_back({0.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({1.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({1.0, 0.0});
 
-//    std::cout << "[getVector1] vec: " << vec << '\n';
-//    std::cout << "[getVector1] expected: " << expectedVec << '\n';
+    //    std::cout << "[getVector1] vec: " << vec << '\n';
+    //    std::cout << "[getVector1] expected: " << expectedVec << '\n';
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
@@ -535,29 +537,28 @@ TEST(LimTest, getVectorLIMDD12) {
 
     // make edge Z|1>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim1);
+    auto            e1   = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim1);
 
     // make edge ZZ(|0>|+> + |1>Z|1>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
-    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+    auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
 
-    auto vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVectorLIMDD(e2);
     dd::CVec expectedVec;
-    expectedVec.push_back({ 1.0,0.0});
-    expectedVec.push_back({-1.0,0.0});
-    expectedVec.push_back({ 0.0,0.0});
-    expectedVec.push_back({ 1.0,0.0});
+    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+    expectedVec.push_back({0.0, 0.0});
+    expectedVec.push_back({1.0, 0.0});
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }
-
 
 TEST(LimTest, GramSchmidt1) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("I");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -567,7 +568,7 @@ TEST(LimTest, GramSchmidt2) {
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("Z");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -577,7 +578,7 @@ TEST(LimTest, GramSchmidt3) {
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -587,7 +588,7 @@ TEST(LimTest, GramSchmidt4) {
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-iXZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -597,7 +598,7 @@ TEST(LimTest, GramSchmidt5) {
     G.push_back(new dd::LimEntry<>("Y"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -607,7 +608,7 @@ TEST(LimTest, GramSchmidt6) {
     G.push_back(new dd::LimEntry<>("YZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -618,7 +619,7 @@ TEST(LimTest, GramSchmidt7) {
     G.push_back(new dd::LimEntry<>("IZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -629,7 +630,7 @@ TEST(LimTest, GramSchmidt8) {
     G.push_back(new dd::LimEntry<>("YI"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("II");
     EXPECT_EQ(*y, *expected);
 }
@@ -640,7 +641,7 @@ TEST(LimTest, GramSchmidt9) {
     G.push_back(new dd::LimEntry<>("YX"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IX");
     std::cout << "[GramSchmidt9 test] y = " << *y << std::endl;
     EXPECT_EQ(*y, *expected);
@@ -652,7 +653,7 @@ TEST(LimTest, GramSchmidt10) {
     G.push_back(new dd::LimEntry<>("ZIZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -663,7 +664,7 @@ TEST(LimTest, GramSchmidt11) {
     G.push_back(new dd::LimEntry<>("ZXZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IXI");
     EXPECT_EQ(*y, *expected);
 }
@@ -675,15 +676,15 @@ TEST(LimTest, GramSchmidt12) {
     G.push_back(new dd::LimEntry<>("IIZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZZI");
     std::bitset<32> bits;
-    dd::LimEntry<>* y = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
 
 TEST(LimTest, intersectGroupsZ1) {
     dd::StabilizerGroup G, H;
-    G.push_back(new dd::LimEntry<>( "ZI"));
-    G.push_back(new dd::LimEntry<>( "IZ"));
+    G.push_back(new dd::LimEntry<>("ZI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
     H.push_back(new dd::LimEntry<>("-ZI"));
     H.push_back(new dd::LimEntry<>("-IZ"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsZ(G, H);
@@ -1103,8 +1104,8 @@ TEST(LimTest, CosetElementPauli4) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("X"));
     H.push_back(new dd::LimEntry<>("Y"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("-iX");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("-iX");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1124,8 +1125,8 @@ TEST(LimTest, CosetElementPauli6) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("X"));
     H.push_back(new dd::LimEntry<>("Y"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("iX");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("iX");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1134,8 +1135,8 @@ TEST(LimTest, CosetElementPauli7) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("X"));
     H.push_back(new dd::LimEntry<>("Y"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("-X");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("-X");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1144,8 +1145,8 @@ TEST(LimTest, CosetElementPauli8) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("Y"));
     H.push_back(new dd::LimEntry<>("X"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("-iZ");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("-iZ");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1154,8 +1155,8 @@ TEST(LimTest, CosetElementPauli9) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("Y"));
     H.push_back(new dd::LimEntry<>("X"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("Z");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("Z");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1164,8 +1165,8 @@ TEST(LimTest, CosetElementPauli10) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("Y"));
     H.push_back(new dd::LimEntry<>("X"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("iZ");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("iZ");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = new dd::LimEntry<>("Y");
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1176,8 +1177,8 @@ TEST(LimTest, CosetElementPauli11) {
     G.push_back(new dd::LimEntry<>("IZ"));
     H.push_back(new dd::LimEntry<>("XZ"));
     H.push_back(new dd::LimEntry<>("XY"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("II");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a         = new dd::LimEntry<>("II");
+    dd::LimEntry<>* x         = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected1 = new dd::LimEntry<>("II");
     dd::LimEntry<>* expected2 = new dd::LimEntry<>("XZ");
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected1) || dd::LimEntry<>::Equal(x, expected2));
@@ -1189,8 +1190,8 @@ TEST(LimTest, CosetElementPauli12) {
     G.push_back(new dd::LimEntry<>("IZ"));
     H.push_back(new dd::LimEntry<>("ZI"));
     H.push_back(new dd::LimEntry<>("IX"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("YX");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("YX");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = dd::LimEntry<>::noLIM;
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1199,8 +1200,8 @@ TEST(LimTest, CosetElementPauli13) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("Z"));
     H.push_back(new dd::LimEntry<>("-Z"));
-    dd::LimEntry<>* a = new dd::LimEntry<>("-I");
-    dd::LimEntry<>* x = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
+    dd::LimEntry<>* a        = new dd::LimEntry<>("-I");
+    dd::LimEntry<>* x        = dd::Pauli::getCosetIntersectionElementPauli(G, H, a);
     dd::LimEntry<>* expected = new dd::LimEntry<>("Z");
     EXPECT_TRUE(dd::LimEntry<>::Equal(x, expected));
 }
@@ -1225,10 +1226,10 @@ TEST(LimTest, GaussianElimination1) {
 
 TEST(LimTest, GaussianElimination2) {
     dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi {"ZZI"};
+    dd::LimEntry<>      zzi{"ZZI"};
     dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz {"ZIZ"};
-    dd::LimEntry<>      izz {"IZZ"};
+    dd::LimEntry<>      ziz{"ZIZ"};
+    dd::LimEntry<>      izz{"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -1255,10 +1256,10 @@ TEST(LimTest, GaussianElimination2) {
 
 TEST(LimTest, columnEchelonForm1) {
     dd::StabilizerGroup G;
-    dd::LimEntry<>      zzi {"ZZI"};
+    dd::LimEntry<>      zzi{"ZZI"};
     dd::LimEntry<>      zzi2{"ZZI"};
-    dd::LimEntry<>      ziz {"ZIZ"};
-    dd::LimEntry<>      izz {"IZZ"};
+    dd::LimEntry<>      ziz{"ZIZ"};
+    dd::LimEntry<>      izz{"IZZ"};
     G.push_back(&zzi);
     G.push_back(&zzi2);
     G.push_back(&ziz);
@@ -1336,7 +1337,7 @@ TEST(LimTest, CreateNode1) {
     // This test:
     //  Create a node for |+> |+>, i.e., the state [1 1 1 1].
     //  Create two nodes for |+>, and then a node both of whose edges point to |+>.
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(1);
     std::cout << "Test CreateNode1.\n"; std::cout.flush();
 
     // Create |+>
@@ -1348,7 +1349,7 @@ TEST(LimTest, CreateNode1) {
     e2.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
 
     dd::Edge<dd::vNode> e3{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e3.p->e = {e1,e2};
+    e3.p->e = {e1, e2};
 
     e3 = dd->normalizeLIMDD(e3, false);
 
@@ -1364,25 +1365,25 @@ TEST(LimTest, CreateNode2) {
 
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
-    plus->v = 0;
+    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v         = 0;
 
     // Create edge I|+>
     dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, nullptr};
 
     // Create edge Z|+>
-    dd::LimEntry<>* l = new dd::LimEntry<>("Z");
+    dd::LimEntry<>*     l  = new dd::LimEntry<>("Z");
     dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, l};
 
     // Create edge |0>|e0> + |1>|e1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e.p->e = {e0, e1};
+    e.p->e                = {e0, e1};
     // normalize the edge / node
     e = dd->normalizeLIMDD(e, false);
     std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.l), true);
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e.l), true);
     std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
+    EXPECT_EQ(dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
 }
 
 TEST(LimTest, CreateNode3) {
@@ -1391,11 +1392,11 @@ TEST(LimTest, CreateNode3) {
 
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
-    plus->v = 0;
+    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v         = 0;
 
     // Create edge Z|+>
-    dd::LimEntry<>* l = new dd::LimEntry<>("Z");
+    dd::LimEntry<>*     l  = new dd::LimEntry<>("Z");
     dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, l};
 
     // Create edge I|+>
@@ -1403,13 +1404,13 @@ TEST(LimTest, CreateNode3) {
 
     // Create edge |0>|e0> + |1>|e1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e.p->e = {e0, e1};
+    e.p->e                = {e0, e1};
     // normalize the edge / node
     e = dd->normalizeLIMDD(e, false);
     std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::Equal(e.l, l), true);
+    EXPECT_EQ(dd::LimEntry<>::Equal(e.l, l), true);
     std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
+    EXPECT_EQ(dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
 }
 
 TEST(LimTest, CreateNode4) {
@@ -1419,15 +1420,14 @@ TEST(LimTest, CreateNode4) {
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
     // Create node |0>
     dd::vNode* zeroState = dd->vUniqueTable.getNode();
-    zeroState->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zeroState->e         = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
     // Add Z to the stabilizer group of zeroState
     zeroState->limVector.push_back(lim);
 
-
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
-    plus->v = 0;
+    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->v         = 0;
 
     // Create edge I|0>
     dd::Edge<dd::vNode> e0 = {zeroState, dd::Complex::one, nullptr};
@@ -1435,16 +1435,15 @@ TEST(LimTest, CreateNode4) {
     // Create edge Z|+>
     dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, lim};
 
-
     // Create edge |0>|e0> + |1>|e1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e.p->e = {e0, e1};
+    e.p->e                = {e0, e1};
     // normalize the edge / node
     e = dd->normalizeLIMDD(e, false);
     std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::Equal(e.l, lim), true);
+    EXPECT_EQ(dd::LimEntry<>::Equal(e.l, lim), true);
     std::cout << "high label: (should be I):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
-    EXPECT_EQ( dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
+    EXPECT_EQ(dd::LimEntry<>::isIdentity(e.p->e[1].l), true);
 }
 
 TEST(LimTest, CreateNode6) {
@@ -1453,15 +1452,15 @@ TEST(LimTest, CreateNode6) {
 
     // Create node |0>
     dd::vNode* zeroState = dd->vUniqueTable.getNode();
-    zeroState->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zeroState->e         = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
     // Add stabilizer Z
     dd::LimEntry<>* limZ = new dd::LimEntry<>("Z");
     zeroState->limVector.push_back(limZ);
 
     // Create node |0>|0>
-    dd::vNode* zeroZero = dd->vUniqueTable.getNode();
-    dd::Edge<dd::vNode> e0 = {zeroState, dd::Complex::one, nullptr};
-    zeroZero->e = {e0, dd::Package::vEdge::zero};
+    dd::vNode*          zeroZero = dd->vUniqueTable.getNode();
+    dd::Edge<dd::vNode> e0       = {zeroState, dd::Complex::one, nullptr};
+    zeroZero->e                  = {e0, dd::Package::vEdge::zero};
     // Add stabilizers ZI and IZ
     dd::LimEntry<>* limIZ = new dd::LimEntry<>("IZ");
     zeroZero->limVector.push_back(limZ);
@@ -1471,12 +1470,12 @@ TEST(LimTest, CreateNode6) {
     dd::Edge<dd::vNode> zeroZeroEdge = {zeroZero, dd::Complex::one, nullptr};
 
     // Create edge ZZ |0>|0>
-    dd::LimEntry<>* limZZ = new dd::LimEntry<>("ZZ");
-    dd::Edge<dd::vNode> zeroZeroZEdge= {zeroZero, dd::Complex::one, limZZ};
+    dd::LimEntry<>*     limZZ         = new dd::LimEntry<>("ZZ");
+    dd::Edge<dd::vNode> zeroZeroZEdge = {zeroZero, dd::Complex::one, limZZ};
 
     // Create node |0>|zeroZeroEdge> + |1>|zeroZeroZEdge>
     dd::vNode* v = dd->vUniqueTable.getNode();
-    v->e = {zeroZeroEdge, zeroZeroZEdge};
+    v->e         = {zeroZeroEdge, zeroZeroZEdge};
 
     // Create edge to v
     dd::Edge<dd::vNode> e = {v, dd::Complex::one, nullptr};
@@ -1485,7 +1484,7 @@ TEST(LimTest, CreateNode6) {
     e = dd->normalizeLIMDD(e, false);
     std::cout << "root label:                " << dd::LimEntry<>::to_string(e.l) << '\n';
     std::cout << "high label: (should be I): " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
-    EXPECT_TRUE( dd::LimEntry<>::isIdentity(e.p->e[1].l) );
+    EXPECT_TRUE(dd::LimEntry<>::isIdentity(e.p->e[1].l));
 }
 
 TEST(LimTest, CreateNode7) {
@@ -1494,27 +1493,26 @@ TEST(LimTest, CreateNode7) {
 
     // Create edge I|0>
     dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zero.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zero.p->e                = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
     // Construct stabilizer group of |0>
     zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
 
     // Create edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero0 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero0.p->e = {zero, dd::Package::vEdge::zero};
+    zeroZero0.p->e                = {zero, dd::Package::vEdge::zero};
     // Construct stabilizer group
     zeroZero0.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero0.p->limVector.push_back(new dd::LimEntry<>("IZ"));
     // Create a second edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero1 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero1.p->e = {zero, dd::Package::vEdge::zero};
+    zeroZero1.p->e                = {zero, dd::Package::vEdge::zero};
     zeroZero1.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero1.p->limVector.push_back(new dd::LimEntry<>("IZ"));
 
-
     // Create edge I|0>|zeroZero0> + |0>|zeroZero1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e.p->e = {zeroZero0, zeroZero1};
-    e = dd->normalizeLIMDD(e, false);
+    e.p->e                = {zeroZero0, zeroZero1};
+    e                     = dd->normalizeLIMDD(e, false);
 
     std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::isIdentity(e.l), true);
@@ -1528,20 +1526,20 @@ TEST(LimTest, CreateNode8) {
 
     // Create edge I|0>
     dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zero.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zero.p->e                = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
     // Construct stabilizer group of |0>
     zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
 
     // Create edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero.p->e = {zero, dd::Package::vEdge::zero};
+    zeroZero.p->e                = {zero, dd::Package::vEdge::zero};
     // Construct stabilizer group
     zeroZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero.p->limVector.push_back(new dd::LimEntry<>("IZ"));
 
     // Create edge ZI |1>|0>
     dd::Edge<dd::vNode> oneZero = {dd->vUniqueTable.getNode(), dd::Complex::one, new dd::LimEntry<>("IZ")};
-    oneZero.p->e = {dd::Package::vEdge::zero, zero};
+    oneZero.p->e                = {dd::Package::vEdge::zero, zero};
     // Construct stabilizer group
     oneZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     oneZero.p->limVector.push_back(new dd::LimEntry<>("-IZ"));
@@ -1585,7 +1583,7 @@ TEST(LimTest, CreateNode10) {
 
     std::cout << "[CreateNode10 test] amplitude of edge: " << e1.w.toString() << std::endl;
     std::cout << "[CreateNode10 test] amplitude low: " << e1.p->e[0].w << " amplitude high: " << e1.p->e[1].w << std::endl;
-//    EXPECT_EQ(e1.w, dd::Complex::minusOne());
+    //    EXPECT_EQ(e1.w, dd::Complex::minusOne());
     // TODO I wish to check whether the weight on the incoming edge is appropriate, without imposing or assuming a specific weight normalization scheme. How do I do that?
     EXPECT_EQ(dd::LimEntry<>::getPhase(e1.l), dd::phases::phase_one);
 }
@@ -1813,7 +1811,7 @@ TEST(LimTest, CreateNode18) {
 }
 
 TEST(LimTest, constructStabilizerGroup2) {
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(1);
 
     auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
     std::cout << "Stabilizer group of |0>:\n"; std::cout.flush();
@@ -1824,7 +1822,7 @@ TEST(LimTest, constructStabilizerGroup2) {
 }
 
 TEST(LimTest, constructStabilizergroup3) {
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(1);
 
     auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
     std::cout << "Stabilizer group of |1>:\n";
@@ -1839,13 +1837,13 @@ TEST(LimTest, constructStabilizergroup3) {
 }
 
 TEST(LimTest, constructStabilizerGroup4) {
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(1);
 
-    dd::ComplexValue twocn = dd::ComplexValue{2.0, 0.0};
-    dd::Complex twoc = dd->cn.lookup(twocn);
-    dd::Edge<dd::vNode> two = {dd->vUniqueTable.getNode(), twoc, nullptr};
-    two.p = dd::vNode::terminal;
-    auto e = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, two}, false, nullptr);
+    dd::ComplexValue    twocn = dd::ComplexValue{2.0, 0.0};
+    dd::Complex         twoc  = dd->cn.lookup(twocn);
+    dd::Edge<dd::vNode> two   = {dd->vUniqueTable.getNode(), twoc, nullptr};
+    two.p                     = dd::vNode::terminal;
+    auto e                    = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, two}, false, nullptr);
     std::cout << "Stabilizer group of |0> + 2|1> :\n";
     dd::Pauli::printStabilizerGroup(e.p->limVector);
 
@@ -1949,10 +1947,10 @@ TEST(LimTest, constructStabilizerGroup10) {
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
 
     // make edge 2|1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto             e1    = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
     dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
-    dd::Complex twoc = dd->cn.lookup(twocv);
-    e1.w = twoc;
+    dd::Complex      twoc  = dd->cn.lookup(twocv);
+    e1.w                   = twoc;
 
     // make edge |00> + 2|11>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
@@ -2152,10 +2150,10 @@ TEST(LimTest, constructStabilizerGroup21) {
     auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge |0>|e0> + 2|1>|e1>
-    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+    auto             e2    = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
     dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
-    dd::Complex twoc = dd->cn.lookup(twocv);
-    e1.w = twoc;
+    dd::Complex      twoc  = dd->cn.lookup(twocv);
+    e1.w                   = twoc;
 
     // make edge |0>|e2>
     auto e3 = dd->makeDDNode(2, std::array{e2, dd::Package::vEdge::zero}, false, nullptr);
@@ -2205,18 +2203,28 @@ TEST(LimTest, constructStabilizerGroup22) {
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e4.p->limVector, expectedGroup));
 }
 
+TEST(LimTest, nextTest) {
+    auto           dd = std::make_unique<dd::Package>(1);
+    dd::LimEntry<> id;
 
+    // make edge |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
 
+    // make edge |1>
+    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
 
+    // make edge |0>|e0> + 2|1>|e1>
+    auto             e2    = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+    dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
+    dd::Complex      twoc  = dd->cn.lookup(twocv);
+    e1.w                   = twoc;
 
+    // make edge |0>|e2>
+    auto e3 = dd->makeDDNode(2, std::array{e2, dd::Package::vEdge::zero}, false, nullptr);
 
-
-
-
-
-
-
-
+    auto tmp = dd->follow(e3, 0, id);
+    dd->unfollow(e3, 0, tmp.second);
+}
 
 TEST(LimTest, simpleMultiplicationBellState) {
     auto dd = std::make_unique<dd::Package>(2);

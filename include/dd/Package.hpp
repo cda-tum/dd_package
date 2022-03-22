@@ -232,36 +232,45 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            std::cout << "[normalizeLIMDD] case Fork. Setting data.\n"; std::cout.flush();
-            Complex loww = r.p->e[0].w;
+            std::cout << "[normalizeLIMDD] case Fork. Setting data.\n";
+            std::cout.flush();
+            Complex loww  = r.p->e[0].w;
             Complex highw = r.p->e[1].w;
             std::cout << "[normalizeLIMDD} low weight: " << loww << "  high weight: " << highw << std::endl;
-            LimEntry<>* lowLim  = r.p->e[0].l;
-            LimEntry<>* higLim  = r.p->e[1].l;
+            LimEntry<>* lowLim = r.p->e[0].l;
+            LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            std::cout << "[normalizeLIMDD] Step 1: multiply.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 1: multiply.\n";
+            std::cout.flush();
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
             // Step 2: Make the left LIM Identity
-            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n"; std::cout.flush();
-            r.p->e[0].l = nullptr;
-            vNode       oldNode = *(r.p);       // make a copy of the old node
+            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n";
+            std::cout.flush();
+            r.p->e[0].l   = nullptr;
+            vNode oldNode = *(r.p); // make a copy of the old node
             // Step 3: Choose a canonical right LIM
-            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n"; std::cout.flush();
-            bool s = false;
+            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
+            std::cout.flush();
+            bool s      = false;
             r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
-            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
+            std::cout.flush();
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
-            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
+            std::cout.flush();
             LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode);
-            assert (iso != LimEntry<>::noLIM);
+            assert(iso != LimEntry<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
-            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n";
+            std::cout.flush();
             r.l = LimEntry<>::multiply(r.l, lowLim);
-            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n";
+            std::cout.flush();
             r.l = LimEntry<>::multiply(r.l, iso);
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n"; std::cout.flush();
+            std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
+            std::cout.flush();
             if (r.l->getPhase() == phases::phase_minus_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByMinusOne();
@@ -1239,6 +1248,60 @@ namespace dd {
             return e;
         }
 
+        template<class Node>
+        void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
+            switch (lim.getQubit(e.p->v)) {
+                case 'I':
+                    std::cout << "encountered I " << std::endl;
+                    break;
+                    //                case 'X':
+                    //                    std::cout << "encountered X " << std::endl;
+                    //                    break;
+                    //                case 'Y':
+                    //                    std::cout << "encountered Y " << std::endl;
+                    //                    break;
+                case 'Z':
+                    std::cout << "encountered Z " << std::endl;
+                    if (path == 1) {
+                        e.w.multiplyByMinusOne();
+                    }
+                    break;
+                default:
+                    std::cout << "Encountered unknown Stabilizer!" << std::endl;
+                    assert(false);
+            }
+        }
+
+        template<class Node>
+        std::pair<Edge<Node>, LimEntry<>> follow(Edge<Node>& e, const short path, const LimEntry<> lim) {
+            assert(e.p != nullptr);
+
+            LimEntry<> lim2(e.l);
+            lim2.multiplyBy(lim);
+
+            switch (lim2.getQubit(e.p->v)) {
+                case 'I':
+                    std::cout << "encountered I " << std::endl;
+                    return {e.p->e[path], lim2};
+                    //                case 'X':
+                    //                    std::cout << "encountered X " << std::endl;
+                    //                    break;
+                    //                case 'Y':
+                    //                    std::cout << "encountered Y " << std::endl;
+                    //                    break;
+                case 'Z':
+                    std::cout << "encountered Z " << std::endl;
+                    if (path == 1) {
+                        e.w.multiplyByMinusOne();
+                    }
+                    return {e.p->e[path], lim2};
+                default:
+                    std::cout << "Encountered unknown Stabilizer!" << std::endl;
+                    assert(false);
+            }
+            return {e.p->e[path], lim2};
+        }
+
     private:
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0) {
@@ -2138,7 +2201,7 @@ namespace dd {
             std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n"; std::cout.flush();
             const std::size_t dim = 2ULL << e.p->v;
             // allocate resulting vector
-            auto vec = CVec(dim, {0.0, 0.0});
+            auto       vec = CVec(dim, {0.0, 0.0});
             LimEntry<> id;
             getVectorLIMDD(e, Complex::one, 0, vec, id);
             std::cout << "[getVectorLIMDD] complete; constructed vector.\n"; std::cout.flush();
@@ -2184,27 +2247,27 @@ namespace dd {
 
         // Returns whether v ~ w, up to a complex multiplicative factor
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
-            std::cout << "[vectors approximately equal] start.\n"; std::cout.flush();
+            std::cout << "[vectors approximately equal] start.\n";
+            std::cout.flush();
             if (v.size() != w.size()) return false;
             // find the factor d with which the vectors differ
             std::complex<fp> d = 0;
-            bool vz, wz;
-            unsigned int i;
-            for (i=0; i<v.size(); i++) {
+            bool             vz, wz;
+            unsigned int     i;
+            for (i = 0; i < v.size(); i++) {
                 vz = Complex::approximatelyZero(v[i]);
                 wz = Complex::approximatelyZero(w[i]);
                 if (!vz && !wz) {
                     d = v[i] / w[i];
                     i++;
                     break;
-                }
-                else if (!(vz && wz))
+                } else if (!(vz && wz))
                     return false;
             }
             std::cout << "[vectors approximately equal] found factor d = " << d << "\n"; std::cout.flush();
             std::complex<fp> vc;
             // check whether the remainder of the two vectors v,w, differ by factor d
-            for (; i<v.size(); i++) {
+            for (; i < v.size(); i++) {
                 vz = Complex::approximatelyZero(v[i]);
                 wz = Complex::approximatelyZero(w[i]);
                 if (!vz && !wz) {
@@ -2212,17 +2275,16 @@ namespace dd {
                     if (!Complex::approximatelyEqual(vc, w[i])) {
                         return false;
                     }
-                }
-                else if (!(vz && wz))
+                } else if (!(vz && wz))
                     return false;
             }
 
             return true;
         }
 
-        void printCVec(const std::vector<std::complex<fp> >& vec) {
+        void printCVec(const std::vector<std::complex<fp>>& vec) {
             std::cout << "[";
-            for (unsigned int i=0; i<vec.size(); i++) {
+            for (unsigned int i = 0; i < vec.size(); i++) {
                 std::cout << vec[i] << ", ";
             }
             std::cout << "]";
