@@ -205,8 +205,8 @@ namespace dd {
         // TODO limdd: rename to just normalize() ?
         vEdge normalizeLIMDD(const vEdge& e, bool cached) {
             // Step 1: obtain 'normalized' weights for the low and high edge
-            if (!(LimEntry<>::getPhase(e.p->e[0].l) == phases::phase_one &&
-                  LimEntry<>::getPhase(e.p->e[1].l) == phases::phase_one)) {
+            if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
+                  LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
 
@@ -270,11 +270,11 @@ namespace dd {
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
             std::cout.flush();
-            if (r.l->getPhase() == phases::phase_minus_one) {
+            if (r.l->getPhase() == phase_t::phase_minus_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByMinusOne();
                 // Step 6.2: Make the phase of r.l '+1'
-                r.l->setPhase(phases::phase_one);
+                r.l->setPhase(phase_t::phase_one);
             }
             // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
             if (s) {

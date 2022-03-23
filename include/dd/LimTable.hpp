@@ -21,8 +21,8 @@ namespace dd {
         pauli_x  = 'X',
         pauli_y  = 'Z'
     };
-    // todo refactor to 'phase_t' instead of 'phases'
-    enum phases {
+
+    enum phase_t {
         phase_one       = 0,
         phase_i         = 1,
         phase_minus_one = 2,
@@ -65,19 +65,19 @@ namespace dd {
             if (pauliString[0] == '-') {
                 if (pauliString.size() >= 2 && pauliString[1] == 'i') {
                     // Set phase -i
-                    res.set(NUM_BITSETBITS-1, (phases::phase_minus_i & 0x2) >> 1);
-                    res.set(NUM_BITSETBITS-2,  phases::phase_minus_i & 0x1);
+                    res.set(NUM_BITSETBITS-1, (phase_t::phase_minus_i & 0x2) >> 1);
+                    res.set(NUM_BITSETBITS-2,  phase_t::phase_minus_i & 0x1);
                     cursor = 2;  // Start at the character at position 2, skipping the characters '-i'
                 }
                 else {
-                    res.set(NUM_BITSETBITS-1, (phases::phase_minus_one & 0x2) >> 1);
-                    res.set(NUM_BITSETBITS-2,  phases::phase_minus_one & 0x1);
+                    res.set(NUM_BITSETBITS-1, (phase_t::phase_minus_one & 0x2) >> 1);
+                    res.set(NUM_BITSETBITS-2,  phase_t::phase_minus_one & 0x1);
                     cursor = 1;  // Start at the character at position 1, skipping the character '-'
                 }
             }
             else if (pauliString[0] == 'i') {
-                res.set(NUM_BITSETBITS-1, (phases::phase_i & 0x2) >> 1);
-                res.set(NUM_BITSETBITS-2,  phases::phase_i & 0x1);
+                res.set(NUM_BITSETBITS-1, (phase_t::phase_i & 0x2) >> 1);
+                res.set(NUM_BITSETBITS-2,  phase_t::phase_i & 0x1);
                 cursor = 1; // Start at character 1, skipping the character 'i' that indicated the phase
             }
             // Step 2: Process all the qubits
@@ -145,8 +145,8 @@ namespace dd {
         // returns the phase of the LIM, in two bits, which have the following meaning:
         // 00: +1    01: i    10: -1    11: -i
         static int getPhase(const LimEntry<NUM_QUBITS>* l) {
-            if (l == nullptr) return phases::phase_one;
-            if (l == noLIM) return phases::phase_one;
+            if (l == nullptr) return phase_t::phase_one;
+            if (l == noLIM) return phase_t::phase_one;
             return l->getPhase();
 //            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS+1) << 1);
 //            return phase;
@@ -289,17 +289,17 @@ namespace dd {
                 op1 =       getQubit(i) ;
                 op2 = other.getQubit(i);
                 if      (op1 == 'X' && op2 == 'Y')  // XY =  iZ
-                    multiplyPhaseBy(phases::phase_i);
+                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'X' && op2 == 'Z')  // XZ = -iY
-                    multiplyPhaseBy(phases::phase_minus_i);
+                    multiplyPhaseBy(phase_t::phase_minus_i);
                 else if (op1 == 'Y' && op2 == 'X')  // YX = -iZ
-                    multiplyPhaseBy(phases::phase_minus_i);
+                    multiplyPhaseBy(phase_t::phase_minus_i);
                 else if (op1 == 'Y' && op2 == 'Z')  // YZ =  iX
-                    multiplyPhaseBy(phases::phase_i);
+                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'Z' && op2 == 'X')  // ZX =  iY
-                    multiplyPhaseBy(phases::phase_i);
+                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'Z' && op2 == 'Y')  // ZY = -iX
-                    multiplyPhaseBy(phases::phase_minus_i);
+                    multiplyPhaseBy(phase_t::phase_minus_i);
 
                 // Step 2: XOR the bits
                 paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
@@ -374,7 +374,7 @@ namespace dd {
         // i.e., -1 times the Identity operator
         static LimEntry<NUM_QUBITS>* getMinusIdentityOperator() {
             LimEntry<NUM_QUBITS>* Id = getIdentityOperator();
-            Id->setPhase(phases::phase_minus_one);
+            Id->setPhase(phase_t::phase_minus_one);
             return Id;
         }
 

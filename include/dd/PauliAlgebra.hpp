@@ -176,7 +176,7 @@ public:
         // the pauli's are done; handle the phase
         reducingColId = -1;
         for (unsigned int i=0; i<G.size(); i++) {
-            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phases::phase_minus_one) {
+            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phase_t::phase_minus_one) {
                 reducingColId = i;
                 break;
             }
@@ -184,7 +184,7 @@ public:
         if (reducingColId == (unsigned int) -1) return;
         for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
             if (reduceColId == reducingColId) continue;
-            if (G[reduceColId]->lim.getPhase() == phases::phase_minus_one || G[reduceColId]->lim.getPhase() == phases::phase_minus_i) {
+            if (G[reduceColId]->lim.getPhase() == phase_t::phase_minus_one || G[reduceColId]->lim.getPhase() == phase_t::phase_minus_i) {
                 G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
             }
         }
@@ -523,7 +523,7 @@ public:
 //        std::cout << "[coset intersection P] got first product. Computing second product.\n"; std::cout.flush();
         LimEntry<NUM_QUBITS>* a_H = getProductOfElements(H, decomposition_H);
         LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
-        phases phase_diff = (phases) ((a->getPhase() + a_prime->getPhase()) & 0x3);
+        phase_t phase_diff = (phase_t) ((a->getPhase() + a_prime->getPhase()) & 0x3);
         std::cout << "[coset intersection P] a_G = " << *a_G << "\n";
         std::cout << "[coset intersection P] a_H = " << *a_H << "\n";
         std::cout << "[coset intersection P] decomposition G = " << decomposition_G << "\n";
@@ -534,13 +534,13 @@ public:
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             return LimEntry<NUM_QUBITS>::noLIM;
         }
-        if (phase_diff == phases::phase_one) {
+        if (phase_diff == phase_t::phase_one) {
             return a_G;
         }
-        else if (phase_diff == phases::phase_i || phase_diff == phases::phase_minus_i) {
+        else if (phase_diff == phase_t::phase_i || phase_diff == phase_t::phase_minus_i) {
             return LimEntry<NUM_QUBITS>::noLIM;
         }
-        // phase_diff must be -1  (i.e., must be phases::phase_minus_one)
+        // phase_diff must be -1  (i.e., must be phase_t::phase_minus_one)
         std::cout << "[coset intersection P] Phase difference is -1. Computing intersection...\n"; std::cout.flush();
         const std::vector<LimEntry<NUM_QUBITS>*> intersection = intersectGroupsModuloPhase(G, H);
         LimEntry<NUM_QUBITS>* k_G;
@@ -550,7 +550,7 @@ public:
             GramSchmidt(H, intersection[i], decomposition_H);
             k_G = getProductOfElements(G, decomposition_G);
             k_H = getProductOfElements(H, decomposition_H);
-            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phases::phase_minus_one) {
+            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phase_t::phase_minus_one) {
                 a_G->multiplyBy(k_G);
                 return a_G;
             }
@@ -710,7 +710,7 @@ public:
             std::cout << "[getIsomorphismZ] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
             if (amplitudeOppositeSign) {
                 std::cout << "[getIsomorphismZ] multiplying Phase by -1\n"; std::cout.flush();
-                isoHigh->multiplyPhaseBy(phases::phase_minus_one); // multiply by -1
+                isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
                 std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             }
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
@@ -721,7 +721,7 @@ public:
             }
             // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             std::cout << "[getIsomorphismZ] multiplying phase by -1.\n"; std::cout.flush();
-            isoHigh->multiplyPhaseBy(phases::phase_minus_one);
+            isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
             std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
 //            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
@@ -739,7 +739,7 @@ public:
     // Choose the label on the High edge, in the Z group
     static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
         // We assert that the LIM has phase +1  (we expect normalizeLIMDD to guarantee this)
-        assert(LimEntry<>::getPhase(vLabel) == phases::phase_one);
+        assert(LimEntry<>::getPhase(vLabel) == phase_t::phase_one);
         std::cout << "[highLabelZWeight] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; std::cout.flush();
         StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
         std::cout << "[highLabelZWeight] Concatenated; |GH| = " << GH.size() << std::endl;
@@ -747,7 +747,7 @@ public:
         std::cout << "[highLabelZWeight] to CEF'ed; now |GH| = " << GH.size() << std::endl;
         LimEntry<>* newHighLabel = GramSchmidt(GH, vLabel);
         // Set the new phase to +1
-        newHighLabel->setPhase(phases::phase_one);
+        newHighLabel->setPhase(phase_t::phase_one);
         s = false;
         if (!weight.lexSmallerThanxMinusOne()) {
             std::cout << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
@@ -766,6 +766,14 @@ public:
     static LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
         std::cout << u << v << std::endl;
         throw std::exception();
+    }
+
+    // Returns the lexicographically smallest LIM R such that R * |v> == lim * |v>
+    // This is useful when a canonical edge is needed for a cache entry
+    // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
+    //    make sure the left and right-handed multiplications go well
+    static LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
+    	return GramSchmidt(v->limVector, lim);
     }
 
 };
