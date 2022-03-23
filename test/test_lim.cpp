@@ -557,8 +557,7 @@ TEST(LimTest, GramSchmidt1) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("I");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -567,8 +566,7 @@ TEST(LimTest, GramSchmidt2) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("Z");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -577,8 +575,7 @@ TEST(LimTest, GramSchmidt3) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -587,8 +584,7 @@ TEST(LimTest, GramSchmidt4) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-iXZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -597,8 +593,7 @@ TEST(LimTest, GramSchmidt5) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Y"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
 }
@@ -607,8 +602,7 @@ TEST(LimTest, GramSchmidt6) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("YZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -618,8 +612,7 @@ TEST(LimTest, GramSchmidt7) {
     G.push_back(new dd::LimEntry<>("YI"));
     G.push_back(new dd::LimEntry<>("IZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -629,8 +622,7 @@ TEST(LimTest, GramSchmidt8) {
     G.push_back(new dd::LimEntry<>("IZ"));
     G.push_back(new dd::LimEntry<>("YI"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("II");
     EXPECT_EQ(*y, *expected);
 }
@@ -640,8 +632,7 @@ TEST(LimTest, GramSchmidt9) {
     G.push_back(new dd::LimEntry<>("IZ"));
     G.push_back(new dd::LimEntry<>("YX"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IX");
     std::cout << "[GramSchmidt9 test] y = " << *y << std::endl;
     EXPECT_EQ(*y, *expected);
@@ -652,8 +643,7 @@ TEST(LimTest, GramSchmidt10) {
     G.push_back(new dd::LimEntry<>("IYZ"));
     G.push_back(new dd::LimEntry<>("ZIZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }
@@ -663,8 +653,7 @@ TEST(LimTest, GramSchmidt11) {
     G.push_back(new dd::LimEntry<>("IYZ"));
     G.push_back(new dd::LimEntry<>("ZXZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IXI");
     EXPECT_EQ(*y, *expected);
 }
@@ -675,8 +664,7 @@ TEST(LimTest, GramSchmidt12) {
     G.push_back(new dd::LimEntry<>("IZZ"));
     G.push_back(new dd::LimEntry<>("IIZ"));
     dd::LimEntry<>* x = new dd::LimEntry<>("ZZI");
-    std::bitset<32> bits;
-    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x, bits);
+    dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
 }

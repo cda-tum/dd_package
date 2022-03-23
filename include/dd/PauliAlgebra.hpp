@@ -303,22 +303,23 @@ public:
     template<std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
         std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; std::cout.flush();
-        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
-        if (G.size() == 0) return y;
+        LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
+        if (G.size() == 0) return new LimEntry<NUM_QUBITS>(y);
         std::size_t height = 2*NUM_QUBITS;
         for (unsigned int h=0; h<height; h++) {
-            if (y->paulis[h]) {
+            if (y.paulis[h]) {
                 std::cout << "[GramSchmidt] h=" << h << ".\n";
                 // Look for a vector whose first '1' entry is at position h
                 for (unsigned int v=0; v<G.size(); v++) {
                     if (G[v]->pivotPosition() == h) {
                         std::cout << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
-                        y = LimEntry<NUM_QUBITS>::multiply(*y, *G[v]);
+//                        y = LimEntry<NUM_QUBITS>::multiply(*y, *G[v]);
+                        y.multiplyBy(*G[v]);
                     }
                 }
             }
         }
-        return y;
+        return new LimEntry<NUM_QUBITS>(y);
     }
 
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
@@ -352,30 +353,33 @@ public:
     //   The decomposition that is found, is recorded in the bitset 'indicator'
     // todo this algorithm can be sped up if the group G is sorted
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
+    static void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
         std::cout << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
-        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
+//        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
+        LimEntry<NUM_QUBITS> y(x);
         std::size_t height = 2*NUM_QUBITS;
         for (unsigned int i=0; i<height && i<NUM_QUBITS; i++) {
             indicator.set(i, 0);
         }
-        if (G.size() == 0) return y;
+        if (G.size() == 0) return;
         for (unsigned int h=0; h<height; h++) {
-            if (y->paulis[h]) {
+            if (y.paulis[h]) {
                 std::cout << "[GramSchmidt] h=" << h << ".\n";
                 // Look for a vector whose first '1' entry is at position h
                 for (unsigned int v=0; v<G.size(); v++) {
                     if (G[v]->pivotPosition() == h) {
                         std::cout << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
-                        y = LimEntry<NUM_QUBITS>::multiply(*G[v], *y);
-                        std::cout << "[GramSchmidt] after multiplication, y = " << *y << std::endl;
+//                        y = LimEntry<NUM_QUBITS>::multiply(*G[v], *y);
+                        y.multiplyBy(*G[v]);
+                        std::cout << "[GramSchmidt] after multiplication, y = " << y << std::endl;
                         indicator.set(v, 1);
                     }
                 }
             }
         }
-        return y;
+//        return y;
     }
+
 
     // Given a group G and a 0/1 indicator vector,
     //   returns the product of the indicated elements of G
