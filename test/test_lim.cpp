@@ -1,3 +1,4 @@
+#include "dd/Export.hpp"
 #include "dd/LimTable.hpp"
 #include "dd/Package.hpp"
 #include "dd/PauliAlgebra.hpp"
@@ -2208,26 +2209,30 @@ TEST(LimTest, constructStabilizerGroup22) {
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e4.p->limVector, expectedGroup));
 }
 
+
 TEST(LimTest, nextTest) {
     auto dd = std::make_unique<dd::Package>(2);
 
     auto state0 = dd->makeZeroState(2);
 
     auto state1 = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state0);
-    auto state2 = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state1);
-    auto state3 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state2);
-
+    //auto state2 = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state1);
+    auto state3 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state1);
+    dd::export2Dot(state3, "state3.dot", false, true, true, false, true, false);
     auto str = dd::LimEntry<>::to_string(state3.l);
     std::cout << "resulting LIM with Z:" << str << '\n';
-
     auto state3_vec = dd->getVectorLIMDD(state3);
+    for(const auto& i : state3_vec) {std::cout << "  " << i << "\n";}
+
 
     auto state4 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state3);
+    dd::export2Dot(state3, "state4.dot", false, true, true, false, true, false);
 
     str = dd::LimEntry<>::to_string(state4.l);
-    std::cout << "resulting LIM with Z:" << str << '\n';
-
+    std::cout << "resulting LIM with Z^2:" << str << '\n';
     auto state4_vec = dd->getVectorLIMDD(state4);
+    for(const auto& i : state4_vec) {std::cout << "  " << i << "\n";}
+
 
     EXPECT_FALSE(dd->vectorsApproximatelyEqual(state4_vec, state3_vec));
 }
