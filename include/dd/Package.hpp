@@ -1269,7 +1269,7 @@ namespace dd {
                 case 'Z':
                     std::cout << "[Unfollow] encountered Z " << std::endl;
                     if (path == 1) {
-                        e.w.multiplyByMinusOne();
+                        e.p->e[path].w.multiplyByMinusOne();
                     }
                     break;
                 default:
@@ -1297,7 +1297,7 @@ namespace dd {
                 case 'Z':
                     std::cout << "[Follow] encountered Z " << std::endl;
                     if (path == 1) {
-                        e.w.multiplyByMinusOne();
+                        e.p->e[path].w.multiplyByMinusOne();
                     }
                     return {e.p->e[path], lim2};
                 default:
