@@ -1,3 +1,4 @@
+#include "dd/Export.hpp"
 #include "dd/LimTable.hpp"
 #include "dd/Package.hpp"
 #include "dd/PauliAlgebra.hpp"
@@ -1326,7 +1327,8 @@ TEST(LimTest, CreateNode1) {
     //  Create a node for |+> |+>, i.e., the state [1 1 1 1].
     //  Create two nodes for |+>, and then a node both of whose edges point to |+>.
     auto dd = std::make_unique<dd::Package>(1);
-    std::cout << "Test CreateNode1.\n"; std::cout.flush();
+    std::cout << "Test CreateNode1.\n";
+    std::cout.flush();
 
     // Create |+>
     dd::Edge<dd::vNode> e1{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
@@ -1802,7 +1804,8 @@ TEST(LimTest, constructStabilizerGroup2) {
     auto dd = std::make_unique<dd::Package>(1);
 
     auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
-    std::cout << "Stabilizer group of |0>:\n"; std::cout.flush();
+    std::cout << "Stabilizer group of |0>:\n";
+    std::cout.flush();
     dd::Pauli::printStabilizerGroup(l.p->limVector);
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("Z"));
@@ -1849,12 +1852,14 @@ TEST(LimTest, constructStabilizerGroup5) {
     // make e1 = |0>|0>
     std::cout << "[constructStabilizerGroup5 test] making edge |0>|0> by calling MakeDDNode.\n";
     auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
-    std::cout << "[constructStabilizergroup5 test]Stabilizer group of |0>|0>:\n"; std::cout.flush();
+    std::cout << "[constructStabilizergroup5 test]Stabilizer group of |0>|0>:\n";
+    std::cout.flush();
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("ZI"));
-    std::cout << "[constructStabilizergroup5 test] added ZI to expected group.\n"; std::cout.flush();
+    std::cout << "[constructStabilizergroup5 test] added ZI to expected group.\n";
+    std::cout.flush();
     expectedGroup.push_back(new dd::LimEntry<>("IZ"));
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e1.p->limVector, expectedGroup));
 }
@@ -1920,7 +1925,8 @@ TEST(LimTest, constructStabilizerGroup9) {
     auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge |00> + |11>
-    std::cout << "[constructStabilizerGroup9] making node |00> + |11>\n"; std::cout.flush();
+    std::cout << "[constructStabilizerGroup9] making node |00> + |11>\n";
+    std::cout.flush();
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
@@ -2191,27 +2197,32 @@ TEST(LimTest, constructStabilizerGroup22) {
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e4.p->limVector, expectedGroup));
 }
 
+
 TEST(LimTest, nextTest) {
-    auto           dd = std::make_unique<dd::Package>(1);
-    dd::LimEntry<> id;
+    auto dd = std::make_unique<dd::Package>(2);
 
-    // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto state0 = dd->makeZeroState(2);
 
-    // make edge |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto state1 = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state0);
+    //auto state2 = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state1);
+    auto state3 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state1);
+    dd::export2Dot(state3, "state3.dot", false, true, true, false, true, false);
+    auto str = dd::LimEntry<>::to_string(state3.l);
+    std::cout << "resulting LIM with Z:" << str << '\n';
+    auto state3_vec = dd->getVectorLIMDD(state3);
+    for(const auto& i : state3_vec) {std::cout << "  " << i << "\n";}
 
-    // make edge |0>|e0> + 2|1>|e1>
-    auto             e2    = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
-    dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
-    dd::Complex      twoc  = dd->cn.lookup(twocv);
-    e1.w                   = twoc;
 
-    // make edge |0>|e2>
-    auto e3 = dd->makeDDNode(2, std::array{e2, dd::Package::vEdge::zero}, false, nullptr);
+    auto state4 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state3);
+    dd::export2Dot(state3, "state4.dot", false, true, true, false, true, false);
 
-    auto tmp = dd->follow(e3, 0, id);
-    dd->unfollow(e3, 0, tmp.second);
+    str = dd::LimEntry<>::to_string(state4.l);
+    std::cout << "resulting LIM with Z^2:" << str << '\n';
+    auto state4_vec = dd->getVectorLIMDD(state4);
+    for(const auto& i : state4_vec) {std::cout << "  " << i << "\n";}
+
+
+    EXPECT_FALSE(dd->vectorsApproximatelyEqual(state4_vec, state3_vec));
 }
 
 TEST(LimTest, simpleMultiplicationBellState) {

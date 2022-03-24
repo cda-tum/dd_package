@@ -743,7 +743,8 @@ namespace dd {
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
                 l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
-                std::cout << "[makeDDNode] constructed Stabgenset:\n"; std::cout.flush();
+                std::cout << "[makeDDNode] constructed Stabgenset:\n";
+                std::cout.flush();
                 Pauli::printStabilizerGroup(l.p->limVector);
                 return l;
             }
@@ -1047,7 +1048,7 @@ namespace dd {
 
     public:
         template<class Node>
-        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y) {
+        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<> lim = {}) {
             // TODO limdd
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
@@ -1110,8 +1111,12 @@ namespace dd {
                     }
                 }
                 Edge<Node> e2{};
+                LimEntry<> lim2;
+                auto yCopy = y;
                 if (!y.isTerminal() && y.p->v == w) {
-                    e2 = y.p->e[i];
+                    //e2 = y.p->e[i];
+
+                    std::tie(e2, lim2) = follow(yCopy, i, lim);
 
                     if (e2.w != Complex::zero) {
                         e2.w = cn.mulCached(e2.w, y.w);
@@ -1123,7 +1128,8 @@ namespace dd {
                     }
                 }
 
-                edge[i] = add2(e1, e2);
+                edge[i] = add2(e1, e2, lim2);
+                unfollow(yCopy, i, lim2);
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
                     cn.returnToCache(e1.w);
@@ -1135,7 +1141,7 @@ namespace dd {
             }
 
             auto e = makeDDNode(w, edge, true);
-            computeTable.insert({x.p, x.w, x.l}, {y.p, y.w, y.l}, {e.p, e.w, e.l});
+            //computeTable.insert({x.p, x.w, x.l}, {y.p, y.w, y.l}, {e.p, e.w, e.l});
             return e;
         }
 
@@ -1250,7 +1256,7 @@ namespace dd {
         void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
             switch (lim.getQubit(e.p->v)) {
                 case 'I':
-                    std::cout << "encountered I " << std::endl;
+                    std::cout << "[Unfollow] encountered I " << std::endl;
                     break;
                     //                case 'X':
                     //                    std::cout << "encountered X " << std::endl;
@@ -1259,14 +1265,13 @@ namespace dd {
                     //                    std::cout << "encountered Y " << std::endl;
                     //                    break;
                 case 'Z':
-                    std::cout << "encountered Z " << std::endl;
+                    std::cout << "[Unfollow] encountered Z " << std::endl;
                     if (path == 1) {
                         e.w.multiplyByMinusOne();
                     }
                     break;
                 default:
-                    std::cout << "Encountered unknown Stabilizer!" << std::endl;
-                    assert(false);
+                    throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
             }
         }
 
@@ -1279,7 +1284,7 @@ namespace dd {
 
             switch (lim2.getQubit(e.p->v)) {
                 case 'I':
-                    std::cout << "encountered I " << std::endl;
+                    std::cout << "[Follow] encountered I " << std::endl;
                     return {e.p->e[path], lim2};
                     //                case 'X':
                     //                    std::cout << "encountered X " << std::endl;
@@ -1288,21 +1293,19 @@ namespace dd {
                     //                    std::cout << "encountered Y " << std::endl;
                     //                    break;
                 case 'Z':
-                    std::cout << "encountered Z " << std::endl;
+                    std::cout << "[Follow] encountered Z " << std::endl;
                     if (path == 1) {
                         e.w.multiplyByMinusOne();
                     }
                     return {e.p->e[path], lim2};
                 default:
-                    std::cout << "Encountered unknown Stabilizer!" << std::endl;
-                    assert(false);
+                    throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
             }
-            return {e.p->e[path], lim2};
         }
 
     private:
         template<class LeftOperandNode, class RightOperandNode>
-        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0) {
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, const LimEntry<> lim = {}) {
             // TODO limdd
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
@@ -1341,12 +1344,10 @@ namespace dd {
                 }
             }
 
-            constexpr std::size_t N = std::tuple_size_v<decltype(y.p->e)>;
-
             ResultEdge e{};
             if (x.p->v == var && x.p->v == y.p->v) {
                 if (x.p->ident) {
-                    if constexpr (N == NEDGE) {
+                    if constexpr (std::is_same_v<REdge, mEdge>) {
                         // additionally check if y is the identity in case of matrix multiplication
                         if (y.p->ident) {
                             e = makeIdent(start, var);
@@ -1365,7 +1366,7 @@ namespace dd {
                     return e;
                 }
 
-                if constexpr (N == NEDGE) {
+                if constexpr (std::is_same_v<REdge, mEdge>) {
                     // additionally check if y is the identity in case of matrix multiplication
                     if (y.p->ident) {
                         e = xCopy;
@@ -1381,13 +1382,15 @@ namespace dd {
                 }
             }
 
+            constexpr std::size_t N = std::tuple_size_v<decltype(y.p->e)>;
             constexpr std::size_t ROWS = RADIX;
-            constexpr std::size_t COLS = N == NEDGE ? RADIX : 1U;
+            constexpr std::size_t COLS = std::is_same_v<REdge, mEdge> ? RADIX : 1U;
 
             std::array<ResultEdge, N> edge{};
+
             for (auto i = 0U; i < ROWS; i++) {
                 for (auto j = 0U; j < COLS; j++) {
-                    auto idx  = COLS * i + j;
+                    const auto idx  = COLS * i + j;
                     edge[idx] = ResultEdge::zero;
                     for (auto k = 0U; k < ROWS; k++) {
                         LEdge e1{};
@@ -1398,13 +1401,16 @@ namespace dd {
                         }
 
                         REdge e2{};
+                        LimEntry<> lim2;
                         if (!y.isTerminal() && y.p->v == var) {
-                            e2 = y.p->e[j + COLS * k];
+                            //e2 = y.p->e[j + COLS * k];
+                            std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
                         } else {
                             e2 = yCopy;
                         }
 
-                        auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
+                        auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, lim2);
+                        unfollow(yCopy, j + COLS * k, lim2);
 
                         if (k == 0 || edge[idx].w == Complex::zero) {
                             edge[idx] = m;
@@ -1419,7 +1425,7 @@ namespace dd {
             }
             e = makeDDNode(var, edge, true);
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l});
+            //computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l});
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {
@@ -2196,17 +2202,20 @@ namespace dd {
         }
 
         CVec getVectorLIMDD(const vEdge& e) {
-            std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n"; std::cout.flush();
+            std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n";
+            std::cout.flush();
             const std::size_t dim = 2ULL << e.p->v;
             // allocate resulting vector
             auto       vec = CVec(dim, {0.0, 0.0});
             LimEntry<> id;
             getVectorLIMDD(e, Complex::one, 0, vec, id);
-            std::cout << "[getVectorLIMDD] complete; constructed vector.\n"; std::cout.flush();
+            std::cout << "[getVectorLIMDD] complete; constructed vector.\n";
+            std::cout.flush();
             return vec;
         }
         void getVectorLIMDD(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim) {
-            std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n"; std::cout.flush();
+            std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n";
+            std::cout.flush();
             auto c = cn.mulCached(e.w, amp);
 
             // base case
@@ -2220,24 +2229,28 @@ namespace dd {
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
                 // we assume that this edge is labeled with the Identity LIM
-                std::cout << "[getVectorLIMDD rec] entering low edge.\n"; std::cout.flush();
+                std::cout << "[getVectorLIMDD rec] entering low edge.\n";
+                std::cout.flush();
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
                 getVectorLIMDD(e.p->e[0], c, i, vec, lim2);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
-                std::cout << "[getVectorLIMDD rec] high case.\n"; std::cout.flush();
+                std::cout << "[getVectorLIMDD rec] high case.\n";
+                std::cout.flush();
                 // if lim has Pauli Z operator, then multiply by -1
-                auto d = c;
+                auto       d = c;
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
                 std::cout << "[getVectorLIMDD rec] eccumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
-                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n"; std::cout.flush();
+                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
+                    std::cout.flush();
                     d.multiplyByMinusOne();
                 }
                 // calculate the new accumulated LIM
-                std::cout << "[getVectorLIMDD rec] entering high edge.\n"; std::cout.flush();
+                std::cout << "[getVectorLIMDD rec] entering high edge.\n";
+                std::cout.flush();
                 getVectorLIMDD(e.p->e[1], d, x, vec, lim2);
             }
             cn.returnToCache(c);
@@ -2262,7 +2275,8 @@ namespace dd {
                 } else if (!(vz && wz))
                     return false;
             }
-            std::cout << "[vectors approximately equal] found factor d = " << d << "\n"; std::cout.flush();
+            std::cout << "[vectors approximately equal] found factor d = " << d << "\n";
+            std::cout.flush();
             std::complex<fp> vc;
             // check whether the remainder of the two vectors v,w, differ by factor d
             for (; i < v.size(); i++) {
