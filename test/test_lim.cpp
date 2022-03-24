@@ -52,22 +52,22 @@ TEST(LimTest, BitSetFromString) {
 
 TEST(LimTest, PauliToStringWithPhase) {
     dd::LimEntry<5> lim0{"ZXY"};
-    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim0), dd::phases::phase_one);
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim0), dd::phase_t::phase_one);
     EXPECT_EQ(lim0.getQubit(0), 'Z');
     EXPECT_EQ(lim0.getQubit(1), 'X');
 
     dd::LimEntry<5> lim1{"-ZI"};
-    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim1), dd::phases::phase_minus_one);
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim1), dd::phase_t::phase_minus_one);
     EXPECT_EQ(lim1.getQubit(0), 'Z');
     EXPECT_EQ(lim1.getQubit(1), 'I');
 
     dd::LimEntry<5> lim2{"iZI"};
-    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim2), dd::phases::phase_i);
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim2), dd::phase_t::phase_i);
     EXPECT_EQ(lim2.getQubit(0), 'Z');
     EXPECT_EQ(lim2.getQubit(1), 'I');
 
     dd::LimEntry<5> lim3{"-iIZX"};
-    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim3), dd::phases::phase_minus_i);
+    EXPECT_EQ(dd::LimEntry<5>::getPhase(&lim3), dd::phase_t::phase_minus_i);
     EXPECT_EQ(lim3.getQubit(0), 'I');
     EXPECT_EQ(lim3.getQubit(1), 'Z');
     EXPECT_EQ(lim3.getQubit(2), 'X');
@@ -1568,14 +1568,14 @@ TEST(LimTest, CreateNode10) {
 
     // make edge e1 = -|+>, and set this phase in the LIM incoming to the edge
     dd::LimEntry<>* lim = dd::LimEntry<>::getIdentityOperator();
-    lim->setPhase(dd::phases::phase_minus_one);
+    lim->setPhase(dd::phase_t::phase_minus_one);
     auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
 
     std::cout << "[CreateNode10 test] amplitude of edge: " << e1.w.toString() << std::endl;
     std::cout << "[CreateNode10 test] amplitude low: " << e1.p->e[0].w << " amplitude high: " << e1.p->e[1].w << std::endl;
     //    EXPECT_EQ(e1.w, dd::Complex::minusOne());
     // TODO I wish to check whether the weight on the incoming edge is appropriate, without imposing or assuming a specific weight normalization scheme. How do I do that?
-    EXPECT_EQ(dd::LimEntry<>::getPhase(e1.l), dd::phases::phase_one);
+    EXPECT_EQ(dd::LimEntry<>::getPhase(e1.l), dd::phase_t::phase_one);
 }
 
 TEST(LimTest, CreateNode11) {

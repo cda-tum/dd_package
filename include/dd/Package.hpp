@@ -239,6 +239,7 @@ namespace dd {
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             std::cout << "[normalizeLIMDD] Step 1: multiply.\n";
             std::cout.flush();
+//            LimEntry<>* higLimTemp = LimEntry<>::multiply(lowLim, higLim);
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
             // Step 2: Make the left LIM Identity
             std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n";
@@ -249,8 +250,9 @@ namespace dd {
             std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
             std::cout.flush();
             bool s      = false;
-            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
-            r.p->e[1].l = limTable.lookup(*(r.p->e[1].l));
+            LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
+//            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
+            r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             std::cout.flush();
