@@ -77,8 +77,9 @@ namespace dd {
             cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
         };
-        ~Package()                                 = default;
-        Package(const Package& package)            = delete;
+        ~Package()                      = default;
+        Package(const Package& package) = delete;
+
         Package& operator=(const Package& package) = delete;
 
         // resize the package instance
