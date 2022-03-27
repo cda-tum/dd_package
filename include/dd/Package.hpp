@@ -1643,6 +1643,12 @@ namespace dd {
             for (auto& entry: IdTable) entry.p = nullptr;
         }
 
+        mEdge createInitialMatrix(dd::QubitCount n, const std::vector<bool>& ancillary) {
+            auto e = makeIdent(n);
+            incRef(e);
+            return reduceAncillae(e, ancillary);
+        }
+
     private:
         std::vector<mEdge> IdTable{};
 
