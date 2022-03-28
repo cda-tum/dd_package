@@ -47,19 +47,35 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t UT_VEC_NBUCKET                 = 32768U,
-             std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U,
-             std::size_t UT_MAT_NBUCKET                 = 32768U,
-             std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U,
-             std::size_t CT_VEC_ADD_NBUCKET             = 16384U,
-             std::size_t CT_MAT_ADD_NBUCKET             = 16384U,
-             std::size_t CT_MAT_TRANS_NBUCKET           = 4096U,
-             std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U,
-             std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U,
-             std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U,
-             std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U,
-             std::size_t CT_VEC_KRON_NBUCKET            = 4096U,
-             std::size_t CT_MAT_KRON_NBUCKET            = 4096U>
+    struct DDPackageConfig {
+        static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
+        static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
+    };
+
+    template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
+             std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+             std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
+             std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+             std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
+             std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
+             std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
+             std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+             std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+             std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+             std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
+             std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
+             std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET>
     class Package {
         ///
         /// Complex number handling
