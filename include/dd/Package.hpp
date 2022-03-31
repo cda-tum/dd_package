@@ -2285,7 +2285,7 @@ namespace dd {
                 vz = Complex::approximatelyZero(v[i]);
                 wz = Complex::approximatelyZero(w[i]);
                 if (!vz && !wz) {
-                    vc = v[i] * d;
+                    vc = v[i] / d;
                     if (!Complex::approximatelyEqual(vc, w[i])) {
                         return false;
                     }
