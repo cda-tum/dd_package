@@ -203,6 +203,7 @@ namespace dd {
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
         // TODO limdd: rename to just normalize() ?
+        // TODO limdd: incorporate Pauli Lims
         vEdge normalizeLIMDD(const vEdge& e, bool cached) {
             // Step 1: obtain 'normalized' weights for the low and high edge
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&

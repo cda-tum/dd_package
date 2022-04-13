@@ -73,24 +73,45 @@ namespace dd {
             return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }
 
-        // todo this function is required once we implement Pauli functionality; now we only have <Z> functionality
-//        bool lexSmallerThan(const Complex& other) const {
-//        }
+        // Returns true if this=a+bi is lexicographically smaller than other=c+di,
+        // which is true iff a<c or (a=c and b<d)
+        bool lexSmallerThan(const Complex& other) const {
+        	if (!ComplexTable<>::Entry::approximatelyEquals(r, other.r)) {
+        		return ComplexTable<>::Entry::val(r) < ComplexTable<>::Entry::val(other.r);
+        	}
+        	if (!ComplexTable<>::Entry::approximatelyEquals(i, other.i)) {
+        		return ComplexTable<>::Entry::val(i) < ComplexTable<>::Entry::val(other.i);
+        	}
+        	return false;
+        }
 
         // Returns whether z=a+bi is lexicographically smaller than -z
         //   which is true iff
-        //   b > 0, or b=0 and a>0
-        //   i.e., iff z != 0 and z=r e^(it) with 0 <= t < pi
+        //   a < 0, or a=0 and b<0
         bool lexSmallerThanxMinusOne() const {
+            if (!ComplexTable<>::Entry::approximatelyZero(r)) {
+                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
+//                return !ComplexTable<>::Entry::isNegativePointer(i); // TODO limdd this may be faster
+                return ComplexTable<>::Entry::val(r) < 0;
+            }
+            if (!ComplexTable<>::Entry::approximatelyZero(i)) {
+                std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
+//                return !ComplexTable<>::Entry::isNegativePointer(r); // TODO limdd this may be faster
+                return ComplexTable<>::Entry::val(i) < 0;
+            }
+            return false;
+        }
+
+        bool lexLargerThanxMinusOne() const {
             if (!ComplexTable<>::Entry::approximatelyZero(i)) {
                 std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
-//                return !ComplexTable<>::Entry::isNegativePointer(i);
-                return ComplexTable<>::Entry::val(i) > 0;
+//                return !ComplexTable<>::Entry::isNegativePointer(i); // TODO limdd this may be faster
+                return ComplexTable<>::Entry::val(i) < 0;
             }
             if (!ComplexTable<>::Entry::approximatelyZero(r)) {
                 std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
-//                return !ComplexTable<>::Entry::isNegativePointer(r);
-                return ComplexTable<>::Entry::val(r) > 0;
+//                return !ComplexTable<>::Entry::isNegativePointer(r); // TODO limdd this may be faster
+                return ComplexTable<>::Entry::val(r) < 0;
             }
             return false;
         }

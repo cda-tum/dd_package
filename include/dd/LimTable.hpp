@@ -358,8 +358,25 @@ namespace dd {
                     paulis.set(2*v+1, 0);
                     break;
 //                default:
-                    // TODO throw an exception?
+                    // TODO limdd throw an exception?
             }
+        }
+
+        void setOperator(unsigned int v, pauli_op op) {
+        	switch(op) {
+        	case pauli_op::pauli_id:
+        		setOperator(v, 'I');
+        		break;
+        	case pauli_op::pauli_X:
+        		setOperator(v, 'X');
+        		break;
+        	case pauli_op::pauli_Y:
+        		setOperator(v, 'Y');
+        		break;
+        	case pauli_op::pauli_Z:
+        		setOperator(v, 'Z');
+        		break;
+        	}
         }
 
         // Returns I, the Identity operator

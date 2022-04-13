@@ -720,6 +720,7 @@ public:
                 return iso;
             }
             // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
+            // TODO the Z operator is not set? Why not? Omission?
             std::cout << "[getIsomorphismZ] multiplying phase by -1.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
             std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
@@ -727,10 +728,137 @@ public:
 //            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
             if (iso != LimEntry<>::noLIM) {
                 std::cout << "[getIsomorphismZ] Coset was not empty; returning result.\n"; std::cout.flush();
+//                iso->setOperator(u->v-1, pauli_op::pauli_z); // TODO should we do this? write a test
                 return iso;
             }
             else {
                 std::cout << "[getIsomorphismZ] Coset was empty; returning -1.\n"; std::cout.flush();
+                return LimEntry<>::noLIM;
+            }
+        }
+    }
+
+    // TODO limdd
+    static LimEntry<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
+        assert( u != nullptr );
+        assert( v != nullptr );
+        std::cout << "[getIsomorphismPauli] Start.\n";
+        assert (u->v == v->v);
+        Edge<vNode> uLow  = u->e[0];
+        Edge<vNode> uHigh = u->e[1];
+        Edge<vNode> vLow  = v->e[0];
+        Edge<vNode> vHigh = v->e[1];
+        // Assert that neither u nor v is the Zero vector
+        assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
+        assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
+        // TODO is this assertion true in all calls from normalizeLIMDD?
+        assert (uLow.l == nullptr && vLow.l == nullptr);
+        // Case 0.1: the nodes are equal
+        LimEntry<>* iso;
+        if (u == v) {
+            std::cout << "[getIsomorphismPauli] case u == v.\n"; std::cout.flush();
+            // In this case, we return the Identity operator, which is represented by a null pointer
+            return nullptr;
+        }
+        // Case 0.2: The leaf case.
+        // TODO this case should already be covered by case 0.1, since in this case v is also the terminal node
+        //   Do we need this extra check?
+        // TODO if the nodes u != v are not on the same number of qubits, we already know they're not isomorphism, right?
+		// TODO So... we should return noLIM?
+        else if (vNode::isTerminal(u)) {
+            std::cout << "[getIsomorphismPauli] Case u is terminal.\n"; std::cout.flush();
+            // Return the identity operator, which is represented by a null pointer
+            return nullptr;
+        }
+        // Case 1 ("Left knife"): Left child is nonzero, right child is zero
+        else if (uHigh.isZeroTerminal()) {
+        	// TODO check whether X*Q|u> = |v> for some X
+            std::cout << "[getIsomorphismPauli] Case uHigh is terminal\n";
+            if (!vHigh.isZeroTerminal()) return LimEntry<>::noLIM;
+            if (uHigh.p != vHigh.p) return LimEntry<>::noLIM;
+            return LimEntry<>::multiply(*uHigh.l, *vHigh.l);
+        }
+        // Case 2 ("Right knife"): Left child is zero, right child is nonzero
+        // TODO this can never happen, I think, if both nodes are normalized... but maybe they're not normalized yet when this function is called?
+        //      because this function is called before everything is normalized
+        else if (uLow.isZeroTerminal()) {
+            std::cout << "[getIsomorphismPauli] case uLow is terminal.\n";
+            if (!vLow.isZeroTerminal()) return LimEntry<>::noLIM; // not isomorphic
+            if (uLow.p != vLow.p) return LimEntry<>::noLIM;
+            return nullptr;  // return the Identity isomorphism
+        }
+        // Case 3 ("Fork"): Both children are nonzero
+        else {
+        	// Case 3.1: ulow = vhigh, uhigh = vlow
+        	// TODO by handling case 3.1 more efficiently, we can prevent unnecessary copying of u->limVector
+			if (uLow.p == vHigh.p && uHigh.p == vLow.p) {
+				// Return lambda^-1 * R * (X tensor P), where
+				//    P is the uHigh's edge label
+				//    lambda is uHigh's weight
+				//    R is an isomorphism between uPrime and v
+				vNode uPrime;
+				uPrime.v = u->v;
+				uPrime.limVector = u->limVector;
+				uPrime.e[0] = u->e[1];
+				uPrime.e[0].l = nullptr;
+				uPrime.e[0].w = Complex::one;
+				uPrime.e[1] = u->e[0];
+				uPrime.e[1].l = u->e[1].l;
+				uPrime.e[1].w = u->e[1].w; // TODO should be (1 / u->e[1].w). How do I do that?
+				LimEntry<>* R = getIsomorphismPauli(uPrime, v);
+				if (R == LimEntry<>::noLIM) return LimEntry<>::noLIM;
+				LimEntry<> P = *(u->e[1].l);
+				P.setOperator(u->v-1, pauli_op::pauli_x);
+				R->multiplyBy(P);
+				return R; // TODO return an isomorphism AND the weight '1/(u->e[1].w)'
+			}
+        	// Case 3.2: ulow=vlow, uhigh = vhigh
+			// TODO should we refactor this last part and just call getIsomorphismZ?
+			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
+            std::cout << "[getIsomorphismPauli] case Fork.\n"; std::cout.flush();
+            std::cout << "[getIsomorphismPauli] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl;
+            // Step 1.2: check if the amplitudes satisfy uHigh = -1 * vHigh
+            bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
+            // Step 1.1:  check if the amplitudes are equal, up to a sign
+            if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimEntry<>::noLIM;
+            std::cout << "[getIsomorphismPauli] edge weights are approximately equal.\n"; std::cout.flush();
+            // Step 2: Check if nodes u and v have the same children
+            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimEntry<>::noLIM;
+            std::cout << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; std::cout.flush();
+            // Step 3: check if the automorphism groups are equal
+            // TODO Step 3 is not necessary, but *may* speed up detection of non-isomorphic nodes.
+            //      Therefore, best to replace this with a Checksum, or to leave it out
+            if (!stabilizerGroupsEqual(u->limVector, v->limVector)) {
+                return LimEntry<>::noLIM;
+            }
+            std::cout << "[getIsomorphismPauli] the stabilizer Groups of u and v are equal.\n"; std::cout.flush();
+            // Step 4: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
+            LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
+            std::cout << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
+            if (amplitudeOppositeSign) {
+                std::cout << "[getIsomorphismPauli] multiplying Phase by -1\n"; std::cout.flush();
+                isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
+                std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
+            }
+            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            std::cout << "[getIsomorphismPauli] completed coset intersection element.\n"; std::cout.flush();
+            if (iso != LimEntry<>::noLIM) {
+                std::cout << "[getIsomorphismPauli] The coset was non-empty; returning element.\n"; std::cout.flush();
+                return iso;
+            }
+            // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
+            std::cout << "[getIsomorphismPauli] multiplying phase by -1.\n"; std::cout.flush();
+            isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
+            std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
+            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            std::cout << "[getIsomorphismPauli] found coset intersection element.\n"; std::cout.flush();
+            if (iso != LimEntry<>::noLIM) {
+//                iso->setOperator(u->v-1, pauli_op::pauli_z); // TODO should we do this? write a test
+                std::cout << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; std::cout.flush();
+                return iso;
+            }
+            else {
+                std::cout << "[getIsomorphismPauli] Coset was empty; returning -1.\n"; std::cout.flush();
                 return LimEntry<>::noLIM;
             }
         }
@@ -749,7 +877,7 @@ public:
         // Set the new phase to +1
         newHighLabel->setPhase(phase_t::phase_one);
         s = false;
-        if (!weight.lexSmallerThanxMinusOne()) {
+        if (weight.lexLargerThanxMinusOne()) {
             std::cout << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
             weight.multiplyByMinusOne();
             s = true;
@@ -758,13 +886,60 @@ public:
         return newHighLabel;
     }
 
+    // TODO limdd
+    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
+    	LimEntry<>* newHighLabel;
+    	if (u == v) {
+    		newHighLabel = GramSchmidt(u->limVector, vLabel);
+
+    		// TODO Find the lexicographic minimum of (-1)^s * weight^((-1)^x) over all values of s, x
+    		if (weight.lexLargerThanxMinusOne()) {
+    			weight.multiplyByMinusOne();
+    			s = true;
+    		}
+    		bool sInv = false;
+    		Complex weightInv = weight; // TODO Assign value weightInv = 1/weight
+    		if (weightInv.lexLargerThanxMinusOne()) {
+    			weightInv.multiplyByMinusOne();
+    			sInv = true;
+    		}
+    		if (weightInv.lexSmallerThan(weight)) {
+    			weight = weightInv; // TODO does anything need to be deallocated?
+    			x = true;
+    			s = sInv;
+    		}
+    	}
+    	else {
+    		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
+    		toColumnEchelonForm(GH);
+    		newHighLabel = GramSchmidt(GH, vLabel);
+    		if (weight.lexLargerThanxMinusOne()) {
+    			weight.multiplyByMinusOne();
+    			s = true;
+    		}
+    		x = false;
+    	}
+    	newHighLabel->setPhase(phase_t::phase_one);
+    	return newHighLabel;
+    }
+
     static LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
-        std::cout << u << v << vLabel << std::endl;
+    	std::cout << "[highLabelZ] Called with matrix node. Throwing exception.\n" << u << v << vLabel << std::endl;
+        throw std::exception();
+    }
+
+    static LimEntry<>* highLabelPauli(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
+        std::cout << "[highLabelPauli] Called with matrix node. Throwing exception.\n" << u << v << vLabel << std::endl;
         throw std::exception();
     }
 
     static LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
-        std::cout << u << v << std::endl;
+        std::cout << "[getIsomorphismZ] called with matrix nodes. Throwing exception.\n" << u << v << std::endl;
+        throw std::exception();
+    }
+
+    static LimEntry<>* getIsomorphismPauli(const mNode* u, const mNode* v) {
+        std::cout << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << std::endl;
         throw std::exception();
     }
 
@@ -782,3 +957,15 @@ public:
 
 } // namespace dd
 #endif //DDPACKAGE_PAULIALGEBRA_HPP
+
+
+agenda
+not much progress
+my plans
+venue?
+update
+
+Agenda
+1. Status updates
+2. Venue?
+3. to-do's
