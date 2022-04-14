@@ -69,7 +69,7 @@ namespace dd {
         static inline void getAlignedEdgeRevertModificationsOnSubEdges(Edge<Node>* e) {
 
             if (isFirstEdgeDensityPath(e->p->flags) && !isDensityConjugateSet(e->p->flags)) {
-                // Before I do anything else, i must aline the pointer
+                // Before I do anything else, I must align the pointer
                 e->p = getAlignedDensityNode(e->p);
 
                 // first edge paths are not modified I only have to remove the first edge property
@@ -78,7 +78,7 @@ namespace dd {
                 e->p->e[2].p = getAlignedDensityNode(e->p->e[2].p);
                 e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
             } else if (!isDensityConjugateSet(e->p->flags)) {
-                // Before I do anything else, i must aline the pointer
+                // Before I do anything else, I must align the pointer
                 e->p = getAlignedDensityNode(e->p);
 
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
@@ -88,7 +88,7 @@ namespace dd {
                 // Unmark the first edge
                 e->p->e[1].p = getAlignedDensityNode(e->p->e[1].p);
             } else {
-                // Before I do anything else, i must aline the pointer
+                // Before I do anything else, I must align the pointer
                 e->p = getAlignedDensityNode(e->p);
 
                 e->p->e[0].w.i = dd::CTEntry::flipPointerSign(e->p->e[0].w.i);
@@ -110,11 +110,11 @@ namespace dd {
             // Align the node pointers
             if (x != nullptr && isDensityMatrix((long)x->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(x);
-                x->p->flags = 0;
+                x->p->flags = x->p->flags & (~7ULL);
             }
             if (y != nullptr && isDensityMatrix((long)y->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(y);
-                y->p->flags = 0;
+                y->p->flags = x->p->flags & (~7ULL);
             }
         }
 

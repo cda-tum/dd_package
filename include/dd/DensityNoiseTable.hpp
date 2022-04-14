@@ -25,10 +25,9 @@ namespace dd {
         DensityNoiseTable() = default;
 
         struct Entry {
-            OperandType operand;
-            ResultType  result;
+            OperandType              operand;
+            ResultType               result;
             std::vector<signed char> usedQubit;
-            signed char              flags = 0;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -50,7 +49,6 @@ namespace dd {
             entry.result     = result;
             entry.operand    = operand;
             entry.usedQubit  = usedQubit;
-            entry.flags  = result.p->flags;
             ++count;
         }
 
@@ -60,10 +58,11 @@ namespace dd {
             const auto key   = hash(operand, usedQubit);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
-            if (entry.operand != operand) return result;
-            if (entry.usedQubit != usedQubit) return result;
-            if (entry.result.p->flags != operand.p->flags) return result;
-
+//            collision++;
+            if (entry.operand != operand)
+                return result;
+            if (entry.usedQubit != usedQubit)
+                return result;
             hits++;
             return entry.result;
         }
@@ -81,15 +80,17 @@ namespace dd {
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
         std::ostream&    printStatistics(std::ostream& os = std::cout) {
             os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
+//            os << "collisions: " << collision-hits << " collisions/lookups: "  << (collision-hits) / (double)lookups << std::endl;
             return os;
         }
 
     private:
         std::array<Entry, NBUCKET> table{};
         // compute table lookup statistics
-        std::size_t hits    = 0;
-        std::size_t lookups = 0;
-        std::size_t count   = 0;
+        std::size_t hits      = 0;
+        std::size_t lookups   = 0;
+        std::size_t collision = 0;
+        std::size_t count     = 0;
     };
 } // namespace dd
 
