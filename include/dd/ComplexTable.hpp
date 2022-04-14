@@ -465,6 +465,9 @@ namespace dd {
             while (curr != nullptr && val_tol > curr->value) {
                 if (std::abs(curr->value - val) < TOLERANCE) {
                     ++hits;
+                    if (curr->next != nullptr && std::abs(curr->value - val) > std::abs(curr->next->value - val)){
+                        curr->next;
+                    }
                     return curr;
                 }
                 ++collisions;
