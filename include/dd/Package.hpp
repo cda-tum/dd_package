@@ -78,7 +78,7 @@ namespace dd {
             nqubits = nq;
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
-            stochasticNoiseTable.resize(nqubits);
+            stochasticNoiseOperationCache.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
@@ -605,13 +605,15 @@ namespace dd {
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
-            if (x.w == Complex::zero) {
-                if (y.w == Complex::zero) return y;
+            if (x.w.approximatelyZero()) {
+                if (y.w.approximatelyZero()) {
+                    return dEdge::zero;
+                }
                 auto r = y;
                 r.w    = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                 return r;
             }
-            if (y.w == Complex::zero) {
+            if (y.w.approximatelyZero()) {
                 auto r = x;
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 return r;
@@ -625,9 +627,10 @@ namespace dd {
                 }
                 return r;
             }
+            assert(!x.w.approximatelyZero() || !y.w.approximatelyZero());
             //Todo solve this nicer
             //            auto& computeTable = getAddComputeTable<dNode>();
-            auto& computeTable = densityAdd;
+            auto& computeTable = matrixDensityAdd;
             auto  r            = computeTable.lookup({x.p, x.w}, {y.p, y.w});
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -739,7 +742,7 @@ namespace dd {
                 return y;
             }
 
-//            if (x.w == Complex::zero || y.w == Complex::zero) { //todo fix this properly
+            //            if (x.w == Complex::zero || y.w == Complex::zero) { //todo fix this properly
             if (x.w.approximatelyZero() || y.w.approximatelyZero()) {
                 return ResultEdge::zero;
             }
@@ -775,7 +778,7 @@ namespace dd {
 
             ResultEdge e{};
 
-//            multiply2_calls++;
+            //            multiply2_calls++;
 
             constexpr std::size_t ROWS = RADIX;
             constexpr std::size_t COLS = RADIX;
@@ -800,12 +803,12 @@ namespace dd {
                             e2 = yCopy;
                         }
 
-//                        if(short(y.p->v) == 1 && ROWS * i + k == 2 && j + COLS * k == 1){
-//                            printf("Stop\n");
-//                        }
-//
-//                        std::cout << "v: " << short(y.p->v);
-//                        std::cout << " mul: " << ROWS * i + k << " x " << j + COLS * k << std::endl;
+                        //                        if(short(y.p->v) == 1 && ROWS * i + k == 2 && j + COLS * k == 1){
+                        //                            printf("Stop\n");
+                        //                        }
+                        //
+                        //                        std::cout << "v: " << short(y.p->v);
+                        //                        std::cout << " mul: " << ROWS * i + k << " x " << j + COLS * k << std::endl;
 
                         dEdge m;
 
@@ -941,11 +944,12 @@ namespace dd {
                 matrixKronecker.clear();
                 matrixVectorMultiplication.clear();
                 matrixMatrixMultiplication.clear();
+                matrixDensityAdd.clear();
                 matrixDensityMultiplication.clear();
                 toffoliTable.clear();
                 clearIdentityTable();
                 densityNoiseOperations.clear();
-                stochasticNoiseTable.clear();
+                stochasticNoiseOperationCache.clear();
             }
             // invalidate all compute tables where any component of the entry contains numbers from the complex table if any complex numbers were collected
             if (cCollect > 0) {
@@ -958,7 +962,7 @@ namespace dd {
                 vectorKronecker.clear();
                 matrixKronecker.clear();
                 densityNoiseOperations.clear();
-                stochasticNoiseTable.clear();
+                stochasticNoiseOperationCache.clear();
             }
             return vCollect > 0 || mCollect > 0 || cCollect > 0;
         }
@@ -1092,7 +1096,7 @@ namespace dd {
 
             clearIdentityTable();
 
-            stochasticNoiseTable.clear();
+            stochasticNoiseOperationCache.clear();
             densityNoiseOperations.clear();
         }
 
@@ -1294,7 +1298,7 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge> densityAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge> matrixDensityAdd{};
 
         template<class Node>
         [[nodiscard]] ComputeTable<CachedEdge<Node>, CachedEdge<Node>, CachedEdge<Node>>& getAddComputeTable();
@@ -1952,7 +1956,7 @@ namespace dd {
         /// Noise Operations
         ///
     public:
-        StochasticNoiseOperationTable<mEdge> stochasticNoiseTable{nqubits};
+        StochasticNoiseOperationTable<mEdge> stochasticNoiseOperationCache{nqubits};
 
         ///
         /// Decision diagram size
@@ -2932,7 +2936,7 @@ namespace dd {
             std::cout << "[Toffoli Table] ";
             toffoliTable.printStatistics();
             std::cout << "[Stochastic Noise Table] ";
-            stochasticNoiseTable.printStatistics();
+            stochasticNoiseOperationCache.printStatistics();
             std::cout << "[Density Noise Table] ";
             densityNoiseOperations.printStatistics();
             std::cout << "[ComplexTable] ";
@@ -2976,7 +2980,7 @@ namespace dd {
     [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
 
     template<>
-    [[nodiscard]] inline ComputeTable<Package::dCachedEdge, Package::dCachedEdge, Package::dCachedEdge>& Package::getAddComputeTable() { return densityAdd; }
+    [[nodiscard]] inline ComputeTable<Package::dCachedEdge, Package::dCachedEdge, Package::dCachedEdge>& Package::getAddComputeTable() { return matrixDensityAdd; }
 
     template<>
     [[nodiscard]] inline ComputeTable<Package::mEdge, Package::vEdge, Package::vCachedEdge>& Package::getMultiplicationComputeTable() { return matrixVectorMultiplication; }
