@@ -75,7 +75,7 @@ TEST(LimTest, PauliToStringWithPhase) {
 
 TEST(LimTest, muliplyByMinusOne) {
     dd::Complex z = dd::Complex::one;
-    z.multiplyByMinusOne();
+    z.multiplyByMinusOne(true);
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(z.r), -1));
 
     dd::Complex m = dd::Complex::minusOne();
@@ -84,7 +84,7 @@ TEST(LimTest, muliplyByMinusOne) {
     EXPECT_FALSE(z.approximatelyEquals(dd::Complex::one));
 
     dd::Complex s{&dd::ComplexTable<>::sqrt2_2, &dd::ComplexTable<>::one};
-    s.multiplyByMinusOne();
+    s.multiplyByMinusOne(true);
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.r), -dd::SQRT2_2));
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.i), -1));
 }
@@ -557,7 +557,7 @@ TEST(LimTest, getVectorLIMDD12) {
 TEST(LimTest, GramSchmidt1) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("I");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("I");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -566,7 +566,7 @@ TEST(LimTest, GramSchmidt1) {
 TEST(LimTest, GramSchmidt2) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("Z");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("Z");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -575,7 +575,7 @@ TEST(LimTest, GramSchmidt2) {
 TEST(LimTest, GramSchmidt3) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("ZZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("ZZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
@@ -584,7 +584,7 @@ TEST(LimTest, GramSchmidt3) {
 TEST(LimTest, GramSchmidt4) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Z"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-iXZ");
     EXPECT_EQ(*y, *expected);
@@ -593,7 +593,7 @@ TEST(LimTest, GramSchmidt4) {
 TEST(LimTest, GramSchmidt5) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("Y"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("IZ");
     EXPECT_EQ(*y, *expected);
@@ -602,7 +602,7 @@ TEST(LimTest, GramSchmidt5) {
 TEST(LimTest, GramSchmidt6) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("YZ"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -612,7 +612,7 @@ TEST(LimTest, GramSchmidt7) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("YI"));
     G.push_back(new dd::LimEntry<>("IZ"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -622,7 +622,7 @@ TEST(LimTest, GramSchmidt8) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("IZ"));
     G.push_back(new dd::LimEntry<>("YI"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("II");
     EXPECT_EQ(*y, *expected);
@@ -632,7 +632,7 @@ TEST(LimTest, GramSchmidt9) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("IZ"));
     G.push_back(new dd::LimEntry<>("YX"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IX");
     std::cout << "[GramSchmidt9 test] y = " << *y << std::endl;
@@ -643,7 +643,7 @@ TEST(LimTest, GramSchmidt10) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("IYZ"));
     G.push_back(new dd::LimEntry<>("ZIZ"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("ZYI");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -653,7 +653,7 @@ TEST(LimTest, GramSchmidt11) {
     dd::StabilizerGroup G;
     G.push_back(new dd::LimEntry<>("IYZ"));
     G.push_back(new dd::LimEntry<>("ZXZ"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("ZYI");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("ZYI");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("-IXI");
     EXPECT_EQ(*y, *expected);
@@ -664,7 +664,7 @@ TEST(LimTest, GramSchmidt12) {
     G.push_back(new dd::LimEntry<>("ZZZ"));
     G.push_back(new dd::LimEntry<>("IZZ"));
     G.push_back(new dd::LimEntry<>("IIZ"));
-    dd::LimEntry<>* x = new dd::LimEntry<>("ZZI");
+    dd::LimEntry<>* x        = new dd::LimEntry<>("ZZI");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
     dd::LimEntry<>* expected = new dd::LimEntry<>("I");
     EXPECT_EQ(*y, *expected);
@@ -2197,7 +2197,6 @@ TEST(LimTest, constructStabilizerGroup22) {
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(e4.p->limVector, expectedGroup));
 }
 
-
 TEST(LimTest, nextTest) {
     auto dd = std::make_unique<dd::Package>(2);
 
@@ -2210,8 +2209,7 @@ TEST(LimTest, nextTest) {
     auto str = dd::LimEntry<>::to_string(state3.l);
     std::cout << "resulting LIM with Z:" << str << '\n';
     auto state3_vec = dd->getVectorLIMDD(state3);
-    for(const auto& i : state3_vec) {std::cout << "  " << i << "\n";}
-
+    for (const auto& i: state3_vec) { std::cout << "  " << i << "\n"; }
 
     auto state4 = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state3);
     dd::export2Dot(state3, "state4.dot", false, true, true, false, true, false);
@@ -2219,8 +2217,7 @@ TEST(LimTest, nextTest) {
     str = dd::LimEntry<>::to_string(state4.l);
     std::cout << "resulting LIM with Z^2:" << str << '\n';
     auto state4_vec = dd->getVectorLIMDD(state4);
-    for(const auto& i : state4_vec) {std::cout << "  " << i << "\n";}
-
+    for (const auto& i: state4_vec) { std::cout << "  " << i << "\n"; }
 
     EXPECT_FALSE(dd->vectorsApproximatelyEqual(state4_vec, state3_vec));
 }
@@ -2243,27 +2240,62 @@ TEST(LimTest, simpleMultiplicationBellState) {
     EXPECT_TRUE(abs(result[3].real() - 0.707) < 0.001 && abs(result[3].imag()) < 0.001);
 }
 
-TEST(LimTest, simpleCliffordCircuit) {
+TEST(LimTest, simpleCliffordCircuit_1) {
     auto dd = std::make_unique<dd::Package>(2);
 
     auto state = dd->makeZeroState(2);
 
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state);
-    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
-    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 0_pc, 1), state);
-    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 1), state);
+
+    state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 0), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
-    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
-    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
 
     auto result = dd->getVectorLIMDD(state);
 
-    std::vector<bool> expectedBasisState;
-    expectedBasisState.push_back(0);
-    expectedBasisState.push_back(1);
-    auto expected = dd->getVector(dd->makeBasisState(2, expectedBasisState));
+    EXPECT_TRUE(abs(result[0].real() - 1) < 0.0001 && abs(result[0].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[1].real()) < 0.0001 && abs(result[1].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[2].real()) < 0.0001 && abs(result[2].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[3].real()) < 0.0001 && abs(result[3].imag()) < 0.001);
+}
 
-    EXPECT_TRUE(dd->vectorsApproximatelyEqual(result, expected));
+TEST(LimTest, simpleCliffordCircuit_2) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto state = dd->makeZeroState(2);
+
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+
+    auto result = dd->getVectorLIMDD(state);
+
+    EXPECT_TRUE(abs(result[0].real() - 0.5) < 0.0001 && abs(result[0].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[1].real() - 0.5) < 0.0001 && abs(result[1].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[2].real() + 0.5) < 0.0001 && abs(result[2].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[3].real() + 0.5) < 0.0001 && abs(result[3].imag()) < 0.001);
+}
+
+TEST(LimTest, simpleCliffordCircuit_3) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto state = dd->makeZeroState(2);
+
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Zmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+
+    auto result = dd->getVectorLIMDD(state);
+
+    EXPECT_TRUE(abs(result[0].real() - 1) < 0.0001 && abs(result[0].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[1].real()) < 0.0001 && abs(result[1].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[2].real()) < 0.0001 && abs(result[2].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[3].real()) < 0.0001 && abs(result[3].imag()) < 0.001);
 }

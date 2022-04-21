@@ -2248,7 +2248,7 @@ namespace dd {
                 if (lim2.getQubit(e.p->v) == 'Z') {
                     std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
                     std::cout.flush();
-                    d.multiplyByMinusOne();
+                    d.multiplyByMinusOne(true);
                 }
                 // calculate the new accumulated LIM
                 std::cout << "[getVectorLIMDD rec] entering high edge.\n";
