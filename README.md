@@ -1,7 +1,7 @@
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/cda-tum/dd_package/CI?logo=github&style=plastic)](https://github.com/cda-tum/dd_package/actions?query=workflow%3A%22CI%22)
-[![Codecov branch](https://img.shields.io/codecov/c/github/cda-tum/dd_package/master?label=codecov&logo=codecov&style=plastic)](https://codecov.io/gh/cda-tum/dd_package)
-[![bench](https://img.shields.io/badge/benchmark-master-blue?logo=github&style=plastic)](https://cda-tum.github.io/dd_package/dev/bench/)
-![GitHub](https://img.shields.io/github/license/cda-tum/dd_package?style=plastic)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/cda-tum/dd_package/CI?logo=github&style=flat-square)](https://github.com/cda-tum/dd_package/actions?query=workflow%3A%22CI%22)
+[![Codecov branch](https://img.shields.io/codecov/c/github/cda-tum/dd_package/master?label=codecov&logo=codecov&style=flat-square)](https://codecov.io/gh/cda-tum/dd_package)
+[![bench](https://img.shields.io/badge/benchmark-master-blue?logo=github&style=flat-square)](https://cda-tum.github.io/dd_package/dev/bench/)
+![GitHub](https://img.shields.io/github/license/cda-tum/dd_package?style=flat-square)
 
 
 # MQT DD Package - A Package for Decision Diagrams Written in C++
