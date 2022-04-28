@@ -144,6 +144,18 @@ public:
         }
     }
 
+    template <std::size_t NUM_QUBITS>
+    static bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    	for (unsigned int i=0; i<G.size(); i++) {
+    		for (unsigned int j=i+1; j<G.size(); j++) {
+    			if (!G[i]->lim.commutesWith(&(G[j]->lim))) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+
     // does not initialize 'decomposition' to an identity matrix
     // TODO don't reallocate so much memory
     // TODO there is a faster version if the group is sorted
@@ -154,6 +166,10 @@ public:
         std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; std::cout.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
+        if (!isAbelian(G)) {
+        	// Add -I
+        	G.push_back(new LimBitset<NUM_QUBITS>(LimEntry<NUM_QUBITS>::getMinusIdentityOperator()));
+        }
         for (unsigned int h=0; h<pauli_height; h++) {
             // Step 1: Find a column whose first '1' is at position h
             reducingColId = -1;

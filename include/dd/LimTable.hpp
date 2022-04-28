@@ -381,6 +381,20 @@ namespace dd {
         	}
         }
 
+        bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
+        	unsigned int anticommute_count = 0;
+        	char op1, op2;
+        	for (unsigned int q=0; q<NUM_QUBITS; q++) {
+        		op1 = getQubit(q);
+        		op2 = b->getQubit(q);
+        		if (op1 != op2 && op1 != pauli_id && op2 != pauli_id) {
+        			anticommute_count++;
+        		}
+        	}
+        	// the Pauli Lims commute iff they have an even number of anticommuting gates
+        	return (anticommute_count % 2) == 0;
+        }
+
         // Returns I, the Identity operator
         // (Some subroutines start with an identity operator, and then apply mutations to it;
         //  however, if you need the identity operator as such, then use a null pointer)

@@ -962,7 +962,6 @@ TEST(LimTest, intersectGroupsPauli16) {
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("ZZ"));
-    expectedIntersection.push_back(new dd::LimEntry<>("XX"));
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
 }
 
