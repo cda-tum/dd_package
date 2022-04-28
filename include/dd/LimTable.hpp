@@ -19,7 +19,7 @@ namespace dd {
         pauli_id = 'I',
         pauli_z  = 'Z',
         pauli_x  = 'X',
-        pauli_y  = 'Z'
+        pauli_y  = 'Y'
     };
 
     enum phase_t {
@@ -200,7 +200,9 @@ namespace dd {
         static bool Equal(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             if (a == noLIM) return b == noLIM;
             if (b == noLIM) return false;
-            if (isIdentity(a) && isIdentity(b)) return true;
+//            if (a == nullptr && b == nullptr) return true;
+//            if (a == nullptr || b == nullptr) return false;
+            if (isIdentityOperator(a) && isIdentityOperator(b)) return true;
             if (a == nullptr) return false;
             if (b == nullptr) return false;
             return (*a == *b);
@@ -209,10 +211,10 @@ namespace dd {
         static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
             if (a == nullptr) {
-                return isIdentity(b);
+                return isIdentityOperator(b);
             }
             if (b == nullptr) {
-                return isIdentity(a);
+                return isIdentityOperator(a);
             }
             // check whether the first 2*NUM_QUBITS bits are equal
             for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
@@ -237,7 +239,7 @@ namespace dd {
             return isAllZeroVector();
         }
 
-        static bool isIdentity(const LimEntry<NUM_QUBITS>* l) {
+        static bool isIdentityOperator(const LimEntry<NUM_QUBITS>* l) {
             assert(l != noLIM);
             if (l == nullptr) return true;
             return l->isIdentityOperator();
@@ -367,13 +369,13 @@ namespace dd {
         	case pauli_op::pauli_id:
         		setOperator(v, 'I');
         		break;
-        	case pauli_op::pauli_X:
+        	case pauli_op::pauli_x:
         		setOperator(v, 'X');
         		break;
-        	case pauli_op::pauli_Y:
+        	case pauli_op::pauli_y:
         		setOperator(v, 'Y');
         		break;
-        	case pauli_op::pauli_Z:
+        	case pauli_op::pauli_z:
         		setOperator(v, 'Z');
         		break;
         	}
