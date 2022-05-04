@@ -8,8 +8,10 @@
 #include "dd/Package.hpp"
 
 #include "gtest/gtest.h"
+#include <iomanip>
 #include <memory>
 #include <random>
+#include <sstream>
 
 using namespace dd::literals;
 
@@ -98,6 +100,67 @@ TEST(DDPackageTest, BellState) {
     export2Dot(bell_state, "bell_state_mono_classic.dot", false, false, true, false, false);
     export2Dot(bell_state, "bell_state_memory.dot", false, true, true, true, false);
     dd::exportEdgeWeights(bell_state, std::cout);
+
+    dd->statistics();
+}
+
+TEST(DDPackageTest, QFTState) {
+    auto dd = std::make_unique<dd::Package>(3);
+
+    auto h0_gate   = dd->makeGateDD(dd::Hmat, 3, 0);
+    auto s0_gate   = dd->makeGateDD(dd::Smat, 3, 1_pc, 0);
+    auto t0_gate   = dd->makeGateDD(dd::Tmat, 3, 2_pc, 0);
+    auto h1_gate   = dd->makeGateDD(dd::Hmat, 3, 1);
+    auto s1_gate   = dd->makeGateDD(dd::Smat, 3, 2_pc, 1);
+    auto h2_gate   = dd->makeGateDD(dd::Hmat, 3, 2);
+    auto swap_gate = dd->makeSWAPDD(3, {}, 0, 2);
+
+    auto qft_op = dd->multiply(s0_gate, h0_gate);
+    qft_op      = dd->multiply(t0_gate, qft_op);
+    qft_op      = dd->multiply(h1_gate, qft_op);
+    qft_op      = dd->multiply(s1_gate, qft_op);
+    qft_op      = dd->multiply(h2_gate, qft_op);
+
+    qft_op         = dd->multiply(swap_gate, qft_op);
+    auto qft_state = dd->multiply(qft_op, dd->makeZeroState(3));
+
+    dd->printVector(qft_state);
+
+    for (dd::Qubit qubit = 0; qubit < 7; ++qubit) {
+        ASSERT_NEAR(dd->getValueByPath(qft_state, qubit).r, static_cast<dd::fp>(0.5) * dd::SQRT2_2, dd->cn.complexTable.tolerance());
+        ASSERT_EQ(dd->getValueByPath(qft_state, qubit).i, 0);
+    }
+
+    export2Dot(qft_state, "qft_state_colored_labels.dot", true, true, false, false, false);
+    export2Dot(qft_state, "qft_state_colored_labels_classic.dot", true, true, true, false, false);
+    export2Dot(qft_state, "qft_state_mono_labels.dot", false, true, false, false, false);
+    export2Dot(qft_state, "qft_state_mono_labels_classic.dot", false, true, true, false, false);
+    export2Dot(qft_state, "qft_state_colored.dot", true, false, false, false, false);
+    export2Dot(qft_state, "qft_state_colored_classic.dot", true, false, true, false, false);
+    export2Dot(qft_state, "qft_state_mono.dot", false, false, false, false, false);
+    export2Dot(qft_state, "qft_state_mono_classic.dot", false, false, true, false, false);
+    export2Dot(qft_state, "qft_state_memory.dot", false, true, true, true, false);
+    dd::exportEdgeWeights(qft_state, std::cout);
+
+    export2Dot(qft_op, "qft_op_polar_colored_labels.dot", true, true, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored_labels_classic.dot", true, true, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_labels.dot", false, true, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_labels_classic.dot", false, true, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored.dot", true, false, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_colored_classic.dot", true, false, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono.dot", false, false, false, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_mono_classic.dot", false, false, true, false, false, true);
+    export2Dot(qft_op, "qft_op_polar_memory.dot", false, true, true, true, false, true);
+
+    export2Dot(qft_op, "qft_op_rectangular_colored_labels.dot", true, true, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored_labels_classic.dot", true, true, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_labels.dot", false, true, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_labels_classic.dot", false, true, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored.dot", true, false, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_colored_classic.dot", true, false, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono.dot", false, false, false, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_mono_classic.dot", false, false, true, false, false, false);
+    export2Dot(qft_op, "qft_op_rectangular_memory.dot", false, true, true, true, false, false);
 
     dd->statistics();
 }
@@ -820,4 +883,161 @@ TEST(DDPackageTest, DestructiveMeasurementOneArbitraryNormalization) {
     ASSERT_EQ(vAfter[2], static_cast<std::complex<dd::fp>>(dd::complex_SQRT2_2));
     ASSERT_EQ(vAfter[1], static_cast<std::complex<dd::fp>>(dd::complex_zero));
     ASSERT_EQ(vAfter[3], static_cast<std::complex<dd::fp>>(dd::complex_zero));
+}
+
+TEST(DDPackageTest, ExportPolarPhaseFormatted) {
+    std::ostringstream phaseString;
+
+    // zero case
+    dd::printPhaseFormatted(phaseString, 0);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 0)");
+    phaseString.str("");
+
+    // one cases
+    dd::printPhaseFormatted(phaseString, 0.5 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, -0.5 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(-iπ/2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, -dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(-iπ)");
+    phaseString.str("");
+
+    // 1/sqrt(2) cases
+    dd::printPhaseFormatted(phaseString, dd::SQRT2_2 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/√2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 2 * dd::SQRT2_2 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2/√2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 0.5 * dd::SQRT2_2 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/(2√2))");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 0.75 * dd::SQRT2_2 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3/(4√2))");
+    phaseString.str("");
+
+    // pi cases mhhh pie
+    dd::printPhaseFormatted(phaseString, dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 2 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 0.5 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/2)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 0.75 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 3/4)");
+    phaseString.str("");
+
+    dd::printPhaseFormatted(phaseString, 0.25 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ/4)");
+    phaseString.str("");
+
+    // general case
+    dd::printPhaseFormatted(phaseString, 0.12345 * dd::PI);
+    EXPECT_STREQ(phaseString.str().c_str(), "ℯ(iπ 0.12345)");
+    phaseString.str("");
+}
+
+TEST(DDPackageTest, ExportConditionalFormat) {
+    auto cn = std::make_unique<dd::ComplexNumbers>();
+
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(1, 0)).c_str(), "1");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(0, 1)).c_str(), "i");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(-1, 0)).c_str(), "-1");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(0, -1)).c_str(), "-i");
+
+    const auto num = cn->getCached(-dd::SQRT2_2, -dd::SQRT2_2);
+    EXPECT_STREQ(dd::conditionalFormat(num).c_str(), "ℯ(-iπ 3/4)");
+    EXPECT_STREQ(dd::conditionalFormat(num, false).c_str(), "-1/√2(1+i)");
+
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(-1, -1)).c_str(), "2/√2 ℯ(-iπ 3/4)");
+    EXPECT_STREQ(dd::conditionalFormat(cn->getCached(-dd::SQRT2_2, 0)).c_str(), "-1/√2");
+}
+
+TEST(DDPackageTest, BasicNumericInstabilityTest) {
+    using limits = std::numeric_limits<dd::fp>;
+
+    std::cout << std::setprecision(limits::max_digits10);
+
+    std::cout << "The 1/sqrt(2) constant used in this package is " << dd::SQRT2_2 << ", which is the closest floating point value to the actual value of 1/sqrt(2)." << std::endl;
+    std::cout << "Computing std::sqrt(0.5) actually computes this value, i.e. " << std::sqrt(dd::fp(0.5)) << std::endl;
+    EXPECT_EQ(dd::SQRT2_2, std::sqrt(dd::fp(0.5)));
+    std::cout << "However, computing 1/std::sqrt(2.) leads to " << dd::fp(1.0) / std::sqrt(dd::fp(2.)) << ", which differs by 1 ULP from std::sqrt(0.5)" << std::endl;
+    EXPECT_EQ(dd::fp(1.0) / std::sqrt(dd::fp(2.)), std::nextafter(std::sqrt(dd::fp(0.5)), 0.));
+    std::cout << "In the same fashion, computing std::sqrt(2.) leads to " << std::sqrt(dd::fp(2.)) << ", while computing 1/std::sqrt(0.5) leads to " << dd::fp(1.) / std::sqrt(dd::fp(0.5)) << ", which differ by exactly 1 ULP" << std::endl;
+    EXPECT_EQ(std::sqrt(dd::fp(2.)), std::nextafter(dd::fp(1.) / std::sqrt(dd::fp(0.5)), 2.));
+    std::cout << "Another inaccuracy occurs when computing 1/sqrt(2) * 1/sqrt(2), which should equal to 0.5 but is off by 1 ULP: " << std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)) << std::endl;
+    EXPECT_EQ(std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)), std::nextafter(0.5, 1.));
+    std::cout << "This inaccuracy even persists when computing std::sqrt(0.5) * std::sqrt(0.5): " << std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)) << std::endl;
+    EXPECT_EQ(std::sqrt(dd::fp(0.5)) * std::sqrt(dd::fp(0.5)), std::nextafter(dd::fp(0.5), 1.));
+
+    //    std::cout << "Interestingly, calculating powers of dd::SQRT2_2 can be conducted very precisely, i.e., with an error of only 1 ULP." << std::endl;
+    //    dd::fp      accumulator = dd::SQRT2_2 * dd::SQRT2_2;
+    //    std::size_t nq          = 64;
+    //    for (std::size_t i = 1; i < nq; i += 2) {
+    //        std::size_t power  = (i + 1) / 2;
+    //        std::size_t denom  = 1UL << power;
+    //        dd::fp      target = 1. / static_cast<double>(denom);
+    //        dd::fp      diff   = std::abs(target - accumulator);
+    //        const auto  ulps   = dd::ulpDistance(accumulator, target);
+    //        std::cout << accumulator << ", numerical error: " << diff << ", ulps: " << ulps << std::endl;
+    //        EXPECT_EQ(ulps, 1);
+    //        accumulator *= dd::SQRT2_2;
+    //        accumulator *= dd::SQRT2_2;
+    //    }
+}
+
+TEST(DDPackageTest, BasicNumericStabilityTest) {
+    using limits = std::numeric_limits<dd::fp>;
+
+    auto dd = std::make_unique<dd::Package>(1);
+    dd::ComplexNumbers::setTolerance(limits::epsilon());
+    auto state  = dd->makeZeroState(1);
+    auto h      = dd->makeGateDD(dd::Hmat, 1, 0);
+    auto state1 = dd->multiply(h, state);
+    auto z      = dd->makeGateDD(dd::Zmat, 1, 0);
+    auto result = dd->multiply(z, state1);
+
+    const auto topWeight   = result.w.toString(false, limits::max_digits10);
+    const auto leftWeight  = result.p->e[0].w.toString(false, limits::max_digits10);
+    const auto rightWeight = result.p->e[1].w.toString(false, limits::max_digits10);
+    std::cout << topWeight << " | " << leftWeight << " | " << rightWeight << std::endl;
+    EXPECT_EQ(topWeight, "1");
+    std::ostringstream oss{};
+    oss << std::setprecision(limits::max_digits10) << dd::SQRT2_2;
+    EXPECT_EQ(leftWeight, oss.str());
+    oss.str("");
+    oss << -dd::SQRT2_2;
+    EXPECT_EQ(rightWeight, oss.str());
+}
+
+TEST(DDPackageTest, FidelityOfMeasurementOutcomes) {
+    auto dd = std::make_unique<dd::Package>(3);
+
+    auto h_gate     = dd->makeGateDD(dd::Hmat, 3, 2);
+    auto cx_gate1   = dd->makeGateDD(dd::Xmat, 3, 2_pc, 1);
+    auto cx_gate2   = dd->makeGateDD(dd::Xmat, 3, 1_pc, 0);
+    auto zero_state = dd->makeZeroState(3);
+
+    auto ghz_state = dd->multiply(cx_gate2, dd->multiply(cx_gate1, dd->multiply(h_gate, zero_state)));
+
+    std::vector<dd::fp> probs    = {0.5, 0., 0., 0., 0., 0., 0., 0.5};
+    auto                fidelity = dd->fidelityOfMeasurementOutcomes(ghz_state, probs);
+    EXPECT_NEAR(fidelity, 1.0, dd::ComplexTable<>::tolerance());
 }
