@@ -19,27 +19,27 @@ TEST(DDPackageTest, RequestInvalidPackageSize) {
     EXPECT_THROW(auto dd = std::make_unique<dd::Package<>>(std::numeric_limits<dd::Qubit>::max() + 2), std::invalid_argument);
 }
 
-TEST(DDPackageTest, OperationLookupTest) {
-    auto dd = std::make_unique<dd::Package<>>(1);
-
-    // ATrue is not the operation that is being stored, but for the test it doesn't matter
-    auto tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
-    EXPECT_TRUE(tmp_op.p == nullptr);
-
-    auto x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
-    dd->noiseOperationTable.insert(dd::NoiseOperationKind::ATrue, 0, x_gate);
-    tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
-    EXPECT_TRUE(tmp_op.p == x_gate.p);
-
-    tmp_op = dd->multiply(tmp_op, x_gate);
-
-    // I only check this, so that the above test is evaluated when compiled using release mode
-    EXPECT_TRUE(tmp_op.p != nullptr);
-
-    dd->garbageCollect(true);
-    tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
-    EXPECT_TRUE(tmp_op.p == nullptr);
-}
+//TEST(DDPackageTest, OperationLookupTest) {
+//    auto dd = std::make_unique<dd::Package<>>(1);
+//
+//    // ATrue is not the operation that is being stored, but for the test it doesn't matter
+//    auto tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
+//    EXPECT_TRUE(tmp_op.p == nullptr);
+//
+//    auto x_gate = dd->makeGateDD(dd::Xmat, 1, 0);
+//    dd->noiseOperationTable.insert(dd::NoiseOperationKind::ATrue, 0, x_gate);
+//    tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
+//    EXPECT_TRUE(tmp_op.p == x_gate.p);
+//
+//    tmp_op = dd->multiply(tmp_op, x_gate);
+//
+//    // I only check this, so that the above test is evaluated when compiled using release mode
+//    EXPECT_TRUE(tmp_op.p != nullptr);
+//
+//    dd->garbageCollect(true);
+//    tmp_op = dd->noiseOperationTable.lookup(1, dd::NoiseOperationKind::ATrue, 0);
+//    EXPECT_TRUE(tmp_op.p == nullptr);
+//}
 
 TEST(DDPackageTest, TrivialTest) {
     auto dd = std::make_unique<dd::Package<>>(2);

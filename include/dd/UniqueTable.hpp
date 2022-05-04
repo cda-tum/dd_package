@@ -98,7 +98,16 @@ namespace dd {
 
             Node* p = tables[v][key];
             while (p != nullptr) {
-                if (e.p->e == p->e) {
+                bool dmCheck = false;
+                if constexpr (std::is_same_v<Edge<Node>, dEdge>) {
+                    //todo make this more elegant, also, non dm nodes can be reused for dm nodes
+                    Edge<Node> tmp{};
+                    tmp.p = p;
+                    dEdge::revertDmChangesToEdges(&tmp, nullptr);
+                    dmCheck = e.p->e == p->e;
+                    dEdge::applyDmChangesToEdges(&tmp, nullptr);
+                }
+                if (e.p->e == p->e || dmCheck) {
                     // Match found
                     if (e.p != p && !keepNode) {
                         // put node pointed to by e.p on available chain

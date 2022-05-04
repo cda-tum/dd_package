@@ -29,6 +29,7 @@ namespace dd {
             LeftOperandType  leftOperand;
             RightOperandType rightOperand;
             ResultType       result;
+            bool             firstPathEdge = true;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
@@ -44,13 +45,13 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, const bool firstPathEdge = true) {
             const auto key = hash(leftOperand, rightOperand);
-            table[key]     = {leftOperand, rightOperand, result};
+            table[key]     = {leftOperand, rightOperand, result, firstPathEdge};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const bool firstPathEdge = true) {
             ResultType     result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
@@ -58,6 +59,7 @@ namespace dd {
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
+            if (entry.firstPathEdge != firstPathEdge) return result;
 
             hits++;
             return entry.result;
