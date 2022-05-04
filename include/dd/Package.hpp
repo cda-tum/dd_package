@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DDpackage_H
@@ -14,9 +14,10 @@
 #include "ComputeTable.hpp"
 #include "Control.hpp"
 #include "Definitions.hpp"
-#include "DensityNoiseTable.hpp"
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
+#include "Node.hpp"
+#include "DensityNoiseTable.hpp"
 #include "StochasticNoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
@@ -47,6 +48,35 @@
 #include <vector>
 
 namespace dd {
+    struct DDPackageConfig {
+        static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
+        static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
+    };
+
+    template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
+             std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+             std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
+             std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+             std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
+             std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
+             std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
+             std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+             std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+             std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+             std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
+             std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
+             std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET>
     class Package {
         ///
         /// Complex number handling
@@ -66,6 +96,7 @@ namespace dd {
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
+
         Package& operator=(const Package& package) = delete;
 
         // resize the package instance
@@ -79,6 +110,7 @@ namespace dd {
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
             stochasticNoiseOperationCache.resize(nqubits);
+            //todo also resize densityNoiseComputeTable?
             IdTable.resize(nqubits);
         }
 
@@ -99,20 +131,6 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
     public:
-        struct vNode {
-            std::array<Edge<vNode>, RADIX> e{};    // edges out of this node
-            vNode*                         next{}; // used to link nodes in unique table
-            RefCount                       ref{};  // reference count
-            Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
-
-            static vNode            terminalNode;
-            constexpr static vNode* terminal{&terminalNode};
-
-            static constexpr bool isTerminal(const vNode* p) { return p == terminal; }
-        };
-        using vEdge       = Edge<vNode>;
-        using vCachedEdge = CachedEdge<vNode>;
-
         vEdge normalize(const vEdge& e, bool cached) {
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
@@ -280,22 +298,6 @@ namespace dd {
         /// Matrix nodes, edges and quantum gates
         ///
     public:
-        struct mNode {
-            std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
-            mNode*                         next{};        // used to link nodes in unique table
-            RefCount                       ref{};         // reference count
-            Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
-            bool                           symm  = false; // node is symmetric
-            bool                           ident = false; // node resembles identity
-
-            static mNode            terminalNode;
-            constexpr static mNode* terminal{&terminalNode};
-
-            static constexpr bool isTerminal(const mNode* p) { return p == terminal; }
-        };
-        using mEdge       = Edge<mNode>;
-        using mCachedEdge = CachedEdge<mNode>;
-
         mEdge normalize(const mEdge& e, bool cached) {
             auto argmax = -1;
 
@@ -900,7 +902,13 @@ namespace dd {
     public:
         // unique tables
         template<class Node>
-        [[nodiscard]] UniqueTable<Node>& getUniqueTable();
+        [[nodiscard]] auto& getUniqueTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vUniqueTable;
+            } else {
+                return mUniqueTable;
+            }
+        }
 
         template<class Node>
         void incRef(const Edge<Node>& e) {
@@ -911,9 +919,9 @@ namespace dd {
             getUniqueTable<Node>().decRef(e);
         }
 
-        UniqueTable<vNode> vUniqueTable{nqubits};
-        UniqueTable<mNode> mUniqueTable{nqubits};
-        UniqueTable<dNode> dUniqueTable{nqubits};
+        UniqueTable<vNode, UT_VEC_NBUCKET, UT_VEC_INITIAL_ALLOCATION_SIZE> vUniqueTable{nqubits};
+        UniqueTable<mNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> mUniqueTable{nqubits};
+        UniqueTable<dNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> dUniqueTable{nqubits};
 
         bool garbageCollect(bool force = false) {
             // return immediately if no table needs collection
@@ -1305,12 +1313,18 @@ namespace dd {
         /// Addition
         ///
     public:
-        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge> vectorAdd{};
-        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge> matrixDensityAdd{};
+        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
+        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_MAT_ADD_NBUCKET> matrixDensityAdd{};
 
         template<class Node>
-        [[nodiscard]] ComputeTable<CachedEdge<Node>, CachedEdge<Node>, CachedEdge<Node>>& getAddComputeTable();
+        [[nodiscard]] auto& getAddComputeTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vectorAdd;
+            } else {
+                return matrixAdd;
+            }
+        }
 
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
@@ -1426,9 +1440,10 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        UnaryComputeTable<mEdge, mEdge, 4096>  matrixTranspose{};
-        UnaryComputeTable<mEdge, mEdge, 4096>  conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CT_MAT_TRANS_NBUCKET>      matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CT_MAT_CONJ_TRANS_NBUCKET> conjugateMatrixTranspose{};
         DensityNoiseTable<dEdge, dEdge, 16384> densityNoiseOperations{};
+        //Todo move this and use makro instead of fixed value
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->symm) {
@@ -1498,12 +1513,19 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTable<mEdge, vEdge, vCachedEdge> matrixVectorMultiplication{};
-        ComputeTable<mEdge, mEdge, mCachedEdge> matrixMatrixMultiplication{};
-        ComputeTable<dEdge, dEdge, dCachedEdge> matrixDensityMultiplication{};
+        ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
+        ComputeTable<dEdge, dEdge, dCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixDensityMultiplication{};
+
 
         template<class LeftOperandNode, class RightOperandNode>
-        [[nodiscard]] ComputeTable<Edge<LeftOperandNode>, Edge<RightOperandNode>, CachedEdge<RightOperandNode>>& getMultiplicationComputeTable();
+        [[nodiscard]] auto& getMultiplicationComputeTable() {
+            if constexpr (std::is_same_v<RightOperandNode, vNode>) {
+                return matrixVectorMultiplication;
+            } else {
+                return matrixMatrixMultiplication;
+            }
+        }
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0) {
@@ -1669,7 +1691,7 @@ namespace dd {
         /// Inner product and fidelity
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorInnerProduct{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, CT_VEC_INNER_PROD_NBUCKET> vectorInnerProduct{};
 
         ComplexValue innerProduct(const vEdge& x, const vEdge& y) {
             if (x.p == nullptr || y.p == nullptr || x.w.approximatelyZero() || y.w.approximatelyZero()) { // the 0 case
@@ -1694,22 +1716,21 @@ namespace dd {
             return fid.r * fid.r + fid.i * fid.i;
         }
 
-        dd::fp fidelityOfMeasurementOutcomes(const vEdge& e, const std::vector<dd::fp>& probs) {
+        dd::fp fidelityOfMeasurementOutcomes(const vEdge& e, const ProbabilityVector& probs) {
             if (e.w.approximatelyZero()) {
                 return 0.;
             }
-            const auto nq = e.p->v + 1;
-            if (probs.size() != (1U << nq)) {
-                throw std::runtime_error("Mismatch in sizes of DD and probability vector in fidelity function.");
-            }
-
             return fidelityOfMeasurementOutcomesRecursive(e, probs, 0);
         }
 
-        dd::fp fidelityOfMeasurementOutcomesRecursive(const vEdge& e, const std::vector<dd::fp>& probs, const std::size_t i) {
+        dd::fp fidelityOfMeasurementOutcomesRecursive(const vEdge& e, const ProbabilityVector& probs, const std::size_t i) {
             const auto topw = dd::ComplexNumbers::mag(e.w);
             if (e.isTerminal()) {
-                return topw * std::sqrt(probs[i]);
+                if (auto it = probs.find(i); it != probs.end()) {
+                    return topw * std::sqrt(it->second);
+                } else {
+                    return 0.;
+                }
             }
 
             std::size_t leftIdx          = i;
@@ -1718,7 +1739,7 @@ namespace dd {
                 leftContribution = fidelityOfMeasurementOutcomesRecursive(e.p->e[0], probs, leftIdx);
             }
 
-            std::size_t rightIdx          = i | (1 << e.p->v);
+            std::size_t rightIdx          = i | (1ULL << e.p->v);
             auto        rightContribution = 0.;
             if (!e.p->e[1].w.approximatelyZero()) {
                 rightContribution = fidelityOfMeasurementOutcomesRecursive(e.p->e[1], probs, rightIdx);
@@ -1788,11 +1809,18 @@ namespace dd {
         /// Kronecker/tensor product
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorKronecker{};
-        ComputeTable<mEdge, mEdge, mCachedEdge, 4096> matrixKronecker{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, CT_VEC_KRON_NBUCKET> vectorKronecker{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_KRON_NBUCKET> matrixKronecker{};
+        //TODO also add kronecker cache for density matrices?
 
         template<class Node>
-        [[nodiscard]] ComputeTable<Edge<Node>, Edge<Node>, CachedEdge<Node>, 4096>& getKroneckerComputeTable();
+        [[nodiscard]] auto& getKroneckerComputeTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vectorKronecker;
+            } else {
+                return matrixKronecker;
+            }
+        }
 
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y, bool incIdx = true) {
@@ -1883,6 +1911,11 @@ namespace dd {
             assert(before == after);
             return {CTEntry::val(res.w.r), CTEntry::val(res.w.i)};
         }
+        bool isCloseToIdentity(const mEdge& m, dd::fp tol = 1e-10) {
+            std::unordered_set<decltype(m.p)> visited{};
+            visited.reserve(mUniqueTable.getActiveNodeCount());
+            return isCloseToIdentityRecursive(m, visited, tol);
+        }
 
     private:
         /// TODO: introduce a compute table for the trace?
@@ -1948,6 +1981,64 @@ namespace dd {
             }
         }
 
+        bool isCloseToIdentityRecursive(const mEdge& m, std::unordered_set<decltype(m.p)>& visited, dd::fp tol) {
+            // immediately return if this node has already been visited
+            if (visited.find(m.p) != visited.end()) {
+                return true;
+            }
+
+            // immediately return of this node is identical to the identity
+            if (m.p->ident) {
+                return true;
+            }
+
+            // check whether any of the middle successors is non-zero, i.e., m = [ x 0 0 y ]
+            const auto mag1 = dd::ComplexNumbers::mag2(m.p->e[1U].w);
+            const auto mag2 = dd::ComplexNumbers::mag2(m.p->e[2U].w);
+            if (mag1 > tol || mag2 > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // check whether  m = [ ~1 0 0 y ]
+            const auto mag0 = dd::ComplexNumbers::mag2(m.p->e[0U].w);
+            if (std::abs(mag0 - 1.0) > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+            const auto arg0 = dd::ComplexNumbers::arg(m.p->e[0U].w);
+            if (std::abs(arg0) > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // check whether m = [ x 0 0 ~1 ] or m = [ x 0 0 ~0 ] (the last case is true for an ancillary qubit)
+            const auto mag3 = dd::ComplexNumbers::mag2(m.p->e[3U].w);
+            if (mag3 > tol) {
+                if (std::abs(mag3 - 1.0) > tol) {
+                    visited.insert(m.p);
+                    return false;
+                }
+                const auto arg3 = dd::ComplexNumbers::arg(m.p->e[3U].w);
+                if (std::abs(arg3) > tol) {
+                    visited.insert(m.p);
+                    return false;
+                }
+            }
+
+            // m either has the form [ ~1 0 0 ~1 ] or [ ~1 0 0 ~0 ]
+            const auto ident0 = isCloseToIdentityRecursive(m.p->e[0U], visited, tol);
+            if (!ident0) {
+                visited.insert(m.p);
+                return false;
+            }
+
+            // m either has the form [ I 0 0 ~1 ] or [ I 0 0 ~0 ]
+            const auto ident3 = isCloseToIdentityRecursive(m.p->e[3U], visited, tol);
+            visited.insert(m.p);
+            return ident3;
+        }
+
         ///
         /// Toffoli gates
         ///
@@ -1990,6 +2081,12 @@ namespace dd {
 
         void clearIdentityTable() {
             for (auto& entry: IdTable) entry.p = nullptr;
+        }
+
+        mEdge createInitialMatrix(dd::QubitCount n, const std::vector<bool>& ancillary) {
+            auto e = makeIdent(n);
+            incRef(e);
+            return reduceAncillae(e, ancillary);
         }
 
     private:
@@ -2303,7 +2400,7 @@ namespace dd {
                 return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
-            bool one = i & (1 << e.p->v);
+            const bool one = i & (1ULL << e.p->v);
 
             ComplexValue r{};
             if (!one && !e.p->e[0].w.approximatelyZero()) {
@@ -2334,22 +2431,23 @@ namespace dd {
 
             auto c = cn.mulCached(e.w, amp);
 
-            if (e.p->v == -1) {
+            if (e.isTerminal() || e.p->v == -1) {
+                //todo make this cuter
                 cn.returnToCache(c);
                 return {CTEntry::val(c.r), CTEntry::val(c.i)};
             }
 
-            bool row = i & (1 << e.p->v);
-            bool col = j & (1 << e.p->v);
+            const bool row = i & (1ULL << e.p->v);
+            const bool col = j & (1ULL << e.p->v);
 
             ComplexValue r{};
-            if (!row && !col) {
+            if (!row && !col && !e.p->e[0].w.approximatelyZero()) {
                 r = getValueByPath(e.p->e[0], c, i, j);
-            } else if (!row && col) {
+            } else if (!row && col && !e.p->e[1].w.approximatelyZero()) {
                 r = getValueByPath(e.p->e[1], c, i, j);
-            } else if (row && !col) {
+            } else if (row && !col && !e.p->e[2].w.approximatelyZero()) {
                 r = getValueByPath(e.p->e[2], c, i, j);
-            } else if (row && col) {
+            } else if (row && col && !e.p->e[3].w.approximatelyZero()) {
                 r = getValueByPath(e.p->e[3], c, i, j);
             }
             cn.returnToCache(c);
@@ -2357,7 +2455,7 @@ namespace dd {
         }
 
         CVec getVector(const vEdge& e) {
-            std::size_t dim = 1 << (e.p->v + 1);
+            const std::size_t dim = 2ULL << e.p->v;
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
             getVector(e, Complex::one, 0, vec);
@@ -2374,7 +2472,7 @@ namespace dd {
                 return;
             }
 
-            std::size_t x = i | (1 << e.p->v);
+            const std::size_t x = i | (1ULL << e.p->v);
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero())
@@ -2385,11 +2483,11 @@ namespace dd {
         }
 
         void printVector(const vEdge& e) {
-            unsigned long long element = 2u << e.p->v;
-            for (unsigned long long i = 0; i < element; i++) {
-                auto amplitude = getValueByPath(e, i);
+            const unsigned long long element = 2ULL << e.p->v;
+            for (auto i = 0ULL; i < element; i++) {
+                const auto amplitude = getValueByPath(e, i);
                 for (Qubit j = e.p->v; j >= 0; j--) {
-                    std::cout << ((i >> j) & 1u);
+                    std::cout << ((i >> j) & 1ULL);
                 }
                 constexpr auto precision = 3;
                 // set fixed width to maximum of a printed number
@@ -2400,16 +2498,12 @@ namespace dd {
             std::cout << std::flush;
         }
 
-        void printMatrix(mEdge& e) {
-            auto               tmp     = reinterpret_cast<mNode*>(Edge<Package::dNode>::getAlignedDensityNode((const dNode*)e.p));
-            unsigned long long element = 2u << tmp->v;
-            for (unsigned long long i = 0; i < element; i++) {
-                for (unsigned long long j = 0; j < element; j++) {
-                    if (i == 7 && j == 0) {
-                        std::cout << "";
-                    }
-                    auto           amplitude = getValueByPath(e, i, j);
-                    constexpr auto precision = 5;
+        void printMatrix(const mEdge& e) {
+            const unsigned long long element = 2ULL << e.p->v;
+            for (auto i = 0ULL; i < element; i++) {
+                for (auto j = 0ULL; j < element; j++) {
+                    const auto     amplitude = getValueByPath(e, i, j);
+                    constexpr auto precision = 3;
                     // set fixed width to maximum of a printed number
                     // (-) 0.precision plus/minus 0.precision i
                     constexpr auto width = 1 + 2 + precision + 1 + 2 + precision + 1;
@@ -2421,7 +2515,7 @@ namespace dd {
         }
 
         CMat getMatrix(const mEdge& e) {
-            std::size_t dim = 1 << (e.p->v + 1);
+            const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
             getMatrix(e, Complex::one, 0, 0, mat);
@@ -2438,8 +2532,8 @@ namespace dd {
                 return;
             }
 
-            std::size_t x = i | (1 << e.p->v);
-            std::size_t y = j | (1 << e.p->v);
+            const std::size_t x = i | (1ULL << e.p->v);
+            const std::size_t y = j | (1ULL << e.p->v);
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero())
@@ -2453,11 +2547,11 @@ namespace dd {
             cn.returnToCache(c);
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
+        void exportAmplitudesRec(const vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
             if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     if (binary) {
                         amp.writeBinary(oss);
                     } else {
@@ -2473,7 +2567,7 @@ namespace dd {
             exportAmplitudesRec(edge.p->e[1], oss, path + "1", a, level - 1, binary);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
+        void exportAmplitudes(const vEdge& edge, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -2482,7 +2576,7 @@ namespace dd {
             exportAmplitudesRec(edge, oss, "", weight, nq, binary);
             cn.returnToCache(weight);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
+        void exportAmplitudes(const vEdge& edge, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
             std::ofstream      init(outputFilename);
             std::ostringstream oss{};
 
@@ -2492,12 +2586,12 @@ namespace dd {
             init.close();
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
+        void exportAmplitudesRec(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
             if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
                 idx <<= level;
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     amplitudes[idx++] = std::complex<dd::fp>{dd::ComplexTable<>::Entry::val(amp.r), dd::ComplexTable<>::Entry::val(amp.i)};
                 }
 
@@ -2506,10 +2600,10 @@ namespace dd {
 
             auto a = cn.mulCached(amplitude, edge.w);
             exportAmplitudesRec(edge.p->e[0], amplitudes, a, level - 1, idx << 1);
-            exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1);
+            exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1ULL);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
+        void exportAmplitudes(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -2519,14 +2613,14 @@ namespace dd {
             cn.returnToCache(weight);
         }
 
-        void addAmplitudesRec(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
+        void addAmplitudesRec(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
             auto         ar = dd::ComplexTable<>::Entry::val(edge.w.r);
             auto         ai = dd::ComplexTable<>::Entry::val(edge.w.i);
             ComplexValue amp{ar * amplitude.r - ai * amplitude.i, ar * amplitude.i + ai * amplitude.r};
 
             if (edge.isTerminal()) {
                 idx <<= level;
-                for (std::size_t i = 0; i < (1UL << level); i++) {
+                for (std::size_t i = 0; i < (1ULL << level); i++) {
                     auto temp         = std::complex<dd::fp>{amp.r + amplitudes[idx].real(), amp.i + amplitudes[idx].imag()};
                     amplitudes[idx++] = temp;
                 }
@@ -2535,9 +2629,9 @@ namespace dd {
             }
 
             addAmplitudesRec(edge.p->e[0], amplitudes, amp, level - 1, idx << 1);
-            addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1);
+            addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1ULL);
         }
-        void addAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
+        void addAmplitudes(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -2936,15 +3030,15 @@ namespace dd {
                       << "\n  vNode size: " << sizeof(vNode) << " bytes (aligned " << alignof(vNode) << " bytes)"
                       << "\n  mEdge size: " << sizeof(mEdge) << " bytes (aligned " << alignof(mEdge) << " bytes)"
                       << "\n  mNode size: " << sizeof(mNode) << " bytes (aligned " << alignof(mNode) << " bytes)"
-                      << "\n  CT Vector Add size: " << sizeof(decltype(vectorAdd)::Entry) << " bytes (aligned " << alignof(decltype(vectorAdd)::Entry) << " bytes)"
-                      << "\n  CT Matrix Add size: " << sizeof(decltype(matrixAdd)::Entry) << " bytes (aligned " << alignof(decltype(matrixAdd)::Entry) << " bytes)"
-                      << "\n  CT Matrix Transpose size: " << sizeof(decltype(matrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(matrixTranspose)::Entry) << " bytes)"
-                      << "\n  CT Conjugate Matrix Transpose size: " << sizeof(decltype(conjugateMatrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(conjugateMatrixTranspose)::Entry) << " bytes)"
-                      << "\n  CT Matrix Multiplication size: " << sizeof(decltype(matrixMatrixMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixMatrixMultiplication)::Entry) << " bytes)"
-                      << "\n  CT Matrix Vector Multiplication size: " << sizeof(decltype(matrixVectorMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixVectorMultiplication)::Entry) << " bytes)"
-                      << "\n  CT Vector Inner Product size: " << sizeof(decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(decltype(vectorInnerProduct)::Entry) << " bytes)"
-                      << "\n  CT Vector Kronecker size: " << sizeof(decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(decltype(vectorKronecker)::Entry) << " bytes)"
-                      << "\n  CT Matrix Kronecker size: " << sizeof(decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(decltype(matrixKronecker)::Entry) << " bytes)"
+                      << "\n  CT Vector Add size: " << sizeof(typename decltype(vectorAdd)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorAdd)::Entry) << " bytes)"
+                      << "\n  CT Matrix Add size: " << sizeof(typename decltype(matrixAdd)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixAdd)::Entry) << " bytes)"
+                      << "\n  CT Matrix Transpose size: " << sizeof(typename decltype(matrixTranspose)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixTranspose)::Entry) << " bytes)"
+                      << "\n  CT Conjugate Matrix Transpose size: " << sizeof(typename decltype(conjugateMatrixTranspose)::Entry) << " bytes (aligned " << alignof(typename decltype(conjugateMatrixTranspose)::Entry) << " bytes)"
+                      << "\n  CT Matrix Multiplication size: " << sizeof(typename decltype(matrixMatrixMultiplication)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixMatrixMultiplication)::Entry) << " bytes)"
+                      << "\n  CT Matrix Vector Multiplication size: " << sizeof(typename decltype(matrixVectorMultiplication)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixVectorMultiplication)::Entry) << " bytes)"
+                      << "\n  CT Vector Inner Product size: " << sizeof(typename decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorInnerProduct)::Entry) << " bytes)"
+                      << "\n  CT Vector Kronecker size: " << sizeof(typename decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorKronecker)::Entry) << " bytes)"
+                      << "\n  CT Matrix Kronecker size: " << sizeof(typename decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixKronecker)::Entry) << " bytes)"
                       << "\n  ToffoliTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
                       << "\n  Package size: " << sizeof(Package) << " bytes (aligned " << alignof(Package) << " bytes)"
                       << "\n"
@@ -2986,66 +3080,17 @@ namespace dd {
             cn.complexTable.printStatistics();
         }
     };
-
-    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}},
-                                                       nullptr,
-                                                       0,
-                                                       -1};
-
-    inline Package::mNode Package::mNode::terminalNode{
-            {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
-            nullptr,
-            0,
-            -1,
-            true,
-            true};
-
     inline Package::dNode Package::dNode::terminalNode{
             {{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}},
             nullptr,
             0,
             -1,
             0};
-
-    template<>
-    [[nodiscard]] inline UniqueTable<Package::vNode>& Package::getUniqueTable() { return vUniqueTable; }
-
-    template<>
-    [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
-
-    template<>
-    [[nodiscard]] inline UniqueTable<Package::dNode>& Package::getUniqueTable() { return dUniqueTable; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::dCachedEdge, Package::dCachedEdge, Package::dCachedEdge>& Package::getAddComputeTable() { return matrixDensityAdd; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::vEdge, Package::vCachedEdge>& Package::getMultiplicationComputeTable() { return matrixVectorMultiplication; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getMultiplicationComputeTable() { return matrixMatrixMultiplication; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::dEdge, Package::dEdge, Package::dCachedEdge>& Package::getMultiplicationComputeTable() { return matrixDensityMultiplication; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge, 4096>& Package::getKroneckerComputeTable() { return vectorKronecker; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge, 4096>& Package::getKroneckerComputeTable() { return matrixKronecker; }
-
     template<>
     constexpr bool Package::dEdge::operator==(const Package::dEdge& other) const {
         assert(p != nullptr && other.p != nullptr);
         return p == other.p && p->flags == other.p->flags && w.approximatelyEquals(other.w);
     }
-
 } // namespace dd
 
 namespace std {

@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_COMPLEXTABLE_HPP
@@ -484,7 +484,7 @@ namespace dd {
         std::size_t upperNeighbors   = 0;
 
         // numerical tolerance to be used for floating point values
-        static inline fp TOLERANCE = 1e-13;
+        static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024;
 
         Entry*                                available{};
         std::vector<std::vector<Entry>>       chunks{};

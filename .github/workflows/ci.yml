@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -22,7 +22,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name:  Configure CMake
@@ -43,7 +43,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name:  Configure CMake
@@ -65,44 +65,41 @@ jobs:
     needs:   test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name:  Configure CMake
-        run:   cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=Release -DCOVERAGE=1
+        run:   cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=1
       - name:  Build
-        run:   cmake --build "${{github.workspace}}/build" --config Release --target DDPackage_test
+        run:   cmake --build "${{github.workspace}}/build" --config Debug --target DDPackage_test
       - name:              Test
         working-directory: ${{github.workspace}}/build/test
         run:               ./DDPackage_test
+      - name: Run gcov
+        run: |
+          find . -type f -name '*.gcno' -exec gcov -p  {} +
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3.1.0
         with:
           fail_ci_if_error: true
+          verbose: true
 
   codestyle:
-    #    needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: DoozyX/clang-format-lint-action@v0.12
+      - uses: DoozyX/clang-format-lint-action@v0.13
         with:
           source:             'include test'
           clangFormatVersion: 12
-  #          inplace: True
-  #      - uses: EndBug/add-and-commit@v4
-  #        with:
-  #          author_name: github-actions
-  #          author_email: 41898282+github-actions[bot]@users.noreply.github.com
-  #          message: '🎨 clang-format changes'
 
   benchmark:
     needs:   test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name:  Configure CMake
@@ -113,6 +110,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run:               ./DDPackage_bench --benchmark_format=json | tee benchmark_result.json
       - name: Store benchmark result # for pushes
+        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: rhysd/github-action-benchmark@v1
         #        if: github.event_name == 'push'
         with:
