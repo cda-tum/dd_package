@@ -17,9 +17,9 @@
 namespace dd {
     enum pauli_op {
         pauli_id = 'I',
-        pauli_z  = 'Z',
         pauli_x  = 'X',
-        pauli_y  = 'Z'
+        pauli_y  = 'Y',
+        pauli_z  = 'Z'
     };
 
     enum phase_t {
@@ -367,13 +367,13 @@ namespace dd {
         	case pauli_op::pauli_id:
         		setOperator(v, 'I');
         		break;
-        	case pauli_op::pauli_X:
+        	case pauli_op::pauli_x:
         		setOperator(v, 'X');
         		break;
-        	case pauli_op::pauli_Y:
+        	case pauli_op::pauli_y:
         		setOperator(v, 'Y');
         		break;
-        	case pauli_op::pauli_Z:
+        	case pauli_op::pauli_z:
         		setOperator(v, 'Z');
         		break;
         	}

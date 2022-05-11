@@ -144,16 +144,19 @@ public:
         }
     }
 
-    // does not initialize 'decomposition' to an identity matrix
     // TODO don't reallocate so much memory
     // TODO there is a faster version if the group is sorted
     //    (calls to GaussianElimination from getKernel do not sort their group before calling)
     template <std::size_t NUM_QUBITS>
     static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
-        std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; std::cout.flush();
+        std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << " G:.\n"; std::cout.flush();
+        printStabilizerGroup(G);
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
+        if (!groupIsAbelian(G)) {
+        	// add (-I, 0) to G
+        }
         for (unsigned int h=0; h<pauli_height; h++) {
             // Step 1: Find a column whose first '1' is at position h
             reducingColId = -1;
@@ -168,8 +171,9 @@ public:
             for (unsigned int reduceColId =0; reduceColId < G.size(); reduceColId++) {
                 if (reduceColId == reducingColId) continue;
                 if (G[reduceColId]->lim.paulis.test(h)) {
-                    std::cout << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; std::cout.flush();
+                    std::cout << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ". Now G is:\n"; std::cout.flush();
                     G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+                    printStabilizerGroup(G);
                 }
             }
         }
@@ -805,7 +809,7 @@ public:
 				uPrime.e[1] = u->e[0];
 				uPrime.e[1].l = u->e[1].l;
 				uPrime.e[1].w = u->e[1].w; // TODO should be (1 / u->e[1].w). How do I do that?
-				LimEntry<>* R = getIsomorphismPauli(uPrime, v);
+				LimEntry<>* R = getIsomorphismPauli(&uPrime, v);
 				if (R == LimEntry<>::noLIM) return LimEntry<>::noLIM;
 				LimEntry<> P = *(u->e[1].l);
 				P.setOperator(u->v-1, pauli_op::pauli_x);
@@ -957,15 +961,3 @@ public:
 
 } // namespace dd
 #endif //DDPACKAGE_PAULIALGEBRA_HPP
-
-
-agenda
-not much progress
-my plans
-venue?
-update
-
-Agenda
-1. Status updates
-2. Venue?
-3. to-do's
