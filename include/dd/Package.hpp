@@ -225,11 +225,18 @@ namespace dd {
             }
             // Case 2 ("High Knife"):  low edge = 0, high edge is nonzero
             if (zero[0]) {
+            	// TODO switcheroo the nodes!
                 // Step 1: Set the root edge pointer to 'Identity tensor R'
                 r.l = r.p->e[1].l;
                 // Step 2: Set the low edge label to 'Identity'
                 r.p->e[1].l = nullptr; // the right edge is the identity
                 return r;
+            }
+
+            bool swappedChildren = false;
+            if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
+            	swappedChildren = true;
+            	std::swap(r.p->e[0], r.p->e[1]);
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
@@ -250,8 +257,9 @@ namespace dd {
             // Step 3: Choose a canonical right LIM
             std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
             std::cout.flush();
-            bool s      = false;
-            LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
+            bool s = false;
+            bool x = false;
+            LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s, x);
 //            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
@@ -284,6 +292,18 @@ namespace dd {
                 LimEntry<> Z;
                 Z.setOperator(r.p->v, 'Z');
                 r.l->multiplyBy(Z);
+            }
+            if (x) {
+            	LimEntry<> XP(higLim);
+            	XP.setOperator(r.p->v, 'X');
+            	r.l->multiplyBy(XP);
+            	// TODO multiply weight by old high edge weight
+            }
+
+            if (swappedChildren) {
+            	LimEntry<> X;
+            	X.setOperator(r.p->v, 'X');
+            	r.l->multiplyBy(X);
             }
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
@@ -694,7 +714,7 @@ namespace dd {
             e = normalize(e, cached);
             assert(e.p->v == var || e.isTerminal());
 
-            // Consturct the Stabilizer Genetor set
+            // Construct the Stabilizer Generator set
             e.p->limVector = constructStabilizerGeneratorSet(e.p);
 
             // look it up in the unique tables
@@ -745,12 +765,28 @@ namespace dd {
                 assert(l.p->v == var || l.isTerminal());
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
-                l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
+                l.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(l.p));
                 std::cout << "[makeDDNode] constructed Stabgenset:\n";
                 std::cout.flush();
                 Pauli::printStabilizerGroup(l.p->limVector);
                 return l;
             }
+        }
+
+        // Returns a node that is not normalized
+        //   *** ONLY for testing purposes ***
+        Edge<vNode> makeDDNodeNonNormalized(const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges) {
+            auto& uniqueTable = vUniqueTable;
+
+            Edge<vNode> e{uniqueTable.getNode(), Complex::one, nullptr};
+            if (!edges[0].isZeroTerminal()) {
+            	e.p->v = edges[0].p->v + 1;
+            }
+            else {
+            	e.p->v = edges[1].p->v + 1;
+            }
+            e.p->e = edges;
+            return e;
         }
 
         template<class Node>

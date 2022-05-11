@@ -22,6 +22,9 @@ namespace dd {
 
         static Complex zero;
         static Complex one;
+        static Complex minus_one;
+        static Complex complex_i;
+        static Complex minus_i;
 
         void setVal(const Complex& c) const {
             r->value = CTEntry::val(c.r);
@@ -126,8 +129,11 @@ namespace dd {
         return os << c.toString();
     }
 
-    inline Complex Complex::zero{&ComplexTable<>::zero, &ComplexTable<>::zero};
-    inline Complex Complex::one{&ComplexTable<>::one, &ComplexTable<>::zero};
+    inline Complex Complex::zero     {                            &ComplexTable<>::zero,                             &ComplexTable<>::zero};
+    inline Complex Complex::one      {                            &ComplexTable<>::one,                              &ComplexTable<>::zero};
+    inline Complex Complex::minus_one{CTEntry::getNegativePointer(&ComplexTable<>::one),                             &ComplexTable<>::zero};
+    inline Complex Complex::complex_i{                            &ComplexTable<>::zero,                             &ComplexTable<>::one};
+    inline Complex Complex::minus_i  {                            &ComplexTable<>::zero, CTEntry::getNegativePointer(&ComplexTable<>::one)};
 } // namespace dd
 
 namespace std {

@@ -200,7 +200,9 @@ namespace dd {
         static bool Equal(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             if (a == noLIM) return b == noLIM;
             if (b == noLIM) return false;
-            if (isIdentity(a) && isIdentity(b)) return true;
+//            if (a == nullptr && b == nullptr) return true;
+//            if (a == nullptr || b == nullptr) return false;
+            if (isIdentityOperator(a) && isIdentityOperator(b)) return true;
             if (a == nullptr) return false;
             if (b == nullptr) return false;
             return (*a == *b);
@@ -209,10 +211,10 @@ namespace dd {
         static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
             if (a == nullptr) {
-                return isIdentity(b);
+                return isIdentityOperator(b);
             }
             if (b == nullptr) {
-                return isIdentity(a);
+                return isIdentityOperator(a);
             }
             // check whether the first 2*NUM_QUBITS bits are equal
             for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
@@ -237,7 +239,7 @@ namespace dd {
             return isAllZeroVector();
         }
 
-        static bool isIdentity(const LimEntry<NUM_QUBITS>* l) {
+        static bool isIdentityOperator(const LimEntry<NUM_QUBITS>* l) {
             assert(l != noLIM);
             if (l == nullptr) return true;
             return l->isIdentityOperator();
@@ -377,6 +379,20 @@ namespace dd {
         		setOperator(v, 'Z');
         		break;
         	}
+        }
+
+        bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
+        	unsigned int anticommute_count = 0;
+        	char op1, op2;
+        	for (unsigned int q=0; q<NUM_QUBITS; q++) {
+        		op1 = getQubit(q);
+        		op2 = b->getQubit(q);
+        		if (op1 != op2 && op1 != pauli_id && op2 != pauli_id) {
+        			anticommute_count++;
+        		}
+        	}
+        	// the Pauli Lims commute iff they have an even number of anticommuting gates
+        	return (anticommute_count % 2) == 0;
         }
 
         // Returns I, the Identity operator
