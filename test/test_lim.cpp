@@ -586,7 +586,7 @@ TEST(LimTest, GramSchmidt4) {
     G.push_back(new dd::LimEntry<>("Z"));
     dd::LimEntry<>* x = new dd::LimEntry<>("YZ");
     dd::LimEntry<>* y        = dd::Pauli::GramSchmidt(G, x);
-    dd::LimEntry<>* expected = new dd::LimEntry<>("-iXZ");
+    dd::LimEntry<>* expected = new dd::LimEntry<>("iXZ");
     EXPECT_EQ(*y, *expected);
 }
 
@@ -2384,16 +2384,19 @@ TEST(LimTest, getIsomorphismPauli5) {
 
     // make edge e00 = |00> - |11>
     dd::Edge<dd::vNode> e2 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
-    e2.p->e[1].l = new dd::LimEntry<>("-X");
+    e2.p->e[1].l = new dd::LimEntry<>("X");
+    e2.p->e[1].w = dd::Complex::minus_one;
 
     // make edge e11 = |11> = |1>|e1>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
     e3.p->e[1].l = new dd::LimEntry<>("X");
+    e3.p->e[1].w = dd::Complex::one;
 
     dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
-    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IZ");
+    dd::LimEntry<>* expectedIsomorphism1 = new dd::LimEntry<>("IZ");
+    dd::LimEntry<>* expectedIsomorphism2 = new dd::LimEntry<>("ZI");
     std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism1) || dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism2));
 }
 
 TEST(LimTest, getIsomorphismPauli6) {

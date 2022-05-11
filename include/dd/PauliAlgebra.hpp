@@ -953,7 +953,7 @@ public:
             std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             if (iso != LimEntry<>::noLIM) {
-//                iso->setOperator(u->v-1, pauli_op::pauli_z); // TODO should we do this? write a test
+                iso->setOperator(u->v-1, pauli_op::pauli_z); // TODO should we do this? write a test
                 std::cout << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; std::cout.flush();
             }
             else {
