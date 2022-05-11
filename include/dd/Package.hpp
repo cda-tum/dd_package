@@ -240,7 +240,8 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            std::cout << "[normalizeLIMDD] case Fork. Setting data.\n";
+            std::cout << "[normalizeLIMDD] case Fork. Edge is as follows:\n";
+            std::cout << r;
             std::cout.flush();
             LimEntry<>* lowLim = r.p->e[0].l;
             LimEntry<>* higLim = r.p->e[1].l;
@@ -272,10 +273,10 @@ namespace dd {
             assert(iso != LimEntry<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
-            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n";
+            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
             std::cout.flush();
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
-            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n";
+            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso)) << ".\n";
             std::cout.flush();
             r.l = LimEntry<>::multiply(r.l, iso); // TODO memory leak
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
@@ -305,6 +306,8 @@ namespace dd {
             	X.setOperator(r.p->v, 'X');
             	r.l->multiplyBy(X);
             }
+
+            std::cout << "[normalizeLIMDD] Final root edge: " << LimEntry<>::to_string(r.l) << std::endl;
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
             // Should we *not* call normalize at the beginning of the procedure?
@@ -762,6 +765,8 @@ namespace dd {
 
                 // look it up in the unique tables
                 auto l = uniqueTable.lookup(e, false);
+                std::cout << "[makeDDNode] found node in uniqueTable: " << l.p << "  Node is as follows:\n";
+                std::cout << l;
                 assert(l.p->v == var || l.isTerminal());
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful

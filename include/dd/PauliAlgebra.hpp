@@ -916,7 +916,7 @@ public:
 				LimEntry<>* R = getIsomorphismPauli(&uPrime, v);
 				if (R == LimEntry<>::noLIM) return LimEntry<>::noLIM;
 				LimEntry<> P = *(u->e[1].l);
-				P.setOperator(u->v-1, pauli_op::pauli_x);
+				P.setOperator(u->v-1, pauli_op::pauli_x); // TODO this should probably be u->v instead of 'u->v-1'. Make a test
 				R->multiplyBy(P);
 				return R; // TODO return an isomorphism AND the weight '1/(u->e[1].w)'
 			}
