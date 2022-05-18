@@ -340,8 +340,8 @@ namespace dd {
             return c;
         }
 
-        void setOperator(unsigned int v, char op) {
-            if (v >= NUM_QUBITS) return;
+        void setOperator(Qubit v, char op) {
+            if ((int) v >= (int) NUM_QUBITS) return;
             switch(op) {
                 case 'I':
                     paulis.set(2*v,   0);
@@ -364,7 +364,7 @@ namespace dd {
             }
         }
 
-        void setOperator(unsigned int v, pauli_op op) {
+        void setOperator(Qubit v, pauli_op op) {
         	switch(op) {
         	case pauli_op::pauli_id:
         		setOperator(v, 'I');

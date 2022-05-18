@@ -2272,25 +2272,48 @@ namespace dd {
                 std::cout.flush();
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
-                getVectorLIMDD(e.p->e[0], c, i, vec, lim2);
+            	std::size_t id0 = i;
+                auto d0 = c;
+                if (lim2.getQubit(e.p->v) == 'X') {
+                	// new index is x
+                	id0 = x;
+                }
+                if (lim2.getQubit(e.p->v) == 'Y') {
+                	// new index is x
+                	id0 = x;
+                	// multiply c0 by i
+                	d0.multiplyByi();
+                }
+                getVectorLIMDD(e.p->e[0], d0, id0, vec, lim2);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
                 std::cout << "[getVectorLIMDD rec] high case.\n";
                 std::cout.flush();
                 // if lim has Pauli Z operator, then multiply by -1
-                auto       d = c;
+                auto       d1 = c;
+                std::size_t id1 = x;
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
                 std::cout << "[getVectorLIMDD rec] eccumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
                     std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
                     std::cout.flush();
-                    d.multiplyByMinusOne();
+                    d1.multiplyByMinusOne();
+                }
+                else if (lim2.getQubit(e.p->v) == 'X') {
+                	// new index is i
+                	id1 = i;
+                }
+                else if (lim2.getQubit(e.p->v) == 'Y') {
+                	// new index is i
+                	id1 = i;
+                	// multiply d1 by -i
+                	d1.multiplyByMinusi();
                 }
                 // calculate the new accumulated LIM
                 std::cout << "[getVectorLIMDD rec] entering high edge.\n";
                 std::cout.flush();
-                getVectorLIMDD(e.p->e[1], d, x, vec, lim2);
+                getVectorLIMDD(e.p->e[1], d1, id1, vec, lim2);
             }
             cn.returnToCache(c);
         }
@@ -2331,6 +2354,13 @@ namespace dd {
             }
 
             return true;
+        }
+
+        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
+        	e1.l->multiplyBy(iso);
+        	CVec phi1 = getVectorLIMDD(e1);
+        	CVec phi2 = getVectorLIMDD(e2);
+        	return vectorsApproximatelyEqual(phi1, phi2);
         }
 
         void printCVec(const std::vector<std::complex<fp>>& vec) {

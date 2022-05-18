@@ -2387,11 +2387,12 @@ TEST(LimTest, getIsomorphismPauli5) {
     e2.p->e[1].l = new dd::LimEntry<>("X");
     e2.p->e[1].w = dd::Complex::minus_one;
 
-    // make edge e11 = |11> = |1>|e1>
+    // make edge e11 = |00> + |11>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
     e3.p->e[1].l = new dd::LimEntry<>("X");
     e3.p->e[1].w = dd::Complex::one;
 
+    std::cout << "[getIsomorpismPauli5 test] Made all edges; now finding isomorphism between |00>-|11> vs |00>+|11>.\n";
     dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
     dd::LimEntry<>* expectedIsomorphism1 = new dd::LimEntry<>("IZ");
     dd::LimEntry<>* expectedIsomorphism2 = new dd::LimEntry<>("ZI");
@@ -2451,12 +2452,15 @@ TEST(LimTest, getIsomorphismPauli9) {
     std::cout << "[getIsomorpismPauli9 test] making edge |+> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
+    // make edge e0Z = Z|+> = |->
+    auto e0Z= dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    e0Z.l = new dd::LimEntry<>("Z");
+
     // make edge e1 = |++>
     auto e1 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
 
     // make edge e2 = |0+> + |1>Z|+>
-    auto e2 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
-    e2.p->e[1].l = new dd::LimEntry<>("Z");
+    auto e2 = dd->makeDDNode(1, std::array{e0, e0Z}, false, nullptr);
 
     // make edge e3 = |0>|e2> + |1>|e3>
     auto e3 = dd->makeDDNodeNonNormalized(std::array{e1, e2});
@@ -2479,19 +2483,22 @@ TEST(LimTest, getIsomorphismPauli10) {
     std::cout << "[getIsomorpismPauli5 test] making edge |0> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
+    // make edge e0Z = Z|+> = |->
+    auto e0Z= dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    e0Z.l = new dd::LimEntry<>("Z");
+
     // make edge e1 = |++>
     dd::Edge<dd::vNode> e1 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
 
     // make edge e2 = |0+> + |1>Z|+>
-    dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
-    e2.p->e[1].l = new dd::LimEntry<>("Z");
+    dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e0Z}, false, nullptr);
 
     // make edge e3 = |0>|e2> + |1>|e3>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e1, e2});
 
     // make edge e4 = |0>|e3> + |1>|e2>
     dd::Edge<dd::vNode> e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
-    e4.p->e[1].w = dd::Complex::minus_one;
+    e4.p->e[1].w.multiplyByMinusOne();
 
     dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
     dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IXZ");
