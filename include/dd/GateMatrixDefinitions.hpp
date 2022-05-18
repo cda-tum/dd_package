@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_GATEMATRIXDEFINITIONS_H
@@ -77,7 +77,7 @@ namespace dd {
     }
 
     inline GateMatrix RZmat(fp lambda) {
-        return GateMatrix{{{-std::cos(lambda / 2.), -std::sin(lambda / 2.)},
+        return GateMatrix{{{std::cos(lambda / 2.), -std::sin(lambda / 2.)},
                            complex_zero,
                            complex_zero,
                            {std::cos(lambda / 2.), std::sin(lambda / 2.)}}};

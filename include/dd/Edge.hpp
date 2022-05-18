@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_EDGE_HPP
@@ -66,6 +66,89 @@ namespace dd {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
         }
 
+        static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
+            // Align the node pointers
+            if (x != nullptr && isDensityMatrix((long)x->p->flags)) {
+                getAlignedEdgeRevertModificationsOnSubEdges(x);
+                x->p->flags = x->p->flags & (8U);
+            }
+            if (y != nullptr && isDensityMatrix((long)y->p->flags)) {
+                getAlignedEdgeRevertModificationsOnSubEdges(y);
+                y->p->flags = x->p->flags & (8U);
+            }
+        }
+
+        static inline void applyDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
+            // Align the node pointers
+            if (x != nullptr) {
+                if (isDensityMatrix((long)x->p)) {
+                    auto tmp= alignDensityNode(x);
+                    assert((x->p->flags & (7U)) == 0);
+                    x->p->flags = x->p->flags | tmp;
+                }
+            }
+
+            if (y != nullptr) {
+                if (isDensityMatrix((long)y->p)) {
+                    auto tmp= alignDensityNode(y);
+                    assert((y->p->flags & (7U)) == 0);
+                    y->p->flags = x->p->flags | tmp;
+                }
+            }
+        }
+
+
+
+        [[nodiscard]] static inline short int alignDensityNode(Edge<Node>* e) {
+            Node*     alignedNode = getAlignedDensityNode(e->p);
+            short int flags       = (long)e->p & (7U);
+
+            //todo make this more elegant
+            if (alignedNode == nullptr || alignedNode->v <= -1) {
+                e->p = alignedNode;
+                return 0;
+            }
+
+            if (isFirstEdgeDensityPath((long)e->p) && !isDensityConjugateSet((long)e->p)) {
+                // todo, when I am on the firstEdge path I don't need to do anything anymore. Why not just mark it as a normal edge?
+                e->p = alignedNode;
+
+                // first edge paths are not modified and the property is inherited by all child paths
+                e->p->e[0].p = setFirstEdgeDensityPathTrue(e->p->e[0].p);
+                e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
+                e->p->e[2].p = setFirstEdgeDensityPathTrue(e->p->e[2].p);
+                e->p->e[3].p = setFirstEdgeDensityPathTrue(e->p->e[3].p);
+            } else if (!isDensityConjugateSet((long)e->p)) {
+                e->p = alignedNode;
+
+                // Conjugate the second edge (i.e. negate the complex part of the second edge)
+                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
+                e->p->e[2].p   = setDensityConjugateTrue(e->p->e[2].p);
+                // Mark the first edge
+                e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
+            } else {
+                e->p = alignedNode;
+
+                std::swap(e->p->e[2], e->p->e[1]);
+
+                // Conjugate all edges
+                e->p->e[0].w.i = dd::CTEntry::flipPointerSign(e->p->e[0].w.i);
+                e->p->e[0].p   = setDensityConjugateTrue(e->p->e[0].p);
+                e->p->e[1].w.i = dd::CTEntry::flipPointerSign(e->p->e[1].w.i);
+                e->p->e[1].p   = setDensityConjugateTrue(e->p->e[1].p);
+                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
+                e->p->e[2].p   = setDensityConjugateTrue(e->p->e[2].p);
+                e->p->e[3].w.i = dd::CTEntry::flipPointerSign(e->p->e[3].w.i);
+                e->p->e[3].p   = setDensityConjugateTrue(e->p->e[3].p);
+            }
+            e->p->e[0].p = setDensityMatrixTrue(e->p->e[0].p);
+            e->p->e[1].p = setDensityMatrixTrue(e->p->e[1].p);
+            e->p->e[2].p = setDensityMatrixTrue(e->p->e[2].p);
+            e->p->e[3].p = setDensityMatrixTrue(e->p->e[3].p);
+
+            return flags;
+        }
+
         static inline void getAlignedEdgeRevertModificationsOnSubEdges(Edge<Node>* e) {
 
             if (isFirstEdgeDensityPath(e->p->flags) && !isDensityConjugateSet(e->p->flags)) {
@@ -106,84 +189,8 @@ namespace dd {
             e->p->e[3].p = getAlignedDensityNode(e->p->e[3].p);
         }
 
-        static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
-            // Align the node pointers
-            if (x != nullptr && isDensityMatrix((long)x->p->flags)) {
-                getAlignedEdgeRevertModificationsOnSubEdges(x);
-                x->p->flags = x->p->flags & (~7ULL);
-            }
-            if (y != nullptr && isDensityMatrix((long)y->p->flags)) {
-                getAlignedEdgeRevertModificationsOnSubEdges(y);
-                y->p->flags = x->p->flags & (~7ULL);
-            }
-        }
-
-        static inline void applyDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
-            // Align the node pointers
-            if (x != nullptr && isDensityMatrix((long)x->p)) {
-                auto tmp= alignDensityNode(x);
-                x->p->flags = tmp;
-            } else if (x != nullptr){
-                x->p->flags = 0;
-            }
-            if (y != nullptr && isDensityMatrix((long)y->p)) {
-                auto tmp= alignDensityNode(y);
-                y->p->flags = tmp;
-            } else if (y != nullptr){
-                y->p->flags = 0;
-            }
-        }
-
-        [[nodiscard]] static inline short int alignDensityNode(Edge<Node>* e) {
-            Node*     alignedNode = getAlignedDensityNode(e->p);
-            short int flags       = (long)e->p & (7ULL);
-
-            //todo make this more elegant
-            if (alignedNode == nullptr || alignedNode->v <= -1) {
-                e->p = alignedNode;
-                return 0;
-            }
-
-            if (isFirstEdgeDensityPath((long)e->p) && !isDensityConjugateSet((long)e->p)) {
-                e->p = alignedNode;
-
-                // first edge paths are not modified and the property is inherited by all child paths
-                e->p->e[0].p = setFirstEdgeDensityPathTrue(e->p->e[0].p);
-                e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
-                e->p->e[2].p = setFirstEdgeDensityPathTrue(e->p->e[2].p);
-                e->p->e[3].p = setFirstEdgeDensityPathTrue(e->p->e[3].p);
-            } else if (!isDensityConjugateSet((long)e->p)) {
-                e->p = alignedNode;
-
-                // Conjugate the second edge (i.e. negate the complex part of the second edge)
-                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
-                e->p->e[2].p   = setDensityConjugateTrue(e->p->e[2].p);
-                // Mark the first edge
-                e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
-            } else {
-                e->p = alignedNode;
-
-                std::swap(e->p->e[2], e->p->e[1]);
-
-                // Conjugate all edges
-                e->p->e[0].w.i = dd::CTEntry::flipPointerSign(e->p->e[0].w.i);
-                e->p->e[0].p   = setDensityConjugateTrue(e->p->e[0].p);
-                e->p->e[1].w.i = dd::CTEntry::flipPointerSign(e->p->e[1].w.i);
-                e->p->e[1].p   = setDensityConjugateTrue(e->p->e[1].p);
-                e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
-                e->p->e[2].p   = setDensityConjugateTrue(e->p->e[2].p);
-                e->p->e[3].w.i = dd::CTEntry::flipPointerSign(e->p->e[3].w.i);
-                e->p->e[3].p   = setDensityConjugateTrue(e->p->e[3].p);
-            }
-            e->p->e[0].p = setDensityMatrixTrue(e->p->e[0].p);
-            e->p->e[1].p = setDensityMatrixTrue(e->p->e[1].p);
-            e->p->e[2].p = setDensityMatrixTrue(e->p->e[2].p);
-            e->p->e[3].p = setDensityMatrixTrue(e->p->e[3].p);
-
-            return flags;
-        }
-
         // todo make arguments const
+        //todo reuse the original function for this, don't double functionality!
         [[nodiscard]] static inline Edge<Node> getAlignedDensityNodeCopy(Edge<Node> e, Edge<Node> newEdge) {
             Node* alignedNode = getAlignedDensityNode(e.p);
 

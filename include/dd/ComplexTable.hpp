@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_COMPLEXTABLE_HPP
@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -22,7 +23,7 @@
 #include <vector>
 
 namespace dd {
-    template<std::size_t NBUCKET = 32768, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 65536>
+    template<std::size_t NBUCKET = 65537, std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2, std::size_t INITIAL_GC_LIMIT = 65536>
     class ComplexTable {
     public:
         struct Entry {
@@ -36,19 +37,22 @@ namespace dd {
             /// These routines allow to obtain safe pointers
             ///
             [[nodiscard]] static inline Entry* getAlignedPointer(const Entry* e) {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) & (~1ULL));
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) & ~static_cast<std::uintptr_t>(1U));
             }
 
             [[nodiscard]] static inline Entry* getNegativePointer(const Entry* e) {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) | 1ULL);
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) | static_cast<std::uintptr_t>(1U));
             }
 
             [[nodiscard]] static inline Entry* flipPointerSign(const Entry* e) {
-                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) ^ 1ULL);
+                if (e->value == 0){
+                    return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e));
+                }
+                return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) ^ static_cast<std::uintptr_t>(1U));
             }
 
             [[nodiscard]] static inline bool isNegativePointer(const Entry* e) {
-                return reinterpret_cast<std::uintptr_t>(e) & 1ULL;
+                return reinterpret_cast<std::uintptr_t>(e) & static_cast<std::uintptr_t>(1U);
             }
 
             [[nodiscard]] static inline fp val(const Entry* e) {
@@ -65,16 +69,25 @@ namespace dd {
                 return e->refCount;
             }
 
-            [[nodiscard]] static inline bool approximatelyEquals(const Entry* left, const Entry* right) {
-                return std::abs(val(left) - val(right)) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyEquals(const Entry* left, const Entry* right) {
+                return left == right || approximatelyEquals(val(left), val(right));
+            }
+            [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
+                return left == right || std::abs(left - right) <= TOLERANCE;
             }
 
-            [[nodiscard]] static inline bool approximatelyZero(const Entry* e) {
-                return e == &zero || std::abs(val(e)) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyZero(const Entry* e) {
+                return e == &zero || approximatelyZero(val(e));
+            }
+            [[nodiscard]] static constexpr bool approximatelyZero(const fp e) {
+                return std::abs(e) <= TOLERANCE;
             }
 
-            [[nodiscard]] static inline bool approximatelyOne(const Entry* e) {
-                return e == &one || std::abs(val(e) - 1) < TOLERANCE;
+            [[nodiscard]] static constexpr bool approximatelyOne(const Entry* e) {
+                return e == &one || approximatelyOne(val(e));
+            }
+            [[nodiscard]] static constexpr bool approximatelyOne(fp e) {
+                return approximatelyEquals(e, 1.0);
             }
 
             static void writeBinary(const Entry* e, std::ostream& os) {
@@ -110,13 +123,13 @@ namespace dd {
             TOLERANCE = tol;
         }
 
-        static constexpr std::size_t MASK = NBUCKET - 1;
+        static constexpr std::int64_t MASK = NBUCKET - 1;
 
         // linear (clipped) hash function
-        static constexpr std::size_t hash(const fp val) {
+        static constexpr std::int64_t hash(const fp val) {
             assert(val >= 0);
-            auto key = static_cast<std::size_t>(val * MASK + static_cast<dd::fp>(0.5));
-            return std::min<std::size_t>(key, MASK);
+            auto key = static_cast<std::int64_t>(std::nearbyint(val * MASK));
+            return std::min<std::int64_t>(key, MASK);
         }
 
         // access functions
@@ -136,60 +149,79 @@ namespace dd {
             assert(!std::isnan(val));
             assert(val >= 0); // required anyway for the hash function
             ++lookups;
-            if (std::abs(val) < TOLERANCE) {
+            if (Entry::approximatelyZero(val)) {
                 ++hits;
                 return &zero;
             }
 
-            if (std::abs(val - 1.) < TOLERANCE) {
+            if (Entry::approximatelyOne(val)) {
                 ++hits;
                 return &one;
             }
 
-            if (std::abs(val - SQRT2_2) < TOLERANCE) {
+            if (Entry::approximatelyEquals(val, SQRT2_2)) {
                 ++hits;
                 return &sqrt2_2;
             }
 
             assert(val - TOLERANCE >= 0); // should be handle above as special case
 
-            const std::size_t lowerKey = hash(val - TOLERANCE);
-            const std::size_t upperKey = hash(val + TOLERANCE);
+            const auto lowerKey = hash(val - TOLERANCE);
+            const auto upperKey = hash(val + TOLERANCE);
 
             if (upperKey == lowerKey) {
                 ++findOrInserts;
                 return findOrInsert(lowerKey, val);
             }
 
-            // code below is to handle cases where the looked up value
-            // could be in the lower or upper buckets and we have to go through them
+            // code below is to properly handle border cases |----(-|-)----|
+            // in case a value close to a border is looked up,
+            // only the last entry in the lower bucket and the first entry in the upper bucket need to be checked
 
-            const std::size_t key = hash(val);
+            const auto key = hash(val);
 
-            Entry* p = find(table[key], val);
-            if (p != nullptr) {
-                return p;
-            }
-
-            // search in (potentially) lower bucket
+            Entry* p_lower;
+            Entry* p_upper;
             if (lowerKey != key) {
+                p_lower = tailTable[lowerKey];
+                p_upper = table[key];
                 ++lowerNeighbors;
-                // buckets are sorted so we only have to look into the last entry of the lower bucket
-                Entry* p_lower = tailTable[lowerKey];
-                if (p_lower != nullptr && val - p_lower->value < TOLERANCE) {
-                    return p_lower;
-                }
+                //                std::cout << "Border case between lower bucket " << lowerKey << " and actual bucket " << key << ". ";
+            } else {
+                p_lower = tailTable[key];
+                p_upper = table[upperKey];
+                ++upperNeighbors;
+                //                std::cout << "Border case between actual bucket " << key << " and upper bucket " << upperKey << ". ";
             }
 
-            // search in (potentially) higher bucket
-            if (upperKey != key) {
-                ++upperNeighbors;
-                // buckets are sorted, we only have to look at the first element
+            bool lowerMatchFound = (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value));
+            bool upperMatchFound = (p_upper != nullptr && Entry::approximatelyEquals(val, p_upper->value));
 
-                Entry* p_upper = table[upperKey];
-                if (p_upper != nullptr && p_upper->value - val < TOLERANCE) {
+            if (lowerMatchFound && upperMatchFound) {
+                //                std::cout << "Double match. ";
+                ++hits;
+                const auto diffToLower = std::abs(p_lower->value - val);
+                const auto diffToUpper = std::abs(p_upper->value - val);
+                // val is actually closer to p_lower than to p_upper
+                if (diffToLower < diffToUpper) {
+                    //                    std::cout << val << " is closer to lower val " << p_lower->value << " than to upper val " << p_upper->value << std::endl;
+                    return p_lower;
+                } else {
+                    //                    std::cout << val << " is closer to upper val " << p_upper->value << " than to lower val " << p_upper->value << std::endl;
                     return p_upper;
                 }
+            }
+
+            if (lowerMatchFound) {
+                ++hits;
+                //                std::cout << "Matched " << val << " in lower bucket to " << p_lower->value << std::endl;
+                return p_lower;
+            }
+
+            if (upperMatchFound) {
+                ++hits;
+                //                std::cout << "Matched " << val << " in upper bucket to " << p_upper->value << std::endl;
+                return p_upper;
             }
 
             // value was not found in the table -> get a new entry and add it to the central bucket
@@ -238,8 +270,7 @@ namespace dd {
             // important (static) numbers are never altered
             if (entryPtr != &one && entryPtr != &zero && entryPtr != &sqrt2_2) {
                 if (entryPtr->refCount == std::numeric_limits<RefCount>::max()) {
-                    std::clog << "[WARN] MAXREFCNT reached for " << entryPtr->value
-                              << ". Number will never be collected." << std::endl;
+                    std::clog << "[WARN] MAXREFCNT reached for " << entryPtr->value << ". Number will never be collected." << std::endl;
                     return;
                 }
 
@@ -262,8 +293,7 @@ namespace dd {
                     return;
                 }
                 if (entryPtr->refCount == 0) {
-                    throw std::runtime_error("In ComplexTable: RefCount of entry " + std::to_string(entryPtr->value) +
-                                             " is zero before decrement");
+                    throw std::runtime_error("In ComplexTable: RefCount of entry " + std::to_string(entryPtr->value) + " is zero before decrement");
                 }
 
                 // decrease reference count
@@ -364,6 +394,8 @@ namespace dd {
         };
 
         void print() {
+            const auto precision = std::cout.precision();
+            std::cout.precision(std::numeric_limits<dd::fp>::max_digits10);
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto p = table[key];
                 if (p != nullptr)
@@ -371,14 +403,14 @@ namespace dd {
                               << "\n";
 
                 while (p != nullptr) {
-                    std::cout << "\t\t" << p->value << " " << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount
-                              << "\n";
+                    std::cout << "\t\t" << p->value << " " << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\n";
                     p = p->next;
                 }
 
                 if (table[key] != nullptr)
                     std::cout << "\n";
             }
+            std::cout.precision(precision);
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
@@ -419,6 +451,23 @@ namespace dd {
             return os;
         }
 
+        std::ostream& printBucketDistribution(std::ostream& os = std::cout) {
+            for (auto bucket: table) {
+                if (bucket == nullptr) {
+                    os << "0\n";
+                    continue;
+                }
+                std::size_t bucketCount = 0;
+                while (bucket != nullptr) {
+                    ++bucketCount;
+                    bucket = bucket->next;
+                }
+                os << bucketCount << "\n";
+            }
+            os << std::endl;
+            return os;
+        }
+
     private:
         using Bucket = Entry*;
         using Table  = std::array<Bucket, NBUCKET>;
@@ -438,7 +487,7 @@ namespace dd {
         std::size_t upperNeighbors   = 0;
 
         // numerical tolerance to be used for floating point values
-        static inline fp TOLERANCE = 1e-13;
+        static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024;
 
         Entry*                                available{};
         std::vector<std::vector<Entry>>       chunks{};
@@ -456,16 +505,33 @@ namespace dd {
         std::size_t gcRuns  = 0;
         std::size_t gcLimit = 100000;
 
-        inline Entry* findOrInsert(const std::size_t key, const fp val) {
+        inline Entry* findOrInsert(const std::int64_t key, const fp val) {
             [[maybe_unused]] const fp val_tol = val + TOLERANCE;
 
             Entry* curr = table[key];
             Entry* prev = nullptr;
 
-            while (curr != nullptr && val_tol > curr->value) {
-                if (std::abs(curr->value - val) < TOLERANCE) {
+            while (curr != nullptr && curr->value <= val_tol) {
+                if (Entry::approximatelyEquals(curr->value, val)) {
+                    // check if val is actually closer to the next element in the list (if there is one)
+                    if (curr->next != nullptr) {
+                        const auto& next = curr->next;
+                        // potential candidate in range
+                        if (val_tol >= next->value) {
+                            const auto diffToCurr = std::abs(curr->value - val);
+                            const auto diffToNext = std::abs(next->value - val);
+                            // val is actually closer to next than to curr
+                            if (diffToNext < diffToCurr) {
+                                //                                std::cout << "Second hit in bucket" << key << "! " << val << " is closer to " << next->value << " than to " << curr->value << std::endl;
+                                ++hits;
+                                return next;
+                            }
+                        }
+                    }
+                    //                    std::cout << "General hit in bucket " << key << "! " << val << " matches " << curr->value << std::endl;
                     ++hits;
                     if (curr->next != nullptr && std::abs(curr->value - val) > std::abs(curr->next->value - val)){
+                        //todo what is the purpose of this statement?
                         curr->next;
                     }
                     return curr;
@@ -478,6 +544,8 @@ namespace dd {
             ++inserts;
             Entry* entry = getEntry();
             entry->value = val;
+
+            //            std::cout << "Insert " << val << " in middle of bucket " << key << std::endl;
 
             if (prev == nullptr) {
                 // table bucket is empty
@@ -501,7 +569,7 @@ namespace dd {
          * @param val value to be inserted
          * @return pointer to the inserted entry
          */
-        inline Entry* insert(const std::size_t key, const fp val) {
+        inline Entry* insert(const std::int64_t key, const fp val) {
             ++inserts;
             Entry* entry = getEntry();
             entry->value = val;
@@ -509,7 +577,7 @@ namespace dd {
             Entry* curr = table[key];
             Entry* prev = nullptr;
 
-            while (curr != nullptr && val < curr->value) {
+            while (curr != nullptr && curr->value <= val) {
                 ++insertCollisions;
                 prev = curr;
                 curr = curr->next;
@@ -528,20 +596,6 @@ namespace dd {
             count++;
             peakCount = std::max(peakCount, count);
             return entry;
-        }
-
-        inline Entry* find(const Bucket& bucket, const fp& val) {
-            Entry*   p       = bucket;
-            const fp val_tol = val - TOLERANCE;
-            while (p != nullptr && val_tol <= p->value) {
-                if (p->value - val < TOLERANCE) {
-                    ++hits;
-                    return p;
-                }
-                ++collisions;
-                p = p->next;
-            }
-            return nullptr;
         }
     };
 } // namespace dd

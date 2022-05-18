@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_COMPLEX_HPP
@@ -59,25 +59,7 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
-        auto r = CTEntry::val(c.r);
-        auto i = CTEntry::val(c.i);
-
-        if (r != 0) {
-            ComplexValue::printFormatted(os, r);
-        }
-        if (i != 0) {
-            if (r == i) {
-                os << "(1+i)";
-                return os;
-            } else if (i == -r) {
-                os << "(1-i)";
-                return os;
-            }
-            ComplexValue::printFormatted(os, i, true);
-        }
-        if (r == 0 && i == 0) os << 0;
-
-        return os;
+        return os << c.toString();
     }
 
     inline Complex Complex::zero{&ComplexTable<>::zero, &ComplexTable<>::zero};
