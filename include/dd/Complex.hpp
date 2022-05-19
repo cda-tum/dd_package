@@ -65,7 +65,6 @@ namespace dd {
 
         // Sets this complex value z to '-z'
         void multiplyByMinusOne(bool cached = true) {
-            assert(Complex::one != *this);
             if(Complex::zero == *this){
                 return;
             }
