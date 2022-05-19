@@ -2493,15 +2493,15 @@ TEST(LimTest, getIsomorphismPauli10) {
     // make edge e2 = |0+> + |1>Z|+>
     dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e0Z}, false, nullptr);
 
-    // make edge e3 = |0>|e2> + |1>|e3>
+    // make edge e3 = |0>|e1> + |1>|e2>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e1, e2});
 
-    // make edge e4 = |0>|e3> + |1>|e2>
+    // make edge e4 = |0>|e1> + |1>|e1>
     dd::Edge<dd::vNode> e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
     e4.p->e[1].w.multiplyByMinusOne();
 
     dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
-    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IXZ");
+    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IZX");
     std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
 }

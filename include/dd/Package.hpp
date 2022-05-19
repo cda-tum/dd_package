@@ -268,8 +268,8 @@ namespace dd {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             std::cout.flush();
-            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
-            assert(iso != LimEntry<>::noLIM);
+            LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode); // TODO memory leak: this Lim is not freed
+            assert(iso != LimWeight<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
             std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n";
@@ -277,7 +277,10 @@ namespace dd {
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
             std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n";
             std::cout.flush();
-            r.l = LimEntry<>::multiply(r.l, iso); // TODO memory leak
+            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
+            // TODO
+            //    Question @Stefan, Thomas: how to multiply complex numbers? as follows:
+            // r.w  = r.w * iso->weight;
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
             std::cout.flush();

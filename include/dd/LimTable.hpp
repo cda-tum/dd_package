@@ -507,8 +507,49 @@ namespace dd {
         }
     };
 
+    template <std::size_t NUM_QUBITS=32>
+    struct LimWeight {
+    public:
+    	LimEntry<NUM_QUBITS>* lim;
+    	Complex weight;
+
+        static LimWeight<NUM_QUBITS>* noLIM; // value is -1
+
+        // Initializes the identity operator, with weight +1
+    	LimWeight<NUM_QUBITS>()
+    			: weight(Complex::one) {
+    		//
+    	}
+
+    	LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a)
+    			: lim(a->lim), weight(a->weight) {
+    		//
+    	}
+
+    	LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a)
+    			: lim(a->lim), weight(Complex::one) {
+    		//
+    	}
+
+    	void multiplyBy(const LimWeight<NUM_QUBITS>& other) {
+    		lim->multiplyBy(other->lim);
+    		// TODO
+    		// Question @Thomas, Stefan: how to multiply the weight? as follows:
+    		//   weight = weight * other.weight
+    	}
+
+    	void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
+    		lim->multiplyBy(other);
+    	}
+
+
+    };
+
     template <std::size_t NUM_QUBITS>
     LimEntry<NUM_QUBITS>* LimEntry<NUM_QUBITS>::noLIM = (LimEntry<NUM_QUBITS>*) -1;
+
+    template <std::size_t NUM_QUBITS>
+    LimWeight<NUM_QUBITS>* LimWeight<NUM_QUBITS>::noLIM = (LimWeight<NUM_QUBITS>*) -1;
 
     template <std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimEntry<NUM_QUBITS>& a) {
