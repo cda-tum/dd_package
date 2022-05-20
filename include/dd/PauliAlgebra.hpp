@@ -22,6 +22,11 @@ typedef std::vector<LimEntry<>*> StabilizerGroup;
 class Pauli {
 public:
 
+	static void superFlush() {
+		for (unsigned int i=0; i<1000; i++) {
+			std::cout.flush();
+		}
+	}
 
     // todo find an appropriate place for this utility function
     template <std::size_t N, std::size_t M>
@@ -846,7 +851,7 @@ public:
     // TODO take the edge weights into account:
     //    in case 3.1
     //    in knife cases
-    static LimEntry<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
+    static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
         assert( u != nullptr );
         assert( v != nullptr );
         std::cout << "[getIsomorphismPauli] Start.\n";
@@ -861,99 +866,105 @@ public:
         std::cout << "[getIsomorphismPauli] uLow.l = " << LimEntry<>::to_string(uLow.l) << " vLow.l = " << LimEntry<>::to_string(vLow.l) << std::endl;
         assert (LimEntry<>::isIdentityOperator(uLow.l));
         assert (LimEntry<>::isIdentityOperator(vLow.l));
-        LimEntry<>* iso = LimEntry<>::noLIM;
+        LimWeight<>* iso = new LimWeight<>();
         // Case 0: the nodes are equal
         if (u == v) {
             std::cout << "[getIsomorphismPauli] case u == v.\n"; std::cout.flush();
             // In this case, we return the Identity operator, which is represented by a null pointer
-            iso = nullptr;
+            iso = new LimWeight<>((LimEntry<>*)nullptr);
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
         else if (uHigh.isZeroTerminal()) {
-            std::cout << "[getIsomorphismPauli] Case uHigh is terminal\n";
+            std::cout << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
             if (vHigh.isZeroTerminal()) {
-            	if (uLow.p == vLow.p) iso = nullptr;
+            	if (uLow.p == vLow.p) iso = new LimWeight<>((LimEntry<>*)nullptr);
+            	else iso = LimWeight<>::noLIM;
             }
             else if (vLow.isZeroTerminal()) {
             	if (uLow.p == vHigh.p) {
-            		iso = new LimEntry<>(vHigh.l);
-            		iso->setOperator(u->v, 'X');
+            		iso->lim = new LimEntry<>(vHigh.l);
+            		iso->lim->setOperator(u->v, 'X');
             	}
+            	else iso = LimWeight<>::noLIM;
+            }
+            else {
+            	iso = LimWeight<>::noLIM;
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
         else if (uLow.isZeroTerminal()) {
-            std::cout << "[getIsomorphismPauli] case uLow is terminal.\n";
+            std::cout << "[getIsomorphismPauli] case uLow is zero.\n";
         	if (vLow.isZeroTerminal()) {
-        		if (uHigh.p == vHigh.p) return LimEntry<>::multiply(uHigh.l, vHigh.l);
+        		if (uHigh.p == vHigh.p) return new LimWeight<>(LimEntry<>::multiply(uHigh.l, vHigh.l));
         	}
         	else if (vHigh.isZeroTerminal()) {
         		if (uHigh.p == vLow.p) {
-					iso = new LimEntry<>(uHigh.l);
-					iso->setOperator(u->v, 'X');
+					iso->lim = new LimEntry<>(uHigh.l);
+					iso->lim->setOperator(u->v, 'X');
         		}
         	}
         }
         // Case 3 ("Fork"): Both children are nonzero
         else {
-        	// Case 3.1: ulow = vhigh, uhigh = vlow
+        	// Case 3.1: uLow == vHigh, uHigh == vLow but uLow != uHigh, i.e., the isomorphism's first Pauli operator is an X or Y
         	// TODO by handling case 3.1 more efficiently, we can prevent unnecessary copying of u->limVector
 			if (uLow.p == vHigh.p && uHigh.p == vLow.p && uLow.p != uHigh.p) {
 				// Return lambda^-1 * R * (X tensor P), where
 				//    P is the uHigh's edge label
 				//    lambda is uHigh's weight
 				//    R is an isomorphism between uPrime and v
-				std::cout << "[getIsomorphismPauli] case 3.1: children of nodes are opposite pair.\n";
+				std::cout << "[getIsomorphismPauli] case 3.1: children of nodes are opposite pair. Qubits: " << (int)(u->v) << "\n";
+				// TODO refactor this piece of code which swaps two edges
 				vNode uPrime;
 				uPrime.v = u->v;
 				uPrime.limVector = u->limVector;
-				uPrime.e[0] = u->e[1];
+				uPrime.e[0]   = u->e[1];
 				uPrime.e[0].l = nullptr;
-				uPrime.e[0].w = Complex::one;
-				uPrime.e[1] = u->e[0];
+				uPrime.e[0].w = u->e[1].w;
+				uPrime.e[1]   = u->e[0];
 				uPrime.e[1].l = u->e[1].l;
-				uPrime.e[1].w = u->e[1].w; // TODO should be (1 / u->e[1].w). How do I do that?
-				LimEntry<>* R = getIsomorphismPauli(&uPrime, v);
-				if (R == LimEntry<>::noLIM) return LimEntry<>::noLIM;
+				uPrime.e[1].w = u->e[0].w;
+				LimWeight<>* R = getIsomorphismPauli(&uPrime, v);
+				if (R == LimWeight<>::noLIM) return LimWeight<>::noLIM;
 				LimEntry<> P = *(u->e[1].l);
-				P.setOperator(u->v-1, pauli_op::pauli_x); // TODO this should probably be u->v instead of 'u->v-1'. Make a test
+				P.setOperator(u->v, pauli_op::pauli_x);
 				R->multiplyBy(P);
-				return R; // TODO return an isomorphism AND the weight '1/(u->e[1].w)'
+				return R;
 			}
-        	// Case 3.2: ulow=vlow, uhigh = vhigh
-            // Step 1: Check if nodes u and v have the same children
-            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimEntry<>::noLIM;
-            std::cout << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; std::cout.flush();
+        	// Case 3.2: uLow == vLow and uHigh == vHigh
+            std::cout << "[getIsomorphismPauli] case Fork.\n"; std::cout.flush();
+            std::cout << "[getIsomorphismPauli] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl; superFlush();
+            // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
+            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
+            std::cout << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; std::cout.flush(); superFlush();
 			// TODO should we refactor this last part and just call getIsomorphismZ?
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
-            std::cout << "[getIsomorphismPauli] case Fork.\n"; std::cout.flush();
-            std::cout << "[getIsomorphismPauli] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl;
-            // Step 1.1: check if the weights satisfy uHigh = -1 * vHigh
+            // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
             bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
-            // Step 1.2:  check if the edge weights are equal, up to a sign
-            if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimEntry<>::noLIM;
-            std::cout << "[getIsomorphismPauli] edge weights are approximately equal.\n"; std::cout.flush();
-            // Step 4: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
+            // Step 1.3:  check if the edge weights are equal, up to a sign
+            if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimWeight<>::noLIM;
+            std::cout << "[getIsomorphismPauli] edge weights are approximately equal.\n"; std::cout.flush(); superFlush();
+            // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
             LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
-            std::cout << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
+            std::cout << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush(); superFlush();
             if (amplitudeOppositeSign) {
-                std::cout << "[getIsomorphismPauli] multiplying Phase by -1\n"; std::cout.flush();
+                std::cout << "[getIsomorphismPauli] multiplying Phase by -1\n"; std::cout.flush(); superFlush();
                 isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
-                std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
+                std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush(); superFlush();
             }
-            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismPauli] completed coset intersection element.\n"; std::cout.flush();
-            if (iso != LimEntry<>::noLIM) {
+            if (iso->lim != LimEntry<>::noLIM) {
                 std::cout << "[getIsomorphismPauli] The coset was non-empty; returning element.\n"; std::cout.flush();
                 return iso;
             }
-            // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
+            // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             std::cout << "[getIsomorphismPauli] multiplying phase by -1.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
             std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
-            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
-            if (iso != LimEntry<>::noLIM) {
-                iso->setOperator(u->v-1, pauli_op::pauli_z); // TODO should we do this? write a test
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            if (iso->lim != LimEntry<>::noLIM) {
+                iso->lim->setOperator(u->v-1, pauli_op::pauli_z);
                 std::cout << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; std::cout.flush();
             }
             else {

@@ -269,16 +269,19 @@ namespace dd {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             std::cout.flush();
-            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
-            assert(iso != LimEntry<>::noLIM);
+            LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode); // TODO memory leak: this Lim is not freed
+            assert(iso != LimWeight<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
             std::cout << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
             std::cout.flush();
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
-            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso)) << ".\n";
+            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
             std::cout.flush();
-            r.l = LimEntry<>::multiply(r.l, iso); // TODO memory leak
+            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
+            // TODO
+            //    Question @Stefan, Thomas: how to multiply complex numbers? as follows:
+            // r.w  = r.w * iso->weight;
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
             std::cout.flush();
@@ -2277,25 +2280,48 @@ namespace dd {
                 std::cout.flush();
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
-                getVectorLIMDD(e.p->e[0], c, i, vec, lim2);
+            	std::size_t id0 = i;
+                auto d0 = c;
+                if (lim2.getQubit(e.p->v) == 'X') {
+                	// new index is x
+                	id0 = x;
+                }
+                if (lim2.getQubit(e.p->v) == 'Y') {
+                	// new index is x
+                	id0 = x;
+                	// multiply c0 by i
+                	d0.multiplyByi();
+                }
+                getVectorLIMDD(e.p->e[0], d0, id0, vec, lim2);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
                 std::cout << "[getVectorLIMDD rec] high case.\n";
                 std::cout.flush();
                 // if lim has Pauli Z operator, then multiply by -1
-                auto       d = c;
+                auto       d1 = c;
+                std::size_t id1 = x;
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
                 std::cout << "[getVectorLIMDD rec] eccumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
                     std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
                     std::cout.flush();
-                    d.multiplyByMinusOne();
+                    d1.multiplyByMinusOne();
+                }
+                else if (lim2.getQubit(e.p->v) == 'X') {
+                	// new index is i
+                	id1 = i;
+                }
+                else if (lim2.getQubit(e.p->v) == 'Y') {
+                	// new index is i
+                	id1 = i;
+                	// multiply d1 by -i
+                	d1.multiplyByMinusi();
                 }
                 // calculate the new accumulated LIM
                 std::cout << "[getVectorLIMDD rec] entering high edge.\n";
                 std::cout.flush();
-                getVectorLIMDD(e.p->e[1], d, x, vec, lim2);
+                getVectorLIMDD(e.p->e[1], d1, id1, vec, lim2);
             }
             cn.returnToCache(c);
         }
@@ -2336,6 +2362,13 @@ namespace dd {
             }
 
             return true;
+        }
+
+        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
+        	e1.l->multiplyBy(iso);
+        	CVec phi1 = getVectorLIMDD(e1);
+        	CVec phi2 = getVectorLIMDD(e2);
+        	return vectorsApproximatelyEqual(phi1, phi2);
         }
 
         void printCVec(const std::vector<std::complex<fp>>& vec) {

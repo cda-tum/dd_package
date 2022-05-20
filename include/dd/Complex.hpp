@@ -72,6 +72,16 @@ namespace dd {
             i = CTEntry::flipPointerSign(i);
         }
 
+        void multiplyByi() {
+        	std::swap(r, i);
+        	r = CTEntry::flipPointerSign(r);
+        }
+
+        void multiplyByMinusi() {
+        	std::swap(r, i);
+        	i = CTEntry::flipPointerSign(i);
+        }
+
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {
             return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }

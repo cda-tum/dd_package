@@ -2270,21 +2270,21 @@ TEST(LimTest, simpleCliffordCircuit) {
 }
 
 TEST(LimTest, highLabelPauli1) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode15 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
     //  set the weight of e0 to 1+i and the weight of e1 to +1
     e0.w = {&dd::ComplexTable<>::one, &dd::ComplexTable<>::one};
     e1.w = dd::Complex::one;
 
     // make e2 = |0>|e0> + |1>|e1>
     std::cout << "[CreateNode15 test] making edge |0>|+> - |1>|+> by calling MakeDDNode.\n";
-    auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+    dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     // Expected: root label is IZ
     std::cout << "[CreateNode15 test] root label (IZ expected):   " << *(e2.l) << "\n";
@@ -2301,18 +2301,18 @@ TEST(LimTest, getIsomorphismPauli1) {
     auto dd = std::make_unique<dd::Package>(1);
 
     // make edge e0 = |0>
-    std::cout << "[getIsomorpismPauli1 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero});
+    std::cout << "[getIsomorphismPauli1 test] making edge |0> by calling MakeDDNode.\n";
+    dd::Edge<dd::vNode> e0 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero});
 //    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
 
     // make edge e1 = |1>
 //    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
-    auto e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one});
+    dd::Edge<dd::vNode> e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one});
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
-    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("X");
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("X");
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
 TEST(LimTest, getIsomorphismPauli2) {
@@ -2325,11 +2325,12 @@ TEST(LimTest, getIsomorphismPauli2) {
     // make edge e1 = |+> = |0> + |1>
     auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
-    dd::LimEntry<>* expectedIsomorphism = dd::LimEntry<>::noLIM;
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    std::cout << "[getIsomorphismPauli2 test] Done finding isomorphism.\n"; std::cout.flush();
+    dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
 
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism->lim) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
 TEST(LimTest, getIsomorphismPauli3) {
@@ -2342,10 +2343,10 @@ TEST(LimTest, getIsomorphismPauli3) {
     // make edge e1 = |+> = |0> + |1>
     auto e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::one});
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
-    dd::LimEntry<>* expectedIsomorphism = dd::LimEntry<>::noLIM;
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
 TEST(LimTest, getIsomorphismPauli4) {
@@ -2387,16 +2388,17 @@ TEST(LimTest, getIsomorphismPauli5) {
     e2.p->e[1].l = new dd::LimEntry<>("X");
     e2.p->e[1].w = dd::Complex::minus_one;
 
-    // make edge e11 = |11> = |1>|e1>
+    // make edge e11 = |00> + |11>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
     e3.p->e[1].l = new dd::LimEntry<>("X");
     e3.p->e[1].w = dd::Complex::one;
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
-    dd::LimEntry<>* expectedIsomorphism1 = new dd::LimEntry<>("IZ");
-    dd::LimEntry<>* expectedIsomorphism2 = new dd::LimEntry<>("ZI");
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism1) || dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism2));
+    std::cout << "[getIsomorpismPauli5 test] Made all edges; now finding isomorphism between |00>-|11> vs |00>+|11>.\n";
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
+    dd::LimWeight<>* expectedIsomorphism1 = new dd::LimWeight<>("IZ");
+    dd::LimWeight<>* expectedIsomorphism2 = new dd::LimWeight<>("ZI");
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism1) || dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism2));
 }
 
 TEST(LimTest, getIsomorphismPauli6) {
@@ -2417,10 +2419,10 @@ TEST(LimTest, getIsomorphismPauli7) {
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
     e3.p->e[1].l = nullptr;
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
-    dd::LimEntry<>* expectedIsomorphism = dd::LimEntry<>::noLIM;
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
+    dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
 TEST(LimTest, getIsomorphismPauli8) {
@@ -2484,16 +2486,15 @@ TEST(LimTest, getIsomorphismPauli9) {
     std::cout << "[getIsomorpismPauli9 test] making edge |+> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
-    // make edge e5 = Z|+>
-    auto e5 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, new dd::LimEntry<>("Z"));
+    // make edge e0Z = Z|+> = |->
+    auto e0Z= dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    e0Z.l = new dd::LimEntry<>("Z");
 
     // make edge e1 = |++>
     auto e1 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
 
     // make edge e2 = |0+> + |1>Z|+>
-    auto e2 = dd->makeDDNode(1, std::array{e0, e5}, false, nullptr);
-
-    std::cout << "[getIsomorphismPauli9 test] Nodes: " << e1.p << ", " << e2.p << ". Same = " << (e1.p == e2.p) << std::endl;
+    auto e2 = dd->makeDDNode(1, std::array{e0, e0Z}, false, nullptr);
 
     // make edge e3 = |0>|e2> + |1>|e3>
     auto e3 = dd->makeDDNodeNonNormalized(std::array{e1, e2});
@@ -2506,10 +2507,10 @@ TEST(LimTest, getIsomorphismPauli9) {
     EXPECT_EQ(e3.p->e[1].p, e4.p->e[0].p);
     std::cout << "[getIsomorphismPauli9 test] Low label of e3: " << dd::LimEntry<>::to_string(e3.p->e[0].l) << " low label of e4: " << dd::LimEntry<>::to_string(e4.p->e[0].l) << std::endl;
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
-    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IIX");
-    std::cout << "[getIsomorphismPauli9 test] Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
+    dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IIX");
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
 TEST(LimTest, getIsomorphismPauli10) {
@@ -2519,23 +2520,26 @@ TEST(LimTest, getIsomorphismPauli10) {
     std::cout << "[getIsomorpismPauli5 test] making edge |0> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
+    // make edge e0Z = Z|+> = |->
+    auto e0Z= dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    e0Z.l = new dd::LimEntry<>("Z");
+
     // make edge e1 = |++>
     dd::Edge<dd::vNode> e1 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
 
     // make edge e2 = |0+> + |1>Z|+>
-    dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e0}, false, nullptr);
-    e2.p->e[1].l = new dd::LimEntry<>("Z");
+    dd::Edge<dd::vNode> e2 = dd->makeDDNode(1, std::array{e0, e0Z}, false, nullptr);
 
-    // make edge e3 = |0>|e2> + |1>|e3>
+    // make edge e3 = |0>|e1> + |1>|e2>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e1, e2});
 
-    // make edge e4 = |0>|e3> + |1>|e2>
+    // make edge e4 = |0>|e1> + |1>|e1>
     dd::Edge<dd::vNode> e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
-    e4.p->e[1].w = dd::Complex::minus_one;
+    e4.p->e[1].w.multiplyByMinusOne();
 
-    dd::LimEntry<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
-    dd::LimEntry<>* expectedIsomorphism = new dd::LimEntry<>("IXZ");
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism) << std::endl;
-    EXPECT_TRUE(dd::LimEntry<>::Equal(isomorphism, expectedIsomorphism));
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
+    dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IZX");
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
+    EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 

@@ -340,8 +340,8 @@ namespace dd {
             return c;
         }
 
-        void setOperator(unsigned int v, char op) {
-            if (v >= NUM_QUBITS) return;
+        void setOperator(Qubit v, char op) {
+            if ((int) v >= (int) NUM_QUBITS) return;
             switch(op) {
                 case 'I':
                     paulis.set(2*v,   0);
@@ -364,7 +364,7 @@ namespace dd {
             }
         }
 
-        void setOperator(unsigned int v, pauli_op op) {
+        void setOperator(Qubit v, pauli_op op) {
         	switch(op) {
         	case pauli_op::pauli_id:
         		setOperator(v, 'I');
@@ -507,8 +507,66 @@ namespace dd {
         }
     };
 
+    template <std::size_t NUM_QUBITS=32>
+    struct LimWeight {
+    public:
+    	LimEntry<NUM_QUBITS>* lim;
+    	Complex weight;
+
+        static LimWeight<NUM_QUBITS>* noLIM; // value is -1
+
+        // Initializes the identity operator, with weight +1
+    	LimWeight<NUM_QUBITS>()
+    			: weight(Complex::one) {
+    		//
+    	}
+
+    	LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a)
+    			: lim(a->lim), weight(a->weight) {
+    		//
+    	}
+
+    	LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a)
+    			: lim(new LimEntry<NUM_QUBITS>(a)), weight(Complex::one) {
+    		//
+    	}
+
+    	LimWeight<NUM_QUBITS>(const std::string pauliString)
+    			: lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
+    		//
+    	}
+
+    	void multiplyBy(const LimWeight<NUM_QUBITS>& other) {
+    		lim->multiplyBy(other->lim);
+    		// TODO
+    		// Question @Thomas, Stefan: how to multiply the weight? as follows:
+    		//   weight = weight * other.weight
+    	}
+
+    	void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
+    		lim->multiplyBy(other);
+    	}
+
+    	static std::string to_string(const LimWeight<NUM_QUBITS>* a) {
+    		if (a == LimWeight<NUM_QUBITS>::noLIM) {
+    			return "(no LIM)";
+    		}
+    		return LimEntry<NUM_QUBITS>::to_string(a->lim);
+    	}
+
+    	static bool Equal(const LimWeight<NUM_QUBITS>* a, const LimWeight<NUM_QUBITS>* b) {
+    		if (a == noLIM && b == noLIM) return true;
+    		return LimEntry<NUM_QUBITS>::Equal(a->lim, b->lim);
+    	}
+
+
+    };
+
     template <std::size_t NUM_QUBITS>
     LimEntry<NUM_QUBITS>* LimEntry<NUM_QUBITS>::noLIM = (LimEntry<NUM_QUBITS>*) -1;
+
+    template <std::size_t NUM_QUBITS>
+    LimWeight<NUM_QUBITS>* LimWeight<NUM_QUBITS>::noLIM = (LimWeight<NUM_QUBITS>*) -1;
 
     template <std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimEntry<NUM_QUBITS>& a) {
