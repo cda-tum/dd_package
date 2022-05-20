@@ -1145,7 +1145,7 @@ namespace dd {
            auto e = makeDDNode(w, edge, true, firstPathEdge);
 
 //           if (r.p != nullptr && e.p != r.p){
-//               std::cout << "Caching error detected" << std::endl;
+//               std::cout << "Caching error detected in add" << std::endl;
 //           }
 
 
@@ -1290,12 +1290,15 @@ namespace dd {
        }
 
    private:
+
+//       long mul2CallCounter = 0;
+
        template<class LeftOperandNode, class RightOperandNode>
        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, bool firstPathEdge = true) {
            using LEdge      = Edge<LeftOperandNode>;
            using REdge      = Edge<RightOperandNode>;
            using ResultEdge = Edge<RightOperandNode>;
-
+//            auto mul2CallCounterCurrent = ++mul2CallCounter;
            if (x.p == nullptr) return {nullptr, Complex::zero};
            if (y.p == nullptr) return y;
 
@@ -1315,9 +1318,8 @@ namespace dd {
 
            auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
            auto  r            = computeTable.lookup(xCopy, yCopy, firstPathEdge);
-//           r = {};
 //           if (r.p != nullptr && false) { //todo remove this false after debugging
-           if (r.p != nullptr) { //todo remove this false after debugging
+           if (r.p != nullptr) {
                if (r.w.approximatelyZero()) {
                    return ResultEdge::zero;
                } else {
@@ -1447,7 +1449,7 @@ namespace dd {
            e = makeDDNode(var, edge, true, firstPathEdge);
 
 //           if (r.p != nullptr && e.p != r.p){
-//               std::cout << "Caching error detected" << std::endl;
+//               std::cout << "Caching error detected in mul" << std::endl;
 //           }
 
            computeTable.insert(xCopy, yCopy, {e.p, e.w}, firstPathEdge);
@@ -2203,6 +2205,7 @@ namespace dd {
            if (dEdge::isDensityMatrix((long)originalEdge.p)) {
                dEdge newEdge{dUniqueTable.getNode(), originalEdge.w};
                auto  tmp = dEdge::getAlignedDensityNodeCopy(reinterpret_cast<dEdge&>(e), newEdge);
+               // Todo free the nodes again afterwards?
                e         = reinterpret_cast<mEdge&>(tmp);
            }
 

@@ -46,6 +46,7 @@ namespace dd {
 
             [[nodiscard]] static inline Entry* flipPointerSign(const Entry* e) {
                 if (e->value == 0){
+                    // No point in flipping the sign of 0
                     return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e));
                 }
                 return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) ^ static_cast<std::uintptr_t>(1U));
@@ -530,10 +531,6 @@ namespace dd {
                     }
                     //                    std::cout << "General hit in bucket " << key << "! " << val << " matches " << curr->value << std::endl;
                     ++hits;
-                    if (curr->next != nullptr && std::abs(curr->value - val) > std::abs(curr->next->value - val)){
-                        //todo what is the purpose of this statement?
-                        curr->next;
-                    }
                     return curr;
                 }
                 ++collisions;

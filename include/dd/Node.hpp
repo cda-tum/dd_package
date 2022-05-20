@@ -16,6 +16,7 @@ namespace dd {
         vNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
+        short int                      flags = 0;
 
         static vNode            terminalNode;
         constexpr static vNode* terminal{&terminalNode};
