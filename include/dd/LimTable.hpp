@@ -340,22 +340,22 @@ namespace dd {
             return c;
         }
 
-        void setOperator(Qubit v, char op) {
+        void setOperator(Qubit v, pauli_op op) {
             if ((int) v >= (int) NUM_QUBITS) return;
             switch(op) {
-                case 'I':
+                case pauli_op::pauli_id:
                     paulis.set(2*v,   0);
                     paulis.set(2*v+1, 0);
                     break;
-                case 'X':
+                case pauli_op::pauli_x:
                     paulis.set(2*v,   0);
                     paulis.set(2*v+1, 1);
                     break;
-                case 'Y':
+                case pauli_op::pauli_y:
                     paulis.set(2*v,   1);
                     paulis.set(2*v+1, 1);
                     break;
-                case 'Z':
+                case pauli_op::pauli_z:
                     paulis.set(2*v,   1);
                     paulis.set(2*v+1, 0);
                     break;
@@ -364,21 +364,8 @@ namespace dd {
             }
         }
 
-        void setOperator(Qubit v, pauli_op op) {
-        	switch(op) {
-        	case pauli_op::pauli_id:
-        		setOperator(v, 'I');
-        		break;
-        	case pauli_op::pauli_x:
-        		setOperator(v, 'X');
-        		break;
-        	case pauli_op::pauli_y:
-        		setOperator(v, 'Y');
-        		break;
-        	case pauli_op::pauli_z:
-        		setOperator(v, 'Z');
-        		break;
-        	}
+        void setOperator(Qubit v, char op) {
+        	setOperator(v, (pauli_op) op);
         }
 
         bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
@@ -555,7 +542,10 @@ namespace dd {
     	}
 
     	static bool Equal(const LimWeight<NUM_QUBITS>* a, const LimWeight<NUM_QUBITS>* b) {
+    		assert(a != nullptr);
+    		assert(b != nullptr);
     		if (a == noLIM && b == noLIM) return true;
+    		if (a == noLIM || b == noLIM) return false;
     		return LimEntry<NUM_QUBITS>::Equal(a->lim, b->lim);
     	}
 

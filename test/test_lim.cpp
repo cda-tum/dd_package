@@ -2329,7 +2329,7 @@ TEST(LimTest, getIsomorphismPauli2) {
     std::cout << "[getIsomorphismPauli2 test] Done finding isomorphism.\n"; std::cout.flush();
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
 
-    std::cout << "Found isomorphism: " << dd::LimEntry<>::to_string(isomorphism->lim) << std::endl;
+    std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
