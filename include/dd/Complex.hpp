@@ -91,12 +91,12 @@ namespace dd {
         //   i.e., iff z != 0 and z=r e^(it) with 0 <= t < pi
         bool lexSmallerThanxMinusOne() const {
             if (!ComplexTable<>::Entry::approximatelyZero(i)) {
-                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
+//                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(i);
                 return ComplexTable<>::Entry::val(i) > 0;
             }
             if (!ComplexTable<>::Entry::approximatelyZero(r)) {
-                std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
+//                std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(r);
                 return ComplexTable<>::Entry::val(r) > 0;
             }
