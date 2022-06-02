@@ -7,26 +7,16 @@
 #define DDpackage_NOISEOPERATIONTABLE_HPP
 
 #include "Definitions.hpp"
+#include <operations/OpType.hpp>
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+
 #include <vector>
 
 namespace dd {
-    // noise operation kinds
-    enum NoiseOperationKind : std::uint_fast8_t {
-        none,
-        I,
-        X,
-        Y,
-        Z,
-        ATrue,
-        AFalse,
-        opCount
-    };
-
     template<class Edge>
     class StochasticNoiseOperationTable {
     public:
@@ -41,12 +31,12 @@ namespace dd {
             table.resize(nvars);
         }
 
-        void insert(NoiseOperationKind kind, Qubit target, const Edge& r) {
+        void insert(qc::OpType kind, Qubit target, const Edge& r) {
             table.at(target).at(kind) = r;
             ++count;
         }
 
-        Edge lookup(QubitCount n, NoiseOperationKind kind, Qubit target) {
+        Edge lookup(QubitCount n, qc::OpType kind, Qubit target) {
             lookups++;
             Edge r{};
             auto entry = table.at(target).at(kind);
@@ -77,7 +67,7 @@ namespace dd {
 
     private:
         std::size_t                            nvars;
-        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(NoiseOperationKind::opCount);
+        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(qc::OpType::opCount);
         std::vector<std::array<Edge, opCount>> table;
 
         // operation table lookup statistics
