@@ -497,6 +497,7 @@ public:
     static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
 //        std::cout << "[coset intersection P] a = " << *a << "\n"; std::cout.flush();
         std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
+        assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
         std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
         toColumnEchelonFormModuloPhase(GH_Id);
 //        std::cout << "[coset intersection P] Found GH +Id to column echelon mod phase:\n";
