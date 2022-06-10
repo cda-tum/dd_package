@@ -12,7 +12,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
-#include <operations/OpType.hpp>
 #include <vector>
 
 namespace dd {
