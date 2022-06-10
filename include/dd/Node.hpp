@@ -16,7 +16,7 @@ namespace dd {
         vNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
-        short int                      flags = 0;
+        std::int_fast8_t               flags = 0;
 
         static vNode            terminalNode;
         constexpr static vNode* terminal{&terminalNode};
@@ -33,7 +33,7 @@ namespace dd {
         mNode*                         next{};        // used to link nodes in unique table
         RefCount                       ref{};         // reference count
         Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
-        short int                      flags = 0;
+        std::int_fast8_t               flags = 0;
         bool                           symm  = false; // node is symmetric
         bool                           ident = false; // node resembles identity
 
@@ -53,7 +53,7 @@ namespace dd {
         dNode*                         next{};    // used to link nodes in unique table
         RefCount                       ref{};     // reference count
         Qubit                          v{};       // variable index (nonterminal) value (-1 for terminal)
-        short int                      flags = 0;
+        std::int_fast8_t               flags = 0;
                                                   // 8 = marks a reduced dm node,
                                                   // 4 = marks a dm (tmp flag),
                                                   // 2 = mark first path edge (tmp flag),

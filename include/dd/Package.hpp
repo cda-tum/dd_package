@@ -2883,8 +2883,8 @@ namespace std {
            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
            auto h2 = std::hash<dd::Complex>{}(e.w);
            assert((dd::dEdge::isDensityMatrix((long)e.p)) == false);
-           auto h3  = std::hash<short int>{}(e.p->flags & (7U));
-//           auto h3  = std::hash<short int>{}(e.p->flags); //todo this can probably be relaxed to generate more hits
+           auto h3  = std::hash<std::int_fast8_t>{}(e.p->flags & (7U));
+//           auto h3  = std::hash<short int>{}(e.p->flags);
            auto tmp = dd::combineHash(h1, h2);
            return dd::combineHash(tmp, h3);
        }
