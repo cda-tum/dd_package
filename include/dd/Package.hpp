@@ -131,7 +131,6 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
     public:
-
         template<class Node>
         Edge<Node> normalize(const Edge<Node>& e, bool cached) {
             if constexpr (std::is_same_v<Node, vNode>) {
@@ -309,7 +308,6 @@ namespace dd {
             }
         }
 
-
         // generate |0...0> with n qubits
         vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
             if (n + start > nqubits) {
@@ -387,7 +385,6 @@ namespace dd {
         /// Matrix nodes, edges and quantum gates
         ///
     public:
-
         // build matrix representation for a single gate on an n-qubit circuit
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{}, target, start);
@@ -625,17 +622,17 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
-        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false, const bool createMEdge = true) {
+        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false, const bool generateDensityMatrix = false) {
             auto&      uniqueTable = getUniqueTable<Node>();
             Edge<Node> e{uniqueTable.getNode(), Complex::one};
             e.p->v = var;
             e.p->e = edges;
 
             if constexpr (std::is_same_v<Node, mNode> || std::is_same_v<Node, dNode>) {
-                if (createMEdge) {
-                    e.p->flags = 0;
-                } else {
+                if (generateDensityMatrix) {
                     e.p->flags = 8U;
+                } else {
+                    e.p->flags = 0U;
                 }
             }
 
@@ -965,7 +962,7 @@ namespace dd {
 
     public:
         template<class Node>
-        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, bool createMEdge = true) {
+        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y) {
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -993,8 +990,8 @@ namespace dd {
             }
 
             auto& computeTable = getAddComputeTable<Node>();
-            auto  r            = computeTable.lookup({x.p, x.w}, {y.p, y.w}, createMEdge);
-            //           if (r.p != nullptr && false) { //todo disable again
+            auto  r            = computeTable.lookup({x.p, x.w}, {y.p, y.w});
+            //           if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
@@ -1060,14 +1057,13 @@ namespace dd {
                 }
             }
 
-            auto e = makeDDNode(w, edge, true, createMEdge);
+            auto e = makeDDNode(w, edge, true);
 
             //           if (r.p != nullptr && e.p != r.p){
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
 
-
-            computeTable.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w}, createMEdge);
+            computeTable.insert({x.p, x.w}, {y.p, y.w}, {e.p, e.w});
             return e;
         }
 
@@ -1180,9 +1176,9 @@ namespace dd {
                     var = dEdge::getAlignedDensityNode(yCopy.p)->v;
                 }
                 dEdge::applyDmChangesToEdges(&xCopy, &yCopy);
-                e = multiply2(xCopy, yCopy, var, start, !generateDensityMatrix);
+                e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
 
-                dEdge::revertDmChangesToEdges(&xCopy, &yCopy); //Todo do I need to revert the changes when working with a copy?
+                dEdge::revertDmChangesToEdges(&xCopy, &yCopy);
 
             } else {
                 if (!x.isTerminal()) {
@@ -1206,18 +1202,15 @@ namespace dd {
         }
 
     private:
-        //       long mul2CallCounter = 0;
-
         template<class LeftOperandNode, class RightOperandNode>
-        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, bool createMEdge = true) {
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, bool generateDensityMatrix = false) {
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;
-            //            auto mul2CallCounterCurrent = ++mul2CallCounter;
+
             if (x.p == nullptr) return {nullptr, Complex::zero};
             if (y.p == nullptr) return y;
 
-            //           if (x.w == Complex::zero || y.w == Complex::zero) { // todo maybe fix the bug I had
             if (x.w.approximatelyZero() || y.w.approximatelyZero()) {
                 return ResultEdge::zero;
             }
@@ -1232,8 +1225,8 @@ namespace dd {
             yCopy.w    = Complex::one;
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup(xCopy, yCopy, createMEdge);
-            //           if (r.p != nullptr && false) { //todo remove this false after debugging
+            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix);
+            //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return ResultEdge::zero;
@@ -1318,11 +1311,11 @@ namespace dd {
                         if constexpr (std::is_same_v<LeftOperandNode, dNode>) {
                             dEdge m;
                             dEdge::applyDmChangesToEdges(&e1, &e2);
-                            if (createMEdge || idx == 1) {
-                                // When createMEdge is true or I have the first edge I don't optimize anything and set createMEdge for all child edges
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, true);
+                            if (!generateDensityMatrix || idx == 1) {
+                                // When generateDensityMatrix is false or I have the first edge I don't optimize anything and set generateDensityMatrix for all child edges
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false);
                             } else if (idx == 2) {
-                                // When I have the second edge and createMEdge is set to false, then edge[2] == edge[1]
+                                // When I have the second edge and generateDensityMatrix == false, then edge[2] == edge[1]
                                 if (k == 0) {
                                     if (edge[1].w.approximatelyZero()) {
                                         edge[2] = ResultEdge::zero;
@@ -1332,14 +1325,14 @@ namespace dd {
                                 }
                                 continue;
                             } else {
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, createMEdge);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, generateDensityMatrix);
                             }
                             if (k == 0 || edge[idx].w == Complex::zero) {
                                 edge[idx] = m;
                             } else if (m.w != Complex::zero) {
                                 dEdge::applyDmChangesToEdges(&edge[idx], &m);
                                 auto old_e = edge[idx];
-                                edge[idx] = add2(edge[idx], m, createMEdge);
+                                edge[idx]  = add2(edge[idx], m);
                                 dEdge::revertDmChangesToEdges(&edge[idx], &e2);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
@@ -1361,13 +1354,13 @@ namespace dd {
                     }
                 }
             }
-            e = makeDDNode(var, edge, true, createMEdge);
+            e = makeDDNode(var, edge, true, generateDensityMatrix);
 
-            //           if (r.p != nullptr && e.p != r.p){
-            //               std::cout << "Caching error detected in mul" << std::endl;
-            //           }
+            //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
+            //                std::cout << "Caching error detected in mul" << std::endl;
+            //            }
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w}, createMEdge);
+            computeTable.insert(xCopy, yCopy, {e.p, e.w});
 
             if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
                 if (e.w == Complex::one) {
@@ -1508,7 +1501,6 @@ namespace dd {
     public:
         ComputeTable<vEdge, vEdge, vCachedEdge, CT_VEC_KRON_NBUCKET> vectorKronecker{};
         ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_KRON_NBUCKET> matrixKronecker{};
-        //TODO also add kronecker cache for density matrices?
 
         template<class Node>
         [[nodiscard]] auto& getKroneckerComputeTable() {
@@ -1521,6 +1513,10 @@ namespace dd {
 
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y, bool incIdx = true) {
+            if constexpr (std::is_same_v<Edge, dEdge>) {
+                assert(false); // Kronecker is currently not supported for density matrices
+            }
+
             auto e = kronecker2(x, y, incIdx);
 
             if (e.w != Complex::zero && e.w != Complex::one) {

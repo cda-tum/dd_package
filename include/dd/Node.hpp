@@ -29,14 +29,13 @@ namespace dd {
     inline vNode vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1};
 
     struct mNode {
-        std::array<Edge<mNode>, NEDGE> e{};           // edges out of this node
-        mNode*                         next{};        // used to link nodes in unique table
-        RefCount                       ref{};         // reference count
-        Qubit                          v{};           // variable index (nonterminal) value (-1 for terminal)
+        std::array<Edge<mNode>, NEDGE> e{};    // edges out of this node
+        mNode*                         next{}; // used to link nodes in unique table
+        RefCount                       ref{};  // reference count
+        Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
         std::int_fast8_t               flags = 0;
         bool                           symm  = false; // node is symmetric
         bool                           ident = false; // node resembles identity
-
 
         static mNode            terminalNode;
         constexpr static mNode* terminal{&terminalNode};
@@ -49,15 +48,15 @@ namespace dd {
     inline mNode mNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1, 0, true, true};
 
     struct dNode {
-        std::array<Edge<dNode>, NEDGE> e{};       // edges out of this node
-        dNode*                         next{};    // used to link nodes in unique table
-        RefCount                       ref{};     // reference count
-        Qubit                          v{};       // variable index (nonterminal) value (-1 for terminal)
+        std::array<Edge<dNode>, NEDGE> e{};    // edges out of this node
+        dNode*                         next{}; // used to link nodes in unique table
+        RefCount                       ref{};  // reference count
+        Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
         std::int_fast8_t               flags = 0;
-                                                  // 8 = marks a reduced dm node,
-                                                  // 4 = marks a dm (tmp flag),
-                                                  // 2 = mark first path edge (tmp flag),
-                                                  // 1 = mark path is conjugated (tmp flag))
+        // 8 = marks a reduced dm node,
+        // 4 = marks a dm (tmp flag),
+        // 2 = mark first path edge (tmp flag),
+        // 1 = mark path is conjugated (tmp flag))
 
         static dNode            terminalNode;
         constexpr static dNode* terminal{&terminalNode};

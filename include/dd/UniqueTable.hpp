@@ -98,33 +98,42 @@ namespace dd {
 
             Node* p = tables[v][key];
             while (p != nullptr) {
-                //                bool dmCheck = true;
-                //                if constexpr (std::is_same_v<Edge<Node>, dEdge>) {
-                //                    if (dEdge::isDensityMatrix((long)p->flags)) {
-                //                        Edge<Node> tmp{};
-                //                        tmp.p = p;
-                //                        dEdge::revertDmChangesToEdges(&tmp, nullptr);
-                //                        dmCheck = (e.p->e == p->e);
-                //                        dEdge::applyDmChangesToEdges(&tmp, nullptr);
-                //                    }
-                //                }
-                //                if ((e.p->e == p->e && dmCheck) ) {
-                if (e.p->e == p->e){ //&& e.p->flags == p->flags) {
-                    // Match found
-                    if (e.p != p && !keepNode) {
-                        // put node pointed to by e.p on available chain
-                        returnNode(e.p);
+                if constexpr (std::is_same_v<Node, dNode>) {
+                    if (e.p->e == p->e && (e.p->flags <= p->flags)) {
+                        // Match found
+                        if (e.p != p && !keepNode) {
+                            // put node pointed to by e.p on available chain
+                            returnNode(e.p);
+                        }
+                        hits++;
+
+                        // variables should stay the same
+                        assert(p->v == e.p->v);
+
+                        // successors of a node shall either have successive variable numbers or be terminals
+                        for ([[maybe_unused]] const auto& edge: e.p->e)
+                            assert(edge.p->v == v - 1 || edge.isTerminal());
+
+                        return {p, e.w};
                     }
-                    hits++;
+                } else {
+                    if (e.p->e == p->e) {
+                        // Match found
+                        if (e.p != p && !keepNode) {
+                            // put node pointed to by e.p on available chain
+                            returnNode(e.p);
+                        }
+                        hits++;
 
-                    // variables should stay the same
-                    assert(p->v == e.p->v);
+                        // variables should stay the same
+                        assert(p->v == e.p->v);
 
-                    // successors of a node shall either have successive variable numbers or be terminals
-                    for ([[maybe_unused]] const auto& edge: e.p->e)
-                        assert(edge.p->v == v - 1 || edge.isTerminal());
+                        // successors of a node shall either have successive variable numbers or be terminals
+                        for ([[maybe_unused]] const auto& edge: e.p->e)
+                            assert(edge.p->v == v - 1 || edge.isTerminal());
 
-                    return {p, e.w};
+                        return {p, e.w};
+                    }
                 }
                 collisions++;
                 p = p->next;

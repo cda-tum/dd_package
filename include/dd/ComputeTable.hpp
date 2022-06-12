@@ -7,6 +7,7 @@
 #define DDpackage_COMPUTETABLE_HPP
 
 #include "Definitions.hpp"
+#include "Node.hpp"
 
 #include <array>
 #include <cstddef>
@@ -29,7 +30,6 @@ namespace dd {
             LeftOperandType  leftOperand;
             RightOperandType rightOperand;
             ResultType       result;
-            bool             firstPathEdge = true;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
@@ -45,22 +45,24 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, const bool firstPathEdge = true) {
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
             const auto key = hash(leftOperand, rightOperand);
-            table[key]     = {leftOperand, rightOperand, result, firstPathEdge};
+            table[key]     = {leftOperand, rightOperand, result};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const bool firstPathEdge = true) {
-            ResultType     result{};
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const bool useDensityMatrix = false) {
+            ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
-            if (entry.firstPathEdge != firstPathEdge) return result;
 
+            if constexpr (std::is_same_v<RightOperandType, dEdge>) {
+                if ((entry.result.p->flags < 7) == useDensityMatrix) return result;
+            }
             hits++;
             return entry.result;
         }
@@ -71,8 +73,8 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-//            hits    = 0;
-//            lookups = 0;
+            //            hits    = 0;
+            //            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }

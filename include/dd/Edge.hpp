@@ -70,6 +70,10 @@ namespace dd {
             return p & 7ULL;
         }
 
+        [[nodiscard]] static inline bool isDensityMatrixNode(const long p) {
+            return p & 8U;
+        }
+
         [[nodiscard]] static inline Node* getAlignedDensityNode(const Node* p) {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
         }
@@ -217,7 +221,6 @@ namespace dd {
             return !operator==(other);
         }
     };
-
 } // namespace dd
 
 namespace std {
