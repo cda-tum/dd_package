@@ -1086,3 +1086,235 @@ TEST(DDPackageTest, CloseToIdentity) {
     auto notClose3 = dd->makeDDNode(1, std::array{notClose2, dd::mEdge::zero, dd::mEdge::zero, notClose2});
     EXPECT_FALSE(dd->isCloseToIdentity(notClose3));
 }
+
+
+TEST(DDPackageTest, dNodeMultiply) {
+    //Multiply dNode with mNode (MxMxM)
+    dd::Qubit nr_qubits = 3;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd::dEdge::one;
+    for (dd::Qubit p = 0; p < 3; p++) {
+        state = dd->makeDDNode(p, std::array{state, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    }
+    dd->incRef(state);
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 1));
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 2));
+    operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 2));
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
+
+        dd->incRef(tmp2);
+        state.p = dd::dEdge::getAlignedDensityNode(state.p);
+        dd->decRef(state);
+        state = tmp2;
+
+        state.p = dd::dEdge::setDensityMatrixTrue(state.p);
+    }
+
+    const auto stateDensityMatrix = dd->getDensityMatrix(state);
+
+    for (auto& stateVector: stateDensityMatrix) {
+        for (auto& cValue: stateVector) {
+            std::cout << "r:" << cValue.real() << " i:" << cValue.imag();
+        }
+        std::cout << std::endl;
+    }
+
+    for (int i = 0; i < (1 << nr_qubits); i++){
+        for (int j = 0; j < (1 << nr_qubits); j++) {
+            assert(std::abs(stateDensityMatrix[i][j].imag()) == 0);
+            if((i < 4 && j < 4) || (i >= 4 && j >= 4)){
+                assert(stateDensityMatrix[i][j].real() > 0);
+            } else {
+                assert(stateDensityMatrix[i][j].real() < 0);
+            }
+            assert(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
+        }
+    }
+}
+
+TEST(DDPackageTest, dNodeMulCache1) {
+    // Make caching test with dNodes
+    dd::Qubit nr_qubits = 1;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state);
+
+
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, false);
+        dd->incRef(tmp2);
+        state = tmp2;
+    }
+
+    auto state1 = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state1);
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto& computeTable = dd->getMultiplicationComputeTable<dd::dNode, dd::dNode>();
+
+
+        auto xCopy = state1;
+        xCopy.w    = dd::Complex::one;
+        auto yCopy = reinterpret_cast<dd::dEdge&>(tmp0);
+        yCopy.w    = dd::Complex::one;
+
+
+        auto _tmp1         = computeTable.lookup(xCopy, yCopy, false);
+        auto tmp1 = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        assert(_tmp1.p != nullptr && tmp1.p == _tmp1.p);
+
+        auto xCopy1 = reinterpret_cast<dd::dEdge&>(op);
+        xCopy1.w    = dd::Complex::one;
+        auto yCopy1 = tmp1;
+        yCopy1.w    = dd::Complex::one;
+
+
+        auto _tmp2 = computeTable.lookup(xCopy1, yCopy1, true);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
+        assert(_tmp2.p != nullptr && tmp2.p == _tmp2.p);
+        dd->incRef(tmp2);
+        state1.p = dd::dEdge::getAlignedDensityNode(state1.p);
+        dd->decRef(state1);
+        state1 = tmp2;
+    }
+    assert(state1.p == state.p);
+}
+
+TEST(DDPackageTest, dNodeMulCache2) {
+    // Make caching test with dNodes
+    dd::Qubit nr_qubits = 1;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state);
+
+
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
+        dd->incRef(tmp2);
+        state = tmp2;
+    }
+
+    auto state1 = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state1);
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto& computeTable = dd->getMultiplicationComputeTable<dd::dNode, dd::dNode>();
+
+
+        auto xCopy = state1;
+        xCopy.w    = dd::Complex::one;
+        auto yCopy = reinterpret_cast<dd::dEdge&>(tmp0);
+        yCopy.w    = dd::Complex::one;
+
+
+        auto _tmp1         = computeTable.lookup(xCopy, yCopy, false);
+        auto tmp1 = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        assert(_tmp1.p != nullptr && tmp1.p == _tmp1.p);
+
+        auto xCopy1 = reinterpret_cast<dd::dEdge&>(op);
+        xCopy1.w    = dd::Complex::one;
+        auto yCopy1 = tmp1;
+        yCopy1.w    = dd::Complex::one;
+
+
+        auto _tmp2 = computeTable.lookup(xCopy1, yCopy1, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, false);
+        assert(_tmp2.p == nullptr);
+        dd->incRef(tmp2);
+        state1.p = dd::dEdge::getAlignedDensityNode(state1.p);
+        dd->decRef(state1);
+        state1 = tmp2;
+    }
+//    assert(state1.p != state.p); //Should they be equal?
+}
+
+TEST(DDPackageTest, dNodeMulCache3) {
+    // Make caching test with dNodes
+    dd::Qubit nr_qubits = 1;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state);
+
+
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, false);
+        dd->incRef(tmp2);
+        state = tmp2;
+    }
+
+    auto state1 = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state1);
+
+    for (auto& op: operations) {
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto& computeTable = dd->getMultiplicationComputeTable<dd::dNode, dd::dNode>();
+
+
+        auto xCopy = state1;
+        xCopy.w    = dd::Complex::one;
+        auto yCopy = reinterpret_cast<dd::dEdge&>(tmp0);
+        yCopy.w    = dd::Complex::one;
+
+        computeTable.clear();
+        auto _tmp1         = computeTable.lookup(xCopy, yCopy, false);
+        auto tmp1 = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        assert(_tmp1.p == nullptr);
+
+        auto xCopy1 = reinterpret_cast<dd::dEdge&>(op);
+        xCopy1.w    = dd::Complex::one;
+        auto yCopy1 = tmp1;
+        yCopy1.w    = dd::Complex::one;
+
+        computeTable.clear();
+        auto _tmp2 = computeTable.lookup(xCopy1, yCopy1, true);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
+        assert(_tmp2.p == nullptr);
+        dd->incRef(tmp2);
+        state1.p = dd::dEdge::getAlignedDensityNode(state1.p);
+        dd->decRef(state1);
+        state1 = tmp2;
+    }
+}
+
+TEST(DDPackageTest, dEdgeFunctionality) {
+    // Test dEdge functionality, apply changes, revert changes, make copy ...
+}
+
+TEST(DDPackageTest, dEdgeFlag) {
+    // Test the flags for dnode, vnode and mnodes
+}
+
+TEST(DDPackageTest, dNoiseCache) {
+    // Test the flags for dnode, vnode and mnodes
+}
+
+TEST(DDPackageTest, dStochCache) {
+    // Test the flags for dnode, vnode and mnodes
+}

@@ -51,7 +51,7 @@ namespace dd {
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const bool useDensityMatrix = false) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false) {
             ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
@@ -61,7 +61,7 @@ namespace dd {
             if (entry.rightOperand != rightOperand) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
-                if ((entry.result.p->flags < 7) == useDensityMatrix) return result;
+                if ((entry.result.p->flags > 7) && !useDensityMatrix) return result;
             }
             hits++;
             return entry.result;

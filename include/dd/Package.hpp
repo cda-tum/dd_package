@@ -1159,7 +1159,7 @@ namespace dd {
         }
 
         template<class LeftOperand, class RightOperand>
-        RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, bool generateDensityMatrix = false) {
+        RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             Qubit        var = -1;
@@ -2227,6 +2227,56 @@ namespace dd {
                 getMatrix(e.p->e[3], c, x, y, mat);
             cn.returnToCache(c);
         }
+
+        CMat getDensityMatrix(dEdge& e) {
+            dd::dEdge::applyDmChangesToEdges(&e, nullptr);
+            const unsigned long long dim = 2ULL << e.p->v;
+            // allocate resulting matrix
+            auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
+            getDensityMatrix(e, Complex::one, 0, 0, mat);
+            dd::dEdge::revertDmChangesToEdges(&e, nullptr);
+            return mat;
+        }
+
+        void getDensityMatrix(dEdge& e, Complex& amp, std::size_t i, std::size_t j, CMat& mat) {
+            // calculate new accumulated amplitude
+            auto c = cn.mulCached(e.w, amp);
+
+            // base case
+            if (e.isTerminal()) {
+                mat.at(i).at(j) = {CTEntry::val(c.r), CTEntry::val(c.i)};
+                cn.returnToCache(c);
+                return;
+            }
+
+            const std::size_t x = i | (1ULL << e.p->v);
+            const std::size_t y = j | (1ULL << e.p->v);
+
+            // recursive case
+            if (!e.p->e[0].w.approximatelyZero()){
+                dd::dEdge::applyDmChangesToEdges(&e.p->e[0], nullptr);
+                getDensityMatrix(e.p->e[0], c, i, j, mat);
+                dd::dEdge::revertDmChangesToEdges(&e.p->e[0], nullptr);
+            }
+            if (!e.p->e[1].w.approximatelyZero()){
+                dd::dEdge::applyDmChangesToEdges(&e.p->e[1], nullptr);
+                getDensityMatrix(e.p->e[1], c, i, y, mat);
+                dd::dEdge::revertDmChangesToEdges(&e.p->e[1], nullptr);
+            }
+            if (!e.p->e[2].w.approximatelyZero()){
+                dd::dEdge::applyDmChangesToEdges(&e.p->e[2], nullptr);
+                getDensityMatrix(e.p->e[2], c, x, j, mat);
+                dd::dEdge::revertDmChangesToEdges(&e.p->e[2], nullptr);
+            }
+            if (!e.p->e[3].w.approximatelyZero()){
+                dd::dEdge::applyDmChangesToEdges(&e.p->e[3], nullptr);
+                getDensityMatrix(e.p->e[3], c, x, y, mat);
+                dd::dEdge::revertDmChangesToEdges(&e.p->e[3], nullptr);
+            }
+
+            cn.returnToCache(c);
+        }
+
 
         void exportAmplitudesRec(const vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
             if (edge.isTerminal()) {
