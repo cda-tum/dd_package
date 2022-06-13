@@ -20,14 +20,14 @@ namespace dd {
     /// \tparam ResultType type of the operation's result
     /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
     template<class OperandType, class ResultType, std::size_t NBUCKET = 32768>
-    class DensityNoiseTable {
+    class DensityNoiseTable { //todo Inherent from UnaryComputerTable
     public:
         DensityNoiseTable() = default;
 
         struct Entry {
             OperandType              operand;
             ResultType               result;
-            std::vector<signed char> usedQubit;
+            std::vector<dd::Qubit>   usedQubits;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -36,30 +36,30 @@ namespace dd {
         [[nodiscard]] const auto& getTable() const { return table; }
 
         static std::size_t hash(const OperandType& a, const std::vector<signed char>& usedQubits) {
-            unsigned long i = 0;
+            std::size_t i = 0;
             for (auto qubit: usedQubits) {
                 i = (i << 3U) + i * qubit + qubit;
             }
             return (std::hash<OperandType>{}(a) + i) & MASK;
         }
 
-        void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubit) {
-            const auto key   = hash(operand, usedQubit);
+        void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubits) {
+            const auto key   = hash(operand, usedQubits);
             auto&      entry = table[key];
             entry.result     = result;
             entry.operand    = operand;
-            entry.usedQubit  = usedQubit;
+            entry.usedQubits = usedQubits;
             ++count;
         }
 
-        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubit) {
+        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubits) {
             ResultType result{};
             lookups++;
-            const auto key   = hash(operand, usedQubit);
+            const auto key   = hash(operand, usedQubits);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.operand != operand) return result;
-            if (entry.usedQubit != usedQubit) return result;
+            if (entry.usedQubits != usedQubits) return result;
             hits++;
             return entry.result;
         }

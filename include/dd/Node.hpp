@@ -16,7 +16,6 @@ namespace dd {
         vNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
-        std::int_fast8_t               flags = 0;
 
         static vNode            terminalNode;
         constexpr static vNode* terminal{&terminalNode};
@@ -33,7 +32,7 @@ namespace dd {
         mNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
-        std::int_fast8_t               flags = 0;
+        std::uint8_t                   flags = 0;
         bool                           symm  = false; // node is symmetric
         bool                           ident = false; // node resembles identity
 
@@ -52,7 +51,10 @@ namespace dd {
         dNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
-        std::int_fast8_t               flags = 0;
+        std::uint8_t                   flags = 0;
+        bool                           symm  = false; // node is symmetric
+        bool                           ident = false; // node resembles identity
+        // todo merge the symm and ident flags into the flags integer
         // 8 = marks a reduced dm node,
         // 4 = marks a dm (tmp flag),
         // 2 = mark first path edge (tmp flag),
@@ -62,10 +64,9 @@ namespace dd {
         constexpr static dNode* terminal{&terminalNode};
 
         static constexpr bool isTerminal(const dNode* p) { return p == terminal; }
-        //static constexpr bool isDensity() { return true; }
     };
     using dEdge       = Edge<dNode>;
     using dCachedEdge = CachedEdge<dNode>;
-    inline dNode dNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0, -1, 0};
+    inline dNode dNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0, -1, 0, false, false};
 
 } // namespace dd

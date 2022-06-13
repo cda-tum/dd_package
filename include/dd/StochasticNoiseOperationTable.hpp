@@ -6,8 +6,6 @@
 #ifndef DDpackage_NOISEOPERATIONTABLE_HPP
 #define DDpackage_NOISEOPERATIONTABLE_HPP
 
-//#include "dd/Definitions.hpp"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -30,11 +28,13 @@ namespace dd {
         }
 
         void insert(std::uint_fast8_t kind, Qubit target, const Edge& r) {
+            assert(kind < numberOfOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
             table.at(target).at(kind) = r;
             ++count;
         }
 
         Edge lookup(std::uint_fast8_t kind, Qubit target) {
+            assert(kind < numberOfOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
             lookups++;
             Edge r{};
             auto entry = table.at(target).at(kind);
@@ -61,9 +61,9 @@ namespace dd {
         }
 
     private:
-        std::size_t                            nvars;
-        static constexpr auto                  opCount = static_cast<std::uint_fast8_t>(42);
-        std::vector<std::array<Edge, opCount>> table;
+        std::size_t                                       nvars;
+        static constexpr auto                             numberOfOperations = static_cast<std::uint_fast8_t>(42);
+        std::vector<std::array<Edge, numberOfOperations>> table;
 
         // operation table lookup statistics
         std::size_t hits    = 0;

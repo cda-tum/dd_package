@@ -37,7 +37,6 @@ namespace dd {
         static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
             const auto h1 = std::hash<LeftOperandType>{}(leftOperand);
             const auto h2 = std::hash<RightOperandType>{}(rightOperand);
-            // todo improve the hashing scheme
             const auto hash = dd::combineHash(h1, h2);
             return hash & MASK;
         }
@@ -61,7 +60,9 @@ namespace dd {
             if (entry.rightOperand != rightOperand) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
-                if ((entry.result.p->flags > 7) && !useDensityMatrix) return result;
+                // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required. The statement isDensityMatrix(entry.result.p.flags())
+                // evaluates true if the result is a density matrix. In this case the result is only returned when a density matrix is required (=!useDensityMatrix)
+                if ((dd::dEdge::isDensityMatrixNode((std::int_fast8_t) entry.result.p->flags)) && !useDensityMatrix) return result;
             }
             hits++;
             return entry.result;
@@ -73,8 +74,6 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            //            hits    = 0;
-            //            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
