@@ -512,19 +512,19 @@ namespace dd {
             if (p->v == -1)
                 return;
 
-            p->ident = false; // assume not identity
-            p->symm  = false; // assume symmetric
+            p->setIdentity(false);
+            p->setSymmetric(false);
 
             // check if matrix is symmetric
-            if (!p->e[0].p->symm || !p->e[3].p->symm) return;
+            if (!p->e[0].p->isSymmetric() || !p->e[3].p->isSymmetric()) return;
             if (transpose(p->e[1]) != p->e[2]) return;
-            p->symm = true;
+            p->setSymmetric(true);
 
             // check if matrix resembles identity
-            if (!(p->e[0].p->ident) || (p->e[1].w) != Complex::zero || (p->e[2].w) != Complex::zero || (p->e[0].w) != Complex::one ||
-                (p->e[3].w) != Complex::one || !(p->e[3].p->ident))
+            if (!(p->e[0].p->isIdentity()) || (p->e[1].w) != Complex::zero || (p->e[2].w) != Complex::zero || (p->e[0].w) != Complex::one ||
+                (p->e[3].w) != Complex::one || !(p->e[3].p->isIdentity()))
                 return;
-            p->ident = true;
+            p->setIdentity(true);
         }
 
         ///
@@ -1076,7 +1076,7 @@ namespace dd {
         DensityNoiseTable<dEdge, dEdge, CT_MAT_NOISE_NBUCKET>      densityNoise{};
 
         mEdge transpose(const mEdge& a) {
-            if (a.p == nullptr || a.isTerminal() || a.p->symm) {
+            if (a.p == nullptr || a.isTerminal() || a.p->isSymmetric()) {
                 return a;
             }
 
@@ -1248,10 +1248,10 @@ namespace dd {
             if constexpr (std::is_same_v<RightOperandNode, mCachedEdge>) {
                 // This branch is only taken for matrices
                 if (x.p->v == var && x.p->v == y.p->v) {
-                    if (x.p->ident) {
+                    if (x.p->isIdentity()) {
                         if constexpr (N == NEDGE) {
                             // additionally check if y is the identity in case of matrix multiplication
-                            if (y.p->ident) {
+                            if (y.p->isIdentity()) {
                                 e = makeIdent(start, var);
                             } else {
                                 e = yCopy;
@@ -1270,7 +1270,7 @@ namespace dd {
 
                     if constexpr (N == NEDGE) {
                         // additionally check if y is the identity in case of matrix multiplication
-                        if (y.p->ident) {
+                        if (y.p->isIdentity()) {
                             e = xCopy;
                             computeTable.insert(xCopy, yCopy, {e.p, e.w});
                             e.w = cn.mulCached(x.w, y.w);
@@ -1559,7 +1559,7 @@ namespace dd {
             constexpr std::size_t N = std::tuple_size_v<decltype(x.p->e)>;
             // special case handling for matrices
             if constexpr (N == NEDGE) {
-                if (x.p->ident) {
+                if (x.p->isIdentity()) {
                     auto idx = incIdx ? static_cast<Qubit>(y.p->v + 1) : y.p->v;
                     auto e   = makeDDNode(idx, std::array{y, Edge<Node>::zero, Edge<Node>::zero, y});
                     for (auto i = 0; i < x.p->v; ++i) {
@@ -1681,7 +1681,7 @@ namespace dd {
             }
 
             // immediately return of this node is identical to the identity
-            if (m.p->ident) {
+            if (m.p->isIdentity()) {
                 return true;
             }
 
@@ -2819,8 +2819,7 @@ namespace dd {
     template<>
     constexpr bool dEdge::operator==(const dEdge& other) const {
         assert(p != nullptr && other.p != nullptr);
-        return p == other.p && (p->flags & (7U)) == (other.p->flags & (7U)) && w.approximatelyEquals(other.w);
-        //       return p == other.p && p->flags == other.p->flags && w.approximatelyEquals(other.w);
+        return p == other.p && tempDensityMatrixFlagsEqual(p->flags, other.p->flags) && w.approximatelyEquals(other.w);
     }
 } // namespace dd
 
@@ -2831,7 +2830,7 @@ namespace std {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::Complex>{}(e.w);
             assert((dd::dEdge::isDensityMatrix((long)e.p)) == false);
-            auto h3 = std::hash<std::uint8_t>{}(e.p->flags & (7U));
+            auto h3 = std::hash<std::uint_least8_t>{}(e.p->flags & (7U));
             //           auto h3  = std::hash<short int>{}(e.p->flags);
             auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);

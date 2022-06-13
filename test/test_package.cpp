@@ -403,13 +403,13 @@ TEST(DDPackageTest, Extend) {
     EXPECT_EQ(id.p->v, 2);
     EXPECT_EQ(id.p->e[0], id.p->e[3]);
     EXPECT_EQ(id.p->e[1], id.p->e[2]);
-    EXPECT_TRUE(id.p->ident);
+    EXPECT_TRUE(id.p->isIdentity());
 
     auto ext = dd->extend(id, 0, 1);
     EXPECT_EQ(ext.p->v, 3);
     EXPECT_EQ(ext.p->e[0], ext.p->e[3]);
     EXPECT_EQ(ext.p->e[1], ext.p->e[2]);
-    EXPECT_TRUE(ext.p->ident);
+    EXPECT_TRUE(ext.p->isIdentity());
 }
 
 TEST(DDPackageTest, Identity) {
@@ -1016,7 +1016,7 @@ TEST(DDPackageTest, NormalizationNumericStabilityTest) {
         auto p      = dd->makeGateDD(dd::Phasemat(lambda), 1, 0);
         auto pdag   = dd->makeGateDD(dd::Phasemat(-lambda), 1, 0);
         auto result = dd->multiply(p, pdag);
-        EXPECT_TRUE(result.p->ident);
+        EXPECT_TRUE(result.p->isIdentity());
         dd->cn.complexTable.clear();
     }
 }

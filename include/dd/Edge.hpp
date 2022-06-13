@@ -50,6 +50,11 @@ namespace dd {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL);
         }
 
+        [[nodiscard]] static inline bool tempDensityMatrixFlagsEqual(const std::uint8_t a, const std::uint8_t b) {
+            return (a & (7U)) == (b & (7U));
+        }
+
+
         [[nodiscard]] static inline bool isDensityConjugateSet(const long p) {
             return p & 1ULL;
         }
