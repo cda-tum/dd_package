@@ -58,11 +58,8 @@ namespace dd {
             const auto key   = hash(operand, usedQubit);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
-//            collision++;
-            if (entry.operand != operand)
-                return result;
-            if (entry.usedQubit != usedQubit)
-                return result;
+            if (entry.operand != operand) return result;
+            if (entry.usedQubit != usedQubit) return result;
             hits++;
             return entry.result;
         }
@@ -73,8 +70,6 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            //            hits    = 0;
-            //            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }

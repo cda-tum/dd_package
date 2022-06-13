@@ -34,12 +34,11 @@ namespace dd {
             ++count;
         }
 
-        Edge lookup(QubitCount n, std::uint_fast8_t kind, Qubit target) {
+        Edge lookup(std::uint_fast8_t kind, Qubit target) {
             lookups++;
             Edge r{};
             auto entry = table.at(target).at(kind);
             if (entry.p == nullptr) return r;
-            if (entry.p->v != static_cast<Qubit>(n - 1)) return r;
             hits++;
             return entry;
         }
@@ -53,8 +52,6 @@ namespace dd {
                 }
                 count = 0;
             }
-            hits    = 0;
-            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
