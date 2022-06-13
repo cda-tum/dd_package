@@ -1105,6 +1105,7 @@ TEST(DDPackageTest, dNodeMultiply) {
     operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 2));
 
     for (auto& op: operations) {
+
         auto tmp0 = dd->conjugateTranspose(op);
         auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
         auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
@@ -1125,6 +1126,52 @@ TEST(DDPackageTest, dNodeMultiply) {
         }
         std::cout << std::endl;
     }
+
+    for (int i = 0; i < (1 << nr_qubits); i++){
+        for (int j = 0; j < (1 << nr_qubits); j++) {
+            assert(std::abs(stateDensityMatrix[i][j].imag()) == 0);
+            if((i < 4 && j < 4) || (i >= 4 && j >= 4)){
+                assert(stateDensityMatrix[i][j].real() > 0);
+            } else {
+                assert(stateDensityMatrix[i][j].real() < 0);
+            }
+            assert(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
+        }
+    }
+}
+
+TEST(DDPackageTest, dNodeMultiply2) {
+    //Multiply dNode with mNode (MxMxM)
+    dd::Qubit nr_qubits = 3;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd::dEdge::one;
+    for (dd::Qubit p = 0; p < 3; p++) {
+        state = dd->makeDDNode(p, std::array{state, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    }
+    dd->incRef(state);
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 1));
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 2));
+    operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 2));
+
+    for (auto& op: operations) {
+
+        auto tmp0 = dd->conjugateTranspose(op);
+        auto tmp1 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), state, 0, false);
+        auto tmp2 = dd->multiply(tmp1, reinterpret_cast<dd::dEdge&>(tmp0), 0, true);
+
+
+        dd->incRef(tmp2);
+        state.p = dd::dEdge::getAlignedDensityNode(state.p);
+        dd->decRef(state);
+        state = tmp2;
+
+        state.p = dd::dEdge::setDensityMatrixTrue(state.p);
+    }
+
+    const auto stateDensityMatrix = dd->getDensityMatrix(state);
 
     for (int i = 0; i < (1 << nr_qubits); i++){
         for (int j = 0; j < (1 << nr_qubits); j++) {
@@ -1303,18 +1350,68 @@ TEST(DDPackageTest, dNodeMulCache3) {
     }
 }
 
-TEST(DDPackageTest, dEdgeFunctionality) {
-    // Test dEdge functionality, apply changes, revert changes, make copy ...
-}
-
-TEST(DDPackageTest, dEdgeFlag) {
-    // Test the flags for dnode, vnode and mnodes
-}
-
 TEST(DDPackageTest, dNoiseCache) {
     // Test the flags for dnode, vnode and mnodes
+    dd::Qubit nr_qubits = 1;
+    auto dd = std::make_unique<dd::Package<>>(nr_qubits);
+    // Make zero density matrix
+    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    dd->incRef(state);
+
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Xmat, nr_qubits, 0));
+
+    std::vector<dd::Qubit> target = {0};
+
+    auto noiseLookUpResult = dd->densityNoise.lookup(state, target);
+    assert(noiseLookUpResult.p == nullptr);
+    auto tmp0 = dd->conjugateTranspose(operations[0]);
+    auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+    auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(operations[0]), tmp1, 0, true);
+    dd->incRef(tmp2);
+    auto state1 = tmp2;
+    dd->densityNoise.insert(state, state1, target);
+
+    noiseLookUpResult = dd->densityNoise.lookup(state, target);
+    assert(noiseLookUpResult.p != nullptr && noiseLookUpResult.p == state1.p);
+
+    dd->densityNoise.clear();
+    noiseLookUpResult = dd->densityNoise.lookup(state, target);
+    assert(noiseLookUpResult.p == nullptr);
 }
 
 TEST(DDPackageTest, dStochCache) {
-    // Test the flags for dnode, vnode and mnodes
+    dd::Qubit nr_qubits = 4;
+    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+
+    std::vector<dd::mEdge> operations = {};
+    operations.push_back(dd->makeGateDD(dd::Xmat, nr_qubits, 0));
+    operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 1));
+    operations.push_back(dd->makeGateDD(dd::Ymat, nr_qubits, 2));
+    operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 3));
+
+    dd->stochasticNoiseOperationCache.insert(0, 0, operations[0]); //insert X operations with target 0
+    dd->stochasticNoiseOperationCache.insert(1, 1, operations[1]); //insert Z operations with target 1
+    dd->stochasticNoiseOperationCache.insert(2, 2, operations[2]); //insert Y operations with target 2
+    dd->stochasticNoiseOperationCache.insert(3, 3, operations[3]); //insert H operations with target 3
+
+    for (dd::Qubit i = 0; i < 4; i++) {
+        for (dd::Qubit j = 0; j < 4; j++) {
+            if (i == j) {
+                auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
+                assert(op.p != nullptr && op.p == operations[i].p);
+            } else {
+                auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
+                assert(op.p == nullptr);
+            }
+        }
+    }
+
+    dd->stochasticNoiseOperationCache.clear();
+    for (dd::Qubit i = 0; i < 4; i++) {
+        for (dd::Qubit j = 0; j < 4; j++) {
+            auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
+            assert(op.p == nullptr);
+        }
+    }
 }
