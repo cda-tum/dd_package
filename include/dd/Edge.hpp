@@ -70,9 +70,9 @@ namespace dd {
             return p & 7ULL;
         }
 
-        [[nodiscard]] static inline bool isDensityMatrixNode(const long p) {
-            return p & 8U;
-        }
+//        [[nodiscard]] static inline bool isDensityMatrixNode(const long p) {
+//            return p & 8U;
+//        }
 
         [[nodiscard]] static inline Node* getAlignedDensityNode(const Node* p) {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
@@ -185,16 +185,16 @@ namespace dd {
             }
         }
 
-        [[nodiscard]] static inline Edge<Node> getAlignedDensityNodeCopy(Edge<Node> e, Edge* newEdge) {
-            newEdge->p->v    = e.p->v;
-            newEdge->p->e[0] = e.p->e[0];
-            newEdge->p->e[1] = e.p->e[1];
-            newEdge->p->e[2] = e.p->e[2];
-            newEdge->p->e[3] = e.p->e[3];
-
-            alignDensityNode(newEdge);
-            return newEdge;
-        }
+//        [[nodiscard]] static inline Edge<Node>* getAlignedDensityNodeCopy(Edge<Node>* e, Edge* newEdge) {
+//            newEdge->p->v    = e->p->v;
+//            newEdge->p->e[0] = e->p->e[0];
+//            newEdge->p->e[1] = e->p->e[1];
+//            newEdge->p->e[2] = e->p->e[2];
+//            newEdge->p->e[3] = e->p->e[3];
+//
+//            alignDensityNode(newEdge);
+//            return newEdge;
+//        }
     };
 
     template<typename Node>
