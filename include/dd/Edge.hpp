@@ -54,6 +54,10 @@ namespace dd {
             return (a & (7U)) == (b & (7U));
         }
 
+        [[nodiscard]] static inline bool returnTempDensityMatrixFlags(const std::uint8_t a) {
+            return a & (7U) ;
+        }
+
 
         [[nodiscard]] static inline bool isDensityConjugateSet(const long p) {
             return p & 1ULL;
