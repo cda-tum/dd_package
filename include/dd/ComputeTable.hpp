@@ -62,7 +62,7 @@ namespace dd {
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required. The statement isDensityMatrix(entry.result.p.flags())
                 // evaluates true if the result is a density matrix. In this case the result is only returned when a density matrix is required (=!useDensityMatrix)
-                if ((dd::dEdge::isDensityMatrixNode((std::int_fast8_t) entry.result.p->flags)) && !useDensityMatrix) return result;
+                if ((dNode::isDensityMatrixNode((std::int_fast8_t) entry.result.p->flags)) && !useDensityMatrix) return result;
             }
             hits++;
             return entry.result;

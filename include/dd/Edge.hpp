@@ -38,42 +38,9 @@ namespace dd {
         [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == Complex::zero; }
         [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == Complex::one; }
 
-        [[nodiscard]] static inline Node* setDensityConjugateTrue(const Node* p) {
-            return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) | 1ULL);
-        }
-
-        [[nodiscard]] static inline Node* setFirstEdgeDensityPathTrue(const Node* p) {
-            return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) | 2ULL);
-        }
-
-        [[nodiscard]] static inline Node* setDensityMatrixTrue(const Node* p) {
-            return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL);
-        }
-
-        [[nodiscard]] static inline bool tempDensityMatrixFlagsEqual(const std::uint8_t a, const std::uint8_t b) {
-            return (a & (7U)) == (b & (7U));
-        }
-
-        [[nodiscard]] static inline bool returnTempDensityMatrixFlags(const std::uint8_t a) {
-            return a & (7U) ;
-        }
-
-
-        [[nodiscard]] static inline bool isDensityConjugateSet(const long p) {
-            return p & 1ULL;
-        }
-
-        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const long p) {
-            return p & 2ULL;
-        }
-
-        [[nodiscard]] static inline bool isDensityMatrix(const long p) {
-            return p & 7ULL;
-        }
-
-        [[nodiscard]] static inline bool isDensityMatrixNode(const long p) {
-            return p & 8U;
-        }
+        static inline void setDensityConjugateTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 1ULL); }
+        static inline void setFirstEdgeDensityPathTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 2ULL); }
+        static inline void setDensityMatrixTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 4ULL); }
 
         [[nodiscard]] static inline Node* getAlignedDensityNode(const Node* p) {
             return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
@@ -81,11 +48,11 @@ namespace dd {
 
         static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers
-            if (x != nullptr && isDensityMatrix((long)x->p->flags)) {
+            if (x != nullptr && Node::isDensityMatrix((long)x->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(x);
                 x->p->flags = x->p->flags & (8U);
             }
-            if (y != nullptr && isDensityMatrix((long)y->p->flags)) {
+            if (y != nullptr && Node::isDensityMatrix((long)y->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(y);
                 y->p->flags = x->p->flags & (8U);
             }
@@ -94,7 +61,7 @@ namespace dd {
         static inline void applyDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers
             if (x != nullptr) {
-                if (isDensityMatrix((long)x->p)) {
+                if (Node::isDensityMatrix((long)x->p)) {
                     auto tmp = alignDensityNode(x);
                     assert((x->p->flags & (7U)) == 0);
                     x->p->flags = x->p->flags | tmp;
@@ -102,7 +69,7 @@ namespace dd {
             }
 
             if (y != nullptr) {
-                if (isDensityMatrix((long)y->p)) {
+                if (Node::isDensityMatrix((long)y->p)) {
                     auto tmp = alignDensityNode(y);
                     assert((y->p->flags & (7U)) == 0);
                     y->p->flags = x->p->flags | tmp;
@@ -119,22 +86,22 @@ namespace dd {
                 return 0;
             }
 
-            if (isFirstEdgeDensityPath((long)e->p) && !isDensityConjugateSet((long)e->p)) {
+            if (Node::isFirstEdgeDensityPath((long)e->p) && !Node::isDensityConjugateSet((long)e->p)) {
                 e->p = alignedNode;
 
                 // first edge paths are not modified and the property is inherited by all child paths
                 return flags;
-            } else if (!isDensityConjugateSet((long)e->p)) {
+            } else if (!Node::isDensityConjugateSet((long)e->p)) {
                 e->p = alignedNode;
 
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
-                e->p->e[2].p   = setDensityConjugateTrue(e->p->e[2].p);
+               setDensityConjugateTrue(&e->p->e[2]);
                 // Mark the first edge
-                e->p->e[1].p = setFirstEdgeDensityPathTrue(e->p->e[1].p);
+                setFirstEdgeDensityPathTrue(&e->p->e[1]);
 
                 for (auto& edge: e->p->e) {
-                    edge.p = setDensityMatrixTrue(edge.p);
+                    setDensityMatrixTrue(&edge);
                 }
 
             } else {
@@ -144,15 +111,15 @@ namespace dd {
                 for (auto& edge: e->p->e) {
                     // Conjugate all edges
                     edge.w.i = dd::CTEntry::flipPointerSign(edge.w.i);
-                    edge.p   = setDensityConjugateTrue(edge.p);
-                    edge.p   = setDensityMatrixTrue(edge.p);
+                    setDensityConjugateTrue(&edge);
+                    setDensityMatrixTrue(&edge);
                 }
             }
             return flags;
         }
 
         static inline void getAlignedEdgeRevertModificationsOnSubEdges(Edge<Node>* e) {
-            if (isFirstEdgeDensityPath(e->p->flags) && !isDensityConjugateSet(e->p->flags)) {
+            if (Node::isFirstEdgeDensityPath(e->p->flags) && !Node::isDensityConjugateSet(e->p->flags)) {
                 // Before I do anything else, I must align the pointer
                 e->p = getAlignedDensityNode(e->p);
 
@@ -161,7 +128,7 @@ namespace dd {
                     edge.p = getAlignedDensityNode(edge.p);
                 }
 
-            } else if (!isDensityConjugateSet(e->p->flags)) {
+            } else if (!Node::isDensityConjugateSet(e->p->flags)) {
                 // Before I do anything else, I must align the pointer
                 e->p = getAlignedDensityNode(e->p);
 

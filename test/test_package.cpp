@@ -1093,7 +1093,7 @@ TEST(DDPackageTest, dNodeMultiply) {
         dd->decRef(state);
         state = tmp2;
 
-        state.p = dd::dEdge::setDensityMatrixTrue(state.p);
+        dd::dEdge::setDensityMatrixTrue(&state);
     }
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);
@@ -1146,7 +1146,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
         dd->decRef(state);
         state = tmp2;
 
-        state.p = dd::dEdge::setDensityMatrixTrue(state.p);
+        dd::dEdge::setDensityMatrixTrue(&state);
     }
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);

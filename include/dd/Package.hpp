@@ -1168,14 +1168,15 @@ namespace dd {
             if constexpr (std::is_same_v<LeftOperand, dEdge>) {
                 auto xCopy = x;
                 auto yCopy = y;
+                dEdge::applyDmChangesToEdges(&xCopy, &yCopy);
 
                 if (!xCopy.isTerminal()) {
-                    var = dEdge::getAlignedDensityNode(xCopy.p)->v;
+                    var = xCopy.p->v;
                 }
-                if (!y.isTerminal() && (dEdge::getAlignedDensityNode(yCopy.p)->v) > var) {
-                    var = dEdge::getAlignedDensityNode(yCopy.p)->v;
+                if (!y.isTerminal() && yCopy.p->v > var) {
+                    var = yCopy.p->v;
                 }
-                dEdge::applyDmChangesToEdges(&xCopy, &yCopy);
+
                 e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
 
                 dEdge::revertDmChangesToEdges(&xCopy, &yCopy);
