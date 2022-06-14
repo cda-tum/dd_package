@@ -1514,7 +1514,7 @@ namespace dd {
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y, bool incIdx = true) {
             if constexpr (std::is_same_v<Edge, dEdge>) {
-                assert(false); // Kronecker is currently not supported for density matrices
+                throw std::invalid_argument("Kronecker is currently not supported for density matrices");
             }
 
             auto e = kronecker2(x, y, incIdx);
@@ -2815,27 +2815,8 @@ namespace dd {
             cn.complexTable.printStatistics();
         }
     };
-
-    template<>
-    constexpr bool dEdge::operator==(const dEdge& other) const {
-        assert(p != nullptr && other.p != nullptr);
-        return p == other.p && tempDensityMatrixFlagsEqual(p->flags, other.p->flags) && w.approximatelyEquals(other.w);
-    }
 } // namespace dd
 
-namespace std {
-    template<>
-    struct hash<dd::dEdge> {
-        std::size_t operator()(dd::dEdge const& e) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
-            auto h2 = std::hash<dd::Complex>{}(e.w);
-            assert((dd::dEdge::isDensityMatrix((long)e.p)) == false);
-            auto h3 = std::hash<std::uint_least8_t>{}(e.p->flags & (7U));
-            //           auto h3  = std::hash<short int>{}(e.p->flags);
-            auto tmp = dd::combineHash(h1, h2);
-            return dd::combineHash(tmp, h3);
-        }
-    };
-} // namespace std
+
 
 #endif
