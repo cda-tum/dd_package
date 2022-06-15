@@ -107,25 +107,4 @@ namespace dd {
     using dCachedEdge = CachedEdge<dNode>;
     inline dNode dNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0, -1, 0};
 
-    template<>
-    constexpr bool dEdge::operator==(const dEdge& other) const {
-        assert(p != nullptr && other.p != nullptr);
-        return p == other.p && dNode::compareTempDensityMatrixFlags(p->flags, other.p->flags) && w.approximatelyEquals(other.w);
-    }
-
 } // namespace dd
-
-namespace std {
-    template<>
-    struct hash<dd::dEdge> {
-        std::size_t operator()(dd::dEdge const& e) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
-            auto h2 = std::hash<dd::Complex>{}(e.w);
-            assert((dd::dNode::isDensityMatrix((long)e.p)) == false);
-            auto h3 = std::hash<std::uint_least8_t>{}(dd::dNode::getTempDensityMatrixFlags(e.p->flags));
-            //           auto h3  = std::hash<short int>{}(e.p->flags);
-            auto tmp = dd::combineHash(h1, h2);
-            return dd::combineHash(tmp, h3);
-        }
-    };
-} // namespace std
