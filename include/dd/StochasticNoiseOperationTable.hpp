@@ -62,7 +62,7 @@ namespace dd {
 
     private:
         std::size_t                                       nvars;
-        static constexpr auto                             numberOfOperations = static_cast<std::uint_fast8_t>(42);
+        static constexpr auto                             numberOfOperations = static_cast<std::uint_fast8_t>(64);
         std::vector<std::array<Edge, numberOfOperations>> table;
 
         // operation table lookup statistics
