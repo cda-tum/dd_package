@@ -45,7 +45,7 @@ namespace dd {
             }
 
             [[nodiscard]] static inline Entry* flipPointerSign(const Entry* e) {
-                if (e == &ComplexTable<>::zero) {
+                if (e == &ComplexTable<NBUCKET, INITIAL_ALLOCATION_SIZE, GROWTH_FACTOR, INITIAL_GC_LIMIT>::zero) {
                     // No point in flipping the sign of 0
                     return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e));
                 }
