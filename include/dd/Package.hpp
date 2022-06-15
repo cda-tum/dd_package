@@ -53,6 +53,8 @@ namespace dd {
         static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
         static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
         static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t UT_DM_NBUCKET                  = 32768U;
+        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 2048U;
         static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
         static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
         static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
@@ -69,6 +71,8 @@ namespace dd {
              std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
              std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
              std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+             std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
+             std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
              std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
              std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
              std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
@@ -555,7 +559,7 @@ namespace dd {
 
         UniqueTable<vNode, UT_VEC_NBUCKET, UT_VEC_INITIAL_ALLOCATION_SIZE> vUniqueTable{nqubits};
         UniqueTable<mNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> mUniqueTable{nqubits};
-        UniqueTable<dNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> dUniqueTable{nqubits};
+        UniqueTable<dNode, UT_DM_NBUCKET, UT_DM_INITIAL_ALLOCATION_SIZE>   dUniqueTable{nqubits};
 
         bool garbageCollect(bool force = false) {
             // return immediately if no table needs collection
@@ -572,8 +576,9 @@ namespace dd {
                 // Collecting garbage in the complex numbers table requires collecting the node tables as well
                 force = true;
             }
-            auto mCollect = mUniqueTable.garbageCollect(force) + dUniqueTable.garbageCollect(force);
             auto vCollect = vUniqueTable.garbageCollect(force);
+            auto mCollect = mUniqueTable.garbageCollect(force);
+            auto dCollect = dUniqueTable.garbageCollect(force);
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0) {
@@ -583,7 +588,7 @@ namespace dd {
                 matrixVectorMultiplication.clear();
             }
             // invalidate all compute tables involving matrices if any matrix node has been collected
-            if (mCollect > 0) {
+            if (mCollect > 0 || dCollect > 0) {
                 matrixAdd.clear();
                 matrixTranspose.clear();
                 conjugateMatrixTranspose.clear();
@@ -593,7 +598,6 @@ namespace dd {
                 toffoliTable.clear();
                 clearIdentityTable();
                 stochasticNoiseOperationCache.clear();
-
                 densityAdd.clear();
                 densityMul.clear();
                 densityNoise.clear();
@@ -966,15 +970,16 @@ namespace dd {
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
-            if (x.w.approximatelyZero()) {
-                if (y.w.approximatelyZero()) {
+            //            if (CTEntry::exactlyZero(x.w)) {
+            if (x.w.exactlyZero()) {
+                if (y.w.exactlyZero()) {
                     return Edge<Node>::zero;
                 }
                 auto r = y;
                 r.w    = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                 return r;
             }
-            if (y.w.approximatelyZero()) {
+            if (y.w.exactlyZero()) {
                 auto r = x;
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 return r;
@@ -1212,7 +1217,7 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero};
             if (y.p == nullptr) return y;
 
-            if (x.w.approximatelyZero() || y.w.approximatelyZero()) {
+            if (x.w.exactlyZero() || y.w.exactlyZero()) {
                 return ResultEdge::zero;
             }
 

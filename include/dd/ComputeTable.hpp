@@ -35,8 +35,8 @@ namespace dd {
         static constexpr std::size_t MASK = NBUCKET - 1;
 
         static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
-            const auto h1 = std::hash<LeftOperandType>{}(leftOperand);
-            const auto h2 = std::hash<RightOperandType>{}(rightOperand);
+            const auto h1   = std::hash<LeftOperandType>{}(leftOperand);
+            const auto h2   = std::hash<RightOperandType>{}(rightOperand);
             const auto hash = dd::combineHash(h1, h2);
             return hash & MASK;
         }
