@@ -628,8 +628,11 @@ namespace dd {
             e.p->v = var;
             e.p->e = edges;
 
-            if constexpr (std::is_same_v<Node, dNode>) {
-               e.p->setDensityMatrixNodeFlag(generateDensityMatrix);
+            if constexpr (std::is_same_v<Node, mNode> || std::is_same_v<Node, dNode>) {
+                e.p->flags = 0;
+                if constexpr (std::is_same_v<Node, dNode>) {
+                    e.p->setDensityMatrixNodeFlag(generateDensityMatrix);
+                }
             }
 
             assert(e.p->ref == 0);
