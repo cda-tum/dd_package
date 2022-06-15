@@ -1087,11 +1087,11 @@ TEST(DDPackageTest, dNodeMultiply) {
         auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
 
         dd->incRef(tmp2);
-        dd::dEdge::getAlignedDensityEdge(&state);
+        dd::dNode::getAlignedDensityNode(state.p);
         dd->decRef(state);
         state = tmp2;
 
-        dd::dEdge::setDensityMatrixTrue(&state);
+        dd::dNode::setDensityMatrixTrueNode(state.p);
     }
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);
@@ -1138,11 +1138,11 @@ TEST(DDPackageTest, dNodeMultiply2) {
         auto tmp2 = dd->multiply(tmp1, reinterpret_cast<dd::dEdge&>(tmp0), 0, true);
 
         dd->incRef(tmp2);
-        dd::dEdge::getAlignedDensityEdge(&state);
+        dd::dNode::getAlignedDensityNode(state.p);
         dd->decRef(state);
         state = tmp2;
 
-        dd::dEdge::setDensityMatrixTrue(&state);
+        dd::dNode::setDensityMatrixTrueNode(state.p);
     }
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);

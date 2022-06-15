@@ -1040,9 +1040,9 @@ namespace dd {
                 }
 
                 if constexpr (std::is_same_v<Node, dNode>) {
-                    Edge<dNode>::applyDmChangesToEdges(&e1, &e2);
+                    dEdge::applyDmChangesToEdges(&e1, &e2);
                     edge[i] = add2(e1, e2);
-                    Edge<dNode>::revertDmChangesToEdges(&e1, &e2);
+                    dEdge::revertDmChangesToEdges(&e1, &e2);
                 } else {
                     edge[i] = add2(e1, e2);
                 }
@@ -2229,7 +2229,7 @@ namespace dd {
         }
 
         CMat getDensityMatrix(dEdge& e) {
-            dd::dEdge::applyDmChangesToEdges(&e, nullptr);
+            dEdge::applyDmChangesToEdges(&e, nullptr);
             const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
@@ -2254,22 +2254,22 @@ namespace dd {
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()){
-                dd::dEdge::applyDmChangesToEdges(&e.p->e[0], nullptr);
+                dEdge::applyDmChangesToEdges(&e.p->e[0], nullptr);
                 getDensityMatrix(e.p->e[0], c, i, j, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[0], nullptr);
             }
             if (!e.p->e[1].w.approximatelyZero()){
-                dd::dEdge::applyDmChangesToEdges(&e.p->e[1], nullptr);
+                dEdge::applyDmChangesToEdges(&e.p->e[1], nullptr);
                 getDensityMatrix(e.p->e[1], c, i, y, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[1], nullptr);
             }
             if (!e.p->e[2].w.approximatelyZero()){
-                dd::dEdge::applyDmChangesToEdges(&e.p->e[2], nullptr);
+                dEdge::applyDmChangesToEdges(&e.p->e[2], nullptr);
                 getDensityMatrix(e.p->e[2], c, x, j, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[2], nullptr);
             }
             if (!e.p->e[3].w.approximatelyZero()){
-                dd::dEdge::applyDmChangesToEdges(&e.p->e[3], nullptr);
+                dEdge::applyDmChangesToEdges(&e.p->e[3], nullptr);
                 getDensityMatrix(e.p->e[3], c, x, y, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[3], nullptr);
             }
