@@ -538,7 +538,7 @@ namespace dd {
                 return vUniqueTable;
             } else if constexpr (std::is_same_v<Node, mNode>) {
                 return mUniqueTable;
-            } else {
+            } else if constexpr (std::is_same_v<Node, dNode>) {
                 return dUniqueTable;
             }
         }
