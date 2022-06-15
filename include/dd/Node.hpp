@@ -86,12 +86,22 @@ namespace dd {
         constexpr static dNode* terminal{&terminalNode};
         static constexpr bool   isTerminal(const dNode* p) { return p == terminal; }
 
-        [[nodiscard]] static inline bool tempDensityMatrixFlagsEqual(const std::uint_least8_t  a, const std::uint_least8_t  b) { return (a & (7U)) == (b & (7U)); }
-        [[nodiscard]] static inline bool returnTempDensityMatrixFlags(const std::uint_least8_t  a) { return a & (7U); }
+        [[nodiscard]] static inline bool compareTempDensityMatrixFlags(const std::uint_least8_t a, const std::uint_least8_t b) { return (a & (7U)) == (b & (7U)); }
         [[nodiscard]] static inline bool isDensityConjugateSet(const long p) { return p & 1ULL; }
         [[nodiscard]] static inline bool isFirstEdgeDensityPath(const long p) { return p & 2ULL; }
         [[nodiscard]] static inline bool isDensityMatrix(const long p) { return p & 7ULL; }
         [[nodiscard]] static inline bool isDensityMatrixNode(const long p) { return p & 8U; }
+
+        [[nodiscard]] static inline std::uint_least8_t getTempDensityMatrixFlags(const std::uint_least8_t a) { return a & (7U); }
+
+        void unsetTempDensityMatrixFlags() { flags = flags & (~7U); }
+
+        inline void setDensityMatrixNodeFlag(bool densityMatrix) {
+            if (densityMatrix)
+                flags = (flags | 8);
+            else
+                flags = (flags & (~8));
+        }
     };
     using dEdge       = Edge<dNode>;
     using dCachedEdge = CachedEdge<dNode>;
@@ -100,7 +110,7 @@ namespace dd {
     template<>
     constexpr bool dEdge::operator==(const dEdge& other) const {
         assert(p != nullptr && other.p != nullptr);
-        return p == other.p && dNode::tempDensityMatrixFlagsEqual(p->flags, other.p->flags) && w.approximatelyEquals(other.w);
+        return p == other.p && dNode::compareTempDensityMatrixFlags(p->flags, other.p->flags) && w.approximatelyEquals(other.w);
     }
 
 } // namespace dd
@@ -112,7 +122,7 @@ namespace std {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::Complex>{}(e.w);
             assert((dd::dNode::isDensityMatrix((long)e.p)) == false);
-            auto h3 = std::hash<std::uint_least8_t>{}(dd::dNode::returnTempDensityMatrixFlags(e.p->flags));
+            auto h3 = std::hash<std::uint_least8_t>{}(dd::dNode::getTempDensityMatrixFlags(e.p->flags));
             //           auto h3  = std::hash<short int>{}(e.p->flags);
             auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);

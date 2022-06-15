@@ -41,20 +41,17 @@ namespace dd {
         static inline void setDensityConjugateTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 1ULL); }
         static inline void setFirstEdgeDensityPathTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 2ULL); }
         static inline void setDensityMatrixTrue(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) | 4ULL); }
-
-        [[nodiscard]] static inline Node* getAlignedDensityNode(const Node* p) {
-            return reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL));
-        }
+        static inline void getAlignedDensityEdge(Edge* e) { e->p =  reinterpret_cast<Node*>(reinterpret_cast<std::uintptr_t>(e->p) & (~7ULL)); }
 
         static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers
             if (x != nullptr && Node::isDensityMatrix((long)x->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(x);
-                x->p->flags = x->p->flags & (8U);
+                x->p->unsetTempDensityMatrixFlags();
             }
             if (y != nullptr && Node::isDensityMatrix((long)y->p->flags)) {
                 getAlignedEdgeRevertModificationsOnSubEdges(y);
-                y->p->flags = x->p->flags & (8U);
+                y->p->unsetTempDensityMatrixFlags();
             }
         }
 
@@ -63,36 +60,32 @@ namespace dd {
             if (x != nullptr) {
                 if (Node::isDensityMatrix((long)x->p)) {
                     auto tmp = alignDensityNode(x);
-                    assert((x->p->flags & (7U)) == 0);
+                    assert(Node::getTempDensityMatrixFlags(x->p->flags) == 0);
                     x->p->flags = x->p->flags | tmp;
                 }
             }
-
             if (y != nullptr) {
                 if (Node::isDensityMatrix((long)y->p)) {
                     auto tmp = alignDensityNode(y);
-                    assert((y->p->flags & (7U)) == 0);
+                    assert(Node::getTempDensityMatrixFlags(y->p->flags) == 0);
                     y->p->flags = x->p->flags | tmp;
                 }
             }
         }
 
         static inline short int alignDensityNode(Edge<Node>* e) {
-            Node*     alignedNode = getAlignedDensityNode(e->p);
-            short int flags       = (long)e->p & (7U);
+            auto flags = Node::getTempDensityMatrixFlags((long)e->p);
+            getAlignedDensityEdge(e);
 
-            if (alignedNode == nullptr || alignedNode->v <= -1) {
-                e->p = alignedNode;
+            if (e->p == nullptr || e->p->v <= -1) {
                 return 0;
             }
 
-            if (Node::isFirstEdgeDensityPath((long)e->p) && !Node::isDensityConjugateSet((long)e->p)) {
-                e->p = alignedNode;
+            if (Node::isFirstEdgeDensityPath(flags) && !Node::isDensityConjugateSet(flags)) {
 
                 // first edge paths are not modified and the property is inherited by all child paths
                 return flags;
-            } else if (!Node::isDensityConjugateSet((long)e->p)) {
-                e->p = alignedNode;
+            } else if (!Node::isDensityConjugateSet(flags)) {
 
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
@@ -105,8 +98,6 @@ namespace dd {
                 }
 
             } else {
-                e->p = alignedNode;
-
                 std::swap(e->p->e[2], e->p->e[1]);
                 for (auto& edge: e->p->e) {
                     // Conjugate all edges
@@ -119,34 +110,24 @@ namespace dd {
         }
 
         static inline void getAlignedEdgeRevertModificationsOnSubEdges(Edge<Node>* e) {
-            if (Node::isFirstEdgeDensityPath(e->p->flags) && !Node::isDensityConjugateSet(e->p->flags)) {
-                // Before I do anything else, I must align the pointer
-                e->p = getAlignedDensityNode(e->p);
+            // Before I do anything else, I must align the pointer
+            getAlignedDensityEdge(e);
 
-                for (auto& edge: e->p->e) {
-                    // first edge paths are not modified I only have to remove the first edge property
-                    edge.p = getAlignedDensityNode(edge.p);
-                }
+            for (auto& edge: e->p->e) {
+                // first edge paths are not modified I only have to remove the first edge property
+                getAlignedDensityEdge(&edge);
+            }
+
+            if (Node::isFirstEdgeDensityPath(e->p->flags) && !Node::isDensityConjugateSet(e->p->flags)) {
+                ;
 
             } else if (!Node::isDensityConjugateSet(e->p->flags)) {
-                // Before I do anything else, I must align the pointer
-                e->p = getAlignedDensityNode(e->p);
-
-                for (auto& edge: e->p->e) {
-                    // align all nodes
-                    edge.p = getAlignedDensityNode(edge.p);
-                }
-
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 e->p->e[2].w.i = dd::CTEntry::flipPointerSign(e->p->e[2].w.i);
 
             } else {
-                // Before I do anything else, I must align the pointer
-                e->p = getAlignedDensityNode(e->p);
-
                 for (auto& edge: e->p->e) {
                     // Align all nodes and conjugate the weights
-                    edge.p   = getAlignedDensityNode(edge.p);
                     edge.w.i = dd::CTEntry::flipPointerSign(edge.w.i);
                 }
                 std::swap(e->p->e[2], e->p->e[1]);
