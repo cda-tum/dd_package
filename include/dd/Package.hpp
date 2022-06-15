@@ -1078,7 +1078,6 @@ namespace dd {
     public:
         UnaryComputeTable<mEdge, mEdge, CT_MAT_TRANS_NBUCKET>      matrixTranspose{};
         UnaryComputeTable<mEdge, mEdge, CT_MAT_CONJ_TRANS_NBUCKET> conjugateMatrixTranspose{};
-        DensityNoiseTable<dEdge, dEdge, CT_MAT_NOISE_NBUCKET>      densityNoise{};
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->isSymmetric()) {
@@ -1318,7 +1317,7 @@ namespace dd {
                             dEdge m;
                             dEdge::applyDmChangesToEdges(&e1, &e2);
                             if (!generateDensityMatrix || idx == 1) {
-                                // When generateDensityMatrix is false or I have the first edge I don't optimize anything and set generateDensityMatrix for all child edges
+                                // When generateDensityMatrix is false or I have the first edge I don't optimize anything and set generateDensityMatrix to false for all child edges
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false);
                             } else if (idx == 2) {
                                 // When I have the second edge and generateDensityMatrix == false, then edge[2] == edge[1]
@@ -1795,7 +1794,8 @@ namespace dd {
         /// Noise Operations
         ///
     public:
-        StochasticNoiseOperationTable<mEdge> stochasticNoiseOperationCache{nqubits};
+        StochasticNoiseOperationTable<mEdge>                  stochasticNoiseOperationCache{nqubits};
+        DensityNoiseTable<dEdge, dEdge, CT_MAT_NOISE_NBUCKET> densityNoise{};
 
         ///
         /// Decision diagram size
