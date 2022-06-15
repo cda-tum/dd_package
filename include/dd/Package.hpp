@@ -131,97 +131,175 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
     public:
-        template<class Node>
-        Edge<Node> normalize(const Edge<Node>& e, bool cached) {
-            if constexpr (std::is_same_v<Node, vNode>) {
-                auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
+        Edge<vNode> normalize(const Edge<vNode>& e, bool cached) {
+            auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
-                // make sure to release cached numbers approximately zero, but not exactly zero
-                if (cached) {
-                    for (auto i = 0U; i < RADIX; i++) {
-                        if (zero[i] && e.p->e[i].w != Complex::zero) {
-                            cn.returnToCache(e.p->e[i].w);
-                            e.p->e[i] = vEdge::zero;
-                        }
+            // make sure to release cached numbers approximately zero, but not exactly zero
+            if (cached) {
+                for (auto i = 0U; i < RADIX; i++) {
+                    if (zero[i] && e.p->e[i].w != Complex::zero) {
+                        cn.returnToCache(e.p->e[i].w);
+                        e.p->e[i] = vEdge::zero;
                     }
                 }
+            }
 
-                if (zero[0]) {
-                    // all equal to zero
-                    if (zero[1]) {
-                        if (!cached && !e.isTerminal()) {
-                            // If it is not a cached computation, the node has to be put back into the chain
-                            vUniqueTable.returnNode(e.p);
-                        }
-                        return vEdge::zero;
-                    }
-
-                    auto  r = e;
-                    auto& w = r.p->e[1].w;
-                    if (cached && w != Complex::one) {
-                        r.w = w;
-                    } else {
-                        r.w = cn.lookup(w);
-                    }
-                    w = Complex::one;
-                    return r;
-                }
-
+            if (zero[0]) {
+                // all equal to zero
                 if (zero[1]) {
-                    auto  r = e;
-                    auto& w = r.p->e[0].w;
-                    if (cached && w != Complex::one) {
-                        r.w = w;
-                    } else {
-                        r.w = cn.lookup(w);
+                    if (!cached && !e.isTerminal()) {
+                        // If it is not a cached computation, the node has to be put back into the chain
+                        vUniqueTable.returnNode(e.p);
                     }
-                    w = Complex::one;
-                    return r;
+                    return vEdge::zero;
                 }
 
-                const auto mag0         = ComplexNumbers::mag2(e.p->e[0].w);
-                const auto mag1         = ComplexNumbers::mag2(e.p->e[1].w);
-                const auto norm2        = mag0 + mag1;
-                const auto mag2Max      = (mag0 + ComplexTable<>::tolerance() >= mag1) ? mag0 : mag1;
-                const auto argMax       = (mag0 + ComplexTable<>::tolerance() >= mag1) ? 0 : 1;
-                const auto norm         = std::sqrt(norm2);
-                const auto magMax       = std::sqrt(mag2Max);
-                const auto commonFactor = norm / magMax;
-
-                auto  r   = e;
-                auto& max = r.p->e[argMax];
-                if (cached && max.w != Complex::one) {
-                    r.w = max.w;
-                    r.w.r->value *= commonFactor;
-                    r.w.i->value *= commonFactor;
+                auto  r = e;
+                auto& w = r.p->e[1].w;
+                if (cached && w != Complex::one) {
+                    r.w = w;
                 } else {
-                    r.w = cn.lookup(CTEntry::val(max.w.r) * commonFactor, CTEntry::val(max.w.i) * commonFactor);
-                    if (r.w.approximatelyZero()) {
-                        return vEdge::zero;
-                    }
+                    r.w = cn.lookup(w);
                 }
-
-                max.w = cn.lookup(magMax / norm, 0.);
-                if (max.w == Complex::zero)
-                    max = vEdge::zero;
-
-                const auto argMin = (argMax + 1) % 2;
-                auto&      min    = r.p->e[argMin];
-                if (cached) {
-                    cn.returnToCache(min.w);
-                    ComplexNumbers::div(min.w, min.w, r.w);
-                    min.w = cn.lookup(min.w);
-                } else {
-                    auto c = cn.getTemporary();
-                    ComplexNumbers::div(c, min.w, r.w);
-                    min.w = cn.lookup(c);
-                }
-                if (min.w == Complex::zero) {
-                    min = vEdge::zero;
-                }
-
+                w = Complex::one;
                 return r;
             }
+
+            if (zero[1]) {
+                auto  r = e;
+                auto& w = r.p->e[0].w;
+                if (cached && w != Complex::one) {
+                    r.w = w;
+                } else {
+                    r.w = cn.lookup(w);
+                }
+                w = Complex::one;
+                return r;
+            }
+
+            const auto mag0         = ComplexNumbers::mag2(e.p->e[0].w);
+            const auto mag1         = ComplexNumbers::mag2(e.p->e[1].w);
+            const auto norm2        = mag0 + mag1;
+            const auto mag2Max      = (mag0 + ComplexTable<>::tolerance() >= mag1) ? mag0 : mag1;
+            const auto argMax       = (mag0 + ComplexTable<>::tolerance() >= mag1) ? 0 : 1;
+            const auto norm         = std::sqrt(norm2);
+            const auto magMax       = std::sqrt(mag2Max);
+            const auto commonFactor = norm / magMax;
+
+            auto  r   = e;
+            auto& max = r.p->e[argMax];
+            if (cached && max.w != Complex::one) {
+                r.w = max.w;
+                r.w.r->value *= commonFactor;
+                r.w.i->value *= commonFactor;
+            } else {
+                r.w = cn.lookup(CTEntry::val(max.w.r) * commonFactor, CTEntry::val(max.w.i) * commonFactor);
+                if (r.w.approximatelyZero()) {
+                    return vEdge::zero;
+                }
+            }
+
+            max.w = cn.lookup(magMax / norm, 0.);
+            if (max.w == Complex::zero)
+                max = vEdge::zero;
+
+            const auto argMin = (argMax + 1) % 2;
+            auto&      min    = r.p->e[argMin];
+            if (cached) {
+                cn.returnToCache(min.w);
+                ComplexNumbers::div(min.w, min.w, r.w);
+                min.w = cn.lookup(min.w);
+            } else {
+                auto c = cn.getTemporary();
+                ComplexNumbers::div(c, min.w, r.w);
+                min.w = cn.lookup(c);
+            }
+            if (min.w == Complex::zero) {
+                min = vEdge::zero;
+            }
+
+            return r;
+        }
+
+        // generate |0...0> with n qubits
+        vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
+            auto f = vEdge::one;
+            for (std::size_t p = start; p < n + start; p++) {
+                f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
+            }
+            return f;
+        }
+        // generate computational basis state |i> with n qubits
+        vEdge makeBasisState(QubitCount n, const std::vector<bool>& state, std::size_t start = 0) {
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
+            auto f = vEdge::one;
+            for (std::size_t p = start; p < n + start; ++p) {
+                if (state[p] == 0) {
+                    f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
+                } else {
+                    f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
+                }
+            }
+            return f;
+        }
+        // generate general basis state with n qubits
+        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0) {
+            if (n + start > nqubits) {
+                throw std::runtime_error("Requested state with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance.");
+            }
+            if (state.size() < n) {
+                throw std::runtime_error("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
+            }
+
+            auto f = vEdge::one;
+            for (std::size_t p = start; p < n + start; ++p) {
+                switch (state[p]) {
+                    case BasisStates::zero:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
+                        break;
+                    case BasisStates::one:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
+                        break;
+                    case BasisStates::plus:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(dd::SQRT2_2, 0)}}});
+                        break;
+                    case BasisStates::minus:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(-dd::SQRT2_2, 0)}}});
+                        break;
+                    case BasisStates::right:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, dd::SQRT2_2)}}});
+                        break;
+                    case BasisStates::left:
+                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, -dd::SQRT2_2)}}});
+                        break;
+                }
+            }
+            return f;
+        }
+
+        ///
+        /// Matrix nodes, edges and quantum gates
+        ///
+    public:
+        template<class Node>
+        Edge<Node> normalize(const Edge<Node>& e, bool cached) {
             if constexpr (std::is_same_v<Node, mNode> || std::is_same_v<Node, dNode>) {
                 auto argmax = -1;
 
@@ -308,83 +386,6 @@ namespace dd {
             }
         }
 
-        // generate |0...0> with n qubits
-        vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
-            if (n + start > nqubits) {
-                throw std::runtime_error("Requested state with " +
-                                         std::to_string(n + start) +
-                                         " qubits, but current package configuration only supports up to " +
-                                         std::to_string(nqubits) +
-                                         " qubits. Please allocate a larger package instance.");
-            }
-            auto f = vEdge::one;
-            for (std::size_t p = start; p < n + start; p++) {
-                f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
-            }
-            return f;
-        }
-        // generate computational basis state |i> with n qubits
-        vEdge makeBasisState(QubitCount n, const std::vector<bool>& state, std::size_t start = 0) {
-            if (n + start > nqubits) {
-                throw std::runtime_error("Requested state with " +
-                                         std::to_string(n + start) +
-                                         " qubits, but current package configuration only supports up to " +
-                                         std::to_string(nqubits) +
-                                         " qubits. Please allocate a larger package instance.");
-            }
-            auto f = vEdge::one;
-            for (std::size_t p = start; p < n + start; ++p) {
-                if (state[p] == 0) {
-                    f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
-                } else {
-                    f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
-                }
-            }
-            return f;
-        }
-        // generate general basis state with n qubits
-        vEdge makeBasisState(QubitCount n, const std::vector<BasisStates>& state, std::size_t start = 0) {
-            if (n + start > nqubits) {
-                throw std::runtime_error("Requested state with " +
-                                         std::to_string(n + start) +
-                                         " qubits, but current package configuration only supports up to " +
-                                         std::to_string(nqubits) +
-                                         " qubits. Please allocate a larger package instance.");
-            }
-            if (state.size() < n) {
-                throw std::runtime_error("Insufficient qubit states provided. Requested " + std::to_string(n) + ", but received " + std::to_string(state.size()));
-            }
-
-            auto f = vEdge::one;
-            for (std::size_t p = start; p < n + start; ++p) {
-                switch (state[p]) {
-                    case BasisStates::zero:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
-                        break;
-                    case BasisStates::one:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array{vEdge::zero, f});
-                        break;
-                    case BasisStates::plus:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(dd::SQRT2_2, 0)}}});
-                        break;
-                    case BasisStates::minus:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(-dd::SQRT2_2, 0)}}});
-                        break;
-                    case BasisStates::right:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, dd::SQRT2_2)}}});
-                        break;
-                    case BasisStates::left:
-                        f = makeDDNode(static_cast<Qubit>(p), std::array<vEdge, RADIX>{{{f.p, cn.lookup(dd::SQRT2_2, 0)}, {f.p, cn.lookup(0, -dd::SQRT2_2)}}});
-                        break;
-                }
-            }
-            return f;
-        }
-
-        ///
-        /// Matrix nodes, edges and quantum gates
-        ///
-    public:
         // build matrix representation for a single gate on an n-qubit circuit
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{}, target, start);
@@ -2253,22 +2254,22 @@ namespace dd {
             const std::size_t y = j | (1ULL << e.p->v);
 
             // recursive case
-            if (!e.p->e[0].w.approximatelyZero()){
+            if (!e.p->e[0].w.approximatelyZero()) {
                 dEdge::applyDmChangesToEdges(&e.p->e[0], nullptr);
                 getDensityMatrix(e.p->e[0], c, i, j, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[0], nullptr);
             }
-            if (!e.p->e[1].w.approximatelyZero()){
+            if (!e.p->e[1].w.approximatelyZero()) {
                 dEdge::applyDmChangesToEdges(&e.p->e[1], nullptr);
                 getDensityMatrix(e.p->e[1], c, i, y, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[1], nullptr);
             }
-            if (!e.p->e[2].w.approximatelyZero()){
+            if (!e.p->e[2].w.approximatelyZero()) {
                 dEdge::applyDmChangesToEdges(&e.p->e[2], nullptr);
                 getDensityMatrix(e.p->e[2], c, x, j, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[2], nullptr);
             }
-            if (!e.p->e[3].w.approximatelyZero()){
+            if (!e.p->e[3].w.approximatelyZero()) {
                 dEdge::applyDmChangesToEdges(&e.p->e[3], nullptr);
                 getDensityMatrix(e.p->e[3], c, x, y, mat);
                 dd::dEdge::revertDmChangesToEdges(&e.p->e[3], nullptr);
@@ -2276,7 +2277,6 @@ namespace dd {
 
             cn.returnToCache(c);
         }
-
 
         void exportAmplitudesRec(const vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
             if (edge.isTerminal()) {
@@ -2816,7 +2816,5 @@ namespace dd {
         }
     };
 } // namespace dd
-
-
 
 #endif
