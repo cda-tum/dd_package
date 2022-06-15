@@ -1144,6 +1144,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
 
         dd::dNode::setDensityMatrixTrueNode(state.p);
     }
+    dd->printMatrix(operations[0]);
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);
 
@@ -1237,6 +1238,15 @@ TEST(DDPackageTest, dNoiseCache) {
     dd->densityNoise.clear();
     noiseLookUpResult = dd->densityNoise.lookup(state, target);
     assert(noiseLookUpResult.p == nullptr);
+}
+
+TEST(DDPackageTest, calCulpDistance) {
+    dd::Qubit nr_qubits = 1;
+    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+    auto      tmp0      = dd::ulpDistance(1.000000000001, 1);
+    auto      tmp1      = dd::ulpDistance(1, 1);
+    assert(tmp0 > 0);
+    assert(tmp1 == 0);
 }
 
 TEST(DDPackageTest, dStochCache) {
