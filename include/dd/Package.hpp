@@ -199,7 +199,7 @@ namespace dd {
             return r;
         }
 
-        vEdge normalizeLIMDDZ(const vEdge& e, bool cached) {
+        vEdge normalizeLIMDD(const vEdge& e, bool cached) {
         }
 
         // Returns an edge to a node isomorphic to e.p
