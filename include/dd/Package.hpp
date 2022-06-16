@@ -204,7 +204,7 @@ namespace dd {
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
         // TODO limdd: rename to just normalize() ?
         vEdge normalizeLIMDD(const vEdge& e, bool cached) {
-            // Step 1: obtain 'normalized' weights for the low and high edge
+            // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
@@ -224,10 +224,10 @@ namespace dd {
             }
             // Case 2 ("High Knife"):  low edge = 0, high edge is nonzero
             if (zero[0]) {
-                // Step 1: Set the root edge pointer to 'Identity tensor R'
+                // Step 1: Set the root edge pointer to 'Identity tensor (low edge label)'
                 r.l = r.p->e[1].l;
-                // Step 2: Set the low edge label to 'Identity'
-                r.p->e[1].l = nullptr; // the right edge is the identity
+                // Step 2: Set the high edge label to 'Identity'
+                r.p->e[1].l = nullptr;
                 return r;
             }
 
@@ -280,9 +280,9 @@ namespace dd {
             }
             // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
             if (s) {
-                LimEntry<> Z;
-                Z.setOperator(r.p->v, 'Z');
-                r.l->multiplyBy(Z);
+//                LimEntry<> Z;
+//                Z.setOperator(r.p->v, 'Z');
+//                r.l->multiplyBy(Z);
             }
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
@@ -300,7 +300,7 @@ namespace dd {
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         // TODO limdd: is the bit concerning 'bool s' superfluous?
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
-            // Step 1: obtain 'normalized' weights for the low and high edge
+        	// Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
@@ -323,7 +323,7 @@ namespace dd {
             	// TODO switcheroo the nodes!
                 // Step 1: Set the root edge pointer to 'Identity tensor R'
                 r.l = r.p->e[1].l;
-                // Step 2: Set the low edge label to 'Identity'
+                // Step 2: Set the high edge label to 'Identity'
                 r.p->e[1].l = nullptr; // the right edge is the identity
                 return r;
             }
@@ -852,7 +852,7 @@ namespace dd {
                 return l;
             } else if constexpr (std::tuple_size_v<decltype(Node::e)> == RADIX) {
                 // normalize it
-                e = normalizeLIMDDPauli(e, cached);
+                e = normalizeLIMDD(e, cached);
                 assert(e.p->v == var || e.isTerminal());
 
 //                e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p)); // temporary fix, limVector is generated before the node is looked up.
@@ -864,7 +864,7 @@ namespace dd {
                 assert(l.p->v == var || l.isTerminal());
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
-                l.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(l.p));
+                l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
 //                std::cout << "[makeDDNode] constructed Stabgenset:\n";
 //                std::cout.flush();
 //                Pauli::printStabilizerGroup(l.p->limVector);
