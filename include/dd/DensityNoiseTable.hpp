@@ -75,7 +75,6 @@ namespace dd {
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
         std::ostream&    printStatistics(std::ostream& os = std::cout) {
             os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
-            //            os << "collisions: " << collision-hits << " collisions/lookups: "  << (collision-hits) / (double)lookups << std::endl;
             return os;
         }
 
@@ -84,7 +83,6 @@ namespace dd {
         // compute table lookup statistics
         std::size_t hits      = 0;
         std::size_t lookups   = 0;
-        std::size_t collision = 0;
         std::size_t count     = 0;
     };
 } // namespace dd
