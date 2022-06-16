@@ -56,6 +56,8 @@ namespace dd {
     public:
         ComplexNumbers cn{};
 
+        LIMDD_group group;
+
         ///
         /// Construction, destruction, information and reset
         ///
@@ -65,6 +67,7 @@ namespace dd {
         explicit Package(std::size_t nq = defaultQubits):
             cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
+            group = LIMDD_group::Z_group;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -203,7 +206,7 @@ namespace dd {
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
         // TODO limdd: rename to just normalize() ?
-        vEdge normalizeLIMDD(const vEdge& e, bool cached) {
+        vEdge normalizeLIMDDZ(const vEdge& e, bool cached) {
             // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {

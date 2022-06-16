@@ -19,6 +19,12 @@ namespace dd {
 
 typedef std::vector<LimEntry<>*> StabilizerGroup;
 
+enum LIMDD_group {
+	QMDD_group,
+	Z_group,
+	Pauli_group
+};
+
 class Pauli {
 public:
 
