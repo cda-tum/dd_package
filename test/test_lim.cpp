@@ -1306,7 +1306,7 @@ TEST(LimTest, CreateNode0) {
     e.p->v = 0;
     e.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
 
-    e = dd->normalizeLIMDD(e, false);
+    e = dd->normalizeLIMDDPauli(e, false);
 
     EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 0);
@@ -1341,7 +1341,7 @@ TEST(LimTest, CreateNode1) {
     dd::Edge<dd::vNode> e3{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e3.p->e = {e1, e2};
 
-    e3 = dd->normalizeLIMDD(e3, false);
+    e3 = dd->normalizeLIMDDPauli(e3, false);
 
     // Assert: identity label on low edge
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e3.p->e[0].l));
@@ -1369,7 +1369,7 @@ TEST(LimTest, CreateNode2) {
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e                = {e0, e1};
     // normalize the edge / node
-    e = dd->normalizeLIMDD(e, false);
+    e = dd->normalizeLIMDDPauli(e, false);
     std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::isIdentityOperator(e.l), true);
     std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
@@ -1396,7 +1396,7 @@ TEST(LimTest, CreateNode3) {
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e                = {e0, e1};
     // normalize the edge / node
-    e = dd->normalizeLIMDD(e, false);
+    e = dd->normalizeLIMDDPauli(e, false);
     std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::Equal(e.l, l), true);
     std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
@@ -1429,7 +1429,7 @@ TEST(LimTest, CreateNode4) {
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e                = {e0, e1};
     // normalize the edge / node
-    e = dd->normalizeLIMDD(e, false);
+    e = dd->normalizeLIMDDPauli(e, false);
     std::cout << "root label: (should be Z): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::Equal(e.l, lim), true);
     std::cout << "high label: (should be I):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
@@ -1471,7 +1471,7 @@ TEST(LimTest, CreateNode6) {
     dd::Edge<dd::vNode> e = {v, dd::Complex::one, nullptr};
 
     // normalize the edge / node
-    e = dd->normalizeLIMDD(e, false);
+    e = dd->normalizeLIMDDPauli(e, false);
     std::cout << "root label:                " << dd::LimEntry<>::to_string(e.l) << '\n';
     std::cout << "high label: (should be I): " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e.p->e[1].l));
@@ -1502,7 +1502,7 @@ TEST(LimTest, CreateNode7) {
     // Create edge I|0>|zeroZero0> + |0>|zeroZero1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e                = {zeroZero0, zeroZero1};
-    e                     = dd->normalizeLIMDD(e, false);
+    e                     = dd->normalizeLIMDDPauli(e, false);
 
     std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::isIdentityOperator(e.l), true);
@@ -1543,14 +1543,14 @@ TEST(LimTest, CreateNode9) {
     std::cout << "[CreateNode9 test] making edge |0> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
-    // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
-    //  set the phase of this edge to -1
-    // somehow these weights are both set to -1/sqrt(2) when "e2 = dd->makeDDNode(...)" is called?
+    // make edge e1 = -|->
+    dd::Edge<dd::vNode> minusOne = dd::Package::vEdge::one;
+    minusOne.w = dd::Complex::minusOne();
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, minusOne}, false, nullptr);
+    //  set the weight of this edge to -1
     e1.w = dd::Complex::minusOne();
-    e0.w = dd::Complex::one;
 
-    // make e2 = |0>|e0> + |1>|e1>
+    // make e2 = |0>|e0> + |1>|e1> = |0+> - |1->
     std::cout << "[CreateNode9 test] making edge |0>|+> - |1>|+> by calling MakeDDNode.\n";
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
@@ -1559,8 +1559,9 @@ TEST(LimTest, CreateNode9) {
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
-    std::cout << "[CreateNode9 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
-    EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
+    std::cout << "[CreateNode9 test] high label  (Z expected): " << *(e2.p->e[1].l) << "\n";
+    dd::LimEntry<>* expectedHighLabel = new dd::LimEntry<>("Z");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(e2.p->e[1].l, expectedHighLabel));
 }
 
 TEST(LimTest, CreateNode10) {
@@ -1582,7 +1583,7 @@ TEST(LimTest, CreateNode11) {
     auto dd = std::make_unique<dd::Package>(2);
 
     // make edge e0 = |+>
-    std::cout << "[CreateNode10 test] making edge |0> by calling MakeDDNode.\n";
+    std::cout << "[CreateNode11 test] making edge |0> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge e1 = -i|+>
@@ -1591,18 +1592,18 @@ TEST(LimTest, CreateNode11) {
     e1.w = {&dd::ComplexTable<>::zero, dd::ComplexTable<>::Entry::flipPointerSign(&dd::ComplexTable<>::one)};
     e0.w = dd::Complex::one;
 
-    // make e2 = |0>|e0> + |1>|e1>
-    std::cout << "[CreateNode10 test] making edge |0>|+> - i|1>|+> by calling MakeDDNode.\n";
+    // make e2 = |0>|e0> + |1>|e1> = |0+> -i|1+>
+    std::cout << "[CreateNode11 test] making edge |0>|+> -i |1>|+> by calling MakeDDNode.\n";
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     // Expected: root label is IZ
-    std::cout << "[CreateNode10 test] root label (IZ expected): " << *(e2.l) << "\n";
+    std::cout << "[CreateNode11 test] root label (IZ expected): " << *(e2.l) << "\n";
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
-    std::cout << "[CreateNode10 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
+    std::cout << "[CreateNode11 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
-    // TODO I expect that the high edge weight is -i
+    // TODO I expect that the high edge weight is 1
 }
 
 TEST(LimTest, CreateNode12) {
@@ -2409,15 +2410,16 @@ TEST(LimTest, getIsomorphismPauli7) {
 
     // make edge e0 = |0>
     std::cout << "[getIsomorpismPauli7 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    e1.w = dd::Complex::minusOne();
 
     // make edge e00 = |00> - |11>
-    dd::Edge<dd::vNode> e2 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
-    e2.p->e[1].l = new dd::LimEntry<>("X");
+    dd::Edge<dd::vNode> e2 = dd->makeDDNodeNonNormalized(std::array{e0, e1});
 
-    // make edge e11 = |11> = |1>|e1>
+    // make edge e11 = |10> + |11>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
-    e3.p->e[1].l = nullptr;
 
     dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
@@ -2516,8 +2518,8 @@ TEST(LimTest, getIsomorphismPauli9) {
 TEST(LimTest, getIsomorphismPauli10) {
     auto dd = std::make_unique<dd::Package>(3);
 
-    // make edge e0 = |0>
-    std::cout << "[getIsomorpismPauli5 test] making edge |0> by calling MakeDDNode.\n";
+    // make edge e0 = |+>
+    std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
     auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
     // make edge e0Z = Z|+> = |->
@@ -2535,10 +2537,9 @@ TEST(LimTest, getIsomorphismPauli10) {
 
     // make edge e4 = |0>|e1> + |1>|e1>
     dd::Edge<dd::vNode> e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
-    e4.p->e[1].w.multiplyByMinusOne();
 
     dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
-    dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IZX");
+    dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IIX");
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }

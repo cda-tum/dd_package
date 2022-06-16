@@ -739,7 +739,6 @@ public:
     // todo move to file 'Complex.hpp'?
     static bool isTimesMinusOne(Complex a, Complex b) {
         bool rflip = false, iflip = false;
-        std::cout << "[isTimesMinusOne] a=" << a.toString() << " b = " << b.toString() << std::endl;
         // check if Real(a) = -Real(b)
         if (ComplexTable<>::Entry::approximatelyEquals(a.r, ComplexTable<>::Entry::flipPointerSign(b.r))) {
             rflip = true;
@@ -748,7 +747,7 @@ public:
         if (ComplexTable<>::Entry::approximatelyEquals(a.i, ComplexTable<>::Entry::flipPointerSign(b.i))) {
             iflip = true;
         }
-        std::cout << "[isTimesMinusOne] answer: real " << rflip << " im: " << iflip << std::endl;
+        std::cout << "[isTimesMinusOne] answer: " << ((rflip && iflip) ? "yes" : "no") << " because a=" << a.toString() << ", b=" << b.toString() << ", so realflip=" << rflip << ", imflip=" << iflip << std::endl;
         return rflip && iflip;
     }
 
@@ -816,9 +815,8 @@ public:
             LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
             std::cout << "[getIsomorphismZ] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush();
             if (amplitudeOppositeSign) {
-                std::cout << "[getIsomorphismZ] multiplying Phase by -1\n"; std::cout.flush();
+                std::cout << "[getIsomorphismZ] multiplying Phase by -1 because high amplitudes had opposite signs\n"; std::cout.flush();
                 isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
-                std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             }
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismZ] completed coset intersection element.\n"; std::cout.flush();
@@ -830,7 +828,6 @@ public:
             // TODO the Z operator is not set? Why not? Omission?
             std::cout << "[getIsomorphismZ] multiplying phase by -1.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
-            std::cout << "[getIsomorphismZ] multiplied phase by -1.\n"; std::cout.flush();
             iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
 //            std::cout << "[getIsomorphismZ] found coset intersection element.\n"; std::cout.flush();
             if (iso != LimEntry<>::noLIM) {
@@ -854,7 +851,7 @@ public:
     static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
         assert( u != nullptr );
         assert( v != nullptr );
-        std::cout << "[getIsomorphismPauli] Start.\n";
+        std::cout << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
         assert (u->v == v->v);  // Assert u and v have the same nubmer of qubits
         Edge<vNode> uLow  = u->e[0];
         Edge<vNode> uHigh = u->e[1];
@@ -893,7 +890,7 @@ public:
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
         else if (uLow.isZeroTerminal()) {
-            std::cout << "[getIsomorphismPauli] case uLow is zero.\n";
+            std::cout << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
         	if (vLow.isZeroTerminal()) {
         		if (uHigh.p == vHigh.p) return new LimWeight<>(LimEntry<>::multiply(uHigh.l, vHigh.l));
         	}
@@ -903,6 +900,7 @@ public:
 					iso->lim->setOperator(u->v, 'X');
         		}
         	}
+        	else iso = LimWeight<>::noLIM;
         }
         // Case 3 ("Fork"): Both children are nonzero
         else {
@@ -948,9 +946,8 @@ public:
             LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
             std::cout << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush(); superFlush();
             if (amplitudeOppositeSign) {
-                std::cout << "[getIsomorphismPauli] multiplying Phase by -1\n"; std::cout.flush(); superFlush();
+                std::cout << "[getIsomorphismPauli] multiplying Phase by -1 because high weights had opposite signs\n"; std::cout.flush(); superFlush();
                 isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
-                std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush(); superFlush();
             }
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             std::cout << "[getIsomorphismPauli] completed coset intersection element.\n"; std::cout.flush();
@@ -961,10 +958,9 @@ public:
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             std::cout << "[getIsomorphismPauli] multiplying phase by -1.\n"; std::cout.flush();
             isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
-            std::cout << "[getIsomorphismPauli] multiplied phase by -1.\n"; std::cout.flush();
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             if (iso->lim != LimEntry<>::noLIM) {
-                iso->lim->setOperator(u->v-1, pauli_op::pauli_z);
+                iso->lim->setOperator(u->v, pauli_op::pauli_z);
                 std::cout << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; std::cout.flush();
             }
             else {
