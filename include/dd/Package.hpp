@@ -360,7 +360,7 @@ namespace dd {
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode); // TODO memory leak: LIM 'iso' is not freed
             assert(iso != LimWeight<>::noLIM);
-            // Root label := root label * (Id tensor (A)) * K
+            // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
             std::cout << "[normalizeLIMDD] Found isomorphism: " << LimEntry<>::to_string(iso->lim) << "\n";
             std::cout << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
@@ -390,7 +390,7 @@ namespace dd {
             	LimEntry<> XP(higLim);
             	XP.setOperator(r.p->v, 'X');
             	r.l->multiplyBy(XP);
-            	// TODO multiply weight by old high edge weight
+            	// TODO limdd multiply weight by old high edge weight
             }
 
             if (swappedChildren) {
