@@ -88,6 +88,7 @@ namespace dd {
 
         void returnToCache(Complex& c) {
             assert(count >= 2);
+            assert((reinterpret_cast<long>(&c) & 1ULL) == 0); // Mate, you flipped the sign of a cached complex number, by using the flipPointerSign from the complexTable!
             assert(c != Complex::zero);
             assert(c != Complex::one);
             assert(c.r->refCount == 0);

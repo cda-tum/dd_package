@@ -62,14 +62,22 @@ namespace dd {
         // TODO this function is only used in debugging; we could move it to a more suitable place
         static Complex minusOne() {
             Complex min = one;
-            min.r = ComplexTable<>::Entry::flipPointerSign(min.r);
+            min.r       = ComplexTable<>::Entry::flipPointerSign(min.r);
             return min;
         }
 
         // Sets this complex value z to '-z'
-        void multiplyByMinusOne() {
-            r = CTEntry::flipPointerSign(r);
-            i = CTEntry::flipPointerSign(i);
+        void multiplyByMinusOne(bool cached = true) {
+            if(Complex::zero == *this){
+                return;
+            }
+            if (cached) {
+                r->value = r->value * -1;
+                i->value = i->value * -1;
+            } else {
+                r = CTEntry::flipPointerSign(r);
+                i = CTEntry::flipPointerSign(i);
+            }
         }
 
         void multiplyByi() {
@@ -117,7 +125,7 @@ namespace dd {
 
         bool lexLargerThanxMinusOne() const {
             if (!ComplexTable<>::Entry::approximatelyZero(i)) {
-                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
+//                std::cout << "[lexSmallerThanxMinusOne] imag is not zero in " << toString() << "\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(i); // TODO limdd this may be faster
                 return ComplexTable<>::Entry::val(i) < 0;
             }

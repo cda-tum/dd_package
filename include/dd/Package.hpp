@@ -855,6 +855,8 @@ namespace dd {
                 e = normalizeLIMDDPauli(e, cached);
                 assert(e.p->v == var || e.isTerminal());
 
+//                e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p)); // temporary fix, limVector is generated before the node is looked up.
+
                 // look it up in the unique tables
                 auto l = uniqueTable.lookup(e, false);
                 std::cout << "[makeDDNode] found node in uniqueTable: " << l.p << "  Node is as follows:\n";
@@ -863,9 +865,9 @@ namespace dd {
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
                 l.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(l.p));
-                std::cout << "[makeDDNode] constructed Stabgenset:\n";
-                std::cout.flush();
-                Pauli::printStabilizerGroup(l.p->limVector);
+//                std::cout << "[makeDDNode] constructed Stabgenset:\n";
+//                std::cout.flush();
+//                Pauli::printStabilizerGroup(l.p->limVector);
                 return l;
             }
         }
@@ -1392,7 +1394,7 @@ namespace dd {
         void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
             switch (lim.getQubit(e.p->v)) {
                 case 'I':
-                    std::cout << "[Unfollow] encountered I " << std::endl;
+//                    std::cout << "[Unfollow] encountered I " << std::endl;
                     break;
                     //                case 'X':
                     //                    std::cout << "encountered X " << std::endl;
@@ -1401,7 +1403,7 @@ namespace dd {
                     //                    std::cout << "encountered Y " << std::endl;
                     //                    break;
                 case 'Z':
-                    std::cout << "[Unfollow] encountered Z " << std::endl;
+//                    std::cout << "[Unfollow] encountered Z " << std::endl;
                     if (path == 1) {
                         e.p->e[path].w.multiplyByMinusOne();
                     }
@@ -1420,7 +1422,7 @@ namespace dd {
 
             switch (lim2.getQubit(e.p->v)) {
                 case 'I':
-                    std::cout << "[Follow] encountered I " << std::endl;
+//                    std::cout << "[Follow] encountered I " << std::endl;
                     return {e.p->e[path], lim2};
                     //                case 'X':
                     //                    std::cout << "encountered X " << std::endl;
@@ -1429,7 +1431,7 @@ namespace dd {
                     //                    std::cout << "encountered Y " << std::endl;
                     //                    break;
                 case 'Z':
-                    std::cout << "[Follow] encountered Z " << std::endl;
+//                    std::cout << "[Follow] encountered Z " << std::endl;
                     if (path == 1) {
                         e.p->e[path].w.multiplyByMinusOne();
                     }
@@ -2338,20 +2340,20 @@ namespace dd {
         }
 
         CVec getVectorLIMDD(const vEdge& e) {
-            std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n";
-            std::cout.flush();
+            //std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n";
+            //std::cout.flush();
             const std::size_t dim = 2ULL << e.p->v;
             // allocate resulting vector
             auto       vec = CVec(dim, {0.0, 0.0});
             LimEntry<> id;
             getVectorLIMDD(e, Complex::one, 0, vec, id);
-            std::cout << "[getVectorLIMDD] complete; constructed vector.\n";
-            std::cout.flush();
+            //std::cout << "[getVectorLIMDD] complete; constructed vector.\n";
+            //std::cout.flush();
             return vec;
         }
         void getVectorLIMDD(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, const LimEntry<>& lim) {
-            std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n";
-            std::cout.flush();
+            //std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n";
+            //std::cout.flush();
             auto c = cn.mulCached(e.w, amp);
 
             // base case
@@ -2365,8 +2367,8 @@ namespace dd {
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
                 // we assume that this edge is labeled with the Identity LIM
-                std::cout << "[getVectorLIMDD rec] entering low edge.\n";
-                std::cout.flush();
+                //std::cout << "[getVectorLIMDD rec] entering low edge.\n";
+                //std::cout.flush();
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
             	std::size_t id0 = i;
@@ -2384,16 +2386,16 @@ namespace dd {
                 getVectorLIMDD(e.p->e[0], d0, id0, vec, lim2);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
-                std::cout << "[getVectorLIMDD rec] high case.\n";
-                std::cout.flush();
+                //std::cout << "[getVectorLIMDD rec] high case.\n";
+                //std::cout.flush();
                 // if lim has Pauli Z operator, then multiply by -1
                 auto       d1 = c;
                 std::size_t id1 = x;
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
-                std::cout << "[getVectorLIMDD rec] accumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
+//                std::cout << "[getVectorLIMDD rec] accumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
-                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
+//                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
                     d1.multiplyByMinusOne();
                 }
                 else if (lim2.getQubit(e.p->v) == 'X') {
@@ -2407,7 +2409,7 @@ namespace dd {
                 	d1.multiplyByMinusi();
                 }
                 // calculate the new accumulated LIM
-                std::cout << "[getVectorLIMDD rec] walking the high edge.\n";
+//                std::cout << "[getVectorLIMDD rec] walking the high edge.\n";
                 getVectorLIMDD(e.p->e[1], d1, id1, vec, lim2);
             }
             cn.returnToCache(c);
@@ -2415,8 +2417,8 @@ namespace dd {
 
         // Returns whether v ~ w, up to a complex multiplicative factor
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
-            std::cout << "[vectors approximately equal] start.\n";
-            std::cout.flush();
+            //std::cout << "[vectors approximately equal] start.\n";
+            //std::cout.flush();
             if (v.size() != w.size()) return false;
             // find the factor d with which the vectors differ
             std::complex<fp> d = 0;
@@ -2432,8 +2434,8 @@ namespace dd {
                 } else if (!(vz && wz))
                     return false;
             }
-            std::cout << "[vectors approximately equal] found factor d = " << d << "\n";
-            std::cout.flush();
+            //std::cout << "[vectors approximately equal] found factor d = " << d << "\n";
+            //std::cout.flush();
             std::complex<fp> vc;
             // check whether the remainder of the two vectors v,w, differ by factor d
             for (; i < v.size(); i++) {
