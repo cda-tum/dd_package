@@ -865,7 +865,8 @@ public:
         // Assert that neither u nor v is the Zero vector
         assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
-        std::cout << "[getIsomorphismPauli] uLow.l = " << LimEntry<>::to_string(uLow.l) << " vLow.l = " << LimEntry<>::to_string(vLow.l) << std::endl;
+        std::cout << "[getIsomorphismPauli] uLow .l = " << LimEntry<>::to_string(uLow.l) << " vLow.l = " << LimEntry<>::to_string(vLow.l) << std::endl;
+        std::cout << "[getIsomorphismPauli] uHigh.l = " << LimEntry<>::to_string(uHigh.l) << " vHigh.l = " << LimEntry<>::to_string(vHigh.l) << std::endl;
         assert (LimEntry<>::isIdentityOperator(uLow.l));
         assert (LimEntry<>::isIdentityOperator(vLow.l));
         LimWeight<>* iso = new LimWeight<>();
@@ -997,35 +998,39 @@ public:
         return newHighLabel;
     }
 
-    // TODO limdd
+    // TODO limdd:
+    //   1. Should we pass 'true' or 'false' to the multiplyByMinusOne(true/false) function?
+    //   2. find out how to compute 1/weight. Then uncomment the code indicated below
     static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
 
     		// TODO Find the lexicographic minimum of (-1)^s * weight^((-1)^x) over all values of s, x
-    		if (weight.lexLargerThanxMinusOne()) {
-    			weight.multiplyByMinusOne();
+    		if (weight.lexSmallerThanxMinusOne()) {
+    			weight.multiplyByMinusOne(false); // TODO limdd: not sure about the 'false' or 'true' parameter -LV
+    			std::cout << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
     			s = true;
     		}
-    		bool sInv = false;
-    		Complex weightInv = weight; // TODO Assign value weightInv = 1/weight
-    		if (weightInv.lexLargerThanxMinusOne()) {
-    			weightInv.multiplyByMinusOne();
-    			sInv = true;
-    		}
-    		if (weightInv.lexSmallerThan(weight)) {
-    			weight = weightInv; // TODO does anything need to be deallocated?
-    			x = true;
-    			s = sInv;
-    		}
+    		// TODO limdd: in this commented code, assign the value weightInv = 1/weight, and then uncomment the code
+//    		bool sInv = false;
+//    		Complex weightInv = weight; // TODO Assign value weightInv = 1/weight here
+//    		if (weightInv.lexLargerThanxMinusOne()) {
+//    			weightInv.multiplyByMinusOne();
+//    			sInv = true;
+//    		}
+//    		if (weightInv.lexSmallerThan(weight)) {
+//    			weight = weightInv; // TODO does anything need to be deallocated?
+//    			x = true;
+//    			s = sInv;
+//    		}
     	}
     	else {
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
-    		if (weight.lexLargerThanxMinusOne()) {
-    			weight.multiplyByMinusOne();
+    		if (weight.lexSmallerThanxMinusOne()) {
+    			weight.multiplyByMinusOne(false);
     			s = true;
     		}
     		x = false;

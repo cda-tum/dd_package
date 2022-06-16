@@ -348,14 +348,14 @@ namespace dd {
             r.p->e[0].l   = nullptr;
             vNode oldNode = *(r.p); // make a copy of the old node
             // Step 3: Choose a canonical right LIM
-            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
+            std::cout << "[normalizeLIMDD] Step 3: pick High Label; currently " << r.p->e[1].w << " * "  << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             bool s = false;
             bool x = false;
             LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s, x);
 //            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
-            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
+            std::cout << "[normalizeLIMDD] Found high label + weight: " << r.p->e[1].w << " * " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode); // TODO memory leak: LIM 'iso' is not freed

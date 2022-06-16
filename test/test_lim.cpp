@@ -75,7 +75,7 @@ TEST(LimTest, PauliToStringWithPhase) {
 
 TEST(LimTest, muliplyByMinusOne) {
     dd::Complex z = dd::Complex::one;
-    z.multiplyByMinusOne(true);
+    z.multiplyByMinusOne(false);
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(z.r), -1));
 
     dd::Complex m = dd::Complex::minusOne();
@@ -84,7 +84,7 @@ TEST(LimTest, muliplyByMinusOne) {
     EXPECT_FALSE(z.approximatelyEquals(dd::Complex::one));
 
     dd::Complex s{&dd::ComplexTable<>::sqrt2_2, &dd::ComplexTable<>::one};
-    s.multiplyByMinusOne(true);
+    s.multiplyByMinusOne(false);
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.r), -dd::SQRT2_2));
     EXPECT_TRUE(dd::ComplexTable<>::Entry::approximatelyEquals(dd::ComplexTable<>::Entry::val(s.i), -1));
 }
@@ -1549,9 +1549,10 @@ TEST(LimTest, CreateNode9) {
     dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, minusOne}, false, nullptr);
     //  set the weight of this edge to -1
     e1.w = dd::Complex::minusOne();
+    std::cout << "[CreateNode9 test] Root node of state |-> (Z expected): " << (*e1.l) << "\n";
 
     // make e2 = |0>|e0> + |1>|e1> = |0+> - |1->
-    std::cout << "[CreateNode9 test] making edge |0>|+> - |1>|+> by calling MakeDDNode.\n";
+    std::cout << "[CreateNode9 test] making edge |0>|+> - |1>|-> by calling MakeDDNode.\n";
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     // Expected: root label is IZ
@@ -1709,11 +1710,11 @@ TEST(LimTest, CreateNode15) {
     // Expected: root label is IZ
     std::cout << "[CreateNode15 test] root label (IZ expected):   " << *(e2.l) << "\n";
     std::cout << "[CreateNode15 test] root weight: (1+i expected):" << e2.w << "\n";
-    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
+    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("II");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
     std::cout << "[CreateNode15 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
-    std::cout << "[CreateNode15 test] high weight (-1/(1+i) expected): " << e2.p->e[1].w << "\n";
+    std::cout << "[CreateNode15 test] high weight (1/(1+i) expected): " << e2.p->e[1].w << "\n";
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
 }
 
@@ -1799,6 +1800,18 @@ TEST(LimTest, CreateNode18) {
     std::cout << "[CreateNode18 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
     std::cout << "[CreateNode18 test] high weight (1 expected): " << e2.p->e[1].w << "\n";
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
+}
+
+TEST(LimTest, CreateNode19) {
+    auto dd = std::make_unique<dd::Package>(1);
+
+    // make edge e0 = |+>
+    std::cout << "[CreateNode19 test] making edge |-> by calling MakeDDNode.\n";
+    dd::Edge<dd::vNode> minusOne = {dd::vNode::terminal, dd::Complex::minus_one, nullptr};
+    dd::Edge<dd::vNode> minus = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, minusOne}, false, nullptr);
+
+    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("Z");
+    EXPECT_TRUE(dd::LimEntry<>::Equal(minus.l, expectedRootLabel));
 }
 
 TEST(LimTest, constructStabilizerGroup2) {
@@ -2301,11 +2314,11 @@ TEST(LimTest, highLabelPauli1) {
     // Expected: root label is IZ
     std::cout << "[CreateNode15 test] root label (IZ expected):   " << *(e2.l) << "\n";
     std::cout << "[CreateNode15 test] root weight: (1+i expected):" << e2.w << "\n";
-    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
+    dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("I");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
     std::cout << "[CreateNode15 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
-    std::cout << "[CreateNode15 test] high weight (-1/(1+i) expected): " << e2.p->e[1].w << "\n";
+    std::cout << "[CreateNode15 test] high weight (1/(1+i) expected): " << e2.p->e[1].w << "\n";
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
 }
 
