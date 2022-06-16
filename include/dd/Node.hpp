@@ -88,23 +88,23 @@ namespace dd {
 
         [[nodiscard]] [[maybe_unused]] static inline bool tempDensityMatrixFlagsEqual(const std::uint_least8_t a, const std::uint_least8_t b) { return getDensityMatrixTempFlags(a) == getDensityMatrixTempFlags(b); }
 
-        [[nodiscard]] static inline bool isConjugateTempFlagSet(const std::uintptr_t p) { return p & 1ULL; }
-        [[nodiscard]] static inline bool isNonReduceTempFlagSet(const std::uintptr_t p) { return p & 2ULL; }
-        [[nodiscard]] static inline bool isDensityMatrixTempFlagSet(const std::uintptr_t p) { return p & 4ULL; }
-        [[nodiscard]] static inline bool isDensityMatrixNode(const std::uintptr_t p) { return p & 8ULL; }
+        [[nodiscard]] static inline bool isConjugateTempFlagSet(const std::uintptr_t p) { return p & (1ULL << 0); }
+        [[nodiscard]] static inline bool isNonReduceTempFlagSet(const std::uintptr_t p) { return p & (2ULL << 1); }
+        [[nodiscard]] static inline bool isDensityMatrixTempFlagSet(const std::uintptr_t p) { return p & (4ULL << 2); }
+        [[nodiscard]] static inline bool isDensityMatrixNode(const std::uintptr_t p) { return p & (8ULL << 3); }
 
         [[nodiscard]] [[maybe_unused]] static inline bool isConjugateTempFlagSet(const dNode* p) { return isConjugateTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
         [[nodiscard]] [[maybe_unused]] static inline bool isNonReduceTempFlagSet(const dNode* p) { return isNonReduceTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
         [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixTempFlagSet(const dNode* p) { return isDensityMatrixTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
         [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixNode(const dNode* p) { return isDensityMatrixNode(reinterpret_cast<std::uintptr_t>(p)); }
 
-        static inline void setConjugateTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 1ULL); }
-        static inline void setNonReduceTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 2ULL); }
-        static inline void setDensityMatTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL); }
+        static inline void setConjugateTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 0)); }
+        static inline void setNonReduceTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 1)); }
+        static inline void setDensityMatTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 2)); }
         static inline void alignDensityNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL)); }
 
         [[nodiscard]] static inline std::uintptr_t getDensityMatrixTempFlags(dNode*& p) { return getDensityMatrixTempFlags((std::uintptr_t)p); }
-        [[nodiscard]] static inline std::uintptr_t getDensityMatrixTempFlags(std::uintptr_t a) { return a & (7U); }
+        [[nodiscard]] static inline std::uintptr_t getDensityMatrixTempFlags(std::uintptr_t a) { return a & (7ULL); }
 
         void unsetTempDensityMatrixFlags() { flags = flags & (~7U); }
 
