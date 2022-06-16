@@ -1284,3 +1284,21 @@ TEST(DDPackageTest, dStochCache) {
         }
     }
 }
+
+TEST(DDPackageTest, complexRefCount) {
+    auto dd    = std::make_unique<dd::Package<>>(1);
+    auto value = dd->cn.lookup(0.2, 0.2);
+    assert(value.r->refCount == 0);
+    assert(value.i->refCount == 0);
+    dd->cn.incRef(value);
+    assert(value.r->refCount == 2);
+    assert(value.i->refCount == 2);
+}
+
+TEST(DDPackageTest, exactlyZeroComparision) {
+    auto dd      = std::make_unique<dd::Package<>>(1);
+    auto notZero = dd->cn.lookup(0, 0.000000000001);
+    auto zero    = dd->cn.lookup(0, 0);
+    assert(!notZero.exactlyZero());
+    assert(zero.exactlyZero());
+}
