@@ -855,19 +855,31 @@ namespace dd {
                 return l;
             } else if constexpr (std::tuple_size_v<decltype(Node::e)> == RADIX) {
                 // normalize it
-                e = normalizeLIMDD(e, cached);
+            	switch (group) {
+            	case Z_group:
+					e = normalizeLIMDDZ(e, cached);
+					break;
+            	case Pauli_group:
+            		e = normalizeLIMDDPauli(e, cached);
+            	}
                 assert(e.p->v == var || e.isTerminal());
 
 //                e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p)); // temporary fix, limVector is generated before the node is looked up.
 
                 // look it up in the unique tables
                 auto l = uniqueTable.lookup(e, false);
-                std::cout << "[makeDDNode] found node in uniqueTable: " << l.p << "  Node is as follows:\n";
-                std::cout << l;
+//                std::cout << "[makeDDNode] found node in uniqueTable: " << l.p << "  Node is as follows:\n";
+//                std::cout << l;
                 assert(l.p->v == var || l.isTerminal());
                 // TODO skip constructing the stabilizer generator set if it has already been found,
                 //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
-                l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
+                switch(group) {
+                case Z_group:
+					l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
+					break;
+                case Pauli_group:
+					l.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(l.p));
+                }
 //                std::cout << "[makeDDNode] constructed Stabgenset:\n";
 //                std::cout.flush();
 //                Pauli::printStabilizerGroup(l.p->limVector);
