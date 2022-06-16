@@ -199,7 +199,96 @@ namespace dd {
             return r;
         }
 
+        // Returns an edge to a node isomorphic to e.p
+        // The edge is labeled with a LIM
+        // the node e.p is canonical, according to <Z>-LIMDD reduction rules
+        // TODO limdd: rename to just normalize() ?
         vEdge normalizeLIMDD(const vEdge& e, bool cached) {
+            // Step 1: obtain 'normalized' weights for the low and high edge
+            if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
+                  LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
+                throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
+            }
+
+            auto r = normalize(e, cached);
+
+            auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
+
+            // Case 1 ("Low Knife"):  high edge = 0, low edge is nonzero
+            if (zero[1]) {
+                // Step 1: Set the root edge label to 'Identity tensor R'
+                r.l = r.p->e[0].l;
+                // Step 2: Set the low edge label to 'Identity'
+                r.p->e[0].l = nullptr;
+                return r;
+            }
+            // Case 2 ("High Knife"):  low edge = 0, high edge is nonzero
+            if (zero[0]) {
+                // Step 1: Set the root edge pointer to 'Identity tensor R'
+                r.l = r.p->e[1].l;
+                // Step 2: Set the low edge label to 'Identity'
+                r.p->e[1].l = nullptr; // the right edge is the identity
+                return r;
+            }
+
+            // Case 3 ("Fork"):  both edges of e are non-zero
+//            std::cout << "[normalizeLIMDD] case Fork. Setting data.\n";
+//            std::cout.flush();
+            LimEntry<>* lowLim = r.p->e[0].l;
+            LimEntry<>* higLim = r.p->e[1].l;
+            // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
+//            std::cout << "[normalizeLIMDD] Step 1: multiply.\n";
+//            std::cout.flush();
+//            LimEntry<>* higLimTemp = LimEntry<>::multiply(lowLim, higLim);
+            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
+            // Step 2: Make the left LIM Identity
+//            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n";
+//            std::cout.flush();
+            r.p->e[0].l   = nullptr;
+            vNode oldNode = *(r.p); // make a copy of the old node
+            // Step 3: Choose a canonical right LIM
+//            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
+//            std::cout.flush();
+            bool s      = false;
+            LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
+//            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
+            r.p->e[1].l = limTable.lookup(*higLimTemp2);
+            limTable.incRef(r.p->e[1].l);
+//            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
+//            std::cout.flush();
+            // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
+//            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
+//            std::cout.flush();
+            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
+            assert(iso != LimEntry<>::noLIM);
+            // Root label := root label * (Id tensor (A)) * K
+            // Step 5: Use R as the LIM for the incoming edge e
+//            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge.\n";
+//            std::cout.flush();
+            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
+//            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication.\n";
+//            std::cout.flush();
+            r.l = LimEntry<>::multiply(r.l, iso); // TODO memory leak
+            // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
+//            std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
+//            std::cout.flush();
+            if (r.l->getPhase() == phase_t::phase_minus_one) {
+                // Step 6.1: multiply the weight 'r.w' by -1
+                r.w.multiplyByMinusOne();
+                // Step 6.2: Make the phase of r.l '+1'
+                r.l->setPhase(phase_t::phase_one);
+            }
+            // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
+            if (s) {
+                LimEntry<> Z;
+                Z.setOperator(r.p->v, 'Z');
+                r.l->multiplyBy(Z);
+            }
+
+            // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
+            // Should we *not* call normalize at the beginning of the procedure?
+
+            return r;
         }
 
         // Returns an edge to a node isomorphic to e.p
