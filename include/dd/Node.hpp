@@ -204,7 +204,7 @@ namespace std {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::Complex>{}(e.w);
             assert((dd::dNode::isDensityMatrix((long)e.p)) == false);
-            auto h3 = std::hash<std::uint_least8_t>{}(dd::dNode::getTempDensityMatrixFlags(e.p->flags));
+            auto h3  = std::hash<std::uint_least8_t>{}(dd::dNode::getTempDensityMatrixFlags(e.p->flags));
             auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);
         }
