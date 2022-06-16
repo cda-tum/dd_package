@@ -81,9 +81,9 @@ namespace dd {
     private:
         std::array<Entry, NBUCKET> table{};
         // compute table lookup statistics
-        std::size_t hits      = 0;
-        std::size_t lookups   = 0;
-        std::size_t count     = 0;
+        std::size_t hits    = 0;
+        std::size_t lookups = 0;
+        std::size_t count   = 0;
     };
 } // namespace dd
 
