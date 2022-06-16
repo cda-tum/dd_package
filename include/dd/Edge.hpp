@@ -40,10 +40,10 @@ namespace dd {
         [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == Complex::zero; }
         [[nodiscard]] constexpr bool        isOneTerminal() const { return Node::isTerminal(p) && w == Complex::one; }
 
-        static inline void setDensityConjugateTrue(Edge* e) { Node::setDensityConjugateTrueNode(e->p); }
-        static inline void setFirstEdgeDensityPathTrue(Edge* e) { Node::setFirstEdgeDensityPathTrueNode(e->p); }
-        static inline void setDensityMatrixTrue(Edge* e) { Node::setDensityMatrixTrueNode(e->p); }
-        static inline void getAlignedDensityEdge(Edge* e) { Node::getAlignedDensityNode(e->p); }
+        [[maybe_unused]] static inline void setDensityConjugateTrue(Edge* e) { Node::setConjugateTempFlagTrue(e->p); }
+        [[maybe_unused]] static inline void setFirstEdgeDensityPathTrue(Edge* e) { Node::setNonReduceTempFlagTrue(e->p); }
+        [[maybe_unused]] static inline void setDensityMatrixTrue(Edge* e) { Node::setDensityMatTempFlagTrue(e->p); }
+        [[maybe_unused]] static inline void alignDensityEdge(Edge* e) { Node::alignDensityNode(e->p); }
 
         static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
             // Align the node pointers

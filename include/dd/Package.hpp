@@ -627,7 +627,7 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         template<class Node>
-        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false, const bool generateDensityMatrix = false) {
+        Edge<Node> makeDDNode(Qubit var, const std::array<Edge<Node>, std::tuple_size_v<decltype(Node::e)>>& edges, bool cached = false, [[maybe_unused]] const bool generateDensityMatrix = false) {
             auto&      uniqueTable = getUniqueTable<Node>();
             Edge<Node> e{uniqueTable.getNode(), Complex::one};
             e.p->v = var;
@@ -1208,7 +1208,7 @@ namespace dd {
 
     private:
         template<class LeftOperandNode, class RightOperandNode>
-        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, bool generateDensityMatrix = false) {
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;

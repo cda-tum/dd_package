@@ -86,25 +86,25 @@ namespace dd {
         constexpr static dNode* terminal{&terminalNode};
         static constexpr bool   isTerminal(const dNode* p) { return p == terminal; }
 
-        [[nodiscard]] static inline bool compareTempDensityMatrixFlags(const std::uint_least8_t a, const std::uint_least8_t b) { return (a & (7U)) == (b & (7U)); }
+        [[nodiscard]] [[maybe_unused]] static inline bool tempDensityMatrixFlagsEqual(const std::uint_least8_t a, const std::uint_least8_t b) { return getDensityMatrixTempFlags(a) == getDensityMatrixTempFlags(b); }
 
-        [[nodiscard]] static inline bool isDensityConjugateSet(const std::uintptr_t p) { return p & 1ULL; }
-        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const std::uintptr_t p) { return p & 2ULL; }
-        [[nodiscard]] static inline bool isDensityMatrix(const std::uintptr_t p) { return p & 7ULL; }
+        [[nodiscard]] static inline bool isConjugateTempFlagSet(const std::uintptr_t p) { return p & 1ULL; }
+        [[nodiscard]] static inline bool isNonReduceTempFlagSet(const std::uintptr_t p) { return p & 2ULL; }
+        [[nodiscard]] static inline bool isDensityMatrixTempFlagSet(const std::uintptr_t p) { return p & 4ULL; }
         [[nodiscard]] static inline bool isDensityMatrixNode(const std::uintptr_t p) { return p & 8ULL; }
 
-        [[nodiscard]] static inline bool isDensityConjugateSet(const dNode* p) { return isDensityConjugateSet((std::uintptr_t)p); }
-        [[nodiscard]] static inline bool isFirstEdgeDensityPath(const dNode* p) { return isFirstEdgeDensityPath((std::uintptr_t)p); }
-        [[nodiscard]] static inline bool isDensityMatrix(const dNode* p) { return isDensityMatrix((std::uintptr_t)p); }
-        [[nodiscard]] static inline bool isDensityMatrixNode(const dNode* p) { return isDensityMatrixNode((std::uintptr_t)p); }
+        [[nodiscard]] [[maybe_unused]] static inline bool isConjugateTempFlagSet(const dNode* p) { return isConjugateTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
+        [[nodiscard]] [[maybe_unused]] static inline bool isNonReduceTempFlagSet(const dNode* p) { return isNonReduceTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
+        [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixTempFlagSet(const dNode* p) { return isDensityMatrixTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
+        [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixNode(const dNode* p) { return isDensityMatrixNode(reinterpret_cast<std::uintptr_t>(p)); }
 
-        static inline void setDensityConjugateTrueNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 1ULL); }
-        static inline void setFirstEdgeDensityPathTrueNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 2ULL); }
-        static inline void setDensityMatrixTrueNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL); }
-        static inline void getAlignedDensityNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL)); }
+        static inline void setConjugateTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 1ULL); }
+        static inline void setNonReduceTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 2ULL); }
+        static inline void setDensityMatTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | 4ULL); }
+        static inline void alignDensityNode(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) & (~7ULL)); }
 
-        [[nodiscard]] static inline std::uintptr_t getTempDensityMatrixFlags(dNode*& p) { return getTempDensityMatrixFlags((std::uintptr_t)p); }
-        [[nodiscard]] static inline std::uintptr_t getTempDensityMatrixFlags(std::uintptr_t a) { return a & (7U); }
+        [[nodiscard]] static inline std::uintptr_t getDensityMatrixTempFlags(dNode*& p) { return getDensityMatrixTempFlags((std::uintptr_t)p); }
+        [[nodiscard]] static inline std::uintptr_t getDensityMatrixTempFlags(std::uintptr_t a) { return a & (7U); }
 
         void unsetTempDensityMatrixFlags() { flags = flags & (~7U); }
 
@@ -116,25 +116,25 @@ namespace dd {
         }
 
         static inline std::uint_least8_t alignDensityNodeNode(dNode*& p) {
-            std::uint_least8_t flags = getTempDensityMatrixFlags(p);
-            getAlignedDensityNode(p);
+            std::uint_least8_t flags = getDensityMatrixTempFlags(p);
+            alignDensityNode(p);
 
             if (p == nullptr || p->v <= -1) {
                 return 0;
             }
 
-            if (isFirstEdgeDensityPath(flags) && !isDensityConjugateSet(flags)) {
+            if (isNonReduceTempFlagSet(flags) && !isConjugateTempFlagSet(flags)) {
                 // first edge paths are not modified and the property is inherited by all child paths
                 return flags;
-            } else if (!isDensityConjugateSet(flags)) {
+            } else if (!isConjugateTempFlagSet(flags)) {
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 p->e[2].w.i = dd::CTEntry::flipPointerSign(p->e[2].w.i);
-                setDensityConjugateTrueNode(p->e[2].p);
+                setConjugateTempFlagTrue(p->e[2].p);
                 // Mark the first edge
-                setFirstEdgeDensityPathTrueNode(p->e[1].p);
+                setNonReduceTempFlagTrue(p->e[1].p);
 
                 for (auto& edge: p->e) {
-                    setDensityMatrixTrueNode(edge.p);
+                    setDensityMatTempFlagTrue(edge.p);
                 }
 
             } else {
@@ -142,8 +142,8 @@ namespace dd {
                 for (auto& edge: p->e) {
                     // Conjugate all edges
                     edge.w.i = dd::CTEntry::flipPointerSign(edge.w.i);
-                    setDensityConjugateTrueNode(edge.p);
-                    setDensityMatrixTrueNode(edge.p);
+                    setConjugateTempFlagTrue(edge.p);
+                    setDensityMatTempFlagTrue(edge.p);
                 }
             }
             return flags;
@@ -151,17 +151,17 @@ namespace dd {
 
         static inline void getAlignedNodeRevertModificationsOnSubEdges(dNode* p) {
             // Before I do anything else, I must align the pointer
-            getAlignedDensityNode(p);
+            alignDensityNode(p);
 
             for (auto& edge: p->e) {
                 // first edge paths are not modified I only have to remove the first edge property
-                getAlignedDensityNode(edge.p);
+                alignDensityNode(edge.p);
             }
 
-            if (isFirstEdgeDensityPath(p->flags) && !isDensityConjugateSet(p->flags)) {
+            if (isNonReduceTempFlagSet(p->flags) && !isConjugateTempFlagSet(p->flags)) {
                 ;
 
-            } else if (!isDensityConjugateSet(p->flags)) {
+            } else if (!isConjugateTempFlagSet(p->flags)) {
                 // Conjugate the second edge (i.e. negate the complex part of the second edge)
                 p->e[2].w.i = dd::CTEntry::flipPointerSign(p->e[2].w.i);
 
@@ -176,16 +176,16 @@ namespace dd {
 
         static inline void applyDmChangesToNode(dNode*& p) {
             // Align the node pointers
-            if (isDensityMatrix(p)) {
+            if (isDensityMatrixTempFlagSet(p)) {
                 auto tmp = alignDensityNodeNode(p);
-                assert(getTempDensityMatrixFlags(p->flags) == 0);
+                assert(getDensityMatrixTempFlags(p->flags) == 0);
                 p->flags = p->flags | tmp;
             }
         }
 
         static inline void revertDmChangesToNode(dNode*& p) {
             // Align the node pointers
-            if (isDensityMatrix(p->flags)) {
+            if (isDensityMatrixTempFlagSet(p->flags)) {
                 getAlignedNodeRevertModificationsOnSubEdges(p);
                 p->unsetTempDensityMatrixFlags();
             }
@@ -203,8 +203,8 @@ namespace std {
         std::size_t operator()(dd::dEdge const& e) const noexcept {
             auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
             auto h2 = std::hash<dd::Complex>{}(e.w);
-            assert((dd::dNode::isDensityMatrix((long)e.p)) == false);
-            auto h3  = std::hash<std::uint_least8_t>{}(dd::dNode::getTempDensityMatrixFlags(e.p->flags));
+            assert((dd::dNode::isDensityMatrixTempFlagSet(e.p)) == false);
+            auto h3  = std::hash<std::uint_least8_t>{}(dd::dNode::getDensityMatrixTempFlags(e.p->flags));
             auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);
         }
