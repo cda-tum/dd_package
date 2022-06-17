@@ -170,7 +170,7 @@ namespace dd {
 
                 auto  r = e;
                 auto& w = r.p->e[1].w;
-                if (cached && w != Complex::one) {
+                if (cached && !w.exactlyOne()) {
                     r.w = w;
                 } else {
                     r.w = cn.lookup(w);
@@ -182,7 +182,7 @@ namespace dd {
             if (zero[1]) {
                 auto  r = e;
                 auto& w = r.p->e[0].w;
-                if (cached && w != Complex::one) {
+                if (cached && !w.exactlyOne()) {
                     r.w = w;
                 } else {
                     r.w = cn.lookup(w);
@@ -202,7 +202,7 @@ namespace dd {
 
             auto  r   = e;
             auto& max = r.p->e[argMax];
-            if (cached && max.w != Complex::one) {
+            if (cached && !max.w.exactlyOne()) {
                 r.w = max.w;
                 r.w.r->value *= commonFactor;
                 r.w.i->value *= commonFactor;
@@ -365,12 +365,12 @@ namespace dd {
                 for (auto i = 0U; i < NEDGE; ++i) {
                     if (static_cast<decltype(argmax)>(i) == argmax) {
                         if (cached) {
-                            if (r.w == Complex::one)
+                            if (r.w.exactlyOne())
                                 r.w = maxc;
                             else
                                 ComplexNumbers::mul(r.w, r.w, maxc);
                         } else {
-                            if (r.w == Complex::one) {
+                            if (r.w.exactlyOne()) {
                                 r.w = maxc;
                             } else {
                                 auto c = cn.getTemporary();
@@ -386,7 +386,7 @@ namespace dd {
                             r.p->e[i] = Edge<Node>::zero;
                             continue;
                         }
-                        if (cached && !zero[i] && r.p->e[i].w != Complex::one) {
+                        if (cached && !zero[i] && !r.p->e[i].w.exactlyOne()) {
                             cn.returnToCache(r.p->e[i].w);
                         }
                         if (r.p->e[i].w.approximatelyOne())
@@ -1204,7 +1204,7 @@ namespace dd {
                 e = multiply2(x, y, var, start);
             }
 
-            if (e.w != Complex::zero && e.w != Complex::one) {
+            if (!e.w.exactlyZero() && !e.w.exactlyOne()) {
                 cn.returnToCache(e.w);
                 e.w = cn.lookup(e.w);
             }
@@ -1377,8 +1377,8 @@ namespace dd {
 
             computeTable.insert(xCopy, yCopy, {e.p, e.w});
 
-            if (!e.w.exactlyZero() && (x.w != Complex::one || !y.w.exactlyZero())) {
-                if (e.w == Complex::one) {
+            if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
+                if (e.w.exactlyOne()) {
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);
@@ -1534,7 +1534,7 @@ namespace dd {
 
             auto e = kronecker2(x, y, incIdx);
 
-            if (e.w != Complex::zero && e.w != Complex::one) {
+            if (e.w != Complex::zero && !e.w.exactlyOne()) {
                 cn.returnToCache(e.w);
                 e.w = cn.lookup(e.w);
             }
@@ -1652,7 +1652,7 @@ namespace dd {
                 r       = add2(r, t1);
                 auto r2 = r;
 
-                if (r.w == Complex::one) {
+                if (r.w.exactlyOne()) {
                     r.w = a.w;
                 } else {
                     auto c = cn.getTemporary();
@@ -1678,7 +1678,7 @@ namespace dd {
                                [&](const mEdge& e) -> mEdge { return trace(e, eliminate, alreadyEliminated); });
                 auto r = makeDDNode(adjustedV, edge);
 
-                if (r.w == Complex::one) {
+                if (r.w.exactlyOne()) {
                     r.w = a.w;
                 } else {
                     auto c = cn.getTemporary();

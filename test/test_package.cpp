@@ -3,10 +3,10 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
 */
 
-#include "dd/ComplexTable.hpp"
-#include "dd/Export.hpp"
 #include "dd/GateMatrixDefinitions.hpp"
 #include "dd/Package.hpp"
+#include "dd/Export.hpp"
+
 
 #include "gtest/gtest.h"
 #include <iomanip>
@@ -1106,7 +1106,7 @@ TEST(DDPackageTest, dNodeMultiply) {
 
     for (int i = 0; i < (1 << nr_qubits); i++) {
         for (int j = 0; j < (1 << nr_qubits); j++) {
-            EXPECT_TRUE(std::abs(stateDensityMatrix[i][j].imag()) == 0);
+            EXPECT_EQ(std::abs(stateDensityMatrix[i][j].imag()), 0);
             if ((i < 4 && j < 4) || (i >= 4 && j >= 4)) {
                 EXPECT_TRUE(stateDensityMatrix[i][j].real() > 0);
             } else {
@@ -1204,10 +1204,14 @@ TEST(DDPackageTest, dNodeMulCache1) {
 
         auto _tmp2 = computeTable.lookup(xCopy1, yCopy1, true);
         auto tmp2  = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
-        EXPECT_TRUE(_tmp2.p == nullptr);
+        EXPECT_EQ(_tmp2.p, nullptr);
 
         auto _tmp3 = computeTable.lookup(xCopy1, yCopy1, true);
         EXPECT_TRUE(_tmp3.p != nullptr && tmp2.p == _tmp3.p);
+
+        computeTable.clear();
+        auto _tmp4 = computeTable.lookup(xCopy1, yCopy1, true);
+        EXPECT_EQ(_tmp4.p, nullptr);
     }
 }
 
@@ -1225,7 +1229,7 @@ TEST(DDPackageTest, dNoiseCache) {
     std::vector<dd::Qubit> target = {0};
 
     auto noiseLookUpResult = dd->densityNoise.lookup(state, target);
-    EXPECT_TRUE(noiseLookUpResult.p == nullptr);
+    EXPECT_EQ(noiseLookUpResult.p, nullptr);
     auto tmp0 = dd->conjugateTranspose(operations[0]);
     auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
     auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(operations[0]), tmp1, 0, true);
@@ -1238,7 +1242,7 @@ TEST(DDPackageTest, dNoiseCache) {
 
     dd->densityNoise.clear();
     noiseLookUpResult = dd->densityNoise.lookup(state, target);
-    EXPECT_TRUE(noiseLookUpResult.p == nullptr);
+    EXPECT_EQ(noiseLookUpResult.p, nullptr);
 }
 
 TEST(DDPackageTest, calCulpDistance) {
@@ -1247,7 +1251,7 @@ TEST(DDPackageTest, calCulpDistance) {
     auto      tmp0      = dd::ulpDistance(1 + 1e-12, 1);
     auto      tmp1      = dd::ulpDistance(1, 1);
     EXPECT_TRUE(tmp0 > 0);
-    EXPECT_TRUE(tmp1 == 0);
+    EXPECT_EQ(tmp1, 0);
 }
 
 struct stochPackageConfig: public dd::DDPackageConfig {
@@ -1296,7 +1300,7 @@ TEST(DDPackageTest, dStochCache) {
                 EXPECT_TRUE(op.p != nullptr && op.p == operations[i].p);
             } else {
                 auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
-                EXPECT_TRUE(op.p == nullptr);
+                EXPECT_EQ(op.p, nullptr);
             }
         }
     }
@@ -1305,7 +1309,7 @@ TEST(DDPackageTest, dStochCache) {
     for (dd::Qubit i = 0; i < 4; i++) {
         for (dd::Qubit j = 0; j < 4; j++) {
             auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
-            EXPECT_TRUE(op.p == nullptr);
+            EXPECT_EQ(op.p, nullptr);
         }
     }
 }
@@ -1313,17 +1317,25 @@ TEST(DDPackageTest, dStochCache) {
 TEST(DDPackageTest, complexRefCount) {
     auto dd    = std::make_unique<dd::Package<>>(1);
     auto value = dd->cn.lookup(0.2, 0.2);
-    EXPECT_TRUE(value.r->refCount == 0);
-    EXPECT_TRUE(value.i->refCount == 0);
+    EXPECT_EQ(value.r->refCount, 0);
+    EXPECT_EQ(value.i->refCount, 0);
     dd->cn.incRef(value);
-    EXPECT_TRUE(value.r->refCount == 2);
-    EXPECT_TRUE(value.i->refCount == 2);
+    EXPECT_EQ(value.r->refCount, 2);
+    EXPECT_EQ(value.i->refCount, 2);
 }
 
-TEST(DDPackageTest, exactlyZeroComparision) {
+TEST(DDPackageTest, exactlyZeroComparison) {
     auto dd      = std::make_unique<dd::Package<>>(1);
     auto notZero = dd->cn.lookup(0, 2 * dd::ComplexTable<>::tolerance());
     auto zero    = dd->cn.lookup(0, 0);
     EXPECT_TRUE(!notZero.exactlyZero());
     EXPECT_TRUE(zero.exactlyZero());
+}
+
+TEST(DDPackageTest, exactlyOneComparison) {
+    auto dd      = std::make_unique<dd::Package<>>(1);
+    auto notOne = dd->cn.lookup(1 + 2 * dd::ComplexTable<>::tolerance(), 0);
+    auto one    = dd->cn.lookup(1, 0);
+    EXPECT_TRUE(!notOne.exactlyZero());
+    EXPECT_TRUE(one.exactlyZero());
 }
