@@ -64,10 +64,11 @@ namespace dd {
     public:
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
-        explicit Package(std::size_t nq = defaultQubits):
+        static constexpr dd::LIMDD_group defaultGroup  = LIMDD_group::Pauli_group;
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
             cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
-            group = LIMDD_group::Pauli_group;
+            group = _group;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;

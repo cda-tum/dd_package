@@ -1350,7 +1350,7 @@ TEST(LimTest, CreateNode1) {
 }
 
 TEST(LimTest, CreateNode2) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package>(1, dd::Pauli_group);
     std::cout << "Test CreateNode2.\n";
 
     // Create node |+>
