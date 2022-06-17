@@ -62,11 +62,15 @@ namespace dd {
         static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
-        static constexpr std::size_t CT_MAT_NOISE_NBUCKET           = 4096U;
-        static constexpr std::size_t UT_DM_NBUCKET                  = 32768U;
-        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 2048U;
-        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 16384U;
-        static constexpr std::size_t CT_DM_ADD_NBUCKET              = 16384U;
+        static constexpr std::size_t CT_DM_NOISE_NBUCKET            = 1U;
+        static constexpr std::size_t UT_DM_NBUCKET                  = 1U;
+        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 1U;
+        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 1U;
+        static constexpr std::size_t CT_DM_ADD_NBUCKET              = 1U;
+
+        // The number of different quantum operations. I.e., the number of operations defined in the QFR OpType.hpp
+        // This parameter is required to initialize the StochasticNoiseOperationTable.hpp
+        static constexpr std::size_t STOCHASTIC_CACHE_OPS = 1;
     };
 
     template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
@@ -86,7 +90,8 @@ namespace dd {
              std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
              std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
              std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
-             std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_MAT_NOISE_NBUCKET>
+             std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_DM_NOISE_NBUCKET,
+             std::size_t STOCHASTIC_CACHE_OPS           = DDPackageConfig::STOCHASTIC_CACHE_OPS>
     class Package {
         ///
         /// Complex number handling
@@ -939,7 +944,7 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET> densityDensityAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityDensityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -1799,8 +1804,8 @@ namespace dd {
         /// Noise Operations
         ///
     public:
-        StochasticNoiseOperationTable<mEdge>                  stochasticNoiseOperationCache{nqubits};
-        DensityNoiseTable<dEdge, dEdge, CT_DM_NOISE_NBUCKET> densityNoise{};
+        StochasticNoiseOperationTable<mEdge, STOCHASTIC_CACHE_OPS> stochasticNoiseOperationCache{nqubits};
+        DensityNoiseTable<dEdge, dEdge, CT_DM_NOISE_NBUCKET>       densityNoise{};
 
         ///
         /// Decision diagram size
@@ -2825,6 +2830,51 @@ namespace dd {
             cn.complexTable.printStatistics();
         }
     };
+
+    struct DensityMatrixSimulatorDDPackageConfig: public dd::DDPackageConfig {
+        static constexpr std::size_t UT_DM_NBUCKET                 = 65536U;
+        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE = 4096U;
+
+        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET = 16384U;
+        static constexpr std::size_t CT_DM_ADD_NBUCKET     = 16384U;
+        static constexpr std::size_t CT_DM_NOISE_NBUCKET   = 4096U;
+
+        static constexpr std::size_t UT_MAT_NBUCKET            = 16384U;
+        static constexpr std::size_t CT_MAT_ADD_NBUCKET        = 4096U;
+        static constexpr std::size_t CT_VEC_ADD_NBUCKET        = 4096U;
+        static constexpr std::size_t CT_MAT_TRANS_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET = 4096U;
+
+        static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 1U;
+        static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 1U;
+        static constexpr std::size_t UT_VEC_NBUCKET                 = 1U;
+        static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 1U;
+        static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 1U;
+        static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 1U;
+        static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 1U;
+        static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 1U;
+        static constexpr std::size_t STOCHASTIC_CACHE_OPS           = 1U;
+    };
+
+    using DensityMatrixSimulatorDDPackage = dd::Package<DensityMatrixSimulatorDDPackageConfig::UT_VEC_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+                                                        DensityMatrixSimulatorDDPackageConfig::UT_MAT_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_VEC_ADD_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_ADD_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_TRANS_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_VEC_KRON_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_MAT_KRON_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_NOISE_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::UT_DM_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_DM_MULT_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_ADD_NBUCKET,
+                                                        DensityMatrixSimulatorDDPackageConfig::STOCHASTIC_CACHE_OPS>;
 } // namespace dd
 
 #endif

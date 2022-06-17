@@ -3,11 +3,10 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
 */
 
+#include "dd/ComplexTable.hpp"
+#include "dd/Export.hpp"
 #include "dd/GateMatrixDefinitions.hpp"
 #include "dd/Package.hpp"
-#include "dd/Export.hpp"
-#include "dd/ComplexTable.hpp"
-
 
 #include "gtest/gtest.h"
 #include <iomanip>
@@ -1070,7 +1069,7 @@ TEST(DDPackageTest, CloseToIdentity) {
 TEST(DDPackageTest, dNodeMultiply) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1121,7 +1120,7 @@ TEST(DDPackageTest, dNodeMultiply) {
 TEST(DDPackageTest, dNodeMultiply2) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1166,7 +1165,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
 TEST(DDPackageTest, dNodeMulCache1) {
     // Make caching test with dNodes
     dd::Qubit nr_qubits = 1;
-    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
     dd->incRef(state);
@@ -1245,15 +1244,39 @@ TEST(DDPackageTest, dNoiseCache) {
 TEST(DDPackageTest, calCulpDistance) {
     dd::Qubit nr_qubits = 1;
     auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
-    auto      tmp0      = dd::ulpDistance(1+1e-12, 1);
+    auto      tmp0      = dd::ulpDistance(1 + 1e-12, 1);
     auto      tmp1      = dd::ulpDistance(1, 1);
     EXPECT_TRUE(tmp0 > 0);
     EXPECT_TRUE(tmp1 == 0);
 }
 
+struct stochPackageConfig: public dd::DDPackageConfig {
+    static constexpr std::size_t STOCHASTIC_CACHE_OPS = 64;
+};
+
+using stochPackage = dd::Package<stochPackageConfig::UT_VEC_NBUCKET,
+                                 stochPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+                                 stochPackageConfig::UT_MAT_NBUCKET,
+                                 stochPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+                                 stochPackageConfig::CT_VEC_ADD_NBUCKET,
+                                 stochPackageConfig::CT_MAT_ADD_NBUCKET,
+                                 stochPackageConfig::CT_MAT_TRANS_NBUCKET,
+                                 stochPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+                                 stochPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+                                 stochPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+                                 stochPackageConfig::CT_VEC_KRON_NBUCKET,
+                                 stochPackageConfig::CT_MAT_KRON_NBUCKET,
+                                 stochPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
+                                 stochPackageConfig::CT_DM_NOISE_NBUCKET,
+                                 stochPackageConfig::UT_DM_NBUCKET,
+                                 stochPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
+                                 stochPackageConfig::CT_DM_DM_MULT_NBUCKET,
+                                 stochPackageConfig::CT_DM_ADD_NBUCKET,
+                                 stochPackageConfig::STOCHASTIC_CACHE_OPS>;
+
 TEST(DDPackageTest, dStochCache) {
     dd::Qubit nr_qubits = 4;
-    auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
+    auto      dd        = std::make_unique<stochPackage>(nr_qubits);
 
     std::vector<dd::mEdge> operations = {};
     operations.push_back(dd->makeGateDD(dd::Xmat, nr_qubits, 0));
@@ -1282,7 +1305,7 @@ TEST(DDPackageTest, dStochCache) {
     for (dd::Qubit i = 0; i < 4; i++) {
         for (dd::Qubit j = 0; j < 4; j++) {
             auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
-            assert(op.p == nullptr);
+            EXPECT_TRUE(op.p == nullptr);
         }
     }
 }
