@@ -2568,6 +2568,23 @@ TEST(LimTest, getIsomorphismPauli10) {
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
 }
 
+TEST(LimTest, simpleCliffordCircuit_2) {
+    auto dd = std::make_unique<dd::Package>(2);
+
+    auto state = dd->makeZeroState(2);
+
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 2, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
+
+    auto result = dd->getVectorLIMDD(state);
+
+    EXPECT_TRUE(abs(result[0].real() - 0.5) < 0.0001 && abs(result[0].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[1].real() - 0.5) < 0.0001 && abs(result[1].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[2].real() + 0.5) < 0.0001 && abs(result[2].imag()) < 0.001);
+    EXPECT_TRUE(abs(result[3].real() + 0.5) < 0.0001 && abs(result[3].imag()) < 0.001);
+}
+
 TEST(LimTest, simpleCliffordCircuit_3) {
     auto dd = std::make_unique<dd::Package>(2);
 

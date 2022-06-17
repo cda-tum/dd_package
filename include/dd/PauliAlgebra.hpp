@@ -175,7 +175,6 @@ public:
     static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        std::cout << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; std::cout.flush();
-//        printStabilizerGroup(G);
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
         unsigned int reducingColId;
         if (!isAbelian(G)) {
@@ -197,7 +196,6 @@ public:
                 if (reduceColId == reducingColId) continue;
                 if (G[reduceColId]->lim.paulis.test(h)) {
 //                    std::cout << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; std::cout.flush();
-//                    printStabilizerGroup(G);
                     G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
                 }
             }

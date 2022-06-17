@@ -135,7 +135,7 @@ namespace dd {
 
         bool lexLargerThanxMinusOne() const {
             if (!ComplexTable<>::Entry::approximatelyZero(r)) {
-                std::cout << "[lexSmallerThanxMinusOne] real is not zero in " << toString() << "\n";
+//                std::cout << "[lexSmallerThanxMinusOne] real part of " << toString() << " is not zero.\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(r); // TODO limdd this may be faster than current implementation on next line
                 return ComplexTable<>::Entry::val(r) > 0;
             }
