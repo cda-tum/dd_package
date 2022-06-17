@@ -11,6 +11,7 @@
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "Definitions.hpp"
+#include <iostream>
 
 #include <cassert>
 #include <cmath>
@@ -157,10 +158,13 @@ namespace dd {
             return lookup(valr, vali);
         }
         Complex lookup(const fp& r, const fp& i) {
+        	std::cout << "[lookup 1/3] r = " << r << " i = " << i << std::endl;
             Complex ret{};
 
             auto sign_r = std::signbit(r);
+//            std::cout << "[lookup] sign_r = " << sign_r << '\n';
             if (sign_r) {
+				std::cout << "[lookup 1.5/3] sign bit true.\n";
                 auto absr = std::abs(r);
                 // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
                 if (absr < decltype(complexTable)::tolerance()) {
@@ -169,10 +173,13 @@ namespace dd {
                     ret.r = CTEntry::getNegativePointer(complexTable.lookup(absr));
                 }
             } else {
+            	std::cout << "[lookup 1.5/3] sign bit false.\n";
                 ret.r = complexTable.lookup(r);
             }
+            std::cout << "[lookup 2/3] ret.r = " << ret.r->value << '\n';
 
             auto sign_i = std::signbit(i);
+//            std::cout << "[lookup] sign_i = " << sign_i << std::endl;
             if (sign_i) {
                 auto absi = std::abs(i);
                 // if absolute value is close enough to zero, just return the zero entry (avoiding -0.0)
@@ -184,6 +191,8 @@ namespace dd {
             } else {
                 ret.i = complexTable.lookup(i);
             }
+
+            std::cout << "[lookup 3/3] ret = " << ret << "\n";
 
             return ret;
         }

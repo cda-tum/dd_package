@@ -1360,12 +1360,14 @@ TEST(LimTest, CreateNode2) {
 
     // Create edge I|+>
     dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, nullptr};
+    std::cout << "[CreateNode2 test] before normalize, e0 is " << e0;
+    e0 = dd->normalize(e0, false);
     std::cout << "[CreateNode2 test] e0 is " << e0;
 
     // Create edge Z|+>
     dd::LimEntry<>*     l  = new dd::LimEntry<>("Z");
     dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, l};
-    e1 = dd->normalizeLIMDDPau
+    e1 = dd->normalize(e1, false);
     std::cout << "[CreateNode2 test] e1 is " << e1 << ".\n";
 
     // Create edge |0>|e0> + |1>|e1>
@@ -1840,6 +1842,18 @@ TEST(LimTest, CreateNode19) {
 
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("Z");
     EXPECT_TRUE(dd::LimEntry<>::Equal(minus.l, expectedRootLabel));
+}
+
+TEST(LimTest, CreateNode20) {
+    auto dd = std::make_unique<dd::Package>(1, dd::Pauli_group);
+    std::cout << "[Test CreateNode20] start.\n";
+
+    // Create node |+>
+    dd::Edge<dd::vNode> plusEdge = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    std::cout << "[CreateNode20 test] plusEdge is " << plusEdge;
+
+    EXPECT_TRUE(dd::ComplexTable<>::Entry::val(plusEdge.p->e[0].w.r) > 0);
+    EXPECT_TRUE(dd::ComplexTable<>::Entry::val(plusEdge.p->e[1].w.r) > 0);
 }
 
 TEST(LimTest, constructStabilizerGroup2) {

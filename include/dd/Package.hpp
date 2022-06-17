@@ -55,9 +55,6 @@ namespace dd {
         ///
     public:
 
-        // Choose which group is used for LIMDD's isomorphism merging subroutines
-        LIMDD_group group;
-
         ComplexNumbers cn{};
 
         ///
@@ -66,11 +63,11 @@ namespace dd {
     public:
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
-        static constexpr dd::LIMDD_group defaultGroup  = LIMDD_group::Pauli_group;
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
-            cn(ComplexNumbers()), nqubits(nq) {
+        // Choose which group is used for LIMDD's isomorphism merging subroutines
+
+        explicit Package(std::size_t nq = defaultQubits, unsigned int _group = (unsigned int) LIMDD_group::Z_group):
+            cn(ComplexNumbers()), nqubits(nq), group(_group) {
             resize(nq);
-            group = _group;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -102,6 +99,7 @@ namespace dd {
 
     private:
         std::size_t nqubits;
+        unsigned int group;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -116,6 +114,7 @@ namespace dd {
         // TODO limdd: rename this normalizeWeights?
         // (original rename undone because of some errors in tests)
         vEdge normalize(const vEdge& e, bool cached) {
+        	std::cout << "[normalize] edge is currently " << e;
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -161,6 +160,8 @@ namespace dd {
                 return r;
             }
 
+            std::cout << "[normalize] Case fork. Currently edge is " << e;
+
             const auto mag0         = ComplexNumbers::mag2(e.p->e[0].w);
             const auto mag1         = ComplexNumbers::mag2(e.p->e[1].w);
             const auto norm2        = mag0 + mag1;
@@ -169,6 +170,8 @@ namespace dd {
             const auto norm         = std::sqrt(norm2);
             const auto magMax       = std::sqrt(mag2Max);
             const auto commonFactor = norm / magMax;
+
+            std::cout << "[normalize] norm " << norm << " magMag " << magMax << " commonFactor " << commonFactor << "\n";
 
             auto  r   = e;
             auto& max = r.p->e[argMax];
@@ -183,9 +186,13 @@ namespace dd {
                 }
             }
 
+            std::cout << "[normalize] step 3/5 edge is " << r;
+
             max.w = cn.lookup(magMax / norm, 0.);
             if (max.w == Complex::zero)
                 max = vEdge::zero;
+
+            std::cout << "[normalize] step 4/5 edge is " << r;
 
             const auto argMin = (argMax + 1) % 2;
             auto&      min    = r.p->e[argMin];
@@ -194,6 +201,7 @@ namespace dd {
                 ComplexNumbers::div(min.w, min.w, r.w);
                 min.w = cn.lookup(min.w);
             } else {
+            	std::cout << "[normalize] now cached, so getting temp numer. edge is " << r << "\n";
                 auto c = cn.getTemporary();
                 ComplexNumbers::div(c, min.w, r.w);
                 min.w = cn.lookup(c);
@@ -201,6 +209,7 @@ namespace dd {
             if (min.w == Complex::zero) {
                 min = vEdge::zero;
             }
+            std::cout << "[normalize step 5/5 edge is " << r;
 
             return r;
         }
