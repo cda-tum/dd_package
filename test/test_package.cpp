@@ -3,10 +3,9 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
 */
 
+#include "dd/Export.hpp"
 #include "dd/GateMatrixDefinitions.hpp"
 #include "dd/Package.hpp"
-#include "dd/Export.hpp"
-
 
 #include "gtest/gtest.h"
 #include <iomanip>
@@ -1333,7 +1332,7 @@ TEST(DDPackageTest, exactlyZeroComparison) {
 }
 
 TEST(DDPackageTest, exactlyOneComparison) {
-    auto dd      = std::make_unique<dd::Package<>>(1);
+    auto dd     = std::make_unique<dd::Package<>>(1);
     auto notOne = dd->cn.lookup(1 + 2 * dd::ComplexTable<>::tolerance(), 0);
     auto one    = dd->cn.lookup(1, 0);
     EXPECT_TRUE(!notOne.exactlyZero());
