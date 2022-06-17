@@ -53,19 +53,20 @@ namespace dd {
         static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
         static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
         static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
-        static constexpr std::size_t UT_DM_NBUCKET                  = 32768U;
-        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 2048U;
         static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
         static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
         static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
         static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
         static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
         static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
-        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 16384U;
         static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
         static constexpr std::size_t CT_MAT_NOISE_NBUCKET           = 4096U;
+        static constexpr std::size_t UT_DM_NBUCKET                  = 32768U;
+        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 2048U;
+        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 16384U;
+        static constexpr std::size_t CT_DM_ADD_NBUCKET              = 16384U;
     };
 
     template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
@@ -73,6 +74,8 @@ namespace dd {
              std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
              std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
              std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
+             std::size_t CT_DM_ADD_NBUCKET              = DDPackageConfig::CT_DM_ADD_NBUCKET,
+             std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
              std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
              std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
              std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
@@ -80,11 +83,10 @@ namespace dd {
              std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
              std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
              std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
-             std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
              std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
              std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
              std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
-             std::size_t CT_MAT_NOISE_NBUCKET           = DDPackageConfig::CT_MAT_NOISE_NBUCKET>
+             std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_MAT_NOISE_NBUCKET>
     class Package {
         ///
         /// Complex number handling
@@ -117,6 +119,7 @@ namespace dd {
             nqubits = nq;
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
+            dUniqueTable.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
@@ -137,7 +140,7 @@ namespace dd {
         /// Vector nodes, edges and quantum states
         ///
     public:
-        Edge<vNode> normalize(const Edge<vNode>& e, bool cached) {
+        vEdge normalize(const vEdge& e, bool cached) {
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -936,7 +939,7 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_MAT_ADD_NBUCKET> densityDensityAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET> densityDensityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -972,7 +975,6 @@ namespace dd {
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
-            //            if (CTEntry::exactlyZero(x.w)) {
             if (x.w.exactlyZero()) {
                 if (y.w.exactlyZero()) {
                     return Edge<Node>::zero;
@@ -1066,7 +1068,7 @@ namespace dd {
 
             auto e = makeDDNode(w, edge, true);
 
-            //           if (r.p != nullptr && e.p != r.p){
+            //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
 
@@ -1334,9 +1336,10 @@ namespace dd {
                             } else {
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, generateDensityMatrix);
                             }
-                            if (k == 0 || edge[idx].w == Complex::zero) {
+
+                            if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
-                            } else if (m.w != Complex::zero) {
+                            } else if (!m.w.exactlyZero()) {
                                 dEdge::applyDmChangesToEdges(&edge[idx], &m);
                                 auto old_e = edge[idx];
                                 edge[idx]  = add2(edge[idx], m);
@@ -1349,9 +1352,9 @@ namespace dd {
                         } else {
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
 
-                            if (k == 0 || edge[idx].w == Complex::zero) {
+                            if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
-                            } else if (m.w != Complex::zero) {
+                            } else if (!m.w.exactlyZero()) {
                                 auto old_e = edge[idx];
                                 edge[idx]  = add2(edge[idx], m);
                                 cn.returnToCache(old_e.w);
@@ -1369,7 +1372,7 @@ namespace dd {
 
             computeTable.insert(xCopy, yCopy, {e.p, e.w});
 
-            if (e.w != Complex::zero && (x.w != Complex::one || y.w != Complex::one)) {
+            if (!e.w.exactlyZero() && (x.w != Complex::one || !y.w.exactlyZero())) {
                 if (e.w == Complex::one) {
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
@@ -1797,7 +1800,7 @@ namespace dd {
         ///
     public:
         StochasticNoiseOperationTable<mEdge>                  stochasticNoiseOperationCache{nqubits};
-        DensityNoiseTable<dEdge, dEdge, CT_MAT_NOISE_NBUCKET> densityNoise{};
+        DensityNoiseTable<dEdge, dEdge, CT_DM_NOISE_NBUCKET> densityNoise{};
 
         ///
         /// Decision diagram size
