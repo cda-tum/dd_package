@@ -1360,20 +1360,48 @@ TEST(LimTest, CreateNode2) {
 
     // Create edge I|+>
     dd::Edge<dd::vNode> e0 = {plus, dd::Complex::one, nullptr};
+    std::cout << "[CreateNode2 test] e0 is " << e0;
 
     // Create edge Z|+>
     dd::LimEntry<>*     l  = new dd::LimEntry<>("Z");
     dd::Edge<dd::vNode> e1 = {plus, dd::Complex::one, l};
+    e1 = dd->normalizeLIMDDPau
+    std::cout << "[CreateNode2 test] e1 is " << e1 << ".\n";
 
     // Create edge |0>|e0> + |1>|e1>
     dd::Edge<dd::vNode> e = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e.p->e                = {e0, e1};
+    e.p->v = 1;
+    std::cout << "[CreateNode2 test] weights: " << e.p->e[0].w << ", " << e.p->e[1].w << ".\n";
     // normalize the edge / node
     e = dd->normalizeLIMDDPauli(e, false);
-    std::cout << "root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    std::cout << "[CreateNode2 test] root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::isIdentityOperator(e.l), true);
-    std::cout << "high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    std::cout << "[CreateNode2 test] high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::Equal(e.p->e[1].l, l), true);
+}
+
+TEST(LimTest, CreateNode2_simple) {
+    auto dd = std::make_unique<dd::Package>(1);
+    std::cout << "Test CreateNode2.\n";
+
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    std::cout << "[CreateNode2 test] e0 is " << e0;
+
+    dd::LimEntry<>*     z  = new dd::LimEntry<>("Z");
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, z);
+
+    std::cout << "[CreateNode2 test] e1 is " << e1;
+
+    // Create edge |0>|e0> + |1>|e1>
+    dd::Edge<dd::vNode> e = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
+    std::cout << "[CreateNode2 test] e is " << e;
+    // normalize the edge / node
+
+    std::cout << "[CreateNode2 test] root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
+    EXPECT_EQ(dd::LimEntry<>::isIdentityOperator(e.l), true);
+    std::cout << "[CreateNode2 test] high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
+    EXPECT_EQ(dd::LimEntry<>::Equal(e.p->e[1].l, z), true);
 }
 
 TEST(LimTest, CreateNode3) {

@@ -54,9 +54,11 @@ namespace dd {
         /// Complex number handling
         ///
     public:
-        ComplexNumbers cn{};
 
+        // Choose which group is used for LIMDD's isomorphism merging subroutines
         LIMDD_group group;
+
+        ComplexNumbers cn{};
 
         ///
         /// Construction, destruction, information and reset
@@ -339,20 +341,19 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            std::cout << "[normalizeLIMDD] case Fork on "  << (signed int)(r.p->v) + 1 << " qubits. Edge is as follows: " << r;
+            std::cout << "[normalizeLIMDD] case Fork on "  << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r;
             std::cout.flush();
             LimEntry<>* lowLim = r.p->e[0].l;
             LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             std::cout << "[normalizeLIMDD] Step 1: multiply low and high LIMs.\n";
-//            LimEntry<>* higLimTemp = LimEntry<>::multiply(lowLim, higLim);
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
             // Step 2: Make the left LIM Identity
-            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr.\n";
+            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r;
             r.p->e[0].l   = nullptr;
-            vNode oldNode = *(r.p); // make a copy of the old node
             // Step 3: Choose a canonical right LIM
-            std::cout << "[normalizeLIMDD] Step 3: pick High Label; currently " << r.p->e[1].w << " * "  << LimEntry<>::to_string(r.p->e[1].l) << "\n";
+            std::cout << "[normalizeLIMDD] Step 3: pick High Label; edge is currently " << r;
+            vNode oldNode = *(r.p); // make a copy of the old node
             bool s = false;
             bool x = false;
             LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s, x);
