@@ -12,6 +12,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Definitions.hpp"
+
 namespace dd {
     template<class Edge>
     class StochasticNoiseOperationTable {
@@ -62,7 +64,6 @@ namespace dd {
 
     private:
         std::size_t                                       nvars;
-        static constexpr auto                             numberOfOperations = static_cast<std::uint_fast8_t>(64);
         std::vector<std::array<Edge, numberOfOperations>> table;
 
         // operation table lookup statistics
