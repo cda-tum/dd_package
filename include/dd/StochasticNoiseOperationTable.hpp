@@ -12,10 +12,8 @@
 #include <iostream>
 #include <vector>
 
-#include "Definitions.hpp"
-
 namespace dd {
-    template<class Edge>
+    template<class Edge, std::size_t numberOfStochasticOperations = 64>
     class StochasticNoiseOperationTable {
     public:
         explicit StochasticNoiseOperationTable(std::size_t nvars):
@@ -30,13 +28,13 @@ namespace dd {
         }
 
         void insert(std::uint_fast8_t kind, Qubit target, const Edge& r) {
-            assert(kind < numberOfOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
+            assert(kind < numberOfStochasticOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
             table.at(target).at(kind) = r;
             ++count;
         }
 
         Edge lookup(std::uint_fast8_t kind, Qubit target) {
-            assert(kind < numberOfOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
+            assert(kind < numberOfStochasticOperations); // There are new operations in OpType. Increase the value of numberOfOperations accordingly
             lookups++;
             Edge r{};
             auto entry = table.at(target).at(kind);
@@ -63,8 +61,8 @@ namespace dd {
         }
 
     private:
-        std::size_t                                       nvars;
-        std::vector<std::array<Edge, numberOfOperations>> table;
+        std::size_t                                                 nvars;
+        std::vector<std::array<Edge, numberOfStochasticOperations>> table;
 
         // operation table lookup statistics
         std::size_t hits    = 0;

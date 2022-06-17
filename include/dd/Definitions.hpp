@@ -46,10 +46,6 @@ namespace dd {
         left
     };
 
-    // The number of different quantum operations. I.e., the number of operations defined in the QFR OpType.hpp
-    // This parameter is required to initialize the StochasticNoiseOperationTable.hpp
-    static constexpr std::uint_fast8_t numberOfOperations = 64;
-
     static constexpr fp SQRT2_2 = 0.707106781186547524400844362104849039284835937688474036588L;
     static constexpr fp PI      = 3.141592653589793238462643383279502884197169399375105820974L;
     static constexpr fp PI_2    = 1.570796326794896619231321691639751442098584699687552910487L;
