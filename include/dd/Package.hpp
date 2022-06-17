@@ -49,6 +49,7 @@
 
 namespace dd {
     struct DDPackageConfig {
+        //Note the order of parameters here must be the *same* as in the template definition.
         static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
         static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
         static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
@@ -77,10 +78,6 @@ namespace dd {
              std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
              std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
              std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
-             std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
-             std::size_t CT_DM_ADD_NBUCKET              = DDPackageConfig::CT_DM_ADD_NBUCKET,
-             std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
-             std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
              std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
              std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
              std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
@@ -91,6 +88,10 @@ namespace dd {
              std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
              std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
              std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_DM_NOISE_NBUCKET,
+             std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
+             std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
+             std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
+             std::size_t CT_DM_ADD_NBUCKET              = DDPackageConfig::CT_DM_ADD_NBUCKET,
              std::size_t STOCHASTIC_CACHE_OPS           = DDPackageConfig::STOCHASTIC_CACHE_OPS>
     class Package {
         ///
@@ -609,7 +610,7 @@ namespace dd {
                 toffoliTable.clear();
                 clearIdentityTable();
                 stochasticNoiseOperationCache.clear();
-                densityDensityAdd.clear();
+                densityAdd.clear();
                 densityDensityMultiplication.clear();
                 densityNoise.clear();
             }
@@ -623,7 +624,7 @@ namespace dd {
                 vectorKronecker.clear();
                 matrixKronecker.clear();
                 stochasticNoiseOperationCache.clear();
-                densityDensityAdd.clear();
+                densityAdd.clear();
                 densityDensityMultiplication.clear();
                 densityNoise.clear();
             }
@@ -737,7 +738,7 @@ namespace dd {
             clearIdentityTable();
 
             stochasticNoiseOperationCache.clear();
-            densityDensityAdd.clear();
+            densityAdd.clear();
             densityDensityMultiplication.clear();
             densityNoise.clear();
         }
@@ -945,7 +946,7 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityDensityAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -954,7 +955,7 @@ namespace dd {
             } else if constexpr (std::is_same_v<Node, mNode>) {
                 return matrixAdd;
             } else if constexpr (std::is_same_v<Node, dNode>) {
-                return densityDensityAdd;
+                return densityAdd;
             }
         }
 
@@ -2822,7 +2823,7 @@ namespace dd {
             std::cout << "[Stochastic Noise Table] ";
             stochasticNoiseOperationCache.printStatistics();
             std::cout << "[CT Density Add] ";
-            densityDensityAdd.printStatistics();
+            densityAdd.printStatistics();
             std::cout << "[CT Density Mul] ";
             densityDensityMultiplication.printStatistics();
             std::cout << "[CT Density Noise] ";
