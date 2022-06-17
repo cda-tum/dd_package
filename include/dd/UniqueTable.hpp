@@ -83,7 +83,7 @@ namespace dd {
 
         static bool nodesAreEqual(const Node* p, const Node* q) {
             if constexpr (std::is_same_v<Node, dNode>) {
-                return (p->e == q->e && (p->flags <= q->flags));
+                return (p->e == q->e && (p->flags == q->flags));
             } else {
                 return p->e == q->e;
             }
