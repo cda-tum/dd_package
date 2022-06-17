@@ -61,6 +61,7 @@ namespace dd {
         static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
         static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
         static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 16384U;
         static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
         static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
@@ -79,6 +80,7 @@ namespace dd {
              std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
              std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
              std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+             std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
              std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
              std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
              std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
@@ -598,8 +600,8 @@ namespace dd {
                 toffoliTable.clear();
                 clearIdentityTable();
                 stochasticNoiseOperationCache.clear();
-                densityAdd.clear();
-                densityMul.clear();
+                densityDensityAdd.clear();
+                densityDensityMultiplication.clear();
                 densityNoise.clear();
             }
             // invalidate all compute tables where any component of the entry contains numbers from the complex table if any complex numbers were collected
@@ -612,8 +614,8 @@ namespace dd {
                 vectorKronecker.clear();
                 matrixKronecker.clear();
                 stochasticNoiseOperationCache.clear();
-                densityAdd.clear();
-                densityMul.clear();
+                densityDensityAdd.clear();
+                densityDensityMultiplication.clear();
                 densityNoise.clear();
             }
             return vCollect > 0 || mCollect > 0 || cCollect > 0;
@@ -726,8 +728,8 @@ namespace dd {
             clearIdentityTable();
 
             stochasticNoiseOperationCache.clear();
-            densityAdd.clear();
-            densityMul.clear();
+            densityDensityAdd.clear();
+            densityDensityMultiplication.clear();
             densityNoise.clear();
         }
 
@@ -934,7 +936,7 @@ namespace dd {
     public:
         ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
         ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_MAT_ADD_NBUCKET> densityAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_MAT_ADD_NBUCKET> densityDensityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -943,7 +945,7 @@ namespace dd {
             } else if constexpr (std::is_same_v<Node, mNode>) {
                 return matrixAdd;
             } else if constexpr (std::is_same_v<Node, dNode>) {
-                return densityAdd;
+                return densityDensityAdd;
             }
         }
 
@@ -1149,7 +1151,7 @@ namespace dd {
     public:
         ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
         ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
-        ComputeTable<dEdge, dEdge, dCachedEdge, CT_MAT_MAT_MULT_NBUCKET> densityMul{};
+        ComputeTable<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
 
         template<class LeftOperandNode, class RightOperandNode>
         [[nodiscard]] auto& getMultiplicationComputeTable() {
@@ -1158,7 +1160,7 @@ namespace dd {
             } else if constexpr (std::is_same_v<RightOperandNode, mNode>) {
                 return matrixMatrixMultiplication;
             } else if constexpr (std::is_same_v<RightOperandNode, dNode>) {
-                return densityMul;
+                return densityDensityMultiplication;
             }
         }
 
@@ -2811,9 +2813,9 @@ namespace dd {
             std::cout << "[Stochastic Noise Table] ";
             stochasticNoiseOperationCache.printStatistics();
             std::cout << "[CT Density Add] ";
-            densityAdd.printStatistics();
+            densityDensityAdd.printStatistics();
             std::cout << "[CT Density Mul] ";
-            densityMul.printStatistics();
+            densityDensityMultiplication.printStatistics();
             std::cout << "[CT Density Noise] ";
             densityNoise.printStatistics();
             std::cout << "[ComplexTable] ";
