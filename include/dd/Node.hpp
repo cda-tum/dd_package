@@ -154,11 +154,12 @@ namespace dd {
             alignDensityNode(p);
 
             for (auto& edge: p->e) {
-                // first edge paths are not modified I only have to remove the first edge property
+                // remove the set properties from the node pointers of edge.p->e
                 alignDensityNode(edge.p);
             }
 
             if (isNonReduceTempFlagSet(p->flags) && !isConjugateTempFlagSet(p->flags)) {
+                // first edge paths are not modified I only have to remove the first edge property
                 ;
 
             } else if (!isConjugateTempFlagSet(p->flags)) {
@@ -201,11 +202,11 @@ namespace std {
     template<>
     struct hash<dd::dEdge> {
         std::size_t operator()(dd::dEdge const& e) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
-            auto h2 = std::hash<dd::Complex>{}(e.w);
+            const auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
+            const auto h2 = std::hash<dd::Complex>{}(e.w);
             assert((dd::dNode::isDensityMatrixTempFlagSet(e.p)) == false);
-            auto h3  = std::hash<std::uint_least8_t>{}(dd::dNode::getDensityMatrixTempFlags(e.p->flags));
-            auto tmp = dd::combineHash(h1, h2);
+            const auto h3  = std::hash<std::uint_least8_t>{}(dd::dNode::getDensityMatrixTempFlags(e.p->flags));
+            const auto tmp = dd::combineHash(h1, h2);
             return dd::combineHash(tmp, h3);
         }
     };
