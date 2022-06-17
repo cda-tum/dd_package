@@ -1335,6 +1335,6 @@ TEST(DDPackageTest, exactlyOneComparison) {
     auto dd     = std::make_unique<dd::Package<>>(1);
     auto notOne = dd->cn.lookup(1 + 2 * dd::ComplexTable<>::tolerance(), 0);
     auto one    = dd->cn.lookup(1, 0);
-    EXPECT_TRUE(!notOne.exactlyZero());
-    EXPECT_TRUE(one.exactlyZero());
+    EXPECT_TRUE(!notOne.exactlyOne());
+    EXPECT_TRUE(one.exactlyOne());
 }
