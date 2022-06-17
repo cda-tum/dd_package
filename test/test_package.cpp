@@ -3,9 +3,11 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
 */
 
+#include "dd/GateMatrixDefinitions.hpp"
+#include "dd/Package.hpp"
 #include "dd/Export.hpp"
-//#include "dd/GateMatrixDefinitions.hpp"
-//#include "dd/Package.hpp"
+#include "dd/ComplexTable.hpp"
+
 
 #include "gtest/gtest.h"
 #include <iomanip>
@@ -1105,13 +1107,13 @@ TEST(DDPackageTest, dNodeMultiply) {
 
     for (int i = 0; i < (1 << nr_qubits); i++) {
         for (int j = 0; j < (1 << nr_qubits); j++) {
-            assert(std::abs(stateDensityMatrix[i][j].imag()) == 0);
+            EXPECT_TRUE(std::abs(stateDensityMatrix[i][j].imag()) == 0);
             if ((i < 4 && j < 4) || (i >= 4 && j >= 4)) {
-                assert(stateDensityMatrix[i][j].real() > 0);
+                EXPECT_TRUE(stateDensityMatrix[i][j].real() > 0);
             } else {
-                assert(stateDensityMatrix[i][j].real() < 0);
+                EXPECT_TRUE(stateDensityMatrix[i][j].real() < 0);
             }
-            assert(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
+            EXPECT_TRUE(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
         }
     }
 }
@@ -1150,13 +1152,13 @@ TEST(DDPackageTest, dNodeMultiply2) {
 
     for (int i = 0; i < (1 << nr_qubits); i++) {
         for (int j = 0; j < (1 << nr_qubits); j++) {
-            assert(std::abs(stateDensityMatrix[i][j].imag()) == 0);
+            EXPECT_TRUE(std::abs(stateDensityMatrix[i][j].imag()) == 0);
             if ((i < 4 && j < 4) || (i >= 4 && j >= 4)) {
-                assert(stateDensityMatrix[i][j].real() > 0);
+                EXPECT_TRUE(stateDensityMatrix[i][j].real() > 0);
             } else {
-                assert(stateDensityMatrix[i][j].real() < 0);
+                EXPECT_TRUE(stateDensityMatrix[i][j].real() < 0);
             }
-            assert(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
+            EXPECT_TRUE(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
         }
     }
 }
@@ -1194,7 +1196,7 @@ TEST(DDPackageTest, dNodeMulCache1) {
 
         auto _tmp1 = computeTable.lookup(xCopy, yCopy, false);
         auto tmp1  = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
-        assert(_tmp1.p != nullptr && tmp1.p == _tmp1.p);
+        EXPECT_TRUE(_tmp1.p != nullptr && tmp1.p == _tmp1.p);
 
         auto xCopy1 = reinterpret_cast<dd::dEdge&>(op);
         xCopy1.w    = dd::Complex::one;
@@ -1203,10 +1205,10 @@ TEST(DDPackageTest, dNodeMulCache1) {
 
         auto _tmp2 = computeTable.lookup(xCopy1, yCopy1, true);
         auto tmp2  = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
-        assert(_tmp2.p == nullptr);
+        EXPECT_TRUE(_tmp2.p == nullptr);
 
         auto _tmp3 = computeTable.lookup(xCopy1, yCopy1, true);
-        assert(_tmp3.p != nullptr && tmp2.p == _tmp3.p);
+        EXPECT_TRUE(_tmp3.p != nullptr && tmp2.p == _tmp3.p);
     }
 }
 
@@ -1224,7 +1226,7 @@ TEST(DDPackageTest, dNoiseCache) {
     std::vector<dd::Qubit> target = {0};
 
     auto noiseLookUpResult = dd->densityNoise.lookup(state, target);
-    assert(noiseLookUpResult.p == nullptr);
+    EXPECT_TRUE(noiseLookUpResult.p == nullptr);
     auto tmp0 = dd->conjugateTranspose(operations[0]);
     auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
     auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(operations[0]), tmp1, 0, true);
@@ -1233,20 +1235,20 @@ TEST(DDPackageTest, dNoiseCache) {
     dd->densityNoise.insert(state, state1, target);
 
     noiseLookUpResult = dd->densityNoise.lookup(state, target);
-    assert(noiseLookUpResult.p != nullptr && noiseLookUpResult.p == state1.p);
+    EXPECT_TRUE(noiseLookUpResult.p != nullptr && noiseLookUpResult.p == state1.p);
 
     dd->densityNoise.clear();
     noiseLookUpResult = dd->densityNoise.lookup(state, target);
-    assert(noiseLookUpResult.p == nullptr);
+    EXPECT_TRUE(noiseLookUpResult.p == nullptr);
 }
 
 TEST(DDPackageTest, calCulpDistance) {
     dd::Qubit nr_qubits = 1;
     auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
-    auto      tmp0      = dd::ulpDistance(1.000000000001, 1);
+    auto      tmp0      = dd::ulpDistance(1+1e-12, 1);
     auto      tmp1      = dd::ulpDistance(1, 1);
-    assert(tmp0 > 0);
-    assert(tmp1 == 0);
+    EXPECT_TRUE(tmp0 > 0);
+    EXPECT_TRUE(tmp1 == 0);
 }
 
 TEST(DDPackageTest, dStochCache) {
@@ -1268,10 +1270,10 @@ TEST(DDPackageTest, dStochCache) {
         for (dd::Qubit j = 0; j < 4; j++) {
             if (i == j) {
                 auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
-                assert(op.p != nullptr && op.p == operations[i].p);
+                EXPECT_TRUE(op.p != nullptr && op.p == operations[i].p);
             } else {
                 auto op = dd->stochasticNoiseOperationCache.lookup(i, j);
-                assert(op.p == nullptr);
+                EXPECT_TRUE(op.p == nullptr);
             }
         }
     }
@@ -1288,17 +1290,17 @@ TEST(DDPackageTest, dStochCache) {
 TEST(DDPackageTest, complexRefCount) {
     auto dd    = std::make_unique<dd::Package<>>(1);
     auto value = dd->cn.lookup(0.2, 0.2);
-    assert(value.r->refCount == 0);
-    assert(value.i->refCount == 0);
+    EXPECT_TRUE(value.r->refCount == 0);
+    EXPECT_TRUE(value.i->refCount == 0);
     dd->cn.incRef(value);
-    assert(value.r->refCount == 2);
-    assert(value.i->refCount == 2);
+    EXPECT_TRUE(value.r->refCount == 2);
+    EXPECT_TRUE(value.i->refCount == 2);
 }
 
 TEST(DDPackageTest, exactlyZeroComparision) {
     auto dd      = std::make_unique<dd::Package<>>(1);
-    auto notZero = dd->cn.lookup(0, 0.000000000001);
+    auto notZero = dd->cn.lookup(0, 2 * dd::ComplexTable<>::tolerance());
     auto zero    = dd->cn.lookup(0, 0);
-    assert(!notZero.exactlyZero());
-    assert(zero.exactlyZero());
+    EXPECT_TRUE(!notZero.exactlyZero());
+    EXPECT_TRUE(zero.exactlyZero());
 }
