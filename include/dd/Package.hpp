@@ -125,6 +125,7 @@ namespace dd {
             vUniqueTable.resize(nqubits);
             mUniqueTable.resize(nqubits);
             dUniqueTable.resize(nqubits);
+            stochasticNoiseOperationCache.resize(nqubits);
             IdTable.resize(nqubits);
         }
 
