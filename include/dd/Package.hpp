@@ -67,7 +67,7 @@ namespace dd {
         explicit Package(std::size_t nq = defaultQubits):
             cn(ComplexNumbers()), nqubits(nq) {
             resize(nq);
-            group = LIMDD_group::Z_group;
+            group = LIMDD_group::Pauli_group;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -861,16 +861,19 @@ namespace dd {
 					break;
             	case Pauli_group:
             		e = normalizeLIMDDPauli(e, cached);
+            		break;
+            	case QMDD_group: break;
             	}
                 assert(e.p->v == var || e.isTerminal());
 
 //                e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p)); // temporary fix, limVector is generated before the node is looked up.
                 switch(group) {
                 case Z_group:
-					l.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(l.p));
+					e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p));
 					break;
                 case Pauli_group:
-					l.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(l.p));
+					e.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(e.p));
+                case QMDD_group: break;
                 }
 
                 // look it up in the unique tables
