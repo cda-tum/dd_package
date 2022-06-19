@@ -6,6 +6,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+// This is to see whether tests pass trivially
+TEST(LimTest, ThisTestFails) {
+	EXPECT_TRUE(false);
+}
+
 using namespace dd::literals;
 TEST(LimTest, SinglePauliOps) {
     dd::LimEntry<1> id{0b000};
@@ -2628,4 +2633,43 @@ TEST(LimTest, simpleCliffordCircuit_3) {
     EXPECT_TRUE(abs(result[1].real()) < 0.0001 && abs(result[1].imag()) < 0.001);
     EXPECT_TRUE(abs(result[2].real()) < 0.0001 && abs(result[2].imag()) < 0.001);
     EXPECT_TRUE(abs(result[3].real()) < 0.0001 && abs(result[3].imag()) < 0.001);
+}
+
+std::ostream& operator<<(std::ostream& out, const dd::CVec& vec) {
+	for (unsigned int i=0; i<vec.size(); i++) {
+		out << vec[i] << ' ';
+	}
+	return out;
+}
+
+TEST(LimTest, simpleCliffordCircuit_4) {
+	auto dd = std::make_unique<dd::Package>(3);
+
+	auto state = dd->makeZeroState(3);
+
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 0), state);        // x q[0];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 1), state);        // x q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 2_pc, 1), state);  // cx q[2],q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 0_pc, 1), state);  // cx q[0],q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Hmat, 3, 2), state);        // h q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Tmat, 3, 0), state);        // t q[0];
+	state = dd->multiply(dd->makeGateDD(dd::Tdagmat, 3, 1), state);     // tdg q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Tmat, 3, 2), state);        // t q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 2_pc, 1), state);  // cx q[2],q[1]
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 0_pc, 2), state);  // cx q[0],q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Tmat, 3, 1), state);        // t q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 0_pc, 1), state);  // cx q[0],q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Tdagmat, 3, 2), state);     // tdg q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Tdagmat, 3, 1), state);     // tdg q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 0_pc, 2), state);  // cx q[0],q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 2_pc, 1), state);  // cx q[2],q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Tmat, 3, 1), state);        // t q[1];
+	state = dd->multiply(dd->makeGateDD(dd::Hmat, 3, 2), state);        // h q[2];
+	state = dd->multiply(dd->makeGateDD(dd::Xmat, 3, 2_pc, 1), state);  // cx q[2],q[1];
+
+	// assertions
+
+	auto result = dd->getVectorLIMDD(state);
+
+	std::cout << "[simpleCliffordCircuit 4] result: " << result << "\n";
 }

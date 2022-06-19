@@ -144,6 +144,7 @@ namespace dd {
 
         Entry* lookup(const fp& val) {
             assert(!std::isnan(val));
+//            std::cout << "[CT lookup( " << val << " )] start.\n";
             assert(val >= 0); // required anyway for the hash function
             ++lookups;
             if (Entry::approximatelyZero(val)) {
@@ -158,16 +159,20 @@ namespace dd {
 
             if (Entry::approximatelyEquals(val, SQRT2_2)) {
                 ++hits;
+//                std::cout << "[CT lookup( " << val << " )] value is sqrt2/2.\n";
                 return &sqrt2_2;
             }
 
             assert(val - TOLERANCE >= 0); // should be handle above as special case
+
+//            std::cout << "[CT lookup( " << val << " )] value is not 0, 1, sqrt2/2.\n";
 
             const auto lowerKey = hash(val - TOLERANCE);
             const auto upperKey = hash(val + TOLERANCE);
 
             if (upperKey == lowerKey) {
                 ++findOrInserts;
+//                std::cout << "[CT lookup( " << val << " )] found value in lookup table.\n";
                 return findOrInsert(lowerKey, val);
             }
 
@@ -193,6 +198,8 @@ namespace dd {
 
             bool lowerMatchFound = (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value));
             bool upperMatchFound = (p_upper != nullptr && Entry::approximatelyEquals(val, p_upper->value));
+
+//            std::cout << "[CT lookup( " << val << " )] lowerMatchFound = " << lowerMatchFound << "; upperMatchFound = " << upperMatchFound << "\n";
 
             if (lowerMatchFound && upperMatchFound) {
                 //                std::cout << "Double match. ";
@@ -223,6 +230,7 @@ namespace dd {
 
             // value was not found in the table -> get a new entry and add it to the central bucket
             Entry* entry = insert(key, val);
+//            std::cout << "[CT lookup( " << val << " )] value was not found, so adding it. Entry is " << entry->value << "\n";
             return entry;
         }
 

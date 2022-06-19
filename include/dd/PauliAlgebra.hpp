@@ -995,7 +995,7 @@ public:
         s = false;
         if (weight.lexLargerThanxMinusOne()) {
 //            std::cout << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
-            weight.multiplyByMinusOne();
+            weight.multiplyByMinusOne(false);
             s = true;
         }
 //        std::cout << "[highLabelZWeight] end.\n"; std::cout.flush();

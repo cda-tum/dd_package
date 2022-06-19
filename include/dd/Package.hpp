@@ -114,7 +114,7 @@ namespace dd {
         // TODO limdd: rename this normalizeWeights?
         // (original rename undone because of some errors in tests)
         vEdge normalize(const vEdge& e, bool cached) {
-        	std::cout << "[normalize] edge is currently " << e;
+//        	std::cout << "[normalize] start. Edge is currently " << e;
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
             // make sure to release cached numbers approximately zero, but not exactly zero
@@ -160,7 +160,7 @@ namespace dd {
                 return r;
             }
 
-            std::cout << "[normalize] Case fork. Currently edge is " << e;
+//            std::cout << "[normalize] step 1/5: Case fork. Currently edge is " << e;
 
             const auto mag0         = ComplexNumbers::mag2(e.p->e[0].w);
             const auto mag1         = ComplexNumbers::mag2(e.p->e[1].w);
@@ -171,7 +171,7 @@ namespace dd {
             const auto magMax       = std::sqrt(mag2Max);
             const auto commonFactor = norm / magMax;
 
-            std::cout << "[normalize] norm " << norm << " magMag " << magMax << " commonFactor " << commonFactor << "\n";
+//            std::cout << "[normalize] step 2/5: norm " << norm << " magMag " << magMax << " commonFactor " << commonFactor << "\n";
 
             auto  r   = e;
             auto& max = r.p->e[argMax];
@@ -186,13 +186,14 @@ namespace dd {
                 }
             }
 
-            std::cout << "[normalize] step 3/5 edge is " << r;
+//            std::cout << "[normalize] step 3/5 edge is " << r;
+//            std::cout << "[normalize] looking up " << (magMax / norm) << " in ComplexNumbers cache.\n";
 
             max.w = cn.lookup(magMax / norm, 0.);
             if (max.w == Complex::zero)
                 max = vEdge::zero;
 
-            std::cout << "[normalize] step 4/5 edge is " << r;
+//            std::cout << "[normalize] step 4/5 edge is " << r;
 
             const auto argMin = (argMax + 1) % 2;
             auto&      min    = r.p->e[argMin];
@@ -201,7 +202,7 @@ namespace dd {
                 ComplexNumbers::div(min.w, min.w, r.w);
                 min.w = cn.lookup(min.w);
             } else {
-            	std::cout << "[normalize] now cached, so getting temp numer. edge is " << r << "\n";
+//            	std::cout << "[normalize] now cached, so getting temp numer. edge is " << r << "\n";
                 auto c = cn.getTemporary();
                 ComplexNumbers::div(c, min.w, r.w);
                 min.w = cn.lookup(c);
@@ -209,7 +210,7 @@ namespace dd {
             if (min.w == Complex::zero) {
                 min = vEdge::zero;
             }
-            std::cout << "[normalize step 5/5 edge is " << r;
+//            std::cout << "[normalize step 5/5 edge is " << r;
 
             return r;
         }
