@@ -2535,6 +2535,11 @@ TEST(LimTest, getIsomorphismPauli9) {
     // make edge e4 = |0>|e3> + |1>|e2>
     auto e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
 
+    std::cout << "edge 1: " << e1;
+    std::cout << "edge 2: " << e2;
+    std::cout << "edge 3: " << e3;
+    std::cout << "edge 4: " << e4;
+
     std::cout << "[getIsomorphismPauli9 test] Testing children of e3 and e4.\n";
     EXPECT_EQ(e3.p->e[0].p, e4.p->e[1].p);
     EXPECT_EQ(e3.p->e[1].p, e4.p->e[0].p);

@@ -494,6 +494,8 @@ namespace dd {
         }
     };
 
+    // LimWeight contains a LIM and a Complex number
+    // The complex number is always a temporary element of the complex numbers cache
     template <std::size_t NUM_QUBITS=32>
     struct LimWeight {
     public:

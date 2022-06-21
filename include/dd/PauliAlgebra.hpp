@@ -8,7 +8,7 @@
 #include "Edge.hpp"
 #include "Nodes.hpp"
 #include "LimTable.hpp"
-
+#include "ComplexNumbers.hpp"
 #include <iostream>
 
 // note: my package won't compile unless I put my functions in a class
@@ -853,10 +853,10 @@ public:
 
     // Assumes that u and v are semi-reduced:
     // - low edge label is identity
-	// TODO is this assertion true in all calls from normalizeLIMDD?
     // TODO take the edge weights into account:
     //    in case 3.1
     //    in knife cases
+    //    check if uhigh.w = 1 / vhigh.w
     static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
         assert( u != nullptr );
         assert( v != nullptr );
@@ -889,6 +889,7 @@ public:
             }
             else if (vLow.isZeroTerminal()) {
             	if (uLow.p == vHigh.p) {
+					// TODO limdd inspect weight on high edge
             		iso->lim = new LimEntry<>(vHigh.l);
             		iso->lim->setOperator(u->v, 'X');
             	}
@@ -902,9 +903,11 @@ public:
         else if (uLow.isZeroTerminal()) {
             std::cout << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
         	if (vLow.isZeroTerminal()) {
+        		// TODO limdd inspect weights
         		if (uHigh.p == vHigh.p) return new LimWeight<>(LimEntry<>::multiply(uHigh.l, vHigh.l));
         	}
         	else if (vHigh.isZeroTerminal()) {
+        		// TODO limdd inspect weights
         		if (uHigh.p == vLow.p) {
 					iso->lim = new LimEntry<>(uHigh.l);
 					iso->lim->setOperator(u->v, 'X');
@@ -940,16 +943,20 @@ public:
 				return R;
 			}
         	// Case 3.2: uLow == vLow and uHigh == vHigh
-            std::cout << "[getIsomorphismPauli] case Fork.\n"; std::cout.flush();
-            std::cout << "[getIsomorphismPauli] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl; superFlush();
+            std::cout << "[getIsomorphismPauli] case Fork with weights ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl; superFlush();
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
             std::cout << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; std::cout.flush(); superFlush();
 			// TODO should we refactor this last part and just call getIsomorphismZ?
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
+            if (uLow.p == uHigh.p) {
+            	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
+            }
+
             bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
             // Step 1.3:  check if the edge weights are equal, up to a sign
+            // TODO limdd check if uhigh.w = 1 / vhigh.w
             if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimWeight<>::noLIM;
             std::cout << "[getIsomorphismPauli] edge weights are approximately equal.\n"; std::cout.flush(); superFlush();
             // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
@@ -975,6 +982,7 @@ public:
             }
             else {
                 std::cout << "[getIsomorphismPauli] Coset was empty; returning -1.\n"; std::cout.flush();
+                iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
         }
         return iso;
@@ -1002,39 +1010,41 @@ public:
         return newHighLabel;
     }
 
+    // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
+    // Sets the
+    // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
+    // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
-    //   1. Should we pass 'true' or 'false' to the multiplyByMinusOne(true/false) function?
+    //   1. make NUM_QUBITS a template parameter
     //   2. find out how to compute 1/weight. Then uncomment the code indicated below
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
+    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, Complex& weightInv, bool& s, bool& x) {
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
 
-    		// TODO Find the lexicographic minimum of (-1)^s * weight^((-1)^x) over all values of s, x
     		if (weight.lexSmallerThanxMinusOne()) {
-    			weight.multiplyByMinusOne(false); // TODO limdd: not sure about the 'false' or 'true' parameter -LV
+    			weight.multiplyByMinusOne(true);
     			std::cout << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
     			s = true;
     		}
-    		// TODO limdd: in this commented code, assign the value weightInv = 1/weight, and then uncomment the code
-//    		bool sInv = false;
-//    		Complex weightInv = weight; // TODO Assign value weightInv = 1/weight here
-//    		if (weightInv.lexLargerThanxMinusOne()) {
-//    			weightInv.multiplyByMinusOne();
-//    			sInv = true;
-//    		}
-//    		if (weightInv.lexSmallerThan(weight)) {
-//    			weight = weightInv; // TODO does anything need to be deallocated?
-//    			x = true;
-//    			s = sInv;
-//    		}
+    		bool sInv = false;
+    		ComplexNumbers::div(weightInv, Complex::one, weight); // temp := 1/weight
+    		if (weightInv.lexSmallerThanxMinusOne()) {
+    			weightInv.multiplyByMinusOne(true);
+    			sInv = true;
+    		}
+    		if (weightInv.lexSmallerThan(weight)) {
+    			weight.setVal(weightInv);
+    			x = true;
+    			s = sInv;
+    		}
     	}
     	else {
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
     		if (weight.lexSmallerThanxMinusOne()) {
-    			weight.multiplyByMinusOne(false);
+    			weight.multiplyByMinusOne(true);
     			s = true;
     		}
     		x = false;

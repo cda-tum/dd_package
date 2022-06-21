@@ -65,7 +65,7 @@ namespace dd {
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = LIMDD_group::Z_group):
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = LIMDD_group::Pauli_group):
             cn(ComplexNumbers()), nqubits(nq), group(_group) {
             resize(nq);
         };
@@ -366,10 +366,13 @@ namespace dd {
             vNode oldNode = *(r.p); // make a copy of the old node
             bool s = false;
             bool x = false;
-            LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s, x);
-//            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
+            Complex highEdgeWeightTemp = cn.getTemporary(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
+            Complex temp = cn.getTemporary();
+            LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, temp, s, x);
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
+            r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
+            // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             std::cout << "[normalizeLIMDD] Found high label + weight: " << r.p->e[1].w << " * " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";

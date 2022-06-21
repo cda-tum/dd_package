@@ -4,13 +4,20 @@ incorporate weights into the getIsomorphismPauli procedure
     in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
         so that highLabelPauli doesn't need to receive the whole complexTable 
 
-Add a parameter to the dd stating the group, 'Z', 'Pauli', 'QMDD' / 'trivial'
-    refactor the group to enum LIMDD_group type
+all tests pass under Z group
+
+refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
+
+Is the 's' and 'x' parameters useful?
+    write this algorithm on paper, or find it in notebook
+    If the 's' or 'x' is not used, then remove it from the highlabel parameters
 
 incorporate weights into getAutomorphismGroup
-    Write algorithm on paper
+    Write algorithm on paper, or find algorithm in notebook
 
-checkout testSimpleCliffordCircuit_1,2,3 in other branches to see if I've merged correctly
+- make 10 stabilizer circuits
+- make 10 non-stabilizer circuits, with T gates
+make Hamming weight circuits
 
 getLIMDDFromVector() turn a ket-vector into a LIMDD
 use some tests to test whether the isomorphism-finding machinery works:
@@ -28,10 +35,6 @@ Log
     output debugging statements to the Log instead of to std::cout
     ability to turn the log on and off
 
-
-- make 10 stabilizer circuits
-- make 10 non-stabilizer circuits, with T gates
-make Hamming weight circuits
 
 refactor LimEntry<>::setOperator so that one function is called,
     instead of two different setOperators
@@ -228,22 +231,31 @@ PauliAlgebra.hpp: highLabelZ
     GH is not deallocated properly
 
 in LimTable.hpp: LimEntry::multiply
-    put the new LimEntry in the LimTable?
-    otherwise, in the places that call this function, make sure that the LimEntry is put in the LimTable?
+    In the places that call this function, make sure that the LimEntry is put in the LimTable,
+    if appropriate, and otherwise is deallocated
+    make an inventory of places where this happens
+
+====    DONE
+
+// TODO is the assertion that the low LIMs are Identity true in all calls from normalizeLIMDD?
+    Yes, this assertion holds when getIsomorphism is called
+
+checkout testSimpleCliffordCircuit_1,2,3 in other branches to see if I've merged correctly
 
 The following tests fail:
 [  FAILED  ] LimTest.simpleCliffordCircuit
-	Because simulation is not yet supported; only representation is supported
+    Because simulation is not yet supported; only representation is supported
 [  FAILED  ] DDPackageTest.VectorSerializationTest
-	Because serialize() and deserialize() do not support LIMDDs yet
+    Because serialize() and deserialize() do not support LIMDDs yet
 [  FAILED  ] DDPackageTest.BasicNumericStabilityTest
-	Because it stores the state |-> = |0> - |1>.
-	It assumes the high edge weight will be -sqrt 2.
-	However, with the new LIMDD functionality, this is stored as Z|+>  =  Z(|0> + |1>),
-	so the weight is +sqrt 2 instead of -sqrt 2.
+    Because it stores the state |-> = |0> - |1>.
+    It assumes the high edge weight will be -sqrt 2.
+    However, with the new LIMDD functionality, this is stored as Z|+>  =  Z(|0> + |1>),
+    so the weight is +sqrt 2 instead of -sqrt 2.
 
+Add a parameter to the dd stating the group, 'Z', 'Pauli', 'QMDD' / 'trivial'
+    refactor the group to enum LIMDD_group type
 
-====    DONE
 
 
 Ask Linz to help design the division and multiplications that are needed
