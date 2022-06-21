@@ -65,7 +65,7 @@ namespace dd {
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
 
-        explicit Package(std::size_t nq = defaultQubits, unsigned int _group = (unsigned int) LIMDD_group::Z_group):
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = LIMDD_group::Z_group):
             cn(ComplexNumbers()), nqubits(nq), group(_group) {
             resize(nq);
         };
@@ -99,7 +99,7 @@ namespace dd {
 
     private:
         std::size_t nqubits;
-        unsigned int group;
+        LIMDD_group group;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -878,13 +878,13 @@ namespace dd {
             	}
                 assert(e.p->v == var || e.isTerminal());
 
-//                e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p)); // temporary fix, limVector is generated before the node is looked up.
                 switch(group) {
                 case Z_group:
 					e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p));
 					break;
                 case Pauli_group:
 					e.p->limVector = Pauli::constructStabilizerGeneratorSetPauli(*(e.p));
+					break;
                 case QMDD_group: break;
                 }
 
