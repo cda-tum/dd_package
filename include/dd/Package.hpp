@@ -2870,13 +2870,13 @@ namespace dd {
                                       DensityMatrixSimulatorDDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
                                       DensityMatrixSimulatorDDPackageConfig::CT_VEC_KRON_NBUCKET,
                                       DensityMatrixSimulatorDDPackageConfig::CT_MAT_KRON_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_NOISE_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::UT_DM_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
-                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_DM_MULT_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::CT_DM_ADD_NBUCKET,
-                                                        DensityMatrixSimulatorDDPackageConfig::STOCHASTIC_CACHE_OPS>;
+                                      DensityMatrixSimulatorDDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
+                                      DensityMatrixSimulatorDDPackageConfig::CT_DM_NOISE_NBUCKET,
+                                      DensityMatrixSimulatorDDPackageConfig::UT_DM_NBUCKET,
+                                      DensityMatrixSimulatorDDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
+                                      DensityMatrixSimulatorDDPackageConfig::CT_DM_DM_MULT_NBUCKET,
+                                      DensityMatrixSimulatorDDPackageConfig::CT_DM_ADD_NBUCKET,
+                                      DensityMatrixSimulatorDDPackageConfig::STOCHASTIC_CACHE_OPS>;
 } // namespace dd
 
 #endif
