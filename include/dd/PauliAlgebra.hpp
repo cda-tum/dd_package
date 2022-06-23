@@ -740,22 +740,6 @@ public:
         return stabgenset;
     }
 
-    // Returns true iff a == -b, approximately
-    // todo move to file 'Complex.hpp'?
-    static bool isTimesMinusOne(Complex a, Complex b) {
-        bool rflip = false, iflip = false;
-        // check if Real(a) = -Real(b)
-        if (ComplexTable<>::Entry::approximatelyEquals(a.r, ComplexTable<>::Entry::flipPointerSign(b.r))) {
-            rflip = true;
-        }
-        // Check if Im(a) = -Im(b)
-        if (ComplexTable<>::Entry::approximatelyEquals(a.i, ComplexTable<>::Entry::flipPointerSign(b.i))) {
-            iflip = true;
-        }
-        std::cout << "[isTimesMinusOne] answer: " << ((rflip && iflip) ? "yes" : "no") << " because a=" << a.toString() << ", b=" << b.toString() << ", so realflip=" << rflip << ", imflip=" << iflip << std::endl;
-        return rflip && iflip;
-    }
-
     // Returns an isomorphism between u and v,
     // or LimEntry<>::noLim if u and v are not isomorphic
     // Assumes that the low edges of u and v have an Identity LIM
@@ -809,7 +793,7 @@ public:
 //            std::cout << "[getIsomorphismZ] case Fork.\n"; std::cout.flush();
 //            std::cout << "[getIsomorphismZ] ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << std::endl;
             // Step 1.2: check if the amplitudes satisfy uHigh = -1 * vHigh
-            bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
+            bool amplitudeOppositeSign = uHigh.w.approximatelyEqualsMinus(vHigh.w);
             // Step 1.1:  check if the amplitudes are equal, up to a sign
             if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimEntry<>::noLIM;
 //            std::cout << "[getIsomorphismZ] edge weights are approximately equal.\n"; std::cout.flush();
@@ -857,7 +841,7 @@ public:
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
-    static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v) {
+    static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn) {
         assert( u != nullptr );
         assert( v != nullptr );
         std::cout << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
@@ -935,7 +919,7 @@ public:
 				uPrime.e[1]   = u->e[0];
 				uPrime.e[1].l = u->e[1].l;
 				uPrime.e[1].w = u->e[0].w;
-				LimWeight<>* R = getIsomorphismPauli(&uPrime, v);
+				LimWeight<>* R = getIsomorphismPauli(&uPrime, v, cn);
 				if (R == LimWeight<>::noLIM) return LimWeight<>::noLIM;
 				LimEntry<> P = *(u->e[1].l);
 				P.setOperator(u->v, pauli_op::pauli_x);
@@ -954,15 +938,27 @@ public:
             	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
             }
 
-            bool amplitudeOppositeSign = isTimesMinusOne(uHigh.w, vHigh.w);
+//            Complex div0 = cn.getTemporary();  // Eventually returned to cache
+//            ComplexNumbers::div(div0, u->e[1].w, u->e[0].w);
+//            Complex div1 = cn.getTemporary();  // Eventually returned to cache
+//            ComplexNumbers::div(div1, v->e[1].w, v->e[0].w);
+//            iso->weight  = cn.getTemporary();  // We ask the calling function to return this to cache
+//            ComplexNumbers::div(iso->weight, u->e[0].w, v->e[1].w);
+
+//            bool amplitudeOppositeSign = div0.approximatelyEqualsMinus(div1);
+            bool edgeWeightsOppositeSign = u->e[1].w.approximatelyEqualsMinus(v->e[1].w);
+//            bool edgeWeightsPlusMinus  = div0.approximatelyEqualsPlusMinus(div1);
+            bool edgeWeightsPlusMinus  = u->e[1].w.approximatelyEquals(v->e[1].w) || edgeWeightsOppositeSign;
+//            cn.returnToCache(div0);
+//            cn.returnToCache(div1);
             // Step 1.3:  check if the edge weights are equal, up to a sign
             // TODO limdd check if uhigh.w = 1 / vhigh.w
-            if (!uLow.w.approximatelyEquals(vLow.w) || (!uHigh.w.approximatelyEquals(vHigh.w) && !amplitudeOppositeSign)) return LimWeight<>::noLIM;
+            if (!edgeWeightsPlusMinus) return LimWeight<>::noLIM;
             std::cout << "[getIsomorphismPauli] edge weights are approximately equal.\n"; std::cout.flush(); superFlush();
             // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
             LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
             std::cout << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; std::cout.flush(); superFlush();
-            if (amplitudeOppositeSign) {
+            if (edgeWeightsOppositeSign) {
                 std::cout << "[getIsomorphismPauli] multiplying Phase by -1 because high weights had opposite signs\n"; std::cout.flush(); superFlush();
                 isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
             }
@@ -982,6 +978,7 @@ public:
             }
             else {
                 std::cout << "[getIsomorphismPauli] Coset was empty; returning -1.\n"; std::cout.flush();
+//                cn.returnToCache(iso->weight);
                 iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
         }
@@ -1016,28 +1013,37 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    //   2. find out how to compute 1/weight. Then uncomment the code indicated below
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, Complex& weightInv, bool& s, bool& x) {
+    //   2. Communicate that we need a new reduction rule for high edge weights. This procedure now implements a candidate for that.
+    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
 
-    		if (weight.lexSmallerThanxMinusOne()) {
+    		if (CTEntry::val(weight.r) < 0) {
     			weight.multiplyByMinusOne(true);
-    			std::cout << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
     			s = true;
+    			std::cout << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
     		}
-    		bool sInv = false;
-    		ComplexNumbers::div(weightInv, Complex::one, weight); // temp := 1/weight
-    		if (weightInv.lexSmallerThanxMinusOne()) {
-    			weightInv.multiplyByMinusOne(true);
-    			sInv = true;
-    		}
-    		if (weightInv.lexSmallerThan(weight)) {
-    			weight.setVal(weightInv);
+    		fp norm = ComplexNumbers::mag2(weight);
+    		if (norm > 1) {
+    			ComplexNumbers::div(weight, Complex::one, weight);
     			x = true;
-    			s = sInv;
     		}
+
+//    		if (weight.lexSmallerThanxMinusOne()) {
+//    			weight.multiplyByMinusOne(true);
+//    			s = true;
+//    		}
+//    		ComplexNumbers::div(weightInv, Complex::one, weight); // temp := 1/weight
+//    		if (weightInv.lexSmallerThanxMinusOne()) {
+//    			weightInv.multiplyByMinusOne(true);
+//    			sInv = true;
+//    		}
+//    		if (weightInv.lexSmallerThan(weight)) {
+//    			weight.setVal(weightInv);
+//    			x = true;
+//    			s = sInv;
+//    		}
     	}
     	else {
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);

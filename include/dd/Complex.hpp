@@ -51,6 +51,29 @@ namespace dd {
             return CTEntry::approximatelyZero(x.real()) && CTEntry::approximatelyZero(x.imag());
         }
 
+        // Returns true iff a == -b, approximately
+        bool approximatelyEqualsMinus(const Complex& c) const {
+            bool rflip = false, iflip = false;
+            // check if Real(a) = -Real(c)
+            if (ComplexTable<>::Entry::approximatelyEquals(r, ComplexTable<>::Entry::flipPointerSign(c.r))) {
+                rflip = true;
+            }
+            // Check if Im(a) = -Im(c)
+            if (ComplexTable<>::Entry::approximatelyEquals(i, ComplexTable<>::Entry::flipPointerSign(c.i))) {
+                iflip = true;
+            }
+//            std::cout << "[isTimesMinusOne] answer: " << ((rflip && iflip) ? "yes" : "no") << " because a=" << a.toString() << ", b=" << b.toString() << ", so realflip=" << rflip << ", imflip=" << iflip << std::endl;
+            return rflip && iflip;
+        }
+
+        // Returns true iff this Complex number == +/- c
+        //   (i.e, if this number is approximately equal to plus or minus c)
+        inline bool approximatelyEqualsPlusMinus(const Complex& c) const {
+        	if (approximatelyEquals(c)) return true;
+        	if (approximatelyEqualsMinus(c)) return true;
+        	return false;
+        }
+
         inline bool operator==(const Complex& other) const {
             return r == other.r && i == other.i;
         }

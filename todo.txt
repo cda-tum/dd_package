@@ -2,9 +2,15 @@
 incorporate weights into the getIsomorphismPauli procedure
     Use a cached weight in getHighLabelPauli
     in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
-        so that highLabelPauli doesn't need to receive the whole complexTable 
+        so that highLabelPauli doesn't need to receive the whole complexTable
+    do not assume that the low weight is 1 
+    cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
+    	work out on paper first
 
 all tests pass under Z group
+
+make a new reduction rule for weights on the high edge.
+	communicate with Linz
 
 refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
 
@@ -21,7 +27,7 @@ make Hamming weight circuits
 
 getLIMDDFromVector() turn a ket-vector into a LIMDD
 use some tests to test whether the isomorphism-finding machinery works:
-vector := [ ... [
+vector := [ ... ]
 iso := xyziy
 transformedVector := iso * vector
 LIMDD a := getLIMDDFromVector(vector)

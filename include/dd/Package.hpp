@@ -63,9 +63,10 @@ namespace dd {
     public:
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
+        static constexpr LIMDD_group defaultGroup      = LIMDD_group::Pauli_group;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = LIMDD_group::Pauli_group):
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
             cn(ComplexNumbers()), nqubits(nq), group(_group) {
             resize(nq);
         };
@@ -366,17 +367,19 @@ namespace dd {
             vNode oldNode = *(r.p); // make a copy of the old node
             bool s = false;
             bool x = false;
-            Complex highEdgeWeightTemp = cn.getTemporary(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
-            Complex temp = cn.getTemporary();
-            LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, temp, s, x);
+            Complex highEdgeWeightTemp = cn.getTemporary(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i)); // TODO return to cache
+//            Complex temp = cn.getTemporary(); // TODO return to cache
+            LimEntry<>* higLimTemp2 = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, s, x);
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
+//            cn.returnToCache(highEdgeWeightTemp);
+//            cn.returnToCache(temp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             std::cout << "[normalizeLIMDD] Found high label + weight: " << r.p->e[1].w << " * " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
-            LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode); // TODO memory leak: LIM 'iso' is not freed
+            LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
             assert(iso != LimWeight<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
@@ -388,6 +391,13 @@ namespace dd {
             // TODO
             //    Question @Stefan, Thomas: how to multiply complex numbers? as follows:
             // r.w  = r.w * iso->weight;
+//            Complex rootWeightTemp = cn.getTemporary(); // TODO return to cache
+//            cn.mul(rootWeightTemp, r.w, iso->weight);
+//            cn.returnToCache(iso->weight);
+//            r.w = cn.lookup(rootWeightTemp);
+//            r.w = rootWeightTemp;
+//            cn.returnToCache(rootWeightTemp);
+
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
             std::cout.flush();

@@ -2341,7 +2341,7 @@ TEST(LimTest, getIsomorphismPauli1) {
 //    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
     dd::Edge<dd::vNode> e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one});
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("X");
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
@@ -2357,7 +2357,7 @@ TEST(LimTest, getIsomorphismPauli2) {
     // make edge e1 = |+> = |0> + |1>
     auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     std::cout << "[getIsomorphismPauli2 test] Done finding isomorphism.\n"; std::cout.flush();
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
 
@@ -2375,7 +2375,7 @@ TEST(LimTest, getIsomorphismPauli3) {
     // make edge e1 = |+> = |0> + |1>
     auto e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::one});
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
@@ -2426,7 +2426,7 @@ TEST(LimTest, getIsomorphismPauli5) {
     e3.p->e[1].w = dd::Complex::one;
 
     std::cout << "[getIsomorpismPauli5 test] Made all edges; now finding isomorphism between |00>-|11> vs |00>+|11>.\n";
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism1 = new dd::LimWeight<>("IZ");
     dd::LimWeight<>* expectedIsomorphism2 = new dd::LimWeight<>("ZI");
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
@@ -2452,7 +2452,7 @@ TEST(LimTest, getIsomorphismPauli7) {
     // make edge e11 = |10> + |11>
     dd::Edge<dd::vNode> e3 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e2.p, e3.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
@@ -2545,7 +2545,7 @@ TEST(LimTest, getIsomorphismPauli9) {
     EXPECT_EQ(e3.p->e[1].p, e4.p->e[0].p);
     std::cout << "[getIsomorphismPauli9 test] Low label of e3: " << dd::LimEntry<>::to_string(e3.p->e[0].l) << " low label of e4: " << dd::LimEntry<>::to_string(e4.p->e[0].l) << std::endl;
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IIX");
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));
@@ -2574,7 +2574,7 @@ TEST(LimTest, getIsomorphismPauli10) {
     // make edge e4 = |0>|e1> + |1>|e1>
     dd::Edge<dd::vNode> e4 = dd->makeDDNodeNonNormalized(std::array{e2, e1});
 
-    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p);
+    dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e3.p, e4.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("IIX");
     std::cout << "Found isomorphism: " << dd::LimWeight<>::to_string(isomorphism) << std::endl;
     EXPECT_TRUE(dd::LimWeight<>::Equal(isomorphism, expectedIsomorphism));

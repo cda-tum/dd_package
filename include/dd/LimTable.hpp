@@ -506,7 +506,7 @@ namespace dd {
 
         // Initializes the identity operator, with weight +1
     	LimWeight<NUM_QUBITS>()
-    			: weight(Complex::one) {
+    			: lim(nullptr), weight(Complex::one) {
     		//
     	}
 
