@@ -1019,7 +1019,7 @@ public:
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
 
-    		if (CTEntry::val(weight.r) < 0) {
+    		if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
     			weight.multiplyByMinusOne(true);
     			s = true;
     			std::cout << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
