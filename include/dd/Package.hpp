@@ -1467,10 +1467,17 @@ namespace dd {
                 case 'I':
 //                    std::cout << "[Follow] encountered I " << std::endl;
                     return {e.p->e[path], lim2};
-                    //                case 'X':
-                    //                    std::cout << "encountered X " << std::endl;
-                    //                    break;
-                    //                case 'Y':
+				case 'X':
+					return {e.p->e[1-path], lim2};
+//					std::cout << "encountered X " << std::endl;
+//					break;
+				case 'Y':
+					if (path == 0) {
+						e.p->e[1-path].w.multiplyByi();
+					} else {
+						e.p->e[1-path].w.multiplyByMinusi();
+					}
+					return {e.p->e[1-path], lim2};
                     //                    std::cout << "encountered Y " << std::endl;
                     //                    break;
                 case 'Z':

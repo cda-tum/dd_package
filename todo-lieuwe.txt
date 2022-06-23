@@ -7,6 +7,9 @@ incorporate weights into the getIsomorphismPauli procedure
     cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
     	work out on paper first
 
+implement 'follow' and 'unfollow' for the Pauli group
+	amounts to implementing X and Y
+
 all tests pass under Z group
 
 make a new reduction rule for weights on the high edge.
