@@ -1068,7 +1068,7 @@ TEST(DDPackageTest, CloseToIdentity) {
 TEST(DDPackageTest, dNodeMultiply) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1119,7 +1119,7 @@ TEST(DDPackageTest, dNodeMultiply) {
 TEST(DDPackageTest, dNodeMultiply2) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1164,7 +1164,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
 TEST(DDPackageTest, dNodeMulCache1) {
     // Make caching test with dNodes
     dd::Qubit nr_qubits = 1;
-    auto      dd        = std::make_unique<dd::DensityMatrixSimulatorDDPackage>(nr_qubits);
+    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
     // Make zero density matrix
     auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
     dd->incRef(state);

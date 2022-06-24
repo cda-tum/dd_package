@@ -45,7 +45,6 @@ target_sources(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/UnaryComputeTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/DensityNoiseTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/StochasticNoiseOperationTable.hpp>
-        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/NoiseFunctionality.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/UniqueTable.hpp>)
 
 # set include directories
