@@ -194,11 +194,11 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     b[0] = b[1] = true;
     auto e      = dd->makeBasisState(nqubits, b);
     auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero,
-                                          dd::BasisStates::one,
-                                          dd::BasisStates::plus,
-                                          dd::BasisStates::minus,
-                                          dd::BasisStates::left,
-                                          dd::BasisStates::right});
+                                               dd::BasisStates::one,
+                                               dd::BasisStates::plus,
+                                               dd::BasisStates::minus,
+                                               dd::BasisStates::left,
+                                               dd::BasisStates::right});
     dd->incRef(e);
     dd->incRef(f);
     dd->vUniqueTable.printActive();
@@ -1065,10 +1065,55 @@ TEST(DDPackageTest, CloseToIdentity) {
     EXPECT_FALSE(dd->isCloseToIdentity(notClose3));
 }
 
+struct DensityMatrixSimulatorDDPackageConfigTesting: public dd::DDPackageConfig {
+    static constexpr std::size_t UT_DM_NBUCKET                 = 65536U;
+    static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE = 4096U;
+
+    static constexpr std::size_t CT_DM_DM_MULT_NBUCKET = 16384U;
+    static constexpr std::size_t CT_DM_ADD_NBUCKET     = 16384U;
+    static constexpr std::size_t CT_DM_NOISE_NBUCKET   = 4096U;
+
+    static constexpr std::size_t UT_MAT_NBUCKET            = 16384U;
+    static constexpr std::size_t CT_MAT_ADD_NBUCKET        = 4096U;
+    static constexpr std::size_t CT_VEC_ADD_NBUCKET        = 4096U;
+    static constexpr std::size_t CT_MAT_TRANS_NBUCKET      = 4096U;
+    static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET = 4096U;
+
+    static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 1U;
+    static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 1U;
+    static constexpr std::size_t UT_VEC_NBUCKET                 = 1U;
+    static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 1U;
+    static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 1U;
+    static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 1U;
+    static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 1U;
+    static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 1U;
+    static constexpr std::size_t STOCHASTIC_CACHE_OPS           = 1U;
+};
+
+using DensityMatrixPackageTest = dd::Package<DensityMatrixSimulatorDDPackageConfigTesting::UT_VEC_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::UT_VEC_INITIAL_ALLOCATION_SIZE,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::UT_MAT_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::UT_MAT_INITIAL_ALLOCATION_SIZE,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_VEC_ADD_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_ADD_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_TRANS_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_CONJ_TRANS_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_VEC_MULT_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_MAT_MULT_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_VEC_KRON_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_MAT_KRON_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_VEC_INNER_PROD_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_DM_NOISE_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::UT_DM_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::UT_DM_INITIAL_ALLOCATION_SIZE,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_DM_DM_MULT_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::CT_DM_ADD_NBUCKET,
+                                             DensityMatrixSimulatorDDPackageConfigTesting::STOCHASTIC_CACHE_OPS>;
+
 TEST(DDPackageTest, dNodeMultiply) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
+    auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1119,7 +1164,7 @@ TEST(DDPackageTest, dNodeMultiply) {
 TEST(DDPackageTest, dNodeMultiply2) {
     //Multiply dNode with mNode (MxMxM)
     dd::Qubit nr_qubits = 3;
-    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
+    auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
     auto state = dd::dEdge::one;
     for (dd::Qubit p = 0; p < 3; p++) {
@@ -1164,7 +1209,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
 TEST(DDPackageTest, dNodeMulCache1) {
     // Make caching test with dNodes
     dd::Qubit nr_qubits = 1;
-    auto      dd        = std::make_unique<dd::DensityMatrixPackage>(nr_qubits);
+    auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
     auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
     dd->incRef(state);
