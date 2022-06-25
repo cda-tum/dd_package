@@ -193,12 +193,7 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     auto           b       = std::vector<bool>(nqubits, false);
     b[0] = b[1] = true;
     auto e      = dd->makeBasisState(nqubits, b);
-    auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero,
-                                               dd::BasisStates::one,
-                                               dd::BasisStates::plus,
-                                               dd::BasisStates::minus,
-                                               dd::BasisStates::left,
-                                               dd::BasisStates::right});
+    auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero, dd::BasisStates::one, dd::BasisStates::plus, dd::BasisStates::minus, dd::BasisStates::left, dd::BasisStates::right});
     dd->incRef(e);
     dd->incRef(f);
     dd->vUniqueTable.printActive();
