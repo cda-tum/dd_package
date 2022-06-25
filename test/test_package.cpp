@@ -193,12 +193,7 @@ TEST(DDPackageTest, StateGenerationManipulation) {
     auto           b       = std::vector<bool>(nqubits, false);
     b[0] = b[1] = true;
     auto e      = dd->makeBasisState(nqubits, b);
-    auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero,
-                                               dd::BasisStates::one,
-                                               dd::BasisStates::plus,
-                                               dd::BasisStates::minus,
-                                               dd::BasisStates::left,
-                                               dd::BasisStates::right});
+    auto f      = dd->makeBasisState(nqubits, {dd::BasisStates::zero, dd::BasisStates::one, dd::BasisStates::plus, dd::BasisStates::minus, dd::BasisStates::left, dd::BasisStates::right});
     dd->incRef(e);
     dd->incRef(f);
     dd->vUniqueTable.printActive();
@@ -1159,6 +1154,13 @@ TEST(DDPackageTest, dNodeMultiply) {
             EXPECT_TRUE(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
         }
     }
+
+    auto   probVector = dd->getProbVectorFromDensityMatrix(state, 0.001);
+    double tolerance  = 1e-10;
+    for (auto& prob: probVector) {
+        std::cout << prob.first << ": " << prob.second << std::endl;
+        EXPECT_NEAR(prob.second, 0.125, tolerance);
+    }
 }
 
 TEST(DDPackageTest, dNodeMultiply2) {
@@ -1203,6 +1205,12 @@ TEST(DDPackageTest, dNodeMultiply2) {
             }
             EXPECT_TRUE(std::abs(std::abs(stateDensityMatrix[i][j]) - 0.125) < 0.000001);
         }
+    }
+    auto   probVector = dd->getProbVectorFromDensityMatrix(state, 0.001);
+    double tolerance  = 1e-10;
+    for (auto& prob: probVector) {
+        std::cout << prob.first << ": " << prob.second << std::endl;
+        EXPECT_NEAR(prob.second, 0.125, tolerance);
     }
 }
 
