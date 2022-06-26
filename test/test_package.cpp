@@ -1119,16 +1119,7 @@ TEST(DDPackageTest, dNodeMultiply) {
     operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 2));
 
     for (auto& op: operations) {
-        auto tmp0 = dd->conjugateTranspose(op);
-        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
-        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
-
-        dd->incRef(tmp2);
-        dd::dNode::alignDensityNode(state.p);
-        dd->decRef(state);
-        state = tmp2;
-
-        dd::dNode::setDensityMatTempFlagTrue(state.p);
+        dd->applyOperationToDensity(state, op, true);
     }
 
     const auto stateDensityMatrix = dd->getDensityMatrix(state);
@@ -1174,16 +1165,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
     operations.push_back(dd->makeGateDD(dd::Zmat, nr_qubits, 2));
 
     for (auto& op: operations) {
-        auto tmp0 = dd->conjugateTranspose(op);
-        auto tmp1 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), state, 0, false);
-        auto tmp2 = dd->multiply(tmp1, reinterpret_cast<dd::dEdge&>(tmp0), 0, true);
-
-        dd->incRef(tmp2);
-        dd::dNode::alignDensityNode(state.p);
-        dd->decRef(state);
-        state = tmp2;
-
-        dd::dNode::setDensityMatTempFlagTrue(state.p);
+        dd->applyOperationToDensity(state, op, true);
     }
     dd->printMatrix(operations[0]);
 

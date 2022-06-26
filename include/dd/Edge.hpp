@@ -46,22 +46,22 @@ namespace dd {
         [[maybe_unused]] static inline void alignDensityEdge(Edge* e) { Node::alignDensityNode(e->p); }
 
         static inline void revertDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
-            // Align the node pointers
-            if (x != nullptr) {
-                Node::revertDmChangesToNode(x->p);
-            }
-            if (y != nullptr) {
-                Node::revertDmChangesToNode(y->p);
-            }
+            revertDmChangesToEdge(x);
+            revertDmChangesToEdge(y);
         }
+        static inline void revertDmChangesToEdge(Edge<Node>* x) {
+            // Align the node pointer
+            Node::revertDmChangesToNode(x->p);
+        }
+
         static inline void applyDmChangesToEdges(Edge<Node>* x, Edge<Node>* y) {
-            // Align the node pointers
-            if (x != nullptr) {
-                Node::applyDmChangesToNode(x->p);
-            }
-            if (y != nullptr) {
-                Node::applyDmChangesToNode(y->p);
-            }
+            applyDmChangesToEdge(x);
+            applyDmChangesToEdge(y);
+        }
+
+        static inline void applyDmChangesToEdge(Edge<Node>* x) {
+            // Apply density matrix changes to node pointer
+            Node::applyDmChangesToNode(x->p);
         }
     };
 

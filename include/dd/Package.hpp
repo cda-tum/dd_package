@@ -2327,12 +2327,12 @@ namespace dd {
         }
 
         CMat getDensityMatrix(dEdge& e) {
-            dEdge::applyDmChangesToEdges(&e, nullptr);
+            dEdge::applyDmChangesToEdge(&e);
             const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
             getDensityMatrix(e, Complex::one, 0, 0, mat);
-            dd::dEdge::revertDmChangesToEdges(&e, nullptr);
+            dd::dEdge::revertDmChangesToEdge(&e);
             return mat;
         }
 
@@ -2352,24 +2352,24 @@ namespace dd {
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdges(&e.p->e[0], nullptr);
+                dEdge::applyDmChangesToEdge(&e.p->e[0]);
                 getDensityMatrix(e.p->e[0], c, i, j, mat);
-                dd::dEdge::revertDmChangesToEdges(&e.p->e[0], nullptr);
+                dd::dEdge::revertDmChangesToEdge(&e.p->e[0]);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdges(&e.p->e[1], nullptr);
+                dEdge::applyDmChangesToEdge(&e.p->e[1]);
                 getDensityMatrix(e.p->e[1], c, i, y, mat);
-                dd::dEdge::revertDmChangesToEdges(&e.p->e[1], nullptr);
+                dd::dEdge::revertDmChangesToEdge(&e.p->e[1]);
             }
             if (!e.p->e[2].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdges(&e.p->e[2], nullptr);
+                dEdge::applyDmChangesToEdge(&e.p->e[2]);
                 getDensityMatrix(e.p->e[2], c, x, j, mat);
-                dd::dEdge::revertDmChangesToEdges(&e.p->e[2], nullptr);
+                dd::dEdge::revertDmChangesToEdge(&e.p->e[2]);
             }
             if (!e.p->e[3].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdges(&e.p->e[3], nullptr);
+                dEdge::applyDmChangesToEdge(&e.p->e[3]);
                 getDensityMatrix(e.p->e[3], c, x, y, mat);
-                dd::dEdge::revertDmChangesToEdges(&e.p->e[3], nullptr);
+                dd::dEdge::revertDmChangesToEdge(&e.p->e[3]);
             }
 
             cn.returnToCache(c);
