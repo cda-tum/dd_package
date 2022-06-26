@@ -1173,6 +1173,23 @@ namespace dd {
             }
         }
 
+        dEdge applyOperationToDensity(dEdge& e, mEdge& operation, [[maybe_unused]] bool generateDensityMatrix = false) {
+            [[maybe_unused]] const auto before = cn.cacheCount();
+            auto                        tmp0   = conjugateTranspose(reinterpret_cast<mEdge&>(operation));
+            auto                        tmp1   = multiply(e, reinterpret_cast<dEdge&>(tmp0), 0, false);
+            auto                        tmp2   = multiply(reinterpret_cast<dEdge&>(operation), tmp1, 0, generateDensityMatrix);
+            incRef(tmp2);
+            dEdge::alignDensityEdge(&e);
+            decRef(e);
+            e = tmp2;
+
+            if (generateDensityMatrix) {
+                dEdge::setDensityMatrixTrue(&e);
+            }
+
+            return e;
+        }
+
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
             [[maybe_unused]] const auto before = cn.cacheCount();
@@ -2151,6 +2168,61 @@ namespace dd {
             }
             cn.returnToCache(c);
             return r;
+        }
+
+        std::map<std::string, double> getProbVectorFromDensityMatrix(dEdge e, double measurementThreshold) {
+            std::map<std::string, double> measuredResult = {};
+            double                        p0, p1;
+            double                        globalProbability;
+            double                        statesToMeasure;
+
+            dEdge::alignDensityEdge(&e);
+
+            statesToMeasure = std::pow(2, nqubits);
+
+            for (int m = 0; m < statesToMeasure; m++) {
+                int currentResult        = m;
+                globalProbability        = dd::CTEntry::val(e.w.r);
+                std::string resultString = intToString(m, '1');
+                dEdge       cur          = e;
+                for (size_t i = 0; i < nqubits; ++i) {
+                    if (cur.p->v != -1 && globalProbability > measurementThreshold) {
+                        assert(dd::CTEntry::approximatelyZero(cur.p->e.at(0).w.i) && dd::CTEntry::approximatelyZero(cur.p->e.at(3).w.i));
+                        p0 = dd::CTEntry::val(cur.p->e.at(0).w.r);
+                        p1 = dd::CTEntry::val(cur.p->e.at(3).w.r);
+                    } else {
+                        globalProbability = 0;
+                        break;
+                    }
+
+                    if (currentResult % 2 == 0) {
+                        cur = cur.p->e.at(0);
+                        globalProbability *= p0;
+                    } else {
+                        cur = cur.p->e.at(3);
+                        globalProbability *= p1;
+                    }
+                    currentResult = currentResult >> 1;
+                }
+                measuredResult.insert({resultString, globalProbability});
+            }
+            return measuredResult;
+        }
+
+        [[nodiscard]] std::string intToString(long targetNumber, char value) const {
+            if (targetNumber < 0) {
+                throw std::runtime_error(std::string{"Integer must be at least zero!"});
+            }
+            auto        qubits = nqubits;
+            std::string path(qubits, '0');
+            auto        number = (unsigned long)targetNumber;
+            for (size_t i = 1; i <= qubits; i++) {
+                if (number % 2) {
+                    path[qubits - i] = value;
+                }
+                number = number >> 1u;
+            }
+            return path;
         }
 
         CVec getVector(const vEdge& e) {
