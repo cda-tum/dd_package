@@ -237,6 +237,14 @@ namespace dd {
             return r;
         }
 
+        dEdge makeZeroDensityOperator() {
+            auto f = dEdge::one;
+            for (size_t p = 0; p < nqubits; p++) {
+                f = makeDDNode(p, std::array{f, dEdge::zero, dEdge::zero, dEdge::zero});
+            }
+            return f;
+        }
+
         // generate |0...0> with n qubits
         vEdge makeZeroState(QubitCount n, std::size_t start = 0) {
             if (n + start > nqubits) {

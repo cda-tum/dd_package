@@ -1110,10 +1110,7 @@ TEST(DDPackageTest, dNodeMultiply) {
     dd::Qubit nr_qubits = 3;
     auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
-    auto state = dd::dEdge::one;
-    for (dd::Qubit p = 0; p < 3; p++) {
-        state = dd->makeDDNode(p, std::array{state, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
-    }
+    auto state = dd->makeZeroDensityOperator();
     dd->incRef(state);
     std::vector<dd::mEdge> operations = {};
     operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
@@ -1168,10 +1165,7 @@ TEST(DDPackageTest, dNodeMultiply2) {
     dd::Qubit nr_qubits = 3;
     auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
-    auto state = dd::dEdge::one;
-    for (dd::Qubit p = 0; p < 3; p++) {
-        state = dd->makeDDNode(p, std::array{state, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
-    }
+    auto state = dd->makeZeroDensityOperator();
     dd->incRef(state);
     std::vector<dd::mEdge> operations = {};
     operations.push_back(dd->makeGateDD(dd::Hmat, nr_qubits, 0));
@@ -1219,7 +1213,7 @@ TEST(DDPackageTest, dNodeMulCache1) {
     dd::Qubit nr_qubits = 1;
     auto      dd        = std::make_unique<DensityMatrixPackageTest>(nr_qubits);
     // Make zero density matrix
-    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    auto state = dd->makeZeroDensityOperator();
     dd->incRef(state);
 
     std::vector<dd::mEdge> operations = {};
@@ -1272,7 +1266,7 @@ TEST(DDPackageTest, dNoiseCache) {
     dd::Qubit nr_qubits = 1;
     auto      dd        = std::make_unique<dd::Package<>>(nr_qubits);
     // Make zero density matrix
-    auto state = dd->makeDDNode(0, std::array{dd::dEdge::one, dd::dEdge::zero, dd::dEdge::zero, dd::dEdge::zero});
+    auto state = dd->makeZeroDensityOperator();
     dd->incRef(state);
 
     std::vector<dd::mEdge> operations = {};
