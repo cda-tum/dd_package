@@ -365,7 +365,7 @@ namespace dd {
                 if (argmax == -1) {
                     if (!cached && !e.isTerminal()) {
                         // If it is not a cached computation, the node has to be put back into the chain
-                        mUniqueTable.returnNode(reinterpret_cast<mNode*>(e.p));
+                        getUniqueTable<Node>().returnNode(e.p);
                     }
                     return Edge<Node>::zero;
                 }
