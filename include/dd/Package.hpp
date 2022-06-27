@@ -1183,9 +1183,9 @@ namespace dd {
 
         dEdge applyOperationToDensity(dEdge& e, mEdge& operation, [[maybe_unused]] bool generateDensityMatrix = false) {
             [[maybe_unused]] const auto before = cn.cacheCount();
-            auto                        tmp0   = conjugateTranspose(reinterpret_cast<mEdge&>(operation));
-            auto                        tmp1   = multiply(e, reinterpret_cast<dEdge&>(tmp0), 0, false);
-            auto                        tmp2   = multiply(reinterpret_cast<dEdge&>(operation), tmp1, 0, generateDensityMatrix);
+            auto                        tmp0   = conjugateTranspose(operation);
+            auto                        tmp1   = multiply(e, densityFromMatrixEdge(tmp0), 0, false);
+            auto                        tmp2   = multiply(densityFromMatrixEdge(operation), tmp1, 0, generateDensityMatrix);
             incRef(tmp2);
             dEdge::alignDensityEdge(&e);
             decRef(e);

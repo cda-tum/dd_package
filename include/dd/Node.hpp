@@ -196,6 +196,10 @@ namespace dd {
     using dCachedEdge = CachedEdge<dNode>;
     inline dNode dNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0, -1, 0};
 
+    static inline dEdge densityFromMatrixEdge(const mEdge& e) {
+        return dEdge{reinterpret_cast<dNode*>(e.p), e.w};
+    }
+
 } // namespace dd
 
 namespace std {
