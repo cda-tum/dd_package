@@ -6,11 +6,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-// This is to see whether tests pass trivially
-TEST(LimTest, ThisTestFails) {
-	EXPECT_TRUE(false);
-}
-
 using namespace dd::literals;
 TEST(LimTest, SinglePauliOps) {
     dd::LimEntry<1> id{0b000};

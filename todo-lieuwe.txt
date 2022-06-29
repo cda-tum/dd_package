@@ -12,9 +12,6 @@ implement 'follow' and 'unfollow' for the Pauli group
 
 all tests pass under Z group
 
-make a new reduction rule for weights on the high edge.
-	communicate with Linz
-
 refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
 
 Is the 's' and 'x' parameters useful?
@@ -40,10 +37,7 @@ if isValidIsomorphism(a, b, isoFound) party else error
 
 in tests, call isIsomorphism instead of defining a handwritten isomorphism
 
-Log
-    output debugging statements to the Log instead of to std::cout
-    ability to turn the log on and off
-
+put all debug statements in the Log
 
 refactor LimEntry<>::setOperator so that one function is called,
     instead of two different setOperators
@@ -59,12 +53,11 @@ Write many tests for
 		when -I is generated
 	getVector
 
-Refactor 'limVector' into 'stabilizerGroup'
-
 In getKernelZ, getKernelPauli,
     Refactor LimBitset* into LimBitset, i.e., make them local, temporary variables,
     to reduce memory management problems
 
+Refactor 'limVector' into 'stabilizerGroup'
 refactor StabilizerGroup into its own class
     Methods:
     GramSchmidt
@@ -92,10 +85,6 @@ add <Z>-LIMDD functionality to
     cache of multiplyMatrix
     make inventory of places where LIMDD functionality needs to be added in order to support simulation
 
-Take steps to fix the segmentation faults, invalid free errors
-    make a vNode destructor, which does nothing.
-    repair memory leaks in all the methods that need it, in PauliAlgebra.hpp
-
 rewrite GaussianElimination so that it takes into account the phase
     - toColumnEchelonForm(StabilizerGroup)
         - constructStabilizerGroupZ
@@ -105,152 +94,28 @@ rewrite GaussianElimination so that it takes into account the phase
     in these applications, is it important to handle the case when -I is generated?
     If so, then neither of these methods will suffer from the "not handling -I correctly"-deficiency.
 
-====    TODO new functionality to support Pauli    ====
 
-** Tests **
-- make 10 test cases for highLabelPauli
--     on paper
-- make 10 test cases for getIsomorphismPauli
--     on paper
-- make a test case for nodes which trigger Step 5 in getIsomorphismZ, the 'Z'-operator clause
-- make a test case which triggers Step 5 in getIsomorphismPauli
-- make a test case which triggers Case 3.1 in getIsomorphismPauli
-- make a test case which triggers case 3.1, and which is sensitive to the weight
-- make a test which triggers case x=1 in normalizeLIMDD
 
-in normalizeLIMDD:
-    + swap the two edges if necessary
-    + find a total order on nodes... their ID?
-    + use bool x in the getLabels function
-    - in case x=1, multiply weight by lambda
-
-getIsomorphismPauli
-    + modify getIsomorphismZ by checking whether maybe u and v need to be exchanged;
-    + sketch this algorithm on paper
-    + it looks like we have all the necessary elements, like intersect Pauli cosets
-    - multiply with 1/w
-
-getStabilizerGeneratorSetPauli
-    + work out on paper
-    + implement
-    + call from normalize
-
-GaussianEliminationPauli
-    hypothesis: already works.
-    - Write tests to check if we're left-multiplying or right-multiplying and whether that matters (given that our groups are abelian)
-
-getRootLabel
-    Hypothesis: already works for Pauli
-        since it just returns the lexmin of a coset, which is what we want
-
-toColumnEchelonFormPauli
-    Hypothesis: works after we refactor GaussianEliminationPauli (if necessary)
-
-GramSchmidt
-    Hypothesis: already works.
-    - make some tests to check that idea
-
-getKernelPauli
-    Hypothesis: works after we refactor GaussianEliminationPauli (if necessary)
-
-getKernelModuloPhase
-    hypothesis: it already works, because it works if GaussianEliminationModuloPhase works
-
-intersectGroupsPauli
-    Write 10 tests to test this behaviour
-    Refactor this to ask for getKernelPauli
-    Hypothesis: it works when getKernelPauli works
-    Double-check whether getProductOfElements should do left or right multiplication
-
-Ask whether the number of qubits in the diagram 'nq' is different from the number of qubits for LIMs
-
-====    TODO for which I need JKU's help
-
-prepare Linz meeting
-    new edge weight normalization rules; make a picture illustrating why this is
-    make list of places in code where LimTable should be added
-
-PauliAlgebra.hpp: implement several algorithms without a memory leak:
-	- GramSchmidt
-		Can be implemented with almost no reallocation of memory
-		e.g., the 'y' object can be a local variable, instead of a pointer
-	- GaussianElimination(LimEntry)
-	   the following line may introduce a memory leak, by allocating a new LimEntry without deallocating the previous content of G[reduceColId]
-        G[reduceColId] = LimEntry<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
-	- GaussianEliminationModuloPhase
-	   the same as above
-	- GaussianElimination(LimBitset)
-	   the same as above
-	- almost any place where two LIMs are multiplied
-	
-PauliAlgebra.hpp: highLabelZWeight
-	Here a weight is multiplied by -1, in the function
-            weight.multiplyByMinusOne();
-    Can this have unintended consequences if the CTEntry is also used by another weight elsewhere in the diagram?
-    If so, we should refactor this line to have no unintended consequences
-
-PauliAlgebra.hpp: constuctStabilizerGeneratorSetZ
-	deallocate 'm' and 'minus'
-
-Package.hpp: normalizeLIMDD()
-	1. two LIMs are multiplied in the following line in Step 1,
-            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
-	   This may introduce a memory leak; ideally, these LIMs are put in the table
-       The same question for LimEntry<>::multiply in Step 5 and Step 7
-    2. in Step 3, the procedure highLabelZ may change the weight on the high edge, by multiplying it by -1.
-       Is this a violation of the normalization rules?
-       --> see picture TODO
-    3. In Step 6, the root edge weight is multiplied by -1.
-       Can this have unintended consequences if the same weights are used elsewhere in the diagram?
-
-PauliAlgebra.hpp: pruneZeroColumns
-    This procedure removes LimEntry* pointers from a vector, without properly deallocating the LimEntry objects
-    this procedure should reduce the refcount of the LimEntry objects it removes from G
-
-PauliAlgebra.hpp: appendIdentityMatrixBitset
-    allocates new LimBitset, but these objects are never deallocated.
-    Solution: deallocate immediately after use, since they are temporary objects used locally in a function
-
-PauliAlgebra.hpp: getKernelZ
-    This procedure allocates LimBitset objects in the G_Id variable,
-    but these objects are not deallocated.
-
-in PauliAlgebra.hpp: getCosetIntersectionElementPauli
-    The following local variables are allocated on the heap but not deallocated, causing memory leaks:
-        GH
-        GH_Id
-        a_H
-        a_prime
-        k_G
-        k_H
-
-PauliAlgebra.hpp: constructStabilizerGeneratorSetZ
-    put LimEntry pointers 'idZ' and 'minusIdZ' into the LimTable?
-    deallocate 'minus' and 'm'
-
-PauliAlgebra.hpp: isTimesMinusOne
-    Should this method be moved to Complex.hpp?
-
-PauliAlgebra.hpp: getIsomorphismZ
-    'isoHigh' is allocated, but not deallocated.
-    Put this object in the LimTable, or deallocate appropriately in some other way, e.g.,
-    refactor into a local variable (on the stack)
-
-PauliAlgebra.hpp: highLabelZ
-    GH is not deallocated properly
-
-in LimTable.hpp: LimEntry::multiply
-    In the places that call this function, make sure that the LimEntry is put in the LimTable,
-    if appropriate, and otherwise is deallocated
-    make an inventory of places where this happens
 
 ====    DONE
+
+Log
+    output debugging statements to the Log instead of to std::cout
+    ability to turn the log on and off
+
+make a new reduction rule for weights on the high edge.
+	communicate with Linz
 
 // TODO is the assertion that the low LIMs are Identity true in all calls from normalizeLIMDD?
     Yes, this assertion holds when getIsomorphism is called
 
 checkout testSimpleCliffordCircuit_1,2,3 in other branches to see if I've merged correctly
 
+Take steps to fix the segmentation faults, invalid free errors
+    make a vNode destructor, which does nothing.
+    repair memory leaks in all the methods that need it, in PauliAlgebra.hpp
+    (Sebastiaan fixed these)
+    
 The following tests fail:
 [  FAILED  ] LimTest.simpleCliffordCircuit
     Because simulation is not yet supported; only representation is supported
@@ -399,3 +264,144 @@ in a new branch, make LIMs the most significant bit
 
 sort stabilizer groups descending instead of ascending
 
+
+
+
+====    TODO new functionality to support Pauli    ====
+
+** Tests **
+- make 10 test cases for highLabelPauli
+-     on paper
+- make 10 test cases for getIsomorphismPauli
+-     on paper
+- make a test case for nodes which trigger Step 5 in getIsomorphismZ, the 'Z'-operator clause
+- make a test case which triggers Step 5 in getIsomorphismPauli
+- make a test case which triggers Case 3.1 in getIsomorphismPauli
+- make a test case which triggers case 3.1, and which is sensitive to the weight
+- make a test which triggers case x=1 in normalizeLIMDD
+
+in normalizeLIMDD:
+    + swap the two edges if necessary
+    + find a total order on nodes... their ID?
+    + use bool x in the getLabels function
+    - in case x=1, multiply weight by lambda
+
+getIsomorphismPauli
+    + modify getIsomorphismZ by checking whether maybe u and v need to be exchanged;
+    + sketch this algorithm on paper
+    + it looks like we have all the necessary elements, like intersect Pauli cosets
+    - multiply with 1/w
+
+getStabilizerGeneratorSetPauli
+    + work out on paper
+    + implement
+    + call from normalize
+
+GaussianEliminationPauli
+    hypothesis: already works.
+    - Write tests to check if we're left-multiplying or right-multiplying and whether that matters (given that our groups are abelian)
+
+getRootLabel
+    Hypothesis: already works for Pauli
+        since it just returns the lexmin of a coset, which is what we want
+
+toColumnEchelonFormPauli
+    Hypothesis: works after we refactor GaussianEliminationPauli (if necessary)
+
+GramSchmidt
+    Hypothesis: already works.
+    - make some tests to check that idea
+
+getKernelPauli
+    Hypothesis: works after we refactor GaussianEliminationPauli (if necessary)
+
+getKernelModuloPhase
+    hypothesis: it already works, because it works if GaussianEliminationModuloPhase works
+
+intersectGroupsPauli
+    Write 10 tests to test this behaviour
+    Refactor this to ask for getKernelPauli
+    Hypothesis: it works when getKernelPauli works
+    Double-check whether getProductOfElements should do left or right multiplication
+
+Ask whether the number of qubits in the diagram 'nq' is different from the number of qubits for LIMs
+
+====    TODO for which I need JKU's help
+
+prepare Linz meeting
+    new edge weight normalization rules; make a picture illustrating why this is
+    make list of places in code where LimTable should be added
+
+PauliAlgebra.hpp: implement several algorithms without a memory leak:
+	- GramSchmidt
+		Can be implemented with almost no reallocation of memory
+		e.g., the 'y' object can be a local variable, instead of a pointer
+	- GaussianElimination(LimEntry)
+	   the following line may introduce a memory leak, by allocating a new LimEntry without deallocating the previous content of G[reduceColId]
+        G[reduceColId] = LimEntry<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+	- GaussianEliminationModuloPhase
+	   the same as above
+	- GaussianElimination(LimBitset)
+	   the same as above
+	- almost any place where two LIMs are multiplied
+	
+PauliAlgebra.hpp: highLabelZWeight
+	Here a weight is multiplied by -1, in the function
+            weight.multiplyByMinusOne();
+    Can this have unintended consequences if the CTEntry is also used by another weight elsewhere in the diagram?
+    If so, we should refactor this line to have no unintended consequences
+
+PauliAlgebra.hpp: constuctStabilizerGeneratorSetZ
+	deallocate 'm' and 'minus'
+
+Package.hpp: normalizeLIMDD()
+	1. two LIMs are multiplied in the following line in Step 1,
+            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim);
+	   This may introduce a memory leak; ideally, these LIMs are put in the table
+       The same question for LimEntry<>::multiply in Step 5 and Step 7
+    2. in Step 3, the procedure highLabelZ may change the weight on the high edge, by multiplying it by -1.
+       Is this a violation of the normalization rules?
+       --> see picture TODO
+    3. In Step 6, the root edge weight is multiplied by -1.
+       Can this have unintended consequences if the same weights are used elsewhere in the diagram?
+
+PauliAlgebra.hpp: pruneZeroColumns
+    This procedure removes LimEntry* pointers from a vector, without properly deallocating the LimEntry objects
+    this procedure should reduce the refcount of the LimEntry objects it removes from G
+
+PauliAlgebra.hpp: appendIdentityMatrixBitset
+    allocates new LimBitset, but these objects are never deallocated.
+    Solution: deallocate immediately after use, since they are temporary objects used locally in a function
+
+PauliAlgebra.hpp: getKernelZ
+    This procedure allocates LimBitset objects in the G_Id variable,
+    but these objects are not deallocated.
+
+in PauliAlgebra.hpp: getCosetIntersectionElementPauli
+    The following local variables are allocated on the heap but not deallocated, causing memory leaks:
+        GH
+        GH_Id
+        a_H
+        a_prime
+        k_G
+        k_H
+
+PauliAlgebra.hpp: constructStabilizerGeneratorSetZ
+    put LimEntry pointers 'idZ' and 'minusIdZ' into the LimTable?
+    deallocate 'minus' and 'm'
+
+PauliAlgebra.hpp: isTimesMinusOne
+    Should this method be moved to Complex.hpp?
+
+PauliAlgebra.hpp: getIsomorphismZ
+    'isoHigh' is allocated, but not deallocated.
+    Put this object in the LimTable, or deallocate appropriately in some other way, e.g.,
+    refactor into a local variable (on the stack)
+
+PauliAlgebra.hpp: highLabelZ
+    GH is not deallocated properly
+
+in LimTable.hpp: LimEntry::multiply
+    In the places that call this function, make sure that the LimEntry is put in the LimTable,
+    if appropriate, and otherwise is deallocated
+    make an inventory of places where this happens

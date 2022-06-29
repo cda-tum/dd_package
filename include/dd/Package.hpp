@@ -17,6 +17,7 @@
 #include "Edge.hpp"
 #include "GateMatrixDefinitions.hpp"
 #include "LimTable.hpp"
+#include "Log.hpp"
 #include "Nodes.hpp"
 #include "NoiseOperationTable.hpp"
 #include "PauliAlgebra.hpp"
@@ -63,8 +64,8 @@ namespace dd {
     public:
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
-        static constexpr LIMDD_group defaultGroup      = LIMDD_group::Pauli_group;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
+        static constexpr LIMDD_group defaultGroup      = LIMDD_group::Pauli_group;
 
         explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
             cn(ComplexNumbers()), nqubits(nq), group(_group) {
@@ -352,18 +353,17 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            std::cout << "[normalizeLIMDD] case Fork on "  << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r;
-            std::cout.flush();
+            Log::log << "[normalizeLIMDD] case Fork on "  << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r;
             LimEntry<>* lowLim = r.p->e[0].l;
             LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            std::cout << "[normalizeLIMDD] Step 1: multiply low and high LIMs.\n";
+            Log::log << "[normalizeLIMDD] Step 1: multiply low and high LIMs.\n";
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
             // Step 2: Make the left LIM Identity
-            std::cout << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r;
+            Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r;
             r.p->e[0].l   = nullptr;
             // Step 3: Choose a canonical right LIM
-            std::cout << "[normalizeLIMDD] Step 3: pick High Label; edge is currently " << r;
+            Log::log << "[normalizeLIMDD] Step 3: pick High Label; edge is currently " << r;
             vNode oldNode = *(r.p); // make a copy of the old node
             bool s = false;
             bool x = false;
@@ -376,17 +376,17 @@ namespace dd {
 //            cn.returnToCache(highEdgeWeightTemp);
 //            cn.returnToCache(temp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-            std::cout << "[normalizeLIMDD] Found high label + weight: " << r.p->e[1].w << " * " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
+            Log::log << "[normalizeLIMDD] Found high label + weight: " << r.p->e[1].w << " * " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
-            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
+            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
             assert(iso != LimWeight<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
-            std::cout << "[normalizeLIMDD] Found isomorphism: " << LimEntry<>::to_string(iso->lim) << "\n";
-            std::cout << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
+            Log::log << "[normalizeLIMDD] Found isomorphism: " << LimEntry<>::to_string(iso->lim) << "\n";
+            Log::log << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
-            std::cout << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
+            Log::log << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
             r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
             // TODO
             //    Question @Stefan, Thomas: how to multiply complex numbers? as follows:
@@ -399,8 +399,7 @@ namespace dd {
 //            cn.returnToCache(rootWeightTemp);
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            std::cout << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
-            std::cout.flush();
+            Log::log << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
             if (r.l->getPhase() == phase_t::phase_minus_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByMinusOne();
@@ -427,7 +426,7 @@ namespace dd {
             	r.l->multiplyBy(X);
             }
 
-            std::cout << "[normalizeLIMDD] Final root edge: " << LimEntry<>::to_string(r.l) << std::endl;
+            Log::log << "[normalizeLIMDD] Final root edge: " << LimEntry<>::to_string(r.l) << '\n';
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
             // Should we *not* call normalize at the beginning of the procedure?
