@@ -2212,7 +2212,9 @@ namespace dd {
                     }
                     currentResult = currentResult >> 1;
                 }
-                measuredResult.insert({resultString, globalProbability});
+                if (globalProbability > 0) { // No need to track probabilities of 0
+                    measuredResult.insert({resultString, globalProbability});
+                }
             }
             return measuredResult;
         }
