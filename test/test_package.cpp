@@ -1283,7 +1283,7 @@ TEST(DDPackageTest, calCulpDistance) {
 }
 
 struct stochPackageConfig: public dd::DDPackageConfig {
-    static constexpr std::size_t STOCHASTIC_CACHE_OPS = 64;
+    static constexpr std::size_t STOCHASTIC_CACHE_OPS = 36;
 };
 
 using stochPackage = dd::Package<stochPackageConfig::UT_VEC_NBUCKET,
