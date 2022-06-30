@@ -886,7 +886,9 @@ namespace dd {
             	case Pauli_group:
             		e = normalizeLIMDDPauli(e, cached);
             		break;
-            	case QMDD_group: break;
+            	case QMDD_group:
+                    e = normalize(e, cached);
+                    break;
             	}
                 assert(e.p->v == var || e.isTerminal());
 
