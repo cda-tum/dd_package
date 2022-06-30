@@ -237,9 +237,9 @@ namespace dd {
             return r;
         }
 
-        dEdge makeZeroDensityOperator() {
+        dEdge makeZeroDensityOperator(QubitCount n) {
             auto f = dEdge::one;
-            for (size_t p = 0; p < nqubits; p++) {
+            for (size_t p = 0; p < n; p++) {
                 f = makeDDNode(p, std::array{f, dEdge::zero, dEdge::zero, dEdge::zero});
             }
             return f;
@@ -1065,9 +1065,9 @@ namespace dd {
                 }
 
                 if constexpr (std::is_same_v<Node, dNode>) {
-                    dEdge::applyDmChangesToEdges(&e1, &e2);
+                    dEdge::applyDmChangesToEdges(e1, e2);
                     edge[i] = add2(e1, e2);
-                    dEdge::revertDmChangesToEdges(&e1, &e2);
+                    dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
                     edge[i] = add2(e1, e2);
                 }
@@ -1181,18 +1181,18 @@ namespace dd {
             }
         }
 
-        dEdge applyOperationToDensity(dEdge& e, mEdge& operation, [[maybe_unused]] bool generateDensityMatrix = false) {
+        dEdge applyOperationToDensity(dEdge& e, const mEdge& operation, bool generateDensityMatrix = false) {
             [[maybe_unused]] const auto before = cn.cacheCount();
             auto                        tmp0   = conjugateTranspose(operation);
             auto                        tmp1   = multiply(e, densityFromMatrixEdge(tmp0), 0, false);
             auto                        tmp2   = multiply(densityFromMatrixEdge(operation), tmp1, 0, generateDensityMatrix);
             incRef(tmp2);
-            dEdge::alignDensityEdge(&e);
+            dEdge::alignDensityEdge(e);
             decRef(e);
             e = tmp2;
 
             if (generateDensityMatrix) {
-                dEdge::setDensityMatrixTrue(&e);
+                dEdge::setDensityMatrixTrue(e);
             }
 
             return e;
@@ -1208,7 +1208,7 @@ namespace dd {
             if constexpr (std::is_same_v<LeftOperand, dEdge>) {
                 auto xCopy = x;
                 auto yCopy = y;
-                dEdge::applyDmChangesToEdges(&xCopy, &yCopy);
+                dEdge::applyDmChangesToEdges(xCopy, yCopy);
 
                 if (!xCopy.isTerminal()) {
                     var = xCopy.p->v;
@@ -1219,7 +1219,7 @@ namespace dd {
 
                 e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
 
-                dEdge::revertDmChangesToEdges(&xCopy, &yCopy);
+                dEdge::revertDmChangesToEdges(xCopy, yCopy);
 
             } else {
                 if (!x.isTerminal()) {
@@ -1351,7 +1351,7 @@ namespace dd {
 
                         if constexpr (std::is_same_v<LeftOperandNode, dNode>) {
                             dEdge m;
-                            dEdge::applyDmChangesToEdges(&e1, &e2);
+                            dEdge::applyDmChangesToEdges(e1, e2);
                             if (!generateDensityMatrix || idx == 1) {
                                 // When generateDensityMatrix is false or I have the first edge I don't optimize anything and set generateDensityMatrix to false for all child edges
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false);
@@ -1372,15 +1372,15 @@ namespace dd {
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
-                                dEdge::applyDmChangesToEdges(&edge[idx], &m);
+                                dEdge::applyDmChangesToEdges(edge[idx], m);
                                 auto old_e = edge[idx];
                                 edge[idx]  = add2(edge[idx], m);
-                                dEdge::revertDmChangesToEdges(&edge[idx], &e2);
+                                dEdge::revertDmChangesToEdges(edge[idx], e2);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
                             }
                             //Undo modifications on density matrices
-                            dEdge::revertDmChangesToEdges(&e1, &e2);
+                            dEdge::revertDmChangesToEdges(e1, e2);
                         } else {
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
 
@@ -2178,22 +2178,22 @@ namespace dd {
             return r;
         }
 
-        std::map<std::string, double> getProbVectorFromDensityMatrix(dEdge e, double measurementThreshold) {
-            std::map<std::string, double> measuredResult = {};
-            double                        p0, p1;
-            double                        globalProbability;
-            double                        statesToMeasure;
+        std::map<std::string, dd::fp> getProbVectorFromDensityMatrix(dEdge e, double measurementThreshold) {
+            std::map<std::string, dd::fp> measuredResult = {};
+            dd::fp                        p0, p1, globalProbability;
+            dEdge::alignDensityEdge(e);
+            if (static_cast<unsigned long long>(2ULL << (e.p->v + 1)) >= std::numeric_limits<unsigned long long>::max()) {
+                throw std::runtime_error(std::string{"Density matrix is too large to measure!"});
+            };
 
-            dEdge::alignDensityEdge(&e);
+            const unsigned long long statesToMeasure = 2ULL << e.p->v;
 
-            statesToMeasure = std::pow(2, nqubits);
-
-            for (int m = 0; m < statesToMeasure; m++) {
-                int currentResult        = m;
-                globalProbability        = dd::CTEntry::val(e.w.r);
-                std::string resultString = intToString(m, '1');
-                dEdge       cur          = e;
-                for (size_t i = 0; i < nqubits; ++i) {
+            for (unsigned long long m = 0; m < statesToMeasure; m++) {
+                unsigned long long currentResult = m;
+                globalProbability                = dd::CTEntry::val(e.w.r);
+                auto  resultString               = intToString(m, '1', e.p->v + 1);
+                dEdge cur                        = e;
+                for (dd::Qubit i = 0; i < e.p->v + 1; ++i) {
                     if (cur.p->v != -1 && globalProbability > measurementThreshold) {
                         assert(dd::CTEntry::approximatelyZero(cur.p->e.at(0).w.i) && dd::CTEntry::approximatelyZero(cur.p->e.at(3).w.i));
                         p0 = dd::CTEntry::val(cur.p->e.at(0).w.r);
@@ -2219,18 +2219,13 @@ namespace dd {
             return measuredResult;
         }
 
-        [[nodiscard]] std::string intToString(long targetNumber, char value) const {
-            if (targetNumber < 0) {
-                throw std::runtime_error(std::string{"Integer must be at least zero!"});
-            }
-            auto        qubits = nqubits;
-            std::string path(qubits, '0');
-            auto        number = (unsigned long)targetNumber;
-            for (size_t i = 1; i <= qubits; i++) {
-                if (number % 2) {
-                    path[qubits - i] = value;
+        [[nodiscard]] std::string intToString(unsigned long long targetNumber, char value, dd::Qubit size) const {
+            std::string path(size, '0');
+            for (auto i = 1; i <= size; i++) {
+                if (targetNumber % 2) {
+                    path[size - i] = value;
                 }
-                number = number >> 1u;
+                targetNumber = targetNumber >> 1u;
             }
             return path;
         }
@@ -2329,12 +2324,12 @@ namespace dd {
         }
 
         CMat getDensityMatrix(dEdge& e) {
-            dEdge::applyDmChangesToEdge(&e);
+            dEdge::applyDmChangesToEdge(e);
             const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
             getDensityMatrix(e, Complex::one, 0, 0, mat);
-            dd::dEdge::revertDmChangesToEdge(&e);
+            dd::dEdge::revertDmChangesToEdge(e);
             return mat;
         }
 
@@ -2354,24 +2349,24 @@ namespace dd {
 
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdge(&e.p->e[0]);
+                dEdge::applyDmChangesToEdge(e.p->e[0]);
                 getDensityMatrix(e.p->e[0], c, i, j, mat);
-                dd::dEdge::revertDmChangesToEdge(&e.p->e[0]);
+                dd::dEdge::revertDmChangesToEdge(e.p->e[0]);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdge(&e.p->e[1]);
+                dEdge::applyDmChangesToEdge(e.p->e[1]);
                 getDensityMatrix(e.p->e[1], c, i, y, mat);
-                dd::dEdge::revertDmChangesToEdge(&e.p->e[1]);
+                dd::dEdge::revertDmChangesToEdge(e.p->e[1]);
             }
             if (!e.p->e[2].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdge(&e.p->e[2]);
+                dEdge::applyDmChangesToEdge(e.p->e[2]);
                 getDensityMatrix(e.p->e[2], c, x, j, mat);
-                dd::dEdge::revertDmChangesToEdge(&e.p->e[2]);
+                dd::dEdge::revertDmChangesToEdge(e.p->e[2]);
             }
             if (!e.p->e[3].w.approximatelyZero()) {
-                dEdge::applyDmChangesToEdge(&e.p->e[3]);
+                dEdge::applyDmChangesToEdge(e.p->e[3]);
                 getDensityMatrix(e.p->e[3], c, x, y, mat);
-                dd::dEdge::revertDmChangesToEdge(&e.p->e[3]);
+                dd::dEdge::revertDmChangesToEdge(e.p->e[3]);
             }
 
             cn.returnToCache(c);
