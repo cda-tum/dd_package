@@ -330,19 +330,30 @@ namespace dd {
 
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
+            	Log::log << "[normalizeLIMDD] Case low knife.\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
                 r.l = r.p->e[0].l;
                 // Step 2: Set the low edge label to 'Identity'
                 r.p->e[0].l = nullptr;
+                // Step 3: multiply the root edge weight by the low edge weight (?)
+                // TODO limdd
                 return r;
             }
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
             if (zero[0]) {
             	// TODO switcheroo the nodes!
-                // Step 1: Set the root edge pointer to 'Identity tensor R'
-                r.l = r.p->e[1].l;
-                // Step 2: Set the high edge label to 'Identity'
-                r.p->e[1].l = nullptr; // the right edge is the identity
+            	Log::log << "[normalizeLIMDD] Case high knife.\n";
+                // Step 1: Multiply the root label by the high edge label
+                r.l = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO limdd memory leak
+                // Step 2: Right-multiply the root edge by X
+                LimEntry<> X;
+                X.setOperator(r.p->v, 'X');
+                r.l = LimEntry<>::multiply(r.l, &X);  // TODO limdd memory leak
+                // Step 3: Set the low and high edge labels to 'Identity'
+                r.p->e[0].l = nullptr; // Set low  edge to Identity
+                r.p->e[1].l = nullptr; // Set high edge to Identity
+                r.p->e[0].w = cn.lookup(r.p->e[1].w);
+                r.p->e[1].w = cn.lookup(Complex::zero);
                 return r;
             }
 
@@ -1427,7 +1438,7 @@ namespace dd {
             }
 
             [[maybe_unused]] const auto after = cn.cacheCount();
-            assert(before == after);
+//            assert(before == after);  // TODO limdd: turn this assertion back on. It was only turned off for debug purposes
 
             return e;
         }
@@ -1438,12 +1449,12 @@ namespace dd {
                 case 'I':
 //                    std::cout << "[Unfollow] encountered I " << std::endl;
                     break;
-                    //                case 'X':
-                    //                    std::cout << "encountered X " << std::endl;
-                    //                    break;
-                    //                case 'Y':
-                    //                    std::cout << "encountered Y " << std::endl;
-                    //                    break;
+                                    case 'X':
+                                        std::cout << "encountered X " << std::endl;
+                                        break;
+                                    case 'Y':
+                                        std::cout << "encountered Y " << std::endl;
+                                        break;
                 case 'Z':
 //                    std::cout << "[Unfollow] encountered Z " << std::endl;
                     if (path == 1) {

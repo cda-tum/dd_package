@@ -11,6 +11,7 @@
 #include "ComplexNumbers.hpp"
 #include "Log.hpp"
 #include <iostream>
+#include <array>
 
 // note: my package won't compile unless I put my functions in a class
 // for now, I've called this class Pauli
@@ -653,11 +654,12 @@ public:
 
     // Construct the stabilizer generator set of 'node' in the Pauli group
 	// TODO limdd store stab in LimTable
-    static StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode node) {
+    static StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode& node) {
         Edge<vNode> low, high;
         low  = node.e[0];
         high = node.e[1];
         unsigned int n = node.v;
+        auto zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
 
         StabilizerGroup stabgenset;
         // Case 0: Check if this node is the terminal node (aka the Leaf)
@@ -667,7 +669,7 @@ public:
             return stabgenset;
         }
         // Case 1: right child is zero
-        else if (high.isZeroTerminal()) {
+        else if (zero[1]) {
             Log::log << "[stab genPauli] |0> knife case  n = " << n << ". Low stabilizer group is:\n";
             stabgenset = low.p->limVector; // copies the stabilizer group of the left child
             printStabilizerGroup(stabgenset);
@@ -680,7 +682,7 @@ public:
             // so we do not need to perform that step here
         }
         // Case 2: left child is zero
-        else if (low.isZeroTerminal()) {
+        else if (zero[0]) {
             Log::log << "[stab genPauli] |1> knife case. n = " << n << ". High stabilizer group is:\n";
             stabgenset = high.p->limVector; // copy the stabilizer of the right child
             printStabilizerGroup(stabgenset);
@@ -857,6 +859,10 @@ public:
         Log::log << "[getIsomorphismPauli] uHigh.l = " << LimEntry<>::to_string(uHigh.l) << " vHigh.l = " << LimEntry<>::to_string(vHigh.l) << Log::endl;
         assert (LimEntry<>::isIdentityOperator(uLow.l));
         assert (LimEntry<>::isIdentityOperator(vLow.l));
+        auto zeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
+        auto zeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
+
+
         LimWeight<>* iso = new LimWeight<>();
         // Case 0: the nodes are equal
         if (u == v) {
@@ -865,13 +871,13 @@ public:
             iso = new LimWeight<>((LimEntry<>*)nullptr);
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
-        else if (uHigh.isZeroTerminal()) {
+        else if (zeroU[1]) {
             Log::log << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
-            if (vHigh.isZeroTerminal()) {
+            if (zeroV[1]) {
             	if (uLow.p == vLow.p) iso = new LimWeight<>((LimEntry<>*)nullptr);
             	else iso = LimWeight<>::noLIM;
             }
-            else if (vLow.isZeroTerminal()) {
+            else if (zeroV[0]) {
             	if (uLow.p == vHigh.p) {
 					// TODO limdd inspect weight on high edge
             		iso->lim = new LimEntry<>(vHigh.l);
@@ -884,13 +890,13 @@ public:
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
-        else if (uLow.isZeroTerminal()) {
+        else if (zeroU[0]) {
             Log::log << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
-        	if (vLow.isZeroTerminal()) {
+        	if (zeroV[0]) {
         		// TODO limdd inspect weights
         		if (uHigh.p == vHigh.p) return new LimWeight<>(LimEntry<>::multiply(uHigh.l, vHigh.l));
         	}
-        	else if (vHigh.isZeroTerminal()) {
+        	else if (zeroV[1]) {
         		// TODO limdd inspect weights
         		if (uHigh.p == vLow.p) {
 					iso->lim = new LimEntry<>(uHigh.l);

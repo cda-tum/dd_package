@@ -39,7 +39,7 @@ namespace dd {
 
 	class Log {
 	public:
-		static inline _Log log = _Log(0);
+		static inline _Log log = _Log(1);
 		static inline char endl = '\n';
 	};
 

@@ -1,4 +1,8 @@
 ====    TODO
+
+make functionality in Package which allows me to execute a circuit
+refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
+
 incorporate weights into the getIsomorphismPauli procedure
     Use a cached weight in getHighLabelPauli
     in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
@@ -13,6 +17,7 @@ implement 'follow' and 'unfollow' for the Pauli group
 all tests pass under Z group
 
 refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
+	(maybe not, since the returnToCache() obligations on normalizeLIMDD() would be more complicated
 
 Is the 's' and 'x' parameters useful?
     write this algorithm on paper, or find it in notebook
