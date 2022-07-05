@@ -2182,7 +2182,7 @@ namespace dd {
             std::map<std::string, dd::fp> measuredResult = {};
             dd::fp                        p0, p1, globalProbability;
             dEdge::alignDensityEdge(e);
-            if (std::pow(2, e.p->v+1) >= static_cast<double>(std::numeric_limits<unsigned long long>::max())) {
+            if (std::pow(2, e.p->v + 1) >= static_cast<double>(std::numeric_limits<unsigned long long>::max())) {
                 throw std::runtime_error(std::string{"Density matrix is too large to measure!"});
             }
 
