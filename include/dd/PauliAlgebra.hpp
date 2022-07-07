@@ -45,6 +45,11 @@ public:
         }
     }
 
+    phase_t multiplyPhases(phase_t a, phase_t b) {
+    	phase_t c = ((a & 0x1) ^ (b & 0x1)) | ((a & 0x2) ^ (b & 0x2) ^ (a & b & 0x1));
+    	return c;
+    }
+
     // Returns whether the two groups have the same vector of generators
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
@@ -460,6 +465,7 @@ public:
     }
 
     // Given two groups G, H, computes the intersection, <G> intersect <H>
+    // TODO refactor with NUM_QUBITS template parameter
     static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup intersection;
         StabilizerGroup GH = groupConcatenate(G, H);
@@ -481,6 +487,7 @@ public:
     }
 
     // TODO Not yet implemented
+    // TODO refactor with NUM_QUBITS template parameter
     static StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
         return intersectGroupsZ(G, H);
     }
@@ -489,7 +496,7 @@ public:
     //    J is not necessarily in Column Echelon Form
     //    J may contain elements that are equal up to phase
     // todo verify: does this method work for Pauli groups? it certainly works for Z groups
-    // TODO refactor loop body to getProductOfElements
+    // TODO refactor with template parameter NUM_QUBITS
     static StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
 //        Log::log << "[intersectGroups mod phase] start  |G|=" << G.size() << "  |H| = " << H.size() << Log::endl;
 //        Log::log << "[intersectGroups mod phase] Group G:\n";
@@ -521,6 +528,26 @@ public:
     static LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
     	// How do I do this?
     	// it's just modulo F2
+    	std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
+    	std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
+    	toColumnEchelonFormModuloPhase(GH_Id);
+
+        std::bitset<NUM_QUBITS> decomposition;   // decomposition of 'a'
+        LimBitset<NUM_QUBITS> a_bitset(a);
+        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
+        a_bitset = GramSchmidt(GH_Id, &a_bitset);
+        std::bitset<NUM_QUBITS> decomposition_G, decomposition_H;  // these bitsets are initialized to 00...0, according to the C++ reference
+        bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
+        bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size()+H.size());
+        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
+//        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
+        LimEntry<NUM_QUBITS>* a_H = getProductOfElements(H, decomposition_H);
+        LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
+        phase_t phase_diff = (phase_t) ((a->getPhase() + a_prime->getPhase()) & 0x3);
+        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
+            return LimEntry<NUM_QUBITS>::noLIM;
+        }
+        return a_G;
     }
 
     // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
@@ -594,11 +621,66 @@ public:
         return LimEntry<NUM_QUBITS>::noLIM;
     }
 
+	// TODO write a test
+    template<std::size_t NUM_QUBITS>
+    static phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
+    	phase_t phase = phase_t::phase_one;
+    	LimEntry<NUM_QUBITS> A(a);
+    	LimEntry<NUM_QUBITS> B;
+//    	LimEntry<NUM_QUBITS> g;
+    	for (unsigned int g=0; g<G.size; g++) {
+    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
+    				A.multiplyBy(G[g]);
+    				B.multiplyBy(G[g]);
+    				break;
+    			}
+    		}
+    	}
+    	return B.getPhase();
+    }
+
+    // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
+    // Finds an element in the set G intersect lambda a H b,
+    // or returns LimEntry::noLIM, if this set is empty
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
-    	// Find generators of G intersect H modulo phase
-    	StabilizerGroup GintersectH = intersectGroupsModuloPhase(G, H);
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda) {
     	// find an element in G intersect abH modulo phase
+    	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
+    	LimEntry<NUM_QUBITS>* c = getCosetIntersectionElementModuloPhase(G, H, ab);
+    	c->setPhase(recoverPhase(G, c));
+    	LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a,c);
+    	// Retrieve the phase of acb in H
+    	acb = LimEntry<NUM_QUBITS>::multiply(acb, b);
+    	phase_t alpha = recoverPhase(H, acb);
+    	alpha = LimEntry<NUM_QUBITS>::multiplyPhases(alpha, lambda)
+    	// Find generators of G intersect H modulo phase
+    	std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
+//    	std::vector<int> beta(0, GintersectH);
+    	int j1 = -1;
+    	bool beta;
+    	if (alpha == phase_t::phase_one) {
+    		for (unsigned int i=0; i<GintersectH.size(); i++) {
+    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, j) != recoverPhase(H, j));
+    			if (beta == 0) return GintersectH[i];
+    			else if (j1 == -1) {
+    				j1 = i;
+    			}
+    			else {
+    				return LimEntry<>::multiply(recoverElement(G, GintersectH[j1]), recoverElement(G, GintersectH[i]));
+    			}
+    		}
+
+    	}
+    	else if (alpha == phase_t::phase_minus_one) {
+    		// See if some element of J has xy = -1
+    		for (unsigned int i=0; i<GintersectH.size(); i++) {
+    			if (GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, j) != recoverPhase(H, j))) {
+    				return recoverElement(G, GintersectH[i]);
+    			}
+    		}
+    	}
+		return LimEntry<NUM_QUBITS>::noLIM;
     }
 
     // We assume that only vNodes are passed

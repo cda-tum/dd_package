@@ -19,6 +19,8 @@ incorporate weights into the getIsomorphismPauli procedure
     cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
     	work out on paper first
 
+write test for recoverPhase(G, a)
+
 Implement automation of stabilizer group checking:
     iterate over all 4^n pauli operators; check if the operator stabilizes the state (using cvec?)
     expand the set of 
