@@ -6,7 +6,7 @@
 #define DDPACKAGE_PAULIALGEBRA_HPP
 
 #include "Edge.hpp"
-#include "Nodes.hpp"
+#include "Node.hpp"
 #include "LimTable.hpp"
 #include "ComplexNumbers.hpp"
 #include "Log.hpp"

@@ -156,7 +156,7 @@ TEST(LimTest, SimpleTable8) {
 
 TEST(LimTest, NodeLims) {
     /* Note that due to usage of default template parameters, actual code might break if used with a different LimTable setup */
-    auto dd        = std::make_unique<dd::Package>(1);
+    auto dd        = std::make_unique<dd::Package<>>(1);
     auto root_edge = dd->makeZeroState(1);
 
     auto* y = dd->getLimTable().lookup(3);
@@ -187,7 +187,7 @@ TEST(LimTest, NodeLims) {
 }
 
 TEST(LimTest, LimHashing) {
-    auto dd        = std::make_unique<dd::Package>(2);
+    auto dd        = std::make_unique<dd::Package<>>(2);
     auto root_edge = dd->makeZeroState(2);
 
     auto hash1 = dd->vUniqueTable.hash(root_edge.p);
@@ -310,10 +310,10 @@ TEST(LimTest, bitsetXOR) {
 }
 
 TEST(LimTest, getVectorLIMDD1) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e0 = Z|0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     auto     vec = dd->getVectorLIMDD(e0);
     dd::CVec expectedVec;
@@ -324,11 +324,11 @@ TEST(LimTest, getVectorLIMDD1) {
 }
 
 TEST(LimTest, getVectorLIMDD2) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge Z|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto            e0  = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
+    auto            e0  = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, lim);
 
     auto     vec = dd->getVectorLIMDD(e0);
     dd::CVec expectedVec;
@@ -339,11 +339,11 @@ TEST(LimTest, getVectorLIMDD2) {
 }
 
 TEST(LimTest, getVectorLIMDD3) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge Z|1>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto            e0  = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim);
+    auto            e0  = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, lim);
 
     std::cout << "[getVector3] constructing amplitude vector.\n";
     std::cout.flush();
@@ -356,14 +356,14 @@ TEST(LimTest, getVectorLIMDD3) {
 }
 
 TEST(LimTest, getVectorLIMDD4) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge ZI|1>|1>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, lim);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -376,15 +376,15 @@ TEST(LimTest, getVectorLIMDD4) {
 }
 
 TEST(LimTest, getVectorLIMDD5) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge Z|1>
     dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
-    auto            e0   = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim0);
+    auto            e0   = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, lim0);
 
     // make edge ZI|1>|1>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
-    auto            e1   = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
+    auto            e1   = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, lim1);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -397,14 +397,14 @@ TEST(LimTest, getVectorLIMDD5) {
 }
 
 TEST(LimTest, getVectorLIMDD6) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge ZI|1>|0>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, lim);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -417,14 +417,14 @@ TEST(LimTest, getVectorLIMDD6) {
 }
 
 TEST(LimTest, getVectorLIMDD7) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge ZI|1>|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
-    auto            e1  = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, lim);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -437,16 +437,16 @@ TEST(LimTest, getVectorLIMDD7) {
 }
 
 TEST(LimTest, getVectorLIMDD8) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge Z|+>
     dd::LimEntry<>* lim0 = new dd::LimEntry<>("Z");
-    auto            e0   = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim0);
+    auto            e0   = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, lim0);
 
     // make edge ZI|1>Z|+>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("IZ");
     std::cout << "[getVector8] lim1 = " << dd::LimEntry<>::to_string(lim1) << "\n";
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, lim1);
+    auto e1 = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, lim1);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -461,14 +461,14 @@ TEST(LimTest, getVectorLIMDD8) {
 }
 
 TEST(LimTest, getVectorLIMDD9) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge ZI|0>|+>
     dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
-    auto            e1  = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, lim);
+    auto            e1  = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, lim);
 
     auto     vec = dd->getVectorLIMDD(e1);
     dd::CVec expectedVec;
@@ -481,14 +481,14 @@ TEST(LimTest, getVectorLIMDD9) {
 }
 
 TEST(LimTest, getVectorLIMDD10) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge Z|+>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
-    auto            e1   = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim1);
+    auto            e1   = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, lim1);
 
     // make edge ZZ(|0>|0> + |1>Z|+>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
@@ -505,13 +505,13 @@ TEST(LimTest, getVectorLIMDD10) {
 }
 
 TEST(LimTest, getVectorLIMDD11) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge ZZ(|0>|0> + |1>|+>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
@@ -531,14 +531,14 @@ TEST(LimTest, getVectorLIMDD11) {
 }
 
 TEST(LimTest, getVectorLIMDD12) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge Z|1>
     dd::LimEntry<>* lim1 = new dd::LimEntry<>("Z");
-    auto            e1   = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, lim1);
+    auto            e1   = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, lim1);
 
     // make edge ZZ(|0>|+> + |1>Z|1>)
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
@@ -1281,13 +1281,13 @@ TEST(LimTest, columnEchelonForm2) {
 }
 
 TEST(LimTest, createDDNode) {
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd  = std::make_unique<dd::Package<>>(1);
     auto lim = dd->limTable.lookup('X');
 
     EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 0);
 
-    auto l = dd->makeDDNode(1, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, lim);
+    auto l = dd->makeDDNode(1, std::array{dd::vEdge::one, dd::vEdge::zero}, false, lim);
 
     EXPECT_EQ(dd->vUniqueTable.getActiveNodeCount(), 0);
     EXPECT_EQ(dd->vUniqueTable.getNodeCount(), 1);
@@ -1299,12 +1299,12 @@ TEST(LimTest, createDDNode) {
 }
 
 TEST(LimTest, CreateNode0) {
-    auto dd  = std::make_unique<dd::Package>(1);
+    auto dd  = std::make_unique<dd::Package<>>(1);
     auto lim = dd->limTable.lookup('X');
 
     dd::Edge<dd::vNode> e{dd->vUniqueTable.getNode(), dd::Complex::one, lim};
     e.p->v = 0;
-    e.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    e.p->e = {dd::vEdge::one, dd::vEdge::zero};
 
     e = dd->normalizeLIMDDPauli(e, false);
 
@@ -1326,17 +1326,17 @@ TEST(LimTest, CreateNode1) {
     // This test:
     //  Create a node for |+> |+>, i.e., the state [1 1 1 1].
     //  Create two nodes for |+>, and then a node both of whose edges point to |+>.
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
     std::cout << "Test CreateNode1.\n";
     std::cout.flush();
 
     // Create |+>
     dd::Edge<dd::vNode> e1{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e1.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    e1.p->e = {dd::vEdge::one, dd::vEdge::one};
 
     // Create another |+>
     dd::Edge<dd::vNode> e2{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    e2.p->e = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    e2.p->e = {dd::vEdge::one, dd::vEdge::one};
 
     dd::Edge<dd::vNode> e3{dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
     e3.p->e = {e1, e2};
@@ -1350,12 +1350,12 @@ TEST(LimTest, CreateNode1) {
 }
 
 TEST(LimTest, CreateNode2) {
-    auto dd = std::make_unique<dd::Package>(1, dd::Pauli_group);
+    auto dd = std::make_unique<dd::Package<>>(1, dd::Pauli_group);
     std::cout << "Test CreateNode2.\n";
 
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->e         = {dd::vEdge::one, dd::vEdge::one};
     plus->v         = 0;
 
     // Create edge I|+>
@@ -1384,14 +1384,14 @@ TEST(LimTest, CreateNode2) {
 }
 
 TEST(LimTest, CreateNode2_simple) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
     std::cout << "Test CreateNode2.\n";
 
-    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     std::cout << "[CreateNode2 test] e0 is " << e0;
 
     dd::LimEntry<>*     z  = new dd::LimEntry<>("Z");
-    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, z);
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, z);
 
     std::cout << "[CreateNode2 test] e1 is " << e1;
 
@@ -1407,12 +1407,12 @@ TEST(LimTest, CreateNode2_simple) {
 }
 
 TEST(LimTest, CreateNode3) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
     std::cout << "Test CreateNode3.\n";
 
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->e         = {dd::vEdge::one, dd::vEdge::one};
     plus->v         = 0;
 
     // Create edge Z|+>
@@ -1434,19 +1434,19 @@ TEST(LimTest, CreateNode3) {
 }
 
 TEST(LimTest, CreateNode4) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
     std::cout << "Test CreateNode4.\n";
 
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
     // Create node |0>
     dd::vNode* zeroState = dd->vUniqueTable.getNode();
-    zeroState->e         = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zeroState->e         = {dd::vEdge::one, dd::vEdge::zero};
     // Add Z to the stabilizer group of zeroState
     zeroState->limVector.push_back(lim);
 
     // Create node |+>
     dd::vNode* plus = dd->vUniqueTable.getNode();
-    plus->e         = {dd::Package::vEdge::one, dd::Package::vEdge::one};
+    plus->e         = {dd::vEdge::one, dd::vEdge::one};
     plus->v         = 0;
 
     // Create edge I|0>
@@ -1467,12 +1467,12 @@ TEST(LimTest, CreateNode4) {
 }
 
 TEST(LimTest, CreateNode6) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
     std::cout << "Test CreateNode6.\n";
 
     // Create node |0>
     dd::vNode* zeroState = dd->vUniqueTable.getNode();
-    zeroState->e         = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zeroState->e         = {dd::vEdge::one, dd::vEdge::zero};
     // Add stabilizer Z
     dd::LimEntry<>* limZ = new dd::LimEntry<>("Z");
     zeroState->limVector.push_back(limZ);
@@ -1480,7 +1480,7 @@ TEST(LimTest, CreateNode6) {
     // Create node |0>|0>
     dd::vNode*          zeroZero = dd->vUniqueTable.getNode();
     dd::Edge<dd::vNode> e0       = {zeroState, dd::Complex::one, nullptr};
-    zeroZero->e                  = {e0, dd::Package::vEdge::zero};
+    zeroZero->e                  = {e0, dd::vEdge::zero};
     // Add stabilizers ZI and IZ
     dd::LimEntry<>* limIZ = new dd::LimEntry<>("IZ");
     zeroZero->limVector.push_back(limZ);
@@ -1508,24 +1508,24 @@ TEST(LimTest, CreateNode6) {
 }
 
 TEST(LimTest, CreateNode7) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
     std::cout << "Test CreateNode7\n";
 
     // Create edge I|0>
     dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zero.p->e                = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zero.p->e                = {dd::vEdge::one, dd::vEdge::zero};
     // Construct stabilizer group of |0>
     zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
 
     // Create edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero0 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero0.p->e                = {zero, dd::Package::vEdge::zero};
+    zeroZero0.p->e                = {zero, dd::vEdge::zero};
     // Construct stabilizer group
     zeroZero0.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero0.p->limVector.push_back(new dd::LimEntry<>("IZ"));
     // Create a second edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero1 = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero1.p->e                = {zero, dd::Package::vEdge::zero};
+    zeroZero1.p->e                = {zero, dd::vEdge::zero};
     zeroZero1.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero1.p->limVector.push_back(new dd::LimEntry<>("IZ"));
 
@@ -1541,25 +1541,25 @@ TEST(LimTest, CreateNode7) {
 }
 
 TEST(LimTest, CreateNode8) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
     std::cout << "Test CreateNode7\n";
 
     // Create edge I|0>
     dd::Edge<dd::vNode> zero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zero.p->e                = {dd::Package::vEdge::one, dd::Package::vEdge::zero};
+    zero.p->e                = {dd::vEdge::one, dd::vEdge::zero};
     // Construct stabilizer group of |0>
     zero.p->limVector.push_back(new dd::LimEntry<>("Z"));
 
     // Create edge II |0>|0>
     dd::Edge<dd::vNode> zeroZero = {dd->vUniqueTable.getNode(), dd::Complex::one, nullptr};
-    zeroZero.p->e                = {zero, dd::Package::vEdge::zero};
+    zeroZero.p->e                = {zero, dd::vEdge::zero};
     // Construct stabilizer group
     zeroZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     zeroZero.p->limVector.push_back(new dd::LimEntry<>("IZ"));
 
     // Create edge ZI |1>|0>
     dd::Edge<dd::vNode> oneZero = {dd->vUniqueTable.getNode(), dd::Complex::one, new dd::LimEntry<>("IZ")};
-    oneZero.p->e                = {dd::Package::vEdge::zero, zero};
+    oneZero.p->e                = {dd::vEdge::zero, zero};
     // Construct stabilizer group
     oneZero.p->limVector.push_back(new dd::LimEntry<>("ZI"));
     oneZero.p->limVector.push_back(new dd::LimEntry<>("-IZ"));
@@ -1567,16 +1567,16 @@ TEST(LimTest, CreateNode8) {
 }
 
 TEST(LimTest, CreateNode9) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode9 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|->
-    dd::Edge<dd::vNode> minusOne = dd::Package::vEdge::one;
+    dd::Edge<dd::vNode> minusOne = dd::vEdge::one;
     minusOne.w                   = dd::Complex::minusOne();
-    dd::Edge<dd::vNode> e1       = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, minusOne}, false, nullptr);
+    dd::Edge<dd::vNode> e1       = dd->makeDDNode(0, std::array{dd::vEdge::one, minusOne}, false, nullptr);
     //  set the weight of this edge to -1
     e1.w = dd::Complex::minusOne();
     std::cout << "[CreateNode9 test] Root node of state |-> (Z expected): " << (*e1.l) << "\n";
@@ -1596,12 +1596,12 @@ TEST(LimTest, CreateNode9) {
 }
 
 TEST(LimTest, CreateNode10) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e1 = -|+>, and set this phase in the LIM incoming to the edge
     dd::LimEntry<>* lim = dd::LimEntry<>::getIdentityOperator();
     lim->setPhase(dd::phase_t::phase_minus_one);
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, lim);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, lim);
 
     std::cout << "[CreateNode10 test] amplitude of edge: " << e1.w.toString() << std::endl;
     std::cout << "[CreateNode10 test] amplitude low: " << e1.p->e[0].w << " amplitude high: " << e1.p->e[1].w << std::endl;
@@ -1611,14 +1611,14 @@ TEST(LimTest, CreateNode10) {
 }
 
 TEST(LimTest, CreateNode11) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode11 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -i|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of this edge to -i
     e1.w = {&dd::ComplexTable<>::zero, dd::ComplexTable<>::Entry::flipPointerSign(&dd::ComplexTable<>::one)};
     e0.w = dd::Complex::one;
@@ -1638,14 +1638,14 @@ TEST(LimTest, CreateNode11) {
 }
 
 TEST(LimTest, CreateNode12) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode12 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the phase of this edge to i
     e1.w = {&dd::ComplexTable<>::zero, &dd::ComplexTable<>::one};
 
@@ -1664,14 +1664,14 @@ TEST(LimTest, CreateNode12) {
 }
 
 TEST(LimTest, CreateNode13) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode13 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of edge e0 to i and the weight of edge e1 to +1
     e0.w = {&dd::ComplexTable<>::zero, &dd::ComplexTable<>::one};
     e1.w = dd::Complex::one;
@@ -1693,14 +1693,14 @@ TEST(LimTest, CreateNode13) {
 }
 
 TEST(LimTest, CreateNode14) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = -i|+>
     std::cout << "[CreateNode14 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = |+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the phase of e0 to -i, and of e1 to +1
     e0.w = {&dd::ComplexTable<>::zero, dd::ComplexTable<>::Entry::flipPointerSign(&dd::ComplexTable<>::one)};
     e1.w = dd::Complex::one;
@@ -1721,14 +1721,14 @@ TEST(LimTest, CreateNode14) {
 }
 
 TEST(LimTest, CreateNode15) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode15 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of e0 to 1+i and the weight of e1 to +1
     e0.w = {&dd::ComplexTable<>::one, &dd::ComplexTable<>::one};
     e1.w = dd::Complex::one;
@@ -1749,14 +1749,14 @@ TEST(LimTest, CreateNode15) {
 }
 
 TEST(LimTest, CreateNode16) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode16 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of edge e0 to -1 and the weight of e1 to -i
     e0.w = dd::Complex::minusOne();
     e1.w = {&dd::ComplexTable<>::zero, dd::ComplexTable<>::Entry::flipPointerSign(&dd::ComplexTable<>::one)};
@@ -1777,14 +1777,14 @@ TEST(LimTest, CreateNode16) {
 }
 
 TEST(LimTest, CreateNode17) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode17 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of edge e0 to -1 and the weight of e1 to i
     e0.w = dd::Complex::minusOne();
     e1.w = {&dd::ComplexTable<>::zero, &dd::ComplexTable<>::one};
@@ -1805,14 +1805,14 @@ TEST(LimTest, CreateNode17) {
 }
 
 TEST(LimTest, CreateNode18) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode18 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of edge e0 to -1 and the weight of e1 to i
     e0.w = dd::Complex::minusOne();
     e1.w = dd::Complex::one;
@@ -1833,23 +1833,23 @@ TEST(LimTest, CreateNode18) {
 }
 
 TEST(LimTest, CreateNode19) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode19 test] making edge |-> by calling MakeDDNode.\n";
     dd::Edge<dd::vNode> minusOne = {dd::vNode::terminal, dd::Complex::minus_one, nullptr};
-    dd::Edge<dd::vNode> minus    = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, minusOne}, false, nullptr);
+    dd::Edge<dd::vNode> minus    = dd->makeDDNode(0, std::array{dd::vEdge::one, minusOne}, false, nullptr);
 
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("Z");
     EXPECT_TRUE(dd::LimEntry<>::Equal(minus.l, expectedRootLabel));
 }
 
 TEST(LimTest, CreateNode20) {
-    auto dd = std::make_unique<dd::Package>(1, dd::Pauli_group);
+    auto dd = std::make_unique<dd::Package<>>(1, dd::Pauli_group);
     std::cout << "[Test CreateNode20] start.\n";
 
     // Create node |+>
-    dd::Edge<dd::vNode> plusEdge = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> plusEdge = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     std::cout << "[CreateNode20 test] plusEdge is " << plusEdge;
 
     EXPECT_TRUE(dd::ComplexTable<>::Entry::val(plusEdge.p->e[0].w.r) > 0);
@@ -1857,9 +1857,9 @@ TEST(LimTest, CreateNode20) {
 }
 
 TEST(LimTest, constructStabilizerGroup2) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
-    auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto l = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
     std::cout << "Stabilizer group of |0>:\n";
     std::cout.flush();
     dd::Pauli::printStabilizerGroup(l.p->limVector);
@@ -1869,9 +1869,9 @@ TEST(LimTest, constructStabilizerGroup2) {
 }
 
 TEST(LimTest, constructStabilizergroup3) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
-    auto l = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto l = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     std::cout << "Stabilizer group of |1>:\n";
     dd::Pauli::printStabilizerGroup(l.p->limVector);
 
@@ -1884,13 +1884,13 @@ TEST(LimTest, constructStabilizergroup3) {
 }
 
 TEST(LimTest, constructStabilizerGroup4) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     dd::ComplexValue    twocn = dd::ComplexValue{2.0, 0.0};
     dd::Complex         twoc  = dd->cn.lookup(twocn);
     dd::Edge<dd::vNode> two   = {dd->vUniqueTable.getNode(), twoc, nullptr};
     two.p                     = dd::vNode::terminal;
-    auto e                    = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, two}, false, nullptr);
+    auto e                    = dd->makeDDNode(0, std::array{dd::vEdge::one, two}, false, nullptr);
     std::cout << "Stabilizer group of |0> + 2|1> :\n";
     dd::Pauli::printStabilizerGroup(e.p->limVector);
 
@@ -1899,15 +1899,15 @@ TEST(LimTest, constructStabilizerGroup4) {
 }
 
 TEST(LimTest, constructStabilizerGroup5) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make e0 = |0>
     std::cout << "[constructStabilizerGroup5 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make e1 = |0>|0>
     std::cout << "[constructStabilizerGroup5 test] making edge |0>|0> by calling MakeDDNode.\n";
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
     std::cout << "[constructStabilizergroup5 test]Stabilizer group of |0>|0>:\n";
     std::cout.flush();
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
@@ -1921,13 +1921,13 @@ TEST(LimTest, constructStabilizerGroup5) {
 }
 
 TEST(LimTest, constructStabilizerGroup6) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make e0 = |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make e1 = |0>|1>
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
     std::cout << "[constructStabilizergroup6 test] Stabilizer group of |0>|1>:\n";
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
 
@@ -1938,13 +1938,13 @@ TEST(LimTest, constructStabilizerGroup6) {
 }
 
 TEST(LimTest, constructStabilizerGroup7) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     //make edge e1 = |1>|0>
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, nullptr);
     std::cout << "[constructStabilizergroup7 test] Stabilizer group of |0>|1>:\n";
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
 
@@ -1955,13 +1955,13 @@ TEST(LimTest, constructStabilizerGroup7) {
 }
 
 TEST(LimTest, constructStabilizerGroup8) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |1>|1>
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, nullptr);
     std::cout << "[constructStabilizergroup7 test] Stabilizer group of |0>|1>:\n";
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
 
@@ -1972,13 +1972,13 @@ TEST(LimTest, constructStabilizerGroup8) {
 }
 
 TEST(LimTest, constructStabilizerGroup9) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |00> + |11>
     std::cout << "[constructStabilizerGroup9] making node |00> + |11>\n";
@@ -1991,13 +1991,13 @@ TEST(LimTest, constructStabilizerGroup9) {
 }
 
 TEST(LimTest, constructStabilizerGroup10) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge 2|1>
-    auto             e1    = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto             e1    = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     dd::ComplexValue twocv = dd::ComplexValue{2.0, 0.0};
     dd::Complex      twoc  = dd->cn.lookup(twocv);
     e1.w                   = twoc;
@@ -2011,13 +2011,13 @@ TEST(LimTest, constructStabilizerGroup10) {
 }
 
 TEST(LimTest, constructStabilizerGroup11) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>|+>
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("IZ"));
@@ -2025,13 +2025,13 @@ TEST(LimTest, constructStabilizerGroup11) {
 }
 
 TEST(LimTest, constructStabilizerGroup12) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge |1>|+>
-    auto e1 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e0}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{dd::vEdge::zero, e0}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("-IZ"));
@@ -2039,13 +2039,13 @@ TEST(LimTest, constructStabilizerGroup12) {
 }
 
 TEST(LimTest, constructStabilizerGroup13) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>|e0> + |1>|e1>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
@@ -2056,13 +2056,13 @@ TEST(LimTest, constructStabilizerGroup13) {
 }
 
 TEST(LimTest, constructStabilizerGroup14) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |+>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |0>|e0> + |1>|e1>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
@@ -2073,13 +2073,13 @@ TEST(LimTest, constructStabilizerGroup14) {
 }
 
 TEST(LimTest, constructStabilizerGroup15) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |0>|e0> + |1>|e1>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
@@ -2090,16 +2090,16 @@ TEST(LimTest, constructStabilizerGroup15) {
 }
 
 TEST(LimTest, constructStabilizerGroup16) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |00>
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
 
     // make edge |000>
-    auto e2 = dd->makeDDNode(2, std::array{e1, dd::Package::vEdge::zero}, false, nullptr);
+    auto e2 = dd->makeDDNode(2, std::array{e1, dd::vEdge::zero}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("ZII"));
@@ -2109,16 +2109,16 @@ TEST(LimTest, constructStabilizerGroup16) {
 }
 
 TEST(LimTest, constructStabilizerGroup17) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |01>
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
 
     // make edge |001>
-    auto e2 = dd->makeDDNode(2, std::array{e1, dd::Package::vEdge::zero}, false, nullptr);
+    auto e2 = dd->makeDDNode(2, std::array{e1, dd::vEdge::zero}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("-ZII"));
@@ -2128,16 +2128,16 @@ TEST(LimTest, constructStabilizerGroup17) {
 }
 
 TEST(LimTest, constructStabilizerGroup18) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |01>
-    auto e1 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
 
     // make edge |101>
-    auto e2 = dd->makeDDNode(2, std::array{dd::Package::vEdge::zero, e1}, false, nullptr);
+    auto e2 = dd->makeDDNode(2, std::array{dd::vEdge::zero, e1}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("-ZII"));
@@ -2147,19 +2147,19 @@ TEST(LimTest, constructStabilizerGroup18) {
 }
 
 TEST(LimTest, constructStabilizerGroup19) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>|e0> + |1>|e1>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     // make edge |0>|e2>
-    auto e3 = dd->makeDDNode(2, std::array{e2, dd::Package::vEdge::zero}, false, nullptr);
+    auto e3 = dd->makeDDNode(2, std::array{e2, dd::vEdge::zero}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("ZZI"));
@@ -2168,19 +2168,19 @@ TEST(LimTest, constructStabilizerGroup19) {
 }
 
 TEST(LimTest, constructStabilizerGroup20) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |1>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |0>|e0> + |1>|e1>
     auto e2 = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
 
     // make edge |1>|e2>
-    auto e3 = dd->makeDDNode(2, std::array{dd::Package::vEdge::zero, e2}, false, nullptr);
+    auto e3 = dd->makeDDNode(2, std::array{dd::vEdge::zero, e2}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("-ZZI"));
@@ -2191,13 +2191,13 @@ TEST(LimTest, constructStabilizerGroup20) {
 }
 
 TEST(LimTest, constructStabilizerGroup21) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |0>
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
 
     // make edge |0>|e0> + 2|1>|e1>
     auto             e2    = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
@@ -2206,7 +2206,7 @@ TEST(LimTest, constructStabilizerGroup21) {
     e1.w                   = twoc;
 
     // make edge |0>|e2>
-    auto e3 = dd->makeDDNode(2, std::array{e2, dd::Package::vEdge::zero}, false, nullptr);
+    auto e3 = dd->makeDDNode(2, std::array{e2, dd::vEdge::zero}, false, nullptr);
 
     dd::StabilizerGroup expectedGroup;
     expectedGroup.push_back(new dd::LimEntry<>("ZZI"));
@@ -2215,29 +2215,29 @@ TEST(LimTest, constructStabilizerGroup21) {
 }
 
 TEST(LimTest, constructStabilizerGroup22) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge |0>
     std::cout << "[construct stabilizer group test 22] making edge |0>.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
     std::cout << "[construct stabilizer group test 22] stabilizer group of |0>:\n";
     dd::Pauli::printStabilizerGroup(e0.p->limVector);
 
     // make edge |1>
     std::cout << "[construct stabilizer group test 22] making edge |1>.\n";
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     std::cout << "[construct stabilizer group test 22] stabilizer group of |1>:\n";
     dd::Pauli::printStabilizerGroup(e1.p->limVector);
 
     // make edge |00>
     std::cout << "[construct stabilizer group test 22] making edge |00>.\n";
-    auto e2 = dd->makeDDNode(1, std::array{e0, dd::Package::vEdge::zero}, false, nullptr);
+    auto e2 = dd->makeDDNode(1, std::array{e0, dd::vEdge::zero}, false, nullptr);
     std::cout << "[construct stabilizer group test 22] stabilizer group of |00>:\n";
     dd::Pauli::printStabilizerGroup(e2.p->limVector);
 
     // make edge |11>
     std::cout << "[construct stabilizer group test 22] making edge |11>.\n";
-    auto e3 = dd->makeDDNode(1, std::array{dd::Package::vEdge::zero, e1}, false, nullptr);
+    auto e3 = dd->makeDDNode(1, std::array{dd::vEdge::zero, e1}, false, nullptr);
     std::cout << "[construct stabilizer group test 22] stabilizer group of |11>:\n";
     dd::Pauli::printStabilizerGroup(e3.p->limVector);
 
@@ -2254,7 +2254,7 @@ TEST(LimTest, constructStabilizerGroup22) {
 }
 
 TEST(LimTest, nextTest) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     auto state0 = dd->makeZeroState(2);
 
@@ -2283,7 +2283,7 @@ TEST(LimTest, nextTest) {
 }
 
 TEST(LimTest, simpleMultiplicationBellState) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     auto h_gate     = dd->makeGateDD(dd::Hmat, 2, 1);
     auto cx_gate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
@@ -2301,14 +2301,14 @@ TEST(LimTest, simpleMultiplicationBellState) {
 }
 
 TEST(LimTest, highLabelPauli1) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |+>
     std::cout << "[CreateNode15 test] making edge |0> by calling MakeDDNode.\n";
-    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e1 = -|+>
-    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //  set the weight of e0 to 1+i and the weight of e1 to +1
     e0.w = {&dd::ComplexTable<>::one, &dd::ComplexTable<>::one};
     e1.w = dd::Complex::one;
@@ -2329,16 +2329,16 @@ TEST(LimTest, highLabelPauli1) {
 }
 
 TEST(LimTest, getIsomorphismPauli1) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e0 = |0>
     std::cout << "[getIsomorphismPauli1 test] making edge |0> by calling MakeDDNode.\n";
-    dd::Edge<dd::vNode> e0 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero});
-    //    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNodeNonNormalized(std::array{dd::vEdge::one, dd::vEdge::zero});
+    //    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge e1 = |1>
-    //    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
-    dd::Edge<dd::vNode> e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one});
+    //    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e1 = dd->makeDDNodeNonNormalized(std::array{dd::vEdge::zero, dd::vEdge::one});
 
     dd::LimWeight<>* isomorphism         = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = new dd::LimWeight<>("X");
@@ -2347,14 +2347,14 @@ TEST(LimTest, getIsomorphismPauli1) {
 }
 
 TEST(LimTest, getIsomorphismPauli2) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e0 = |0>
     std::cout << "[getIsomorpismPauli2 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge e1 = |+> = |0> + |1>
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     dd::LimWeight<>* isomorphism = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     std::cout << "[getIsomorphismPauli2 test] Done finding isomorphism.\n";
@@ -2366,14 +2366,14 @@ TEST(LimTest, getIsomorphismPauli2) {
 }
 
 TEST(LimTest, getIsomorphismPauli3) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     // make edge e0 = |0>
     std::cout << "[getIsomorpismPauli3 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one});
+    auto e0 = dd->makeDDNodeNonNormalized(std::array{dd::vEdge::zero, dd::vEdge::one});
 
     // make edge e1 = |+> = |0> + |1>
-    auto e1 = dd->makeDDNodeNonNormalized(std::array{dd::Package::vEdge::one, dd::Package::vEdge::one});
+    auto e1 = dd->makeDDNodeNonNormalized(std::array{dd::vEdge::one, dd::vEdge::one});
 
     dd::LimWeight<>* isomorphism         = dd::Pauli::getIsomorphismPauli(e0.p, e1.p, dd->cn);
     dd::LimWeight<>* expectedIsomorphism = dd::LimWeight<>::noLIM;
@@ -2382,15 +2382,15 @@ TEST(LimTest, getIsomorphismPauli3) {
 }
 
 TEST(LimTest, getIsomorphismPauli4) {
-    //    auto dd = std::make_unique<dd::Package>(1);
+    //    auto dd = std::make_unique<dd::Package<>>(1);
     //
     //    // make edge e0 = |0>
     //    std::cout << "[getIsomorpismPauli4 test] making edge |0> by calling MakeDDNode.\n";
-    //    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    //    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     //
     //    // make edge e1 = |+> = |0> + |1>
     //    std::cout << "[getIsomorpismPauli4 test] making edge |+> by calling MakeDDNode.\n";
-    //    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    //    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //
     //    // make edge e00 = |00> + |1+>
     //    std::cout << "[getIsomorpismPauli4 test] making edge |00> + |1+> by calling MakeDDNode.\n";
@@ -2409,11 +2409,11 @@ TEST(LimTest, getIsomorphismPauli4) {
 }
 
 TEST(LimTest, getIsomorphismPauli5) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |0>
     std::cout << "[getIsomorpismPauli5 test] making edge |0> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
     // make edge e00 = |00> - |11>
     dd::Edge<dd::vNode> e2 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
@@ -2437,13 +2437,13 @@ TEST(LimTest, getIsomorphismPauli6) {
 }
 
 TEST(LimTest, getIsomorphismPauli7) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     // make edge e0 = |0>
     std::cout << "[getIsomorpismPauli7 test] making edge |0> by calling MakeDDNode.\n";
-    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::zero}, false, nullptr);
+    dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
-    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::zero, dd::Package::vEdge::one}, false, nullptr);
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     e1.w                   = dd::Complex::minusOne();
 
     // make edge e00 = |00> - |11>
@@ -2459,11 +2459,11 @@ TEST(LimTest, getIsomorphismPauli7) {
 }
 
 TEST(LimTest, getIsomorphismPauli8) {
-    //    auto dd = std::make_unique<dd::Package>(2);
+    //    auto dd = std::make_unique<dd::Package<>>(2);
     //
     //    // make edge e0 = |+>
     //    std::cout << "[getIsomorpismPauli5 test] making edge |0> by calling MakeDDNode.\n";
-    //    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    //    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     //
     //    // make edge e2 = |0>|e0> + |1>Z|e2>
     //    dd::Edge<dd::vNode> e2 = dd->makeDDNodeNonNormalized(std::array{e0, e0});
@@ -2480,25 +2480,25 @@ TEST(LimTest, getIsomorphismPauli8) {
 }
 
 TEST(LimTest, rootLabel1) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge e5 = Z|+>
     std::cout << "[rootLabel1 test] making edge Z|+> by calling MakeDDNode.\n";
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, new dd::LimEntry<>("Z"));
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, new dd::LimEntry<>("Z"));
 
     ASSERT_EQ(*e1.l, dd::LimEntry<>("Z"));
 }
 
 TEST(LimTest, distinctNodes1) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge e0 = |+>
     std::cout << "[distinctNodes1 test] making edge |+> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e5 = Z|+>
     std::cout << "[distinctNodes1 test] making edge Z|+> by calling MakeDDNode.\n";
-    auto e1 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, new dd::LimEntry<>("Z"));
+    auto e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, new dd::LimEntry<>("Z"));
 
     // make edge e1 = |++>
     std::cout << "[distinctNodes1 test] making edge |+>*(" << e0.p << ") by calling MakeDDNode.\n";
@@ -2513,14 +2513,14 @@ TEST(LimTest, distinctNodes1) {
 }
 
 TEST(LimTest, getIsomorphismPauli9) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge e0 = |+>
     std::cout << "[getIsomorpismPauli9 test] making edge |+> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e0Z = Z|+> = |->
-    auto e0Z = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0Z = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     e0Z.l    = new dd::LimEntry<>("Z");
 
     // make edge e1 = |++>
@@ -2552,14 +2552,14 @@ TEST(LimTest, getIsomorphismPauli9) {
 }
 
 TEST(LimTest, getIsomorphismPauli10) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     // make edge e0 = |+>
     std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
-    auto e0 = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
 
     // make edge e0Z = Z|+> = |->
-    auto e0Z = dd->makeDDNode(0, std::array{dd::Package::vEdge::one, dd::Package::vEdge::one}, false, nullptr);
+    auto e0Z = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
     e0Z.l    = new dd::LimEntry<>("Z");
 
     // make edge e1 = |++>
@@ -2581,7 +2581,7 @@ TEST(LimTest, getIsomorphismPauli10) {
 }
 
 TEST(LimTest, simpleCliffordCircuit_1) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     auto state = dd->makeZeroState(2);
 
@@ -2604,7 +2604,7 @@ TEST(LimTest, simpleCliffordCircuit_1) {
 }
 
 TEST(LimTest, simpleCliffordCircuit_2) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     auto state = dd->makeZeroState(2);
 
@@ -2621,7 +2621,7 @@ TEST(LimTest, simpleCliffordCircuit_2) {
 }
 
 TEST(LimTest, simpleCliffordCircuit_3) {
-    auto dd = std::make_unique<dd::Package>(2);
+    auto dd = std::make_unique<dd::Package<>>(2);
 
     auto state = dd->makeZeroState(2);
 
@@ -2648,7 +2648,7 @@ std::ostream& operator<<(std::ostream& out, const dd::CVec& vec) {
 }
 
 TEST(LimTest, simpleCliffordCircuit_4) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     auto state = dd->makeZeroState(3);
 
@@ -2680,7 +2680,7 @@ TEST(LimTest, simpleCliffordCircuit_4) {
 }
 
 TEST(LimTest, simpleTCircuit) {
-    auto dd = std::make_unique<dd::Package>(1);
+    auto dd = std::make_unique<dd::Package<>>(1);
 
     auto state = dd->makeZeroState(dd->qubits());
 
@@ -2697,7 +2697,7 @@ TEST(LimTest, simpleTCircuit) {
 }
 
 TEST(LimTest, multiQubitTCircuit) {
-    auto dd = std::make_unique<dd::Package>(3);
+    auto dd = std::make_unique<dd::Package<>>(3);
 
     auto state = dd->makeZeroState(dd->qubits());
 
@@ -2733,7 +2733,7 @@ TEST(LimTest, multiQubitTCircuit) {
 }
 
 TEST(LimTest, simpleU3Circuit) {
-    auto dd    = std::make_unique<dd::Package>(1);
+    auto dd    = std::make_unique<dd::Package<>>(1);
     auto state = dd->makeZeroState(dd->qubits());
 
     state = dd->multiply(dd->makeGateDD(dd::U3mat(1, 2, 3), dd->qubits(), 0), state);
@@ -2748,7 +2748,7 @@ TEST(LimTest, simpleU3Circuit) {
 }
 
 TEST(LimTest, multiQubitU3Circuit) {
-    auto dd    = std::make_unique<dd::Package>(3);
+    auto dd    = std::make_unique<dd::Package<>>(3);
     auto state = dd->makeZeroState(dd->qubits());
 
     state = dd->multiply(dd->makeGateDD(dd::U3mat(1, 2, 3), dd->qubits(), 2), state);
