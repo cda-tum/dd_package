@@ -15,19 +15,6 @@
 
 // todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
-    enum pauli_op {
-        pauli_id = 'I',
-        pauli_x  = 'X',
-        pauli_y  = 'Y',
-        pauli_z  = 'Z'
-    };
-
-    enum phase_t {
-        phase_one       = 0,
-        phase_i         = 1,
-        phase_minus_one = 2,
-        phase_minus_i   = 3
-    };
 
     template<std::size_t NUM_QUBITS = 32>
     struct LimEntry {
@@ -137,14 +124,14 @@ namespace dd {
             return lim->getQubit(qubit);
         }
 
-        int getPhase() const {
+        phase_t getPhase() const {
             int phase = ((int) paulis.test(2*NUM_QUBITS)) | ((int) paulis.test(2*NUM_QUBITS+1) << 1);
-            return phase;
+            return (phase_t) phase;
         }
 
         // returns the phase of the LIM, in two bits, which have the following meaning:
         // 00: +1    01: i    10: -1    11: -i
-        static int getPhase(const LimEntry<NUM_QUBITS>* l) {
+        static phase_t getPhase(const LimEntry<NUM_QUBITS>* l) {
             if (l == nullptr) return phase_t::phase_one;
             if (l == noLIM) return phase_t::phase_one;
             return l->getPhase();
@@ -226,7 +213,7 @@ namespace dd {
         }
 
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero
-        // TODO there is probably a faster way to check whether a bitvector is all-zero,
+        // TODO limdd: there is probably a faster way to check whether a bitvector is all-zero,
         //   using bit tricks supported by the std::array data structure. --Lieuwe
         bool isAllZeroVector() const {
             for (unsigned int i=0; i<NUM_BITSETBITS; i++) {

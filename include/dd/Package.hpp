@@ -330,11 +330,12 @@ namespace dd {
 
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
-            	Log::log << "[normalizeLIMDD] Case low knife.\n";
+            	Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\").\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
                 r.l = r.p->e[0].l;
                 // Step 2: Set the low edge label to 'Identity'
                 r.p->e[0].l = nullptr;
+                // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
                 // Step 3: multiply the root edge weight by the low edge weight (?)
                 // TODO limdd
                 return r;
@@ -342,7 +343,7 @@ namespace dd {
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
             if (zero[0]) {
             	// TODO switcheroo the nodes!
-            	Log::log << "[normalizeLIMDD] Case high knife.\n";
+            	Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\").\n";
                 // Step 1: Multiply the root label by the high edge label
                 r.l = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO limdd memory leak
                 // Step 2: Right-multiply the root edge by X
@@ -354,6 +355,8 @@ namespace dd {
                 r.p->e[1].l = nullptr; // Set high edge to Identity
                 r.p->e[0].w = cn.lookup(r.p->e[1].w);
                 r.p->e[1].w = cn.lookup(Complex::zero);
+                r.w.multiplyByPhase(r.l->getPhase());
+                r.l->setPhase(phase_t::phase_one);
                 return r;
             }
 
@@ -391,7 +394,9 @@ namespace dd {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             LimWeight<>* iso = Pauli::getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
-            assert(iso != LimWeight<>::noLIM);
+            if (iso == LimWeight<>::noLIM) {
+            	throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
+            }
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
             Log::log << "[normalizeLIMDD] Found isomorphism: " << LimEntry<>::to_string(iso->lim) << "\n";
@@ -2414,7 +2419,7 @@ namespace dd {
             return vec;
         }
         void getVectorLIMDD(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, const LimEntry<>& lim) {
-            //std::cout << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) << " qubits with label " << LimEntry<>::to_string(e.l) << ".\n";
+        	Log::log << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) + 1 << " qubits; i = " << i << " edge label " << LimEntry<>::to_string(e.l) << ", aux label " << LimEntry<>::to_string(&lim) << ".\n";
             //std::cout.flush();
             auto c = cn.mulCached(e.w, amp);
 
@@ -2429,8 +2434,7 @@ namespace dd {
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
                 // we assume that this edge is labeled with the Identity LIM
-                //std::cout << "[getVectorLIMDD rec] entering low edge.\n";
-                //std::cout.flush();
+                Log::log << "[getVectorLIMDD rec] low case.\n";
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
             	std::size_t id0 = i;
@@ -2445,19 +2449,19 @@ namespace dd {
                 	// multiply c0 by i
                 	d0.multiplyByi();
                 }
+                Log::log << "[getVectorLIMDD rec] walking the low edge.\n";
                 getVectorLIMDD(e.p->e[0], d0, id0, vec, lim2);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
-                //std::cout << "[getVectorLIMDD rec] high case.\n";
-                //std::cout.flush();
+            	Log::log << "[getVectorLIMDD rec] high case.\n";
                 // if lim has Pauli Z operator, then multiply by -1
                 auto       d1 = c;
                 std::size_t id1 = x;
                 LimEntry<> lim2(e.l);
                 lim2.multiplyBy(lim);
-//                std::cout << "[getVectorLIMDD rec] accumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
+                Log::log << "[getVectorLIMDD rec] accumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
-//                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
+                	Log::log << "[getVectorLIMDD rec] accumulated lim has Z.\n";
                     d1.multiplyByMinusOne();
                 }
                 else if (lim2.getQubit(e.p->v) == 'X') {
@@ -2471,7 +2475,7 @@ namespace dd {
                 	d1.multiplyByMinusi();
                 }
                 // calculate the new accumulated LIM
-//                std::cout << "[getVectorLIMDD rec] walking the high edge.\n";
+                Log::log << "[getVectorLIMDD rec] walking the high edge.\n";
                 getVectorLIMDD(e.p->e[1], d1, id1, vec, lim2);
             }
             cn.returnToCache(c);

@@ -517,6 +517,12 @@ public:
         return intersection;
     }
 
+    template <std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    	// How do I do this?
+    	// it's just modulo F2
+    }
+
     // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
     // Searches for an element in the set '<G> intersect (<H>+a)'
     // Note that '<G>' is a group, and '<H>+a' is a coset
@@ -586,6 +592,13 @@ public:
         }
 //        Log::log << "[coset intersection P] no element in coset; returning noLIM.\n"; Log::log.flush();
         return LimEntry<NUM_QUBITS>::noLIM;
+    }
+
+    template <std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+    	// Find generators of G intersect H modulo phase
+    	StabilizerGroup GintersectH = intersectGroupsModuloPhase(G, H);
+    	// find an element in G intersect abH modulo phase
     }
 
     // We assume that only vNodes are passed
@@ -670,7 +683,7 @@ public:
         }
         // Case 1: right child is zero
         else if (zero[1]) {
-            Log::log << "[stab genPauli] |0> knife case  n = " << n << ". Low stabilizer group is:\n";
+            Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
             stabgenset = low.p->limVector; // copies the stabilizer group of the left child
             printStabilizerGroup(stabgenset);
             LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
@@ -683,7 +696,7 @@ public:
         }
         // Case 2: left child is zero
         else if (zero[0]) {
-            Log::log << "[stab genPauli] |1> knife case. n = " << n << ". High stabilizer group is:\n";
+            Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
             stabgenset = high.p->limVector; // copy the stabilizer of the right child
             printStabilizerGroup(stabgenset);
             LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
@@ -695,7 +708,7 @@ public:
         // Case 3: the node is a 'fork': both its children are nonzero
         else {
             // Gather the stabilizer groups of the two children
-            Log::log << "[constructStabilizerGeneratorSet] Case fork n = " << n << ".\n";
+            Log::log << "[constructStabilizerGeneratorSet] Case fork n = " << n + 1 << ".\n";
 			StabilizerGroup* stabLow  = &(low. p->limVector);
 			StabilizerGroup* stabHigh = &(high.p->limVector);
 			// Step 1: Compute the intersection
@@ -857,8 +870,10 @@ public:
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
         Log::log << "[getIsomorphismPauli] uLow .l = " << LimEntry<>::to_string(uLow.l) << " vLow.l = " << LimEntry<>::to_string(vLow.l) << Log::endl;
         Log::log << "[getIsomorphismPauli] uHigh.l = " << LimEntry<>::to_string(uHigh.l) << " vHigh.l = " << LimEntry<>::to_string(vHigh.l) << Log::endl;
-        assert (LimEntry<>::isIdentityOperator(uLow.l));
-        assert (LimEntry<>::isIdentityOperator(vLow.l));
+        if (!LimEntry<>::isIdentityOperator(uLow.l))
+        	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
+        if (!LimEntry<>::isIdentityOperator(vLow.l))
+        	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of v does not have identity label\n");
         auto zeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
         auto zeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
 
@@ -944,22 +959,32 @@ public:
             	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
             }
 
-//            Complex div0 = cn.getTemporary();  // Eventually returned to cache
-//            ComplexNumbers::div(div0, u->e[1].w, u->e[0].w);
-//            Complex div1 = cn.getTemporary();  // Eventually returned to cache
-//            ComplexNumbers::div(div1, v->e[1].w, v->e[0].w);
-//            iso->weight  = cn.getTemporary();  // We ask the calling function to return this to cache
+            Complex div0 = cn.getCached();  // Eventually returned to cache
+            ComplexNumbers::div(div0, u->e[1].w, u->e[0].w);
+            Complex div1 = cn.getCached();  // Eventually returned to cache
+            ComplexNumbers::div(div1, v->e[1].w, v->e[0].w);
+            Complex div2 = cn.getCached();
+            ComplexNumbers::div(div2, div0, div1);
+//            iso->weight  = cn.getCached();  // We ask the calling function to return this to cache
 //            ComplexNumbers::div(iso->weight, u->e[0].w, v->e[1].w);
+            cn.returnToCache(div0);
+            cn.returnToCache(div1);
+            cn.returnToCache(div2);
+
+            if (!div2.approximatelyEquals(Complex::one)       && !div2.approximatelyEquals(Complex::complex_i) &&
+                !div2.approximatelyEquals(Complex::minus_one) && !div2.approximatelyEquals(Complex::minus_i)) {
+            	return LimWeight<>::noLIM;
+            }
 
 //            bool amplitudeOppositeSign = div0.approximatelyEqualsMinus(div1);
             bool edgeWeightsOppositeSign = u->e[1].w.approximatelyEqualsMinus(v->e[1].w);
 //            bool edgeWeightsPlusMinus  = div0.approximatelyEqualsPlusMinus(div1);
-            bool edgeWeightsPlusMinus  = u->e[1].w.approximatelyEquals(v->e[1].w) || edgeWeightsOppositeSign;
+//            bool edgeWeightsPlusMinus  = u->e[1].w.approximatelyEquals(v->e[1].w) || edgeWeightsOppositeSign;
 //            cn.returnToCache(div0);
 //            cn.returnToCache(div1);
             // Step 1.3:  check if the edge weights are equal, up to a sign
             // TODO limdd check if uhigh.w = 1 / vhigh.w
-            if (!edgeWeightsPlusMinus) return LimWeight<>::noLIM;
+//            if (!edgeWeightsPlusMinus) return LimWeight<>::noLIM;
             Log::log << "[getIsomorphismPauli] edge weights are approximately equal.\n"; Log::log.flush(); superFlush();
             // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
             LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
@@ -1019,8 +1044,8 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    //   2. Communicate that we need a new reduction rule for high edge weights. This procedure now implements a candidate for that.
     static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
+    	assert( vLabel->getPhase() == phase_t::phase_one );
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
@@ -1061,6 +1086,7 @@ public:
     		}
     		x = false;
     	}
+    	weight.multiplyByPhase(newHighLabel->getPhase());
     	newHighLabel->setPhase(phase_t::phase_one);
     	return newHighLabel;
     }

@@ -8,6 +8,7 @@
 
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
+#include "Definitions.hpp"
 #include "Log.hpp"
 
 #include <cstddef>
@@ -112,6 +113,22 @@ namespace dd {
         void multiplyByMinusi() {
         	std::swap(r, i);
         	i = CTEntry::flipPointerSign(i);
+        }
+
+        void multiplyByPhase(dd::phase_t phase) {
+        	switch(phase) {
+        	case dd::phase_t::phase_i:
+        		multiplyByi();
+        		break;
+        	case phase_t::phase_minus_one:
+        		multiplyByMinusOne(true);
+        		break;
+        	case phase_t::phase_minus_i:
+        		multiplyByMinusi();
+        		break;
+        	case phase_t::phase_one:
+        		break;
+        	}
         }
 
         [[nodiscard]] std::string toString(bool formatted = true, int precision = -1) const {

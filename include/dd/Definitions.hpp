@@ -100,5 +100,19 @@ namespace dd {
         return ulps;
     }
 
+    enum pauli_op {
+        pauli_id = 'I',
+        pauli_x  = 'X',
+        pauli_y  = 'Y',
+        pauli_z  = 'Z'
+    };
+
+    enum phase_t {
+        phase_one       = 0,
+        phase_i         = 1,
+        phase_minus_one = 2,
+        phase_minus_i   = 3
+    };
+
 } // namespace dd
 #endif //DDpackage_DATATYPES_HPP

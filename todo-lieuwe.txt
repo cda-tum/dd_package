@@ -1,5 +1,13 @@
 ====    TODO
 
+Talk to Thomas about:
+    - plans, milestones. We should focus on Z group? or Pauli group? First fix all bugs, then proceed to Pauli-multiply
+    - Walk through normalizLIMDD function. Catch complex-valued code inaccuracies.
+    - both of us need to be convinced that all the code is right imo. walk through the code together? or separately??
+    - do we need documentation for the new LIMDD functionality? I can make long algorithms
+    - large groups, very large groups
+    - better variable reordering strategies
+
 make functionality in Package which allows me to execute a circuit
 refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
 
@@ -11,10 +19,17 @@ incorporate weights into the getIsomorphismPauli procedure
     cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
     	work out on paper first
 
+Implement automation of stabilizer group checking:
+    iterate over all 4^n pauli operators; check if the operator stabilizes the state (using cvec?)
+    expand the set of 
+
 implement 'follow' and 'unfollow' for the Pauli group
 	amounts to implementing X and Y
 
 all tests pass under Z group
+
+make very detailed writeup of getIsomorphismPauli in pdf, explaining all the reasoning.
+    This is also important for other people, and myself, to understand the algorithms.
 
 refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
 	(maybe not, since the returnToCache() obligations on normalizeLIMDD() would be more complicated
@@ -42,7 +57,6 @@ if isValidIsomorphism(a, b, isoFound) party else error
 
 in tests, call isIsomorphism instead of defining a handwritten isomorphism
 
-put all debug statements in the Log
 
 refactor LimEntry<>::setOperator so that one function is called,
     instead of two different setOperators
@@ -105,7 +119,7 @@ rewrite GaussianElimination so that it takes into account the phase
 ====    DONE
 
 Log
-    output debugging statements to the Log instead of to std::cout
+    all debugging statements in the limdd go to Log instead of to std::cout
     ability to turn the log on and off
 
 make a new reduction rule for weights on the high edge.
