@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DDpackage_H
@@ -50,6 +50,35 @@
 #include <vector>
 
 namespace dd {
+    struct DDPackageConfig {
+        static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
+        static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
+    };
+
+    template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
+             std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+             std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
+             std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+             std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
+             std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
+             std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
+             std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+             std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+             std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+             std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
+             std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
+             std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET>
     class Package {
         ///
         /// Complex number handling
@@ -73,6 +102,7 @@ namespace dd {
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
+
         Package& operator=(const Package& package) = delete;
 
         // resize the package instance
@@ -109,12 +139,6 @@ namespace dd {
 
         // Done limdd: Add LIMs for Stabilizer Groups to nodes
     public:
-        typedef struct vNode vNode;
-        using vEdge       = Edge<vNode>;
-        using vCachedEdge = CachedEdge<vNode>;
-
-        // TODO limdd: rename this normalizeWeights?
-        // (original rename undone because of some errors in tests)
         vEdge normalize(const vEdge& e, bool cached) {
 //        	std::cout << "[normalize] start. Edge is currently " << e;
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
@@ -512,10 +536,6 @@ namespace dd {
         /// Matrix nodes, edges and quantum gates
         ///
     public:
-        typedef struct mNode mNode;
-        using mEdge       = Edge<mNode>;
-        using mCachedEdge = CachedEdge<mNode>;
-
         mEdge normalize(const mEdge& e, bool cached) {
             //todo limdd: search for isomorphic nodes
             auto argmax = -1;
@@ -745,7 +765,13 @@ namespace dd {
     public:
         // unique tables
         template<class Node>
-        [[nodiscard]] UniqueTable<Node>& getUniqueTable();
+        [[nodiscard]] auto& getUniqueTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vUniqueTable;
+            } else {
+                return mUniqueTable;
+            }
+        }
 
         template<class Node>
         void incRef(const Edge<Node>& e) {
@@ -758,8 +784,8 @@ namespace dd {
 
         [[nodiscard]] LimTable<>& getLimTable();
 
-        UniqueTable<vNode> vUniqueTable{nqubits};
-        UniqueTable<mNode> mUniqueTable{nqubits};
+        UniqueTable<vNode, UT_VEC_NBUCKET, UT_VEC_INITIAL_ALLOCATION_SIZE> vUniqueTable{nqubits};
+        UniqueTable<mNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> mUniqueTable{nqubits};
         LimTable<>         limTable{};
 
         bool garbageCollect(bool force = false) {
@@ -1204,11 +1230,17 @@ namespace dd {
         /// Addition
         ///
     public:
-        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge> vectorAdd{};
-        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge> matrixAdd{};
+        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
+        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
 
         template<class Node>
-        [[nodiscard]] ComputeTable<CachedEdge<Node>, CachedEdge<Node>, CachedEdge<Node>>& getAddComputeTable();
+        [[nodiscard]] auto& getAddComputeTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vectorAdd;
+            } else {
+                return matrixAdd;
+            }
+        }
 
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
@@ -1331,8 +1363,8 @@ namespace dd {
         /// Matrix (conjugate) transpose
         ///
     public:
-        UnaryComputeTable<mEdge, mEdge, 4096> matrixTranspose{};
-        UnaryComputeTable<mEdge, mEdge, 4096> conjugateMatrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CT_MAT_TRANS_NBUCKET>      matrixTranspose{};
+        UnaryComputeTable<mEdge, mEdge, CT_MAT_CONJ_TRANS_NBUCKET> conjugateMatrixTranspose{};
 
         mEdge transpose(const mEdge& a) {
             if (a.p == nullptr || a.isTerminal() || a.p->symm) {
@@ -1402,11 +1434,17 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTable<mEdge, vEdge, vCachedEdge> matrixVectorMultiplication{};
-        ComputeTable<mEdge, mEdge, mCachedEdge> matrixMatrixMultiplication{};
+        ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
 
         template<class LeftOperandNode, class RightOperandNode>
-        [[nodiscard]] ComputeTable<Edge<LeftOperandNode>, Edge<RightOperandNode>, CachedEdge<RightOperandNode>>& getMultiplicationComputeTable();
+        [[nodiscard]] auto& getMultiplicationComputeTable() {
+            if constexpr (std::is_same_v<RightOperandNode, vNode>) {
+                return matrixVectorMultiplication;
+            } else {
+                return matrixMatrixMultiplication;
+            }
+        }
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0) {
@@ -1635,7 +1673,7 @@ namespace dd {
         /// Inner product and fidelity
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorInnerProduct{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, CT_VEC_INNER_PROD_NBUCKET> vectorInnerProduct{};
 
         ComplexValue innerProduct(const vEdge& x, const vEdge& y) {
             if (x.p == nullptr || y.p == nullptr || x.w.approximatelyZero() || y.w.approximatelyZero()) { // the 0 case
@@ -1754,11 +1792,17 @@ namespace dd {
         /// Kronecker/tensor product
         ///
     public:
-        ComputeTable<vEdge, vEdge, vCachedEdge, 4096> vectorKronecker{};
-        ComputeTable<mEdge, mEdge, mCachedEdge, 4096> matrixKronecker{};
+        ComputeTable<vEdge, vEdge, vCachedEdge, CT_VEC_KRON_NBUCKET> vectorKronecker{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_KRON_NBUCKET> matrixKronecker{};
 
         template<class Node>
-        [[nodiscard]] ComputeTable<Edge<Node>, Edge<Node>, CachedEdge<Node>, 4096>& getKroneckerComputeTable();
+        [[nodiscard]] auto& getKroneckerComputeTable() {
+            if constexpr (std::is_same_v<Node, vNode>) {
+                return vectorKronecker;
+            } else {
+                return matrixKronecker;
+            }
+        }
 
         template<class Edge>
         Edge kronecker(const Edge& x, const Edge& y, bool incIdx = true) {
@@ -1921,44 +1965,58 @@ namespace dd {
 
         bool isCloseToIdentityRecursive(const mEdge& m, std::unordered_set<decltype(m.p)>& visited, dd::fp tol) {
             // immediately return if this node has already been visited
-            if (visited.find(m.p) != visited.end())
+            if (visited.find(m.p) != visited.end()) {
                 return true;
+            }
 
             // immediately return of this node is identical to the identity
-            if (m.p->ident)
+            if (m.p->ident) {
                 return true;
+            }
 
             // check whether any of the middle successors is non-zero, i.e., m = [ x 0 0 y ]
-            const auto mag1 = dd::ComplexNumbers::mag2(m.p->e[1].w);
-            const auto mag2 = dd::ComplexNumbers::mag2(m.p->e[2].w);
+            const auto mag1 = dd::ComplexNumbers::mag2(m.p->e[1U].w);
+            const auto mag2 = dd::ComplexNumbers::mag2(m.p->e[2U].w);
             if (mag1 > tol || mag2 > tol) {
                 visited.insert(m.p);
                 return false;
             }
 
             // check whether  m = [ ~1 0 0 y ]
-            const auto mag0 = dd::ComplexNumbers::mag2(m.p->e[0].w);
+            const auto mag0 = dd::ComplexNumbers::mag2(m.p->e[0U].w);
             if (std::abs(mag0 - 1.0) > tol) {
+                visited.insert(m.p);
+                return false;
+            }
+            const auto arg0 = dd::ComplexNumbers::arg(m.p->e[0U].w);
+            if (std::abs(arg0) > tol) {
                 visited.insert(m.p);
                 return false;
             }
 
             // check whether m = [ x 0 0 ~1 ] or m = [ x 0 0 ~0 ] (the last case is true for an ancillary qubit)
-            const auto mag3 = dd::ComplexNumbers::mag2(m.p->e[3].w);
-            if (std::abs(mag3 - 1.0) > tol && mag3 > tol) {
-                visited.insert(m.p);
-                return false;
+            const auto mag3 = dd::ComplexNumbers::mag2(m.p->e[3U].w);
+            if (mag3 > tol) {
+                if (std::abs(mag3 - 1.0) > tol) {
+                    visited.insert(m.p);
+                    return false;
+                }
+                const auto arg3 = dd::ComplexNumbers::arg(m.p->e[3U].w);
+                if (std::abs(arg3) > tol) {
+                    visited.insert(m.p);
+                    return false;
+                }
             }
 
             // m either has the form [ ~1 0 0 ~1 ] or [ ~1 0 0 ~0 ]
-            const auto ident0 = isCloseToIdentityRecursive(m.p->e[0], visited, tol);
+            const auto ident0 = isCloseToIdentityRecursive(m.p->e[0U], visited, tol);
             if (!ident0) {
                 visited.insert(m.p);
                 return false;
             }
 
             // m either has the form [ I 0 0 ~1 ] or [ I 0 0 ~0 ]
-            const auto ident3 = isCloseToIdentityRecursive(m.p->e[3], visited, tol);
+            const auto ident3 = isCloseToIdentityRecursive(m.p->e[3U], visited, tol);
             visited.insert(m.p);
             return ident3;
         }
@@ -2005,6 +2063,12 @@ namespace dd {
 
         void clearIdentityTable() {
             for (auto& entry: IdTable) entry.p = nullptr;
+        }
+
+        mEdge createInitialMatrix(dd::QubitCount n, const std::vector<bool>& ancillary) {
+            auto e = makeIdent(n);
+            incRef(e);
+            return reduceAncillae(e, ancillary);
         }
 
     private:
@@ -2584,7 +2648,7 @@ namespace dd {
             cn.returnToCache(c);
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
+        void exportAmplitudesRec(const vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
             if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
@@ -2604,7 +2668,7 @@ namespace dd {
             exportAmplitudesRec(edge.p->e[1], oss, path + "1", a, level - 1, binary);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
+        void exportAmplitudes(const vEdge& edge, std::ostream& oss, dd::QubitCount nq, bool binary = false) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -2613,7 +2677,7 @@ namespace dd {
             exportAmplitudesRec(edge, oss, "", weight, nq, binary);
             cn.returnToCache(weight);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
+        void exportAmplitudes(const vEdge& edge, const std::string& outputFilename, dd::QubitCount nq, bool binary = false) {
             std::ofstream      init(outputFilename);
             std::ostringstream oss{};
 
@@ -2623,7 +2687,7 @@ namespace dd {
             init.close();
         }
 
-        void exportAmplitudesRec(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
+        void exportAmplitudesRec(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, Complex& amplitude, dd::QubitCount level, std::size_t idx) {
             if (edge.isTerminal()) {
                 auto amp = cn.getTemporary();
                 dd::ComplexNumbers::mul(amp, amplitude, edge.w);
@@ -2640,7 +2704,7 @@ namespace dd {
             exportAmplitudesRec(edge.p->e[1], amplitudes, a, level - 1, (idx << 1) | 1ULL);
             cn.returnToCache(a);
         }
-        void exportAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
+        void exportAmplitudes(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -2650,7 +2714,7 @@ namespace dd {
             cn.returnToCache(weight);
         }
 
-        void addAmplitudesRec(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
+        void addAmplitudesRec(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, ComplexValue& amplitude, dd::QubitCount level, std::size_t idx) {
             auto         ar = dd::ComplexTable<>::Entry::val(edge.w.r);
             auto         ai = dd::ComplexTable<>::Entry::val(edge.w.i);
             ComplexValue amp{ar * amplitude.r - ai * amplitude.i, ar * amplitude.i + ai * amplitude.r};
@@ -2668,7 +2732,7 @@ namespace dd {
             addAmplitudesRec(edge.p->e[0], amplitudes, amp, level - 1, idx << 1);
             addAmplitudesRec(edge.p->e[1], amplitudes, amp, level - 1, idx << 1 | 1ULL);
         }
-        void addAmplitudes(const dd::Package::vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
+        void addAmplitudes(const vEdge& edge, std::vector<std::complex<dd::fp>>& amplitudes, dd::QubitCount nq) {
             if (edge.isTerminal()) {
                 // TODO special treatment
                 return;
@@ -3073,15 +3137,15 @@ namespace dd {
                       << "\n  vNode size: " << sizeof(vNode) << " bytes (aligned " << alignof(vNode) << " bytes)"
                       << "\n  mEdge size: " << sizeof(mEdge) << " bytes (aligned " << alignof(mEdge) << " bytes)"
                       << "\n  mNode size: " << sizeof(mNode) << " bytes (aligned " << alignof(mNode) << " bytes)"
-                      << "\n  CT Vector Add size: " << sizeof(decltype(vectorAdd)::Entry) << " bytes (aligned " << alignof(decltype(vectorAdd)::Entry) << " bytes)"
-                      << "\n  CT Matrix Add size: " << sizeof(decltype(matrixAdd)::Entry) << " bytes (aligned " << alignof(decltype(matrixAdd)::Entry) << " bytes)"
-                      << "\n  CT Matrix Transpose size: " << sizeof(decltype(matrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(matrixTranspose)::Entry) << " bytes)"
-                      << "\n  CT Conjugate Matrix Transpose size: " << sizeof(decltype(conjugateMatrixTranspose)::Entry) << " bytes (aligned " << alignof(decltype(conjugateMatrixTranspose)::Entry) << " bytes)"
-                      << "\n  CT Matrix Multiplication size: " << sizeof(decltype(matrixMatrixMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixMatrixMultiplication)::Entry) << " bytes)"
-                      << "\n  CT Matrix Vector Multiplication size: " << sizeof(decltype(matrixVectorMultiplication)::Entry) << " bytes (aligned " << alignof(decltype(matrixVectorMultiplication)::Entry) << " bytes)"
-                      << "\n  CT Vector Inner Product size: " << sizeof(decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(decltype(vectorInnerProduct)::Entry) << " bytes)"
-                      << "\n  CT Vector Kronecker size: " << sizeof(decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(decltype(vectorKronecker)::Entry) << " bytes)"
-                      << "\n  CT Matrix Kronecker size: " << sizeof(decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(decltype(matrixKronecker)::Entry) << " bytes)"
+                      << "\n  CT Vector Add size: " << sizeof(typename decltype(vectorAdd)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorAdd)::Entry) << " bytes)"
+                      << "\n  CT Matrix Add size: " << sizeof(typename decltype(matrixAdd)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixAdd)::Entry) << " bytes)"
+                      << "\n  CT Matrix Transpose size: " << sizeof(typename decltype(matrixTranspose)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixTranspose)::Entry) << " bytes)"
+                      << "\n  CT Conjugate Matrix Transpose size: " << sizeof(typename decltype(conjugateMatrixTranspose)::Entry) << " bytes (aligned " << alignof(typename decltype(conjugateMatrixTranspose)::Entry) << " bytes)"
+                      << "\n  CT Matrix Multiplication size: " << sizeof(typename decltype(matrixMatrixMultiplication)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixMatrixMultiplication)::Entry) << " bytes)"
+                      << "\n  CT Matrix Vector Multiplication size: " << sizeof(typename decltype(matrixVectorMultiplication)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixVectorMultiplication)::Entry) << " bytes)"
+                      << "\n  CT Vector Inner Product size: " << sizeof(typename decltype(vectorInnerProduct)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorInnerProduct)::Entry) << " bytes)"
+                      << "\n  CT Vector Kronecker size: " << sizeof(typename decltype(vectorKronecker)::Entry) << " bytes (aligned " << alignof(typename decltype(vectorKronecker)::Entry) << " bytes)"
+                      << "\n  CT Matrix Kronecker size: " << sizeof(typename decltype(matrixKronecker)::Entry) << " bytes (aligned " << alignof(typename decltype(matrixKronecker)::Entry) << " bytes)"
                       << "\n  ToffoliTable::Entry size: " << sizeof(ToffoliTable<mEdge>::Entry) << " bytes (aligned " << alignof(ToffoliTable<mEdge>::Entry) << " bytes)"
                       << "\n  Package size: " << sizeof(Package) << " bytes (aligned " << alignof(Package) << " bytes)"
                       << "\n"
@@ -3123,44 +3187,5 @@ namespace dd {
             limTable.printStatistics();
         }
     };
-
-    inline Package::vNode Package::vNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}},
-                                                       nullptr,
-                                                       0,
-                                                       -1};
-
-    inline Package::mNode Package::mNode::terminalNode{
-            {{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}},
-            nullptr,
-            0,
-            -1,
-            true,
-            true};
-
-    template<>
-    [[nodiscard]] inline UniqueTable<Package::vNode>& Package::getUniqueTable() { return vUniqueTable; }
-
-    template<>
-    [[nodiscard]] inline UniqueTable<Package::mNode>& Package::getUniqueTable() { return mUniqueTable; }
-
-    [[nodiscard]] inline LimTable<>& Package::getLimTable() { return limTable; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::vCachedEdge, Package::vCachedEdge, Package::vCachedEdge>& Package::getAddComputeTable() { return vectorAdd; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mCachedEdge, Package::mCachedEdge, Package::mCachedEdge>& Package::getAddComputeTable() { return matrixAdd; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::vEdge, Package::vCachedEdge>& Package::getMultiplicationComputeTable() { return matrixVectorMultiplication; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge>& Package::getMultiplicationComputeTable() { return matrixMatrixMultiplication; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::vEdge, Package::vEdge, Package::vCachedEdge, 4096>& Package::getKroneckerComputeTable() { return vectorKronecker; }
-
-    template<>
-    [[nodiscard]] inline ComputeTable<Package::mEdge, Package::mEdge, Package::mCachedEdge, 4096>& Package::getKroneckerComputeTable() { return matrixKronecker; }
 } // namespace dd
 #endif
