@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_COMPLEX_HPP
@@ -35,6 +35,14 @@ namespace dd {
 
         [[nodiscard]] inline bool approximatelyEquals(const Complex& c) const {
             return CTEntry::approximatelyEquals(r, c.r) && CTEntry::approximatelyEquals(i, c.i);
+        };
+
+        [[nodiscard]] inline bool exactlyZero() const {
+            return CTEntry::exactlyZero(r) && CTEntry::exactlyZero(i);
+        };
+
+        [[nodiscard]] inline bool exactlyOne() const {
+            return CTEntry::exactlyOne(r) && CTEntry::exactlyZero(i);
         };
 
         [[nodiscard]] inline bool approximatelyZero() const {

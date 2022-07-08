@@ -3,8 +3,8 @@
  * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
-#ifndef DDpackage_UNARYCOMPUTETABLE_HPP
-#define DDpackage_UNARYCOMPUTETABLE_HPP
+#ifndef DDpackage_NOISECOMPUTETABLE_HPP
+#define DDpackage_NOISECOMPUTETABLE_HPP
 
 #include "Definitions.hpp"
 
@@ -15,18 +15,19 @@
 
 namespace dd {
 
-    /// Data structure for caching computed results of unary operations
+    /// Data structure for caching computed results of noise operations
     /// \tparam OperandType type of the operation's operand
     /// \tparam ResultType type of the operation's result
     /// \tparam NBUCKET number of hash buckets to use (has to be a power of two)
     template<class OperandType, class ResultType, std::size_t NBUCKET = 32768>
-    class UnaryComputeTable {
+    class DensityNoiseTable { //todo Inherent from UnaryComputerTable
     public:
-        UnaryComputeTable() = default;
+        DensityNoiseTable() = default;
 
         struct Entry {
-            OperandType operand;
-            ResultType  result;
+            OperandType            operand;
+            ResultType             result;
+            std::vector<dd::Qubit> usedQubits;
         };
 
         static constexpr size_t MASK = NBUCKET - 1;
@@ -34,24 +35,31 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        static std::size_t hash(const OperandType& a) {
-            return std::hash<OperandType>{}(a)&MASK;
+        static std::size_t hash(const OperandType& a, const std::vector<signed char>& usedQubits) {
+            std::size_t i = 0;
+            for (auto qubit: usedQubits) {
+                i = (i << 3U) + i * qubit + qubit;
+            }
+            return (std::hash<OperandType>{}(a) + i) & MASK;
         }
 
-        void insert(const OperandType& operand, const ResultType& result) {
-            const auto key = hash(operand);
-            table[key]     = {operand, result};
+        void insert(const OperandType& operand, const ResultType& result, const std::vector<signed char>& usedQubits) {
+            const auto key   = hash(operand, usedQubits);
+            auto&      entry = table[key];
+            entry.result     = result;
+            entry.operand    = operand;
+            entry.usedQubits = usedQubits;
             ++count;
         }
 
-        ResultType lookup(const OperandType& operand) {
+        ResultType lookup(const OperandType& operand, const std::vector<signed char>& usedQubits) {
             ResultType result{};
             lookups++;
-            const auto key   = hash(operand);
+            const auto key   = hash(operand, usedQubits);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.operand != operand) return result;
-
+            if (entry.usedQubits != usedQubits) return result;
             hits++;
             return entry.result;
         }
@@ -62,8 +70,6 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            hits    = 0;
-            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
@@ -81,4 +87,4 @@ namespace dd {
     };
 } // namespace dd
 
-#endif //DDpackage_UNARYCOMPUTETABLE_HPP
+#endif //DDpackage_NOISECOMPUTETABLE_HPP

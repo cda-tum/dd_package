@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DDcomplex_H
@@ -104,19 +104,13 @@ namespace dd {
         }
         static Complex conj(const Complex& a) {
             auto ret = a;
-            if (a.i != Complex::zero.i) {
-                ret.i = CTEntry::flipPointerSign(a.i);
-            }
+            ret.i    = CTEntry::flipPointerSign(a.i);
             return ret;
         }
         static Complex neg(const Complex& a) {
             auto ret = a;
-            if (a.i != Complex::zero.i) {
-                ret.i = CTEntry::flipPointerSign(a.i);
-            }
-            if (a.r != Complex::zero.i) {
-                ret.r = CTEntry::flipPointerSign(a.r);
-            }
+            ret.i    = CTEntry::flipPointerSign(a.i);
+            ret.r    = CTEntry::flipPointerSign(a.r);
             return ret;
         }
 

@@ -1,12 +1,13 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DDpackage_COMPUTETABLE_HPP
 #define DDpackage_COMPUTETABLE_HPP
 
 #include "Definitions.hpp"
+#include "Node.hpp"
 
 #include <array>
 #include <cstddef>
@@ -49,7 +50,7 @@ namespace dd {
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false) {
             ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
@@ -58,6 +59,10 @@ namespace dd {
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
 
+            if constexpr (std::is_same_v<RightOperandType, dEdge>) {
+                // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
+                if (dNode::isDensityMatrixNode(entry.result.p->flags) != useDensityMatrix) return result;
+            }
             hits++;
             return entry.result;
         }
@@ -68,8 +73,6 @@ namespace dd {
                     entry.result.p = nullptr;
                 count = 0;
             }
-            hits    = 0;
-            lookups = 0;
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }

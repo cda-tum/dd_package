@@ -1,6 +1,6 @@
 /*
- * This file is part of the JKQ DD Package which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum_dd/ for more information.
+ * This file is part of the MQT DD Package which is released under the MIT license.
+ * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
  */
 
 #ifndef DD_PACKAGE_COMPLEXTABLE_HPP
@@ -44,7 +44,19 @@ namespace dd {
                 return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) | static_cast<std::uintptr_t>(1U));
             }
 
+            [[nodiscard]] static inline bool exactlyZero(const Entry* e) {
+                return (e == &ComplexTable<NBUCKET, INITIAL_ALLOCATION_SIZE, GROWTH_FACTOR, INITIAL_GC_LIMIT>::zero);
+            }
+
+            [[nodiscard]] static inline bool exactlyOne(const Entry* e) {
+                return (e == &ComplexTable<NBUCKET, INITIAL_ALLOCATION_SIZE, GROWTH_FACTOR, INITIAL_GC_LIMIT>::one);
+            }
+
             [[nodiscard]] static inline Entry* flipPointerSign(const Entry* e) {
+                if (e == &ComplexTable<NBUCKET, INITIAL_ALLOCATION_SIZE, GROWTH_FACTOR, INITIAL_GC_LIMIT>::zero) {
+                    // No point in flipping the sign of 0
+                    return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e));
+                }
                 return reinterpret_cast<Entry*>(reinterpret_cast<std::uintptr_t>(e) ^ static_cast<std::uintptr_t>(1U));
             }
 

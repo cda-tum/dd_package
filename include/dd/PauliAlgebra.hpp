@@ -6,7 +6,7 @@
 #define DDPACKAGE_PAULIALGEBRA_HPP
 
 #include "Edge.hpp"
-#include "Nodes.hpp"
+#include "Node.hpp"
 #include "LimTable.hpp"
 #include "ComplexNumbers.hpp"
 #include "Log.hpp"
@@ -46,8 +46,10 @@ public:
     }
 
     phase_t multiplyPhases(phase_t a, phase_t b) {
-    	phase_t c = ((a & 0x1) ^ (b & 0x1)) | ((a & 0x2) ^ (b & 0x2) ^ (a & b & 0x1));
-    	return c;
+    	short x = (short) a;
+    	short y = (short) b;
+    	short xy = ((x & 0x1) ^ (y & 0x1)) | ((x & 0x2) ^ (y & 0x2) ^ (x & y & 0x1));
+    	return (phase_t) xy;
     }
 
     // Returns whether the two groups have the same vector of generators
@@ -645,6 +647,7 @@ public:
     // or returns LimEntry::noLIM, if this set is empty
     template <std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda) {
+    	if (lambda != phase_t::phase_one && lambda != phase_t::phase_minus_one) return LimEntry<NUM_QUBITS>::noLIM;
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
     	LimEntry<NUM_QUBITS>* c = getCosetIntersectionElementModuloPhase(G, H, ab);
@@ -653,7 +656,7 @@ public:
     	// Retrieve the phase of acb in H
     	acb = LimEntry<NUM_QUBITS>::multiply(acb, b);
     	phase_t alpha = recoverPhase(H, acb);
-    	alpha = LimEntry<NUM_QUBITS>::multiplyPhases(alpha, lambda)
+    	alpha = LimEntry<NUM_QUBITS>::multiplyPhases(alpha, lambda);
     	// Find generators of G intersect H modulo phase
     	std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
 //    	std::vector<int> beta(0, GintersectH);
@@ -661,7 +664,7 @@ public:
     	bool beta;
     	if (alpha == phase_t::phase_one) {
     		for (unsigned int i=0; i<GintersectH.size(); i++) {
-    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, j) != recoverPhase(H, j));
+    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]));
     			if (beta == 0) return GintersectH[i];
     			else if (j1 == -1) {
     				j1 = i;
@@ -675,7 +678,7 @@ public:
     	else if (alpha == phase_t::phase_minus_one) {
     		// See if some element of J has xy = -1
     		for (unsigned int i=0; i<GintersectH.size(); i++) {
-    			if (GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, j) != recoverPhase(H, j))) {
+    			if (GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
     				return recoverElement(G, GintersectH[i]);
     			}
     		}
