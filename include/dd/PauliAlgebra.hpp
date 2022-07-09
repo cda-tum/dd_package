@@ -45,13 +45,21 @@ public:
         }
     }
 
-    phase_t multiplyPhases(phase_t a, phase_t b) {
+    static phase_t multiplyPhases(phase_t a, phase_t b) {
     	short x = (short) a;
     	short y = (short) b;
-    	short xy = ((x & 0x1) ^ (y & 0x1)) | ((x & 0x2) ^ (y & 0x2) ^ (x & y & 0x1));
+    	short xy = ((x & 0x1) ^ (y & 0x1)) | ((x & 0x2) ^ (y & 0x2) ^ ((x & y & 0x1) << 1));
     	return (phase_t) xy;
+//    	return (phase_t) (((int) a + (int)b) & 0x3);
     }
 
+    static phase_t getPhaseInverse(phase_t a) {
+    	int A = (int) a;
+    	A = (A & 0x1) | ( ((A&1) << 1) ^ (A&2) );
+    	return (phase_t) A;
+//    	return (4 - (int) a) & 0x3;
+
+    }
     // Returns whether the two groups have the same vector of generators
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
@@ -545,7 +553,6 @@ public:
 //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS>* a_H = getProductOfElements(H, decomposition_H);
         LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
-        phase_t phase_diff = (phase_t) ((a->getPhase() + a_prime->getPhase()) & 0x3);
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             return LimEntry<NUM_QUBITS>::noLIM;
         }
@@ -624,13 +631,15 @@ public:
     }
 
 	// TODO write a test
+    // TODO refactor to use recoverElement
     template<std::size_t NUM_QUBITS>
     static phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
-    	phase_t phase = phase_t::phase_one;
+    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
+    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+    	}
     	LimEntry<NUM_QUBITS> A(a);
     	LimEntry<NUM_QUBITS> B;
-//    	LimEntry<NUM_QUBITS> g;
-    	for (unsigned int g=0; g<G.size; g++) {
+    	for (unsigned int g=0; g<G.size(); g++) {
     		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
     			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
     				A.multiplyBy(G[g]);
@@ -642,44 +651,65 @@ public:
     	return B.getPhase();
     }
 
+    // TODO implement
+    // TODO write a test
+    template <std::size_t NUM_QUBITS>
+    static LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
+    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
+    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+    	}
+    	LimEntry<NUM_QUBITS> A(a);
+    	LimEntry<NUM_QUBITS> B;
+    	for (unsigned int g=0; g<G.size(); g++) {
+    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
+    				A.multiplyBy(G[g]);
+    				B.multiplyBy(G[g]);
+    				break;
+    			}
+    		}
+    	}
+    	return B;
+    }
+
     // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
     // Finds an element in the set G intersect lambda a H b,
     // or returns LimEntry::noLIM, if this set is empty
+    // TODO refactor to allocate less dynamic memory
     template <std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda) {
-    	if (lambda != phase_t::phase_one && lambda != phase_t::phase_minus_one) return LimEntry<NUM_QUBITS>::noLIM;
+    	if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
     	LimEntry<NUM_QUBITS>* c = getCosetIntersectionElementModuloPhase(G, H, ab);
     	c->setPhase(recoverPhase(G, c));
     	LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a,c);
-    	// Retrieve the phase of acb in H
     	acb = LimEntry<NUM_QUBITS>::multiply(acb, b);
-    	phase_t alpha = recoverPhase(H, acb);
-    	alpha = LimEntry<NUM_QUBITS>::multiplyPhases(alpha, lambda);
-    	// Find generators of G intersect H modulo phase
-    	std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
-//    	std::vector<int> beta(0, GintersectH);
-    	int j1 = -1;
-    	bool beta;
-    	if (alpha == phase_t::phase_one) {
-    		for (unsigned int i=0; i<GintersectH.size(); i++) {
-    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]));
-    			if (beta == 0) return GintersectH[i];
-    			else if (j1 == -1) {
-    				j1 = i;
-    			}
-    			else {
-    				return LimEntry<>::multiply(recoverElement(G, GintersectH[j1]), recoverElement(G, GintersectH[i]));
-    			}
-    		}
-
+    	phase_t alpha = multiplyPhases(acb->getPhase(), getPhaseInverse(lambda));
+    	// Retrieve the phase of acb in H
+    	phase_t tau = recoverPhase(H, acb);
+    	if (alpha == tau) {
+    		return c;
+//    		for (unsigned int i=0; i<GintersectH.size(); i++) {
+//    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]));
+//    			if (beta == 0) return GintersectH[i];
+//    			else if (j1 == -1) {
+//    				j1 = i;
+//    			}
+//    			else {
+//    				// TODO refactor to avoid dynamic allocation of new LIM
+//    				return LimEntry<>::multiply(new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[j1])), new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
+//    			}
+//    		}
     	}
-    	else if (alpha == phase_t::phase_minus_one) {
+    	// TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
+    	//    Check if this conjecture is true.
+    	else if (alpha == multiplyPhases(tau, phase_t::phase_minus_one)) {
     		// See if some element of J has xy = -1
+        	std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
     		for (unsigned int i=0; i<GintersectH.size(); i++) {
     			if (GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
-    				return recoverElement(G, GintersectH[i]);
+    				return LimEntry<NUM_QUBITS>::multiply(c, new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
     			}
     		}
     	}
@@ -953,7 +983,7 @@ public:
         // Assert that neither u nor v is the Zero vector
         assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
-        Log::log << "[getIsomorphismPauli] uLow .l = " << LimEntry<>::to_string(uLow.l) << " vLow.l = " << LimEntry<>::to_string(vLow.l) << Log::endl;
+        Log::log << "[getIsomorphismPauli] uLow .l = " << LimEntry<>::to_string(uLow.l) <<  " vLow.l  = " << LimEntry<>::to_string(vLow.l) << Log::endl;
         Log::log << "[getIsomorphismPauli] uHigh.l = " << LimEntry<>::to_string(uHigh.l) << " vHigh.l = " << LimEntry<>::to_string(vHigh.l) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
         	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
@@ -1041,28 +1071,34 @@ public:
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
             if (uLow.p == uHigh.p) {
+            	// TODO cover this case
             	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
             }
 
-            Complex div0 = cn.getCached();  // Eventually returned to cache
-            ComplexNumbers::div(div0, u->e[1].w, u->e[0].w);
-            Complex div1 = cn.getCached();  // Eventually returned to cache
-            ComplexNumbers::div(div1, v->e[1].w, v->e[0].w);
-            Complex div2 = cn.getCached();
-            ComplexNumbers::div(div2, div0, div1);
-//            iso->weight  = cn.getCached();  // We ask the calling function to return this to cache
-//            ComplexNumbers::div(iso->weight, u->e[0].w, v->e[1].w);
-            cn.returnToCache(div0);
-            cn.returnToCache(div1);
-            cn.returnToCache(div2);
+            Complex rhoU        = cn.getCached();  // Eventually returned to cache
+            Complex rhoV        = cn.getCached();  // Eventually returned to cache
+            Complex rhoVdivRhoU = cn.getCached();
+            ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
+            ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
+            ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU); // TODO since we only need to know whether this is +/- {1,i} or not, we can optimize and skip this last division
+            Log::log << "[getIsomorphismPauli] weights u0 v1 / u1 v0 = " << rhoVdivRhoU << "\n";
+            phase_t lambda = rhoVdivRhoU.toPhase();
 
-            if (!div2.approximatelyEquals(Complex::one)       && !div2.approximatelyEquals(Complex::complex_i) &&
-                !div2.approximatelyEquals(Complex::minus_one) && !div2.approximatelyEquals(Complex::minus_i)) {
+            cn.returnToCache(rhoVdivRhoU);
+            cn.returnToCache(rhoV);
+            cn.returnToCache(rhoU);
+            if (lambda == phase_t::no_phase) {
+            	Log::log << "[getIsomorphismPauli] Weights do not multiply to +/- {1,i}, so returning noLIM.\n";
             	return LimWeight<>::noLIM;
             }
+            Log::log << "[getIsomorphismPauli] edge weights are approximately equal modulo +/-{1,i}.\n"; Log::log.flush(); superFlush();
+
+            iso->weight = cn.getCached();
+            ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
+
 
 //            bool amplitudeOppositeSign = div0.approximatelyEqualsMinus(div1);
-            bool edgeWeightsOppositeSign = u->e[1].w.approximatelyEqualsMinus(v->e[1].w);
+//            bool edgeWeightsOppositeSign = u->e[1].w.approximatelyEqualsMinus(v->e[1].w);
 //            bool edgeWeightsPlusMinus  = div0.approximatelyEqualsPlusMinus(div1);
 //            bool edgeWeightsPlusMinus  = u->e[1].w.approximatelyEquals(v->e[1].w) || edgeWeightsOppositeSign;
 //            cn.returnToCache(div0);
@@ -1070,15 +1106,15 @@ public:
             // Step 1.3:  check if the edge weights are equal, up to a sign
             // TODO limdd check if uhigh.w = 1 / vhigh.w
 //            if (!edgeWeightsPlusMinus) return LimWeight<>::noLIM;
-            Log::log << "[getIsomorphismPauli] edge weights are approximately equal.\n"; Log::log.flush(); superFlush();
             // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
-            LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
-            Log::log << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; Log::log.flush(); superFlush();
-            if (edgeWeightsOppositeSign) {
-                Log::log << "[getIsomorphismPauli] multiplying Phase by -1 because high weights had opposite signs\n"; Log::log.flush(); superFlush();
-                isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
-            }
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
+//            Log::log << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; Log::log.flush(); superFlush();
+//            if (edgeWeightsOppositeSign) {
+//                Log::log << "[getIsomorphismPauli] multiplying Phase by -1 because high weights had opposite signs\n"; Log::log.flush(); superFlush();
+//                isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
+//            }
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
+//            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             Log::log << "[getIsomorphismPauli] completed coset intersection element.\n"; Log::log.flush();
             if (iso->lim != LimEntry<>::noLIM) {
                 Log::log << "[getIsomorphismPauli] The coset was non-empty; returning element.\n"; Log::log.flush();
@@ -1086,20 +1122,39 @@ public:
             }
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n"; Log::log.flush();
-            isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
+            lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
+//            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             if (iso->lim != LimEntry<>::noLIM) {
                 iso->lim->setOperator(u->v, pauli_op::pauli_z);
                 Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; Log::log.flush();
             }
             else {
-                Log::log << "[getIsomorphismPauli] Coset was empty; returning -1.\n"; Log::log.flush();
+                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n"; Log::log.flush();
 //                cn.returnToCache(iso->weight);
                 iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
         }
         return iso;
     }
+
+//    static LimWeight<>* getIsomorphismPauliBruteForce(const vNode* u, const vNode* v, ComplexNumbers& cn) {
+//    	Edge<vNode> eu{u, Complex::one, nullptr};
+//    	Edge<vNode> ev{v, Complex::one, nullptr};
+//    	unsigned int nqubits = u->v;
+//    	LimEntry<> iso;
+//    	unsigned int isoNum;
+//    	CVec uVec(1ULL << (2*nqubits), 0);
+//    	CVec vVec(1ULL << (2*nqubits), 0);
+//    	for (isoNum = 0; isoNum < 1ULL << (2*nqubits); isoNum++) {
+//    		for (unsigned i=0; i<2nqubits; i++) {
+//    			iso.paulis.set(i, (isoNum & (0x1 << i)) >> i);
+//    		}
+//    		// TODO call getVector
+//    	}
+//    	return nullptr;
+//    }
 
     // Choose the label on the High edge, in the Z group
     static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
@@ -1129,15 +1184,18 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s, bool& x) {
+    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& x) {
     	assert( vLabel->getPhase() == phase_t::phase_one );
+    	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
+        	weight.multiplyByPhase(newHighLabel->getPhase());
+        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << newHighLabel->getPhase() << ", result: weight = " << weight << '\n';
+        	newHighLabel->setPhase(phase_t::phase_one);
 
     		if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
     			weight.multiplyByMinusOne(true);
-    			s = true;
     			Log::log << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
     		}
     		fp norm = ComplexNumbers::mag2(weight);
@@ -1165,14 +1223,18 @@ public:
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
+        	weight.multiplyByPhase(newHighLabel->getPhase());
+        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << newHighLabel->getPhase() << ", result: weight = " << weight << '\n';
+        	newHighLabel->setPhase(phase_t::phase_one);
     		if (weight.lexSmallerThanxMinusOne()) {
+    			Log::log << "[highLabelPauli] before multiplication by -1, weight.r->value = " << weight.r->value << "; weight.i->value = " << weight.i->value << "\n";
     			weight.multiplyByMinusOne(true);
-    			s = true;
+    			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << weight << ".\n";
+    			Log::log << "[highLabelPauli] after  multiplication by -1, weight.r->value = " << weight.r->value << "; weight.i->value = " << weight.i->value << "\n";
     		}
     		x = false;
     	}
-    	weight.multiplyByPhase(newHighLabel->getPhase());
-    	newHighLabel->setPhase(phase_t::phase_one);
+
     	return newHighLabel;
     }
 

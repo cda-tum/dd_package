@@ -39,7 +39,7 @@ namespace dd {
             paulis = bitsetFromString(pauliString);
         }
         explicit LimEntry(const LimEntry<NUM_QUBITS>* l) {
-            if (l != nullptr)
+            if (l != nullptr && l != noLIM)
                 paulis = l->paulis;
         }
 
@@ -555,6 +555,12 @@ namespace dd {
     template <std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimBitset<NUM_QUBITS>& a) {
         return out << a.lim << " -- " << a.bits;
+    }
+
+    template <std::size_t NUM_QUBITS>
+    std::ostream& operator<<(std::ostream& out, const LimWeight<NUM_QUBITS>& a) {
+//    	LimEntry<NUM_QUBITS>* const alim = (LimEntry<NUM_QUBITS>* const) &(a.lim);
+    	return out << a.weight << " * " << LimEntry<NUM_QUBITS>::to_string(a.lim);
     }
 } // namespace dd
 

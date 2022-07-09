@@ -575,13 +575,20 @@ TEST(LimTest, getVectorLIMDD12) {
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
     std::cout << "[getVectorLIMDD12 test] making 2-qubit state e2.\n";
     auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
+    dd::export2Dot(e2, "getVectorLIMDD12.dot", false, true, true, false, true, false);
 
+    std::cout << "[getVectorLIMDD12 test] Root edge: " << e2;
     auto     vec = dd->getVectorLIMDD(e2);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({-1.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
-    expectedVec.push_back({1.0, 0.0});
+    expectedVec.push_back({-1.0, 0.0});
+
+    std::cout << "[getVectorLIMDD12 test] root edge is now " << e2  << "\n";
+    std::cout << "[getVectorLIMDD12 test] actual vector:   " << vec << "\n";
+    std::cout << "[getVectorLIMDD12 test] expected vector: " << expectedVec << "\n";
+
 
     EXPECT_TRUE(dd->vectorsApproximatelyEqual(vec, expectedVec));
 }

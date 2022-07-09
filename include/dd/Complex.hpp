@@ -84,6 +84,23 @@ namespace dd {
         	return false;
         }
 
+        // Returns a phase_t object, if this complex number is +1 or -1
+        phase_t toPhasePMOne() const {
+        	if (approximatelyEquals(Complex::one)) return phase_t::phase_one;
+        	if (approximatelyEquals(Complex::minus_one)) return phase_t::phase_minus_one;
+        	return phase_t::no_phase;
+        }
+
+        // Returns a phase_t object, if this complex number is +1, +i, -1, or -i.
+        //  Otherwise, returns phase_t::no_phase
+        phase_t toPhase() const {
+        	if (approximatelyEquals(Complex::one))       return phase_t::phase_one;
+        	if (approximatelyEquals(Complex::minus_one)) return phase_t::phase_minus_one;
+        	if (approximatelyEquals(Complex::complex_i)) return phase_t::phase_i;
+        	if (approximatelyEquals(Complex::minus_i))   return phase_t::phase_minus_i;
+        	return phase_t::no_phase;
+        }
+
         inline bool operator==(const Complex& other) const {
             return r == other.r && i == other.i;
         }
@@ -100,17 +117,17 @@ namespace dd {
         }
 
         // Sets this complex value z to '-z'
-        void multiplyByMinusOne(bool cached = true) {
+        void multiplyByMinusOne([[maybe_unused]] bool cached = true) {
             if(Complex::zero == *this){
                 return;
             }
-            if (cached) {
-                r->value = r->value * -1;
-                i->value = i->value * -1;
-            } else {
+//            if (cached) {
+//                r->value = r->value * -1;
+//                i->value = i->value * -1;
+//            } else {
                 r = CTEntry::flipPointerSign(r);
                 i = CTEntry::flipPointerSign(i);
-            }
+//            }
         }
 
         void multiplyByi() {
@@ -135,6 +152,7 @@ namespace dd {
         		multiplyByMinusi();
         		break;
         	case phase_t::phase_one:
+        	case phase_t::no_phase:
         		break;
         	}
         }

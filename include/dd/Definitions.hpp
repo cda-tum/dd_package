@@ -111,7 +111,8 @@ namespace dd {
         phase_one       = 0,
         phase_i         = 1,
         phase_minus_one = 2,
-        phase_minus_i   = 3
+        phase_minus_i   = 3,
+		no_phase        = 4
     };
 
 } // namespace dd

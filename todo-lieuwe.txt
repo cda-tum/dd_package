@@ -1,11 +1,9 @@
 ====    TODO
 
 Talk to Thomas about:
-    - plans, milestones. We should focus on Z group? or Pauli group? First fix all bugs, then proceed to Pauli-multiply
-    - Walk through normalizLIMDD function. Catch complex-valued code inaccuracies.
-    - both of us need to be convinced that all the code is right imo. walk through the code together? or separately??
     - do we need documentation for the new LIMDD functionality? I can make long algorithms
     - large groups, very large groups
+Talk to Stefan about:
     - better variable reordering strategies
 
 make functionality in Package which allows me to execute a circuit
@@ -20,6 +18,7 @@ incorporate weights into the getIsomorphismPauli procedure
     	work out on paper first
 
 write test for recoverPhase(G, a)
+write test for recoverElement
 
 Implement automation of stabilizer group checking:
     iterate over all 4^n pauli operators; check if the operator stabilizes the state (using cvec?)
@@ -119,6 +118,7 @@ rewrite GaussianElimination so that it takes into account the phase
 
 
 ====    DONE
+
 
 Log
     all debugging statements in the limdd go to Log instead of to std::cout
