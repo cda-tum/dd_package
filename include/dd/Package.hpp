@@ -358,7 +358,6 @@ namespace dd {
         // TODO limdd: incorporate Pauli Lims
         // TODO limdd: switch the node in case the low edge is zero
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
-        // TODO limdd: is the bit concerning 'bool s' superfluous?
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
             // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
@@ -434,13 +433,14 @@ namespace dd {
             Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
 
             LimWeight<>* iso = new LimWeight<>();
+            // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             iso = Pauli::getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
             if (iso == LimWeight<>::noLIM) {
             	throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
-            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso->weight << " * " << LimEntry<>::to_string(iso->lim) << "\n";
+            Log::log << "[normalizeLIMDD] Found isomorphism: [weight redacted]  * " << LimEntry<>::to_string(iso->lim) << "\n";
             Log::log << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
             Log::log << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
@@ -450,7 +450,7 @@ namespace dd {
             // r.w  = r.w * iso->weight;
             cn.mul(r.w, r.w, iso->weight);
 //            cn.returnToCache(iso->weight);
-            Log::log << "[normalizeLIMDD] Step 5.2: Multiplied root weight by " << iso->weight << "; now root weight = " << r.w << '\n';
+//            Log::log << "[normalizeLIMDD] Step 5.2: Multiplied root weight by " << iso->weight << "; now root weight = " << r.w << '\n';
             //            Complex rootWeightTemp = cn.getTemporary(); // TODO return to cache
             //            cn.mul(rootWeightTemp, r.w, iso->weight);
             //            cn.returnToCache(iso->weight);
@@ -2723,9 +2723,9 @@ namespace dd {
             return vec;
         }
         void getVectorLIMDD(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, const LimEntry<>& lim) {
-//        	Log::log << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) + 1 << " qubits; i = " << i << " edge label " << LimEntry<>::to_string(e.l) << ", aux label " << LimEntry<>::to_string(&lim) << ".\n";
-            //std::cout.flush();
-            auto c = cn.mulCached(e.w, amp);
+        	Log::log << "[getVectorLIMDD rec] vector of " << (int)(e.p->v) + 1 << " qubits; i = " << i << " cached count " << cn.complexCache.getCount() << " edge label " << LimEntry<>::to_string(e.l) << ", aux label " << LimEntry<>::to_string(&lim) << ".\n";
+        	auto c = cn.mulCached(e.w, amp);
+        	Log::log << "[getVectorLIMDD rec] cache count after getting cached entry: " << cn.complexCache.getCount() << '\n';
 
             // base case
             if (e.isTerminal()) {
@@ -2735,14 +2735,17 @@ namespace dd {
             }
             const std::size_t x = i | (1ULL << e.p->v);
 
+            LimEntry<>  lim2(e.l);
+            lim2.multiplyBy(lim);
+            c.multiplyByPhase(lim2.getPhase());
+            lim2.setPhase(phase_t::phase_one);
+
             // recursive case
             if (!e.p->e[0].w.approximatelyZero()) {
                 // we assume that this edge is labeled with the Identity LIM
 //                Log::log << "[getVectorLIMDD rec] low case.\n";
-                LimEntry<> lim2(e.l);
-                lim2.multiplyBy(lim);
                 std::size_t id0 = i;
-                auto        d0  = cn.getCached(CTEntry::val(c.r), CTEntry::val(c.i));
+//                auto        d0  = cn.getCached(CTEntry::val(c.r), CTEntry::val(c.i));
                 if (lim2.getQubit(e.p->v) == 'X') {
                     // new index is x
                     id0 = x;
@@ -2751,23 +2754,26 @@ namespace dd {
                     // new index is x
                     id0 = x;
                     // multiply c0 by i
-                    d0.multiplyByi();
+//                    d0.multiplyByi();
+                    c.multiplyByi();
                 }
 //                Log::log << "[getVectorLIMDD rec] walking the low edge.\n";
-                getVectorLIMDD(e.p->e[0], d0, id0, vec, lim2);
-                cn.returnToCache(d0);
+                getVectorLIMDD(e.p->e[0], c, id0, vec, lim2);
+                if (lim2.getQubit(e.p->v) == 'Y') {
+                	c.multiplyByMinusi();
+                }
+//                cn.returnToCache(d0);
             }
             if (!e.p->e[1].w.approximatelyZero()) {
 //            	Log::log << "[getVectorLIMDD rec] high case.\n";
                 // if lim has Pauli Z operator, then multiply by -1
-                auto        d1  = cn.getCached(CTEntry::val(c.r), CTEntry::val(c.i));
+//                auto        d1  = cn.getCached(CTEntry::val(c.r), CTEntry::val(c.i));
                 std::size_t id1 = x;
-                LimEntry<>  lim2(e.l);
-                lim2.multiplyBy(lim);
                 //                std::cout << "[getVectorLIMDD rec] accumulated lim has lim[q] = " << lim2.getQubit(e.p->v) << "\n";
                 if (lim2.getQubit(e.p->v) == 'Z') {
                     //                    std::cout << "[getVectorLIMDD rec] accumulated lim has Z.\n";
-                    d1.multiplyByMinusOne();
+//                    d1.multiplyByMinusOne();
+                    c .multiplyByMinusOne();
                 } else if (lim2.getQubit(e.p->v) == 'X') {
                     // new index is i
                     id1 = i;
@@ -2775,12 +2781,13 @@ namespace dd {
                     // new index is i
                     id1 = i;
                     // multiply d1 by -i
-                    d1.multiplyByMinusi();
+//                    d1.multiplyByMinusi();
+                    c .multiplyByMinusi();
                 }
                 // calculate the new accumulated LIM
                 //                std::cout << "[getVectorLIMDD rec] walking the high edge.\n";
-                getVectorLIMDD(e.p->e[1], d1, id1, vec, lim2);
-                cn.returnToCache(d1);
+                getVectorLIMDD(e.p->e[1], c, id1, vec, lim2);
+//                cn.returnToCache(d1);
             }
             cn.returnToCache(c);
         }

@@ -9,6 +9,9 @@ Talk to Stefan about:
 make functionality in Package which allows me to execute a circuit
 refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
 
+in normalizeLIMDDPauli, in the knife cases, make sure the two edges point to the same node.
+    ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted.
+
 incorporate weights into the getIsomorphismPauli procedure
     Use a cached weight in getHighLabelPauli
     in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,

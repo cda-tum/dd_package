@@ -1753,12 +1753,13 @@ TEST(LimTest, CreateNode14) {
 
     // Expected: root label is IZ
     std::cout << "[CreateNode14 test] root label (II expected): " << *(e2.l) << "\n";
-    std::cout << "[CreateNode14 test] root weight: (-i expected):" << e2.w << "\n";
+    // TODO why can't I print this weight?
+//    std::cout << "[CreateNode14 test] root weight: (-i expected):" << e2.w << "\n";
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("II");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
     std::cout << "[CreateNode14 test] high label  (I expected):  " << *(e2.p->e[1].l) << "\n";
-    std::cout << "[CreateNode14 test] high weight (i expected): " << e2.p->e[1].w << "\n";
+//    std::cout << "[CreateNode14 test] high weight (i expected): " << e2.p->e[1].w << "\n";
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
 }
 
@@ -1809,12 +1810,12 @@ TEST(LimTest, CreateNode16) {
 
     // Expected: root label is IZ
     std::cout << "[CreateNode16 test] root label (II expected): " << *(e2.l) << "\n";
-    std::cout << "[CreateNode16 test] root weight: (-1 expected):" << e2.w << "\n";
+//    std::cout << "[CreateNode16 test] root weight: (-1 expected):" << e2.w << "\n"; // TODO print weight
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("II");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
     std::cout << "[CreateNode16 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
-    std::cout << "[CreateNode16 test] high weight (i expected): " << e2.p->e[1].w << "\n";
+//    std::cout << "[CreateNode16 test] high weight (i expected): " << e2.p->e[1].w << "\n"; // TODO print weight
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
 }
 
@@ -1865,12 +1866,12 @@ TEST(LimTest, CreateNode18) {
 
     // Expected: root label is IZ
     std::cout << "[CreateNode18 test] root label (IZ expected): " << *(e2.l) << "\n";
-    std::cout << "[CreateNode18 test] root weight: (-1 expected):" << e2.w << "\n";
+//    std::cout << "[CreateNode18 test] root weight: (-1 expected):" << e2.w << "\n"; // TODO print weight
     dd::LimEntry<>* expectedRootLabel = new dd::LimEntry<>("IZ");
     EXPECT_TRUE(dd::LimEntry<>::Equal(e2.l, expectedRootLabel));
     // Expected: high label Identity
     std::cout << "[CreateNode18 test] high label  (I expected): " << *(e2.p->e[1].l) << "\n";
-    std::cout << "[CreateNode18 test] high weight (1 expected): " << e2.p->e[1].w << "\n";
+//    std::cout << "[CreateNode18 test] high weight (1 expected): " << e2.p->e[1].w << "\n"; TODO print weight
     EXPECT_TRUE(dd::LimEntry<>::isIdentityOperator(e2.p->e[1].l));
 }
 

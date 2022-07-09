@@ -60,6 +60,22 @@ public:
 //    	return (4 - (int) a) & 0x3;
 
     }
+
+    static std::string phaseToString(phase_t a) {
+    	switch(a) {
+    	case phase_t::phase_one:
+    		return "+1";
+    	case phase_t::phase_i:
+    		return "i";
+    	case phase_t::phase_minus_one:
+    		return "-1";
+    	case phase_t::phase_minus_i:
+    		return "-i";
+    	case phase_t::no_phase: ;
+    	}
+		return "(no phase)";
+    }
+
     // Returns whether the two groups have the same vector of generators
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
@@ -1171,7 +1187,7 @@ public:
         s = false;
         if (weight.lexLargerThanxMinusOne()) {
 //            Log::log << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
-            weight.multiplyByMinusOne(false);
+            weight.multiplyByMinusOne(true);
             s = true;
         }
 //        Log::log << "[highLabelZWeight] end.\n"; Log::log.flush();
@@ -1224,7 +1240,7 @@ public:
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
         	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << newHighLabel->getPhase() << ", result: weight = " << weight << '\n';
+        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
     		if (weight.lexSmallerThanxMinusOne()) {
     			Log::log << "[highLabelPauli] before multiplication by -1, weight.r->value = " << weight.r->value << "; weight.i->value = " << weight.i->value << "\n";

@@ -121,23 +121,31 @@ namespace dd {
             if(Complex::zero == *this){
                 return;
             }
-//            if (cached) {
-//                r->value = r->value * -1;
-//                i->value = i->value * -1;
-//            } else {
+            if (cached) {
+                r->value = r->value * -1;
+                i->value = i->value * -1;
+            } else {
                 r = CTEntry::flipPointerSign(r);
                 i = CTEntry::flipPointerSign(i);
-//            }
+            }
         }
 
-        void multiplyByi() {
+        void multiplyByi(bool cached = true) {
         	std::swap(r, i);
-        	r = CTEntry::flipPointerSign(r);
+        	if (cached) {
+        		r->value = r->value * -1;
+        	} else {
+				r = CTEntry::flipPointerSign(r);
+        	}
         }
 
-        void multiplyByMinusi() {
+        void multiplyByMinusi(bool cached = true) {
         	std::swap(r, i);
-        	i = CTEntry::flipPointerSign(i);
+        	if (cached) {
+        		i->value = i->value * -1;
+        	} else {
+				i = CTEntry::flipPointerSign(i);
+        	}
         }
 
         void multiplyByPhase(dd::phase_t phase) {
@@ -221,7 +229,8 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
-        return os << c.toString();
+//        return os << c.toString();
+    	return os;
     }
 
     inline Complex Complex::zero     {                            &ComplexTable<>::zero,                             &ComplexTable<>::zero};
