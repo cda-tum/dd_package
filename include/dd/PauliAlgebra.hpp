@@ -698,6 +698,8 @@ public:
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
     	LimEntry<NUM_QUBITS>* c = getCosetIntersectionElementModuloPhase(G, H, ab);
+    	if (c == LimEntry<NUM_QUBITS>::noLIM)
+    		return LimEntry<NUM_QUBITS>::noLIM;
     	c->setPhase(recoverPhase(G, c));
     	LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a,c);
     	acb = LimEntry<NUM_QUBITS>::multiply(acb, b);
@@ -1112,23 +1114,6 @@ public:
             iso->weight = cn.getCached();
             ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
 
-
-//            bool amplitudeOppositeSign = div0.approximatelyEqualsMinus(div1);
-//            bool edgeWeightsOppositeSign = u->e[1].w.approximatelyEqualsMinus(v->e[1].w);
-//            bool edgeWeightsPlusMinus  = div0.approximatelyEqualsPlusMinus(div1);
-//            bool edgeWeightsPlusMinus  = u->e[1].w.approximatelyEquals(v->e[1].w) || edgeWeightsOppositeSign;
-//            cn.returnToCache(div0);
-//            cn.returnToCache(div1);
-            // Step 1.3:  check if the edge weights are equal, up to a sign
-            // TODO limdd check if uhigh.w = 1 / vhigh.w
-//            if (!edgeWeightsPlusMinus) return LimWeight<>::noLIM;
-            // Step 2: If G intersect (H+isoHigh) contains an element P, then Id tensor P is an isomorphism
-//            LimEntry<>* isoHigh = LimEntry<>::multiply(uHigh.l, vHigh.l);
-//            Log::log << "[getIsomorphismPauli] multiplied high isomorphisms:" << LimEntry<>::to_string(isoHigh) << ".\n"; Log::log.flush(); superFlush();
-//            if (edgeWeightsOppositeSign) {
-//                Log::log << "[getIsomorphismPauli] multiplying Phase by -1 because high weights had opposite signs\n"; Log::log.flush(); superFlush();
-//                isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
-//            }
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
 //            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             Log::log << "[getIsomorphismPauli] completed coset intersection element.\n"; Log::log.flush();

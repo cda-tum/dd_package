@@ -448,7 +448,7 @@ TEST(LimTest, getVectorLIMDD7) {
     e0_zero.w = dd::Complex::zero;
 
     // make edge ZI|1>|+>
-    dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
+    dd::LimEntry<>* lim = new dd::LimEntry<>("IZ");
     auto            e1  = dd->makeDDNode(1, std::array{e0_zero, e0}, false, lim);
     std::cout << "[getVectorLIMDD7] e1 = " << e1 << std::endl;
 
