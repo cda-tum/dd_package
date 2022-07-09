@@ -1610,16 +1610,25 @@ namespace dd {
         void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
             switch (lim.getQubit(e.p->v)) {
                 case 'I':
-                    //                    std::cout << "[Unfollow] encountered I " << std::endl;
+                    Log::log << "[Unfollow] encountered I ";
+                    Log::log.flush();
                     break;
-                    //                case 'X':
-                    //                    std::cout << "encountered X " << std::endl;
-                    //                    break;
-                    //                case 'Y':
-                    //                    std::cout << "encountered Y " << std::endl;
-                    //                    break;
+                case 'X':
+                    Log::log << "[Unfollow] encountered X ";
+                    Log::log.flush();
+                    break;
+                case 'Y':
+                    Log::log << "[Unfollow] encountered Y ";
+                    Log::log.flush();
+                    if (path == 0) {
+                        e.p->e[1 - path].w.multiplyByi();
+                    } else {
+                        e.p->e[1 - path].w.multiplyByMinusi();
+                    }
+                    break;
                 case 'Z':
-                    //                    std::cout << "[Unfollow] encountered Z " << std::endl;
+                    Log::log << "[Unfollow] encountered Z ";
+                    Log::log.flush();
                     if (path == 1) {
                         e.p->e[path].w.multiplyByMinusOne();
                     }
@@ -1638,23 +1647,25 @@ namespace dd {
 
             switch (lim2.getQubit(e.p->v)) {
                 case 'I':
-                    //                    std::cout << "[Follow] encountered I " << std::endl;
+                    Log::log << "[Follow] encountered I ";
+                    Log::log.flush();
                     return {e.p->e[path], lim2};
                 case 'X':
+                    Log::log << "[Follow] encountered X ";
+                    Log::log.flush();
                     return {e.p->e[1 - path], lim2};
-                    //					std::cout << "encountered X " << std::endl;
-                    //					break;
                 case 'Y':
+                    Log::log << "[Follow] encountered Y ";
+                    Log::log.flush();
                     if (path == 0) {
                         e.p->e[1 - path].w.multiplyByi();
                     } else {
                         e.p->e[1 - path].w.multiplyByMinusi();
                     }
                     return {e.p->e[1 - path], lim2};
-                    //                    std::cout << "encountered Y " << std::endl;
-                    //                    break;
                 case 'Z':
-                    //                    std::cout << "[Follow] encountered Z " << std::endl;
+                    Log::log << "[Follow] encountered Z ";
+                    Log::log.flush();
                     if (path == 1) {
                         e.p->e[path].w.multiplyByMinusOne();
                     }
@@ -1664,15 +1675,12 @@ namespace dd {
             }
         }
 
-        long callCounter = 0;
-
     private:
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, const LimEntry<> lim = {}) {
             using LEdge            = Edge<LeftOperandNode>;
             using REdge            = Edge<RightOperandNode>;
             using ResultEdge       = Edge<RightOperandNode>;
-            auto customCallCounter = ++callCounter;
 
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
