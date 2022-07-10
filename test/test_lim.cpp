@@ -2333,6 +2333,7 @@ TEST(LimTest, simpleMultiplicationBellState) {
     auto zero_state = dd->makeZeroState(2);
 
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
+    dd::export2Dot(bell_state, "BellStateTest.dot", false, true, true, false, true, false);
 
     auto result = dd->getVectorLIMDD(bell_state);
     dd->printVector(bell_state);

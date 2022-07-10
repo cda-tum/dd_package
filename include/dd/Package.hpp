@@ -445,18 +445,7 @@ namespace dd {
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
             Log::log << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
             r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
-            // TODO
-            //    Question @Stefan, Thomas: how to multiply complex numbers? as follows:
-            // r.w  = r.w * iso->weight;
             cn.mul(r.w, r.w, iso->weight);
-//            cn.returnToCache(iso->weight);
-//            Log::log << "[normalizeLIMDD] Step 5.2: Multiplied root weight by " << iso->weight << "; now root weight = " << r.w << '\n';
-            //            Complex rootWeightTemp = cn.getTemporary(); // TODO return to cache
-            //            cn.mul(rootWeightTemp, r.w, iso->weight);
-            //            cn.returnToCache(iso->weight);
-            //            r.w = cn.lookup(rootWeightTemp);
-            //            r.w = rootWeightTemp;
-            //            cn.returnToCache(rootWeightTemp);
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";

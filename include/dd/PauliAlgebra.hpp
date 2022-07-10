@@ -1192,12 +1192,12 @@ public:
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
         	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << newHighLabel->getPhase() << ", result: weight = " << weight << '\n';
+        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
 
     		if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
     			weight.multiplyByMinusOne(true);
-    			Log::log << "[highLabelPauli] the high edge weight is flipped, so setting s:=true. New weight is " << weight << ".\n";
+    			Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
     		}
     		fp norm = ComplexNumbers::mag2(weight);
     		if (norm > 1) {

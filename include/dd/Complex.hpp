@@ -169,6 +169,7 @@ namespace dd {
             return ComplexValue::toString(CTEntry::val(r), CTEntry::val(i), formatted, precision);
         }
 
+
         // Returns true if this=a+bi is lexicographically smaller than other=c+di,
         // which is true iff a<c or (a=c and b<d)
         bool lexSmallerThan(const Complex& other) const {
@@ -230,7 +231,8 @@ namespace dd {
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
 //        return os << c.toString();
-    	return os;
+        return os << CTEntry::val(c.r) << '+' << CTEntry::val(c.i) << 'i';
+//    	return os;
     }
 
     inline Complex Complex::zero     {                            &ComplexTable<>::zero,                             &ComplexTable<>::zero};
