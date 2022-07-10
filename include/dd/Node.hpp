@@ -21,6 +21,7 @@ namespace dd {
         std::vector<LimTable<>::Entry*> limVector{}; // a vector of pointers to lims, might be nullptr for all identity
         RefCount                        ref{};       // reference count
         Qubit                           v{};         // variable index (nonterminal) value (-1 for terminal)
+        std::uint_least8_t              flags = 0;
 
         static vNode            terminalNode;
         constexpr static vNode* terminal{&terminalNode};
@@ -30,7 +31,7 @@ namespace dd {
     using vEdge       = Edge<vNode>;
     using vCachedEdge = CachedEdge<vNode>;
 
-    inline vNode vNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}}, nullptr, std::vector<LimTable<>::Entry*>{}, 0U, -1};
+    inline vNode vNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}}, nullptr, std::vector<LimTable<>::Entry*>{}, 0U, -1, 0};
 
     struct mNode {
         std::array<Edge<mNode>, NEDGE>  e{};         // edges out of this node

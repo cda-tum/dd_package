@@ -82,9 +82,10 @@ namespace dd {
         [[nodiscard]] const auto& getTables() const { return tables; }
 
         static bool nodesAreEqual(const Node* p, const Node* q) {
-            if constexpr (std::is_same_v<Node, dNode>) {
+            if constexpr (std::is_same_v<Node, mNode>) {
                 return (p->e == q->e && (p->flags == q->flags));
             } else {
+                assert(p->flags == 0 && q->flags == 0);
                 return p->e == q->e;
             }
         }
