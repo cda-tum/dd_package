@@ -21,6 +21,7 @@
 #include "Log.hpp"
 #include "Node.hpp"
 #include "PauliAlgebra.hpp"
+#include "QuantumGate.hpp"
 #include "StochasticNoiseOperationTable.hpp"
 #include "ToffoliTable.hpp"
 #include "UnaryComputeTable.hpp"
@@ -371,20 +372,33 @@ namespace dd {
 
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
-            	Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\").\n";
+            	Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
-                r.l = r.p->e[0].l;
-                // Step 2: Set the low edge label to 'Identity'
+                r.l = LimEntry<>::multiply(r.l, r.p->e[0].l);
+                // Step 2: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr;
+                r.p->e[1].l = nullptr;
                 // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
-                // Step 3: multiply the root edge weight by the low edge weight (?)
-                // TODO limdd
+                r.w.multiplyByPhase(r.l->getPhase());
+                r.l->setPhase(phase_t::phase_one);
+                // Step 4: multiply the root edge weight by the low edge weight
+//                auto rootWeight = cn.getCached();  // TODO return to cache
+//                cn.mul(rootWeight, r.w, r.p->e[0].w);
+//                auto rootWeight = cn.mulCached(r.w, r.p->e[0].w);
+//                r.w = cn.lookup(rootWeight);
+                r.w = cn.mulCached(r.w, r.p->e[0].w);
+//                cn.returnToCache(rootWeight);
+                r.p->e[0].w = Complex::one;
+                r.p->e[1].w = Complex::zero;
+                // Step 5: Make sure both edges point to the same nodes
+                r.p->e[1].p = r.p->e[0].p;
+                // Set the weight to point to actually zero
                 return r;
             }
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
             if (zero[0]) {
-            	// TODO switcheroo the nodes!
-            	Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\").\n";
+            	// TODO double-check if this logic makes sense
+            	Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Multiply the root label by the high edge label
                 r.l = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO limdd memory leak
                 // Step 2: Right-multiply the root edge by X
@@ -394,10 +408,19 @@ namespace dd {
                 // Step 3: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
-                r.p->e[0].w = cn.lookup(r.p->e[1].w);
-                r.p->e[1].w = cn.lookup(Complex::zero);
+                // Step ??: Set the weight right
+//                auto rootWeight = cn.getCached();  // TODO return to cache
+//                cn.mul(rootWeight, r.w, r.p->e[1].w);
+//                auto rootWeight = cn.mulCached(r.w, r.p->e[1].w);
+                r.w = cn.mulCached(r.w, r.p->e[1].w);
+//                r.w = cn.lookup(rootWeight);
+//                cn.returnToCache(rootWeight);
+                r.p->e[0].w = Complex::one;
+                r.p->e[1].w = Complex::zero;
+                // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
+                r.p->e[0].p = r.p->e[1].p;
                 return r;
             }
 
@@ -651,6 +674,7 @@ namespace dd {
                 return r;
             }
         }
+
 
         // build matrix representation for a single gate on an n-qubit circuit
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
@@ -1582,7 +1606,9 @@ namespace dd {
                     var = yCopy.p->v;
                 }
 
+                Log::log << "[multiply] Start multiplying Mat x Vec.\n";
                 e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
+                Log::log << "[multiply] Multiplication complete. Node: " << e << '\n';
 
                 dEdge::revertDmChangesToEdges(xCopy, yCopy);
 
@@ -1863,6 +1889,19 @@ namespace dd {
                 }
             }
             return e;
+        }
+
+    public:
+        vEdge applyGate(const QuantumGate& gate, const vEdge state) {
+			return multiply(makeGateDD(gate.mat, qubits(), gate.controls, gate.target), state);
+        }
+
+        vEdge simulateCircuit(const QuantumCircuit& circuit) {
+        	auto state = makeZeroState(circuit.n);
+        	for (unsigned int gate=0; gate<circuit.gates.size(); gate++) {
+        		state = applyGate(circuit.gates[gate], state);
+        	}
+        	return state;
         }
 
         ///
@@ -2755,6 +2794,9 @@ namespace dd {
                     c.multiplyByi();
                 }
 //                Log::log << "[getVectorLIMDD rec] walking the low edge.\n";
+                if (e.p->v != e.p->e[0].p->v + 1) {
+                	throw std::runtime_error("[getVectorLIMDD] Low edge skips a level.\n");
+                }
                 getVectorLIMDD(e.p->e[0], c, id0, vec, lim2);
                 if (lim2.getQubit(e.p->v) == 'Y') {
                 	c.multiplyByMinusi();
@@ -2783,6 +2825,9 @@ namespace dd {
                 }
                 // calculate the new accumulated LIM
                 //                std::cout << "[getVectorLIMDD rec] walking the high edge.\n";
+                if (e.p->v != e.p->e[1].p->v + 1) {
+                	throw std::runtime_error("[getVectorLIMDD] High edge skips a level.\n");
+                }
                 getVectorLIMDD(e.p->e[1], c, id1, vec, lim2);
 //                cn.returnToCache(d1);
             }

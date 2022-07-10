@@ -9,6 +9,9 @@ Talk to Stefan about:
 make functionality in Package which allows me to execute a circuit
 refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
 
+document the getHighLabelPauli function
+    use this to double-check the u==v case, with division.
+
 in normalizeLIMDDPauli, in the knife cases, make sure the two edges point to the same node.
     ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted.
 
