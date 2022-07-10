@@ -60,6 +60,8 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 		std::cout << "[simulate circuit] LIMDD result: " << resultLIMDD << '\n';
 		if (!limdd->vectorsApproximatelyEqual(resultQMDD, resultLIMDD)) {
 			std::cout << "[simulate circuit] These intermediate vectors differ; aborting simulation.\n";
+            dd::export2Dot(qmddState, "qmdd.dot", true, true, false, false, false);
+            dd::export2Dot(limddState, "limdd.dot", true, true, false, false, false);
 			EXPECT_TRUE(false);
 			break;
 		}
