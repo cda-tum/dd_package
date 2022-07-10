@@ -6,6 +6,7 @@
 #include "dd/Package.hpp"
 #include "dd/PauliAlgebra.hpp"
 #include "dd/QuantumGate.hpp"
+#include "dd/Definitions.hpp"
 
 #include "gmock/gmock.h"
 
