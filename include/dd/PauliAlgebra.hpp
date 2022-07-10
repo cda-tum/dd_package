@@ -495,7 +495,7 @@ public:
     static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup intersection;
         StabilizerGroup GH = groupConcatenate(G, H);
-        std::vector<std::bitset<32> > kernel = getKernelZ(GH);
+        std::vector<std::bitset<dd::NUM_QUBITS> > kernel = getKernelZ(GH);
         LimEntry<>* g;
         for (unsigned int i=0; i<kernel.size(); i++) {
             g = getProductOfElements(G, kernel[i]);
@@ -531,7 +531,7 @@ public:
 //        printStabilizerGroup(H);
         StabilizerGroup intersection;
         StabilizerGroup concat = groupConcatenate(G, H);
-        std::vector<std::bitset<32> > kernel = getKernelModuloPhase(concat);
+        std::vector<std::bitset<dd::NUM_QUBITS> > kernel = getKernelModuloPhase(concat);
 //        Log::log << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
         LimEntry<>* g;
         for (unsigned int i=0; i<kernel.size(); i++) {

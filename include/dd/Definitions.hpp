@@ -14,6 +14,9 @@
 #include <vector>
 
 namespace dd {
+    // Set number of qubits for limdd state vector
+    static const std::size_t NUM_QUBITS = 32;
+
     // integer type used for indexing qubits
     // needs to be a signed type to encode -1 as the index for the terminal
     // std::int_fast8_t can at least address 128 qubits as [0, ..., 127]

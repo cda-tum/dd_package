@@ -16,7 +16,7 @@
 // todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
 
-    template<std::size_t NUM_QUBITS = 32>
+    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS>
     struct LimEntry {
         static_assert(NUM_QUBITS > 0, "Have at least one qubit");
         static_assert(NUM_QUBITS <= std::numeric_limits<dd::Qubit>::max(), "Too many qubits for LimEntry");
@@ -483,7 +483,7 @@ namespace dd {
 
     // LimWeight contains a LIM and a Complex number
     // The complex number is always a temporary element of the complex numbers cache
-    template <std::size_t NUM_QUBITS=32>
+    template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     struct LimWeight {
     public:
     	LimEntry<NUM_QUBITS>* lim;
@@ -576,7 +576,7 @@ namespace std {
 
 namespace dd {
 
-    template<std::size_t NUM_QUBITS = 32, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 4096, std::size_t INITIAL_GC_LIMIT = 65536>
+    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS, std::size_t NBUCKET = 32768, std::size_t ALLOCATION_SIZE = 4096, std::size_t INITIAL_GC_LIMIT = 65536>
     class LimTable {
     public:
         using Entry                = LimEntry<NUM_QUBITS>;
