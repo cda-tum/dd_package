@@ -868,7 +868,7 @@ TEST(LimTest, simpleCircuit89) {
 	c.addGate(dd::Hmat, 3);
 	c.addGate(dd::Tmat, 3_pc, 0);
 	c.addGate(dd::Tmat, 3_pc, 2_pc, 1_pc, 0);
-//	c.addGate(dd::Tmat, 0_pc, 1_nc, 2_nc, 3);
+	c.addGate(dd::Tmat, 0_pc, 1_nc, 2_nc, 3);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Hmat, 0_pc, 1_pc, 2);
 	c.addGate(dd::Xmat, 3);

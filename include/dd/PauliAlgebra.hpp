@@ -1186,9 +1186,6 @@ public:
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
     static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& x) {
-    	if (!( vLabel->getPhase() == phase_t::phase_one )) {
-    		throw std::runtime_error("[highLabelPauli] ERROR vLabel->getPhas() == " + phaseToString(vLabel->getPhase()) + ". Expected phase +1.");
-    	}
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
@@ -1206,21 +1203,6 @@ public:
     			ComplexNumbers::div(weight, Complex::one, weight);
     			x = true;
     		}
-
-//    		if (weight.lexSmallerThanxMinusOne()) {
-//    			weight.multiplyByMinusOne(true);
-//    			s = true;
-//    		}
-//    		ComplexNumbers::div(weightInv, Complex::one, weight); // temp := 1/weight
-//    		if (weightInv.lexSmallerThanxMinusOne()) {
-//    			weightInv.multiplyByMinusOne(true);
-//    			sInv = true;
-//    		}
-//    		if (weightInv.lexSmallerThan(weight)) {
-//    			weight.setVal(weightInv);
-//    			x = true;
-//    			s = sInv;
-//    		}
     	}
     	else {
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
