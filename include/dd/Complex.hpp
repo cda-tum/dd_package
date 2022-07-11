@@ -230,8 +230,8 @@ namespace dd {
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Complex& c) {
-//        return os << c.toString();
-        return os << CTEntry::val(c.r) << '+' << CTEntry::val(c.i) << 'i';
+        return os << c.toString();
+//        return os << CTEntry::val(c.r) << '+' << CTEntry::val(c.i) << 'i';
 //    	return os;
     }
 

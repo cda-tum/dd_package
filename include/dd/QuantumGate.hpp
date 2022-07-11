@@ -35,6 +35,12 @@ public:
 		//
 	}
 
+	QuantumGate(std::array<ComplexValue, NEDGE> _mat, QubitCount _n, Control _control1, Control _control2, Control _control3, Qubit _target)
+		: mat(_mat), n(_n), target(_target), controls(std::set<Control, CompareControl>{_control1, _control2, _control3})
+	{
+		//
+	}
+
 	bool isControlledGate() const {
 		return controls.size() != 0;
 	}
@@ -66,6 +72,12 @@ public:
 		gates.push_back(QuantumGate(mat, n, control1, control2, target));
 		n = std::max(n, (QubitCount) target);
 	}
+
+	void addGate(std::array<ComplexValue, NEDGE> mat, Control control1, Control control2, Control control3, Qubit target) {
+		gates.push_back(QuantumGate(mat, n, control1, control2, control3, target));
+		n = std::max(n, (QubitCount) target);
+	}
+
 
 };
 

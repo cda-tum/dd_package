@@ -1186,7 +1186,9 @@ public:
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
     static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& x) {
-    	assert( vLabel->getPhase() == phase_t::phase_one );
+    	if (!( vLabel->getPhase() == phase_t::phase_one )) {
+    		throw std::runtime_error("[highLabelPauli] ERROR vLabel->getPhas() == " + phaseToString(vLabel->getPhase()) + ". Expected phase +1.");
+    	}
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
