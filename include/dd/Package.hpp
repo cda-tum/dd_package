@@ -1644,16 +1644,16 @@ namespace dd {
                     Log::log << "[Unfollow] encountered Y ";
                     Log::log.flush();
                     if (path == 0) {
-                        e.p->e[1 - path].w.multiplyByi();
+                        e.p->e[1 - path].w.multiplyByi(false);
                     } else {
-                        e.p->e[1 - path].w.multiplyByMinusi();
+                        e.p->e[1 - path].w.multiplyByMinusi(false);
                     }
                     break;
                 case 'Z':
                     Log::log << "[Unfollow] encountered Z ";
                     Log::log.flush();
                     if (path == 1) {
-                        e.p->e[path].w.multiplyByMinusOne();
+                        e.p->e[path].w.multiplyByMinusOne(false);
                     }
                     break;
                 default:
@@ -1665,8 +1665,8 @@ namespace dd {
         std::pair<Edge<Node>, LimEntry<>> follow(Edge<Node>& e, const short path, const LimEntry<> lim) {
             assert(e.p != nullptr);
 
-            LimEntry<> lim2(e.l);
-            lim2.multiplyBy(lim);
+            LimEntry<> lim2(lim);
+            lim2.multiplyBy(e.l);
 
             e.p->flags = 1;
 
@@ -1683,16 +1683,16 @@ namespace dd {
                     Log::log << "[Follow] encountered Y ";
                     Log::log.flush();
                     if (path == 0) {
-                        e.p->e[1 - path].w.multiplyByi();
+                        e.p->e[1 - path].w.multiplyByMinusi(false);
                     } else {
-                        e.p->e[1 - path].w.multiplyByMinusi();
+                        e.p->e[1 - path].w.multiplyByi(false);
                     }
                     return {e.p->e[1 - path], lim2};
                 case 'Z':
                     Log::log << "[Follow] encountered Z ";
                     Log::log.flush();
                     if (path == 1) {
-                        e.p->e[path].w.multiplyByMinusOne();
+                        e.p->e[path].w.multiplyByMinusOne(false);
                     }
                     return {e.p->e[path], lim2};
                 default:
@@ -1703,10 +1703,9 @@ namespace dd {
     private:
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<> lim = {}) {
-            using LEdge      = Edge<LeftOperandNode>;
-            using REdge      = Edge<RightOperandNode>;
-            using ResultEdge = Edge<RightOperandNode>;
-
+            using LEdge          = Edge<LeftOperandNode>;
+            using REdge          = Edge<RightOperandNode>;
+            using ResultEdge     = Edge<RightOperandNode>;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
@@ -2730,6 +2729,7 @@ namespace dd {
 
             // base case
             if (e.isTerminal()) {
+                c.multiplyByPhase(lim.getPhase());
                 vec.at(i) = {CTEntry::val(c.r), CTEntry::val(c.i)};
                 cn.returnToCache(c);
                 return;
@@ -2740,16 +2740,13 @@ namespace dd {
             LimEntry<> lim2;
             vEdge      e2{};
             // recursive case
-            if (!e.p->e[0].w.approximatelyZero()) {
-                std::tie(e2, lim2) = follow(e, 0, lim);
-                getVector(e2, c, i, vec, lim2);
-                unfollow(e, 0, lim2);
-            }
-            if (!e.p->e[1].w.approximatelyZero()) {
-                std::tie(e2, lim2) = follow(e, 1, lim);
-                getVector(e2, c, x, vec, lim2);
-                unfollow(e, 1, lim2);
-            }
+            std::tie(e2, lim2) = follow(e, 0, lim);
+            if (!e2.w.approximatelyZero()) getVector(e2, c, i, vec, lim2);
+            unfollow(e, 0, lim2);
+            std::tie(e2, lim2) = follow(e, 1, lim);
+            if (!e2.w.approximatelyZero()) getVector(e2, c, x, vec, lim2);
+            unfollow(e, 1, lim2);
+
             cn.returnToCache(c);
         }
 
@@ -2771,7 +2768,7 @@ namespace dd {
 
             // base case
             if (e.isTerminal()) {
-            	Log::log << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] base case: vec[" << i << "] = " << c << "\n";
+                Log::log << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] base case: vec[" << i << "] = " << c << "\n";
                 vec.at(i) = {CTEntry::val(c.r), CTEntry::val(c.i)};
                 cn.returnToCache(c);
                 return;
@@ -2807,7 +2804,7 @@ namespace dd {
                 // if lim has Pauli Z operator, then multiply by -1
                 std::size_t id1 = x;
                 if (lim2.getQubit(e.p->v) == 'Z') {
-                	Log::log << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] c := " << c << " after encountering Z on high edge.\n";
+                    Log::log << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] c := " << c << " after encountering Z on high edge.\n";
                     c.multiplyByMinusOne();
                 } else if (lim2.getQubit(e.p->v) == 'X') {
                     // new index is i
@@ -2817,7 +2814,7 @@ namespace dd {
                     id1 = i;
                     c.multiplyByMinusi();
                 }
-				std::cout << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] walking the high edge with c = " << c << ".\n";
+                std::cout << "[getVectorLIMDD rec n=" << e.p->v + 1 << " i=" << i << "] walking the high edge with c = " << c << ".\n";
                 getVectorLIMDD(e.p->e[1], c, id1, vec, lim2);
             }
             cn.returnToCache(c);

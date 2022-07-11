@@ -85,7 +85,7 @@ namespace dd {
             if constexpr (std::is_same_v<Node, mNode>) {
                 return (p->e == q->e && (p->flags == q->flags));
             } else {
-                assert(p->flags == 0 && q->flags == 0);
+//                assert(p->flags == 0 && q->flags == 0);
                 return p->e == q->e;
             }
         }

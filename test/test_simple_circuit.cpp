@@ -53,8 +53,13 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 		qmddState   = qmdd ->applyGate(circuit.gates[gate], qmddState);
 		std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD.\n";
 		limddState  = limdd->applyGate(circuit.gates[gate], limddState);
+
+        dd::export2Dot(qmddState, "pre_qmdd.dot", true, true, false, false, false);
+        dd::export2Dot(limddState, "pre_limdd.dot", true, true, false, false, false);
+
 		resultQMDD  = qmdd ->getVector(qmddState);
 		resultLIMDD = limdd->getVector(limddState);
+//		resultLIMDD = limdd->getVectorLIMDD(limddState);
 		std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
 		std::cout << "[simulate circuit] QMDD  result: " << resultQMDD << '\n';
 		std::cout << "[simulate circuit] LIMDD result: " << resultLIMDD << '\n';

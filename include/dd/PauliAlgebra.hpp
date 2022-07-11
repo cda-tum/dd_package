@@ -726,7 +726,7 @@ public:
     		// See if some element of J has xy = -1
         	std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
     		for (unsigned int i=0; i<GintersectH.size(); i++) {
-    			if (GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
+    			if ((!GintersectH[i]->commutesWith(b)) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
     				return LimEntry<NUM_QUBITS>::multiply(c, new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
     			}
     		}
