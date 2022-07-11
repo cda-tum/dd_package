@@ -997,7 +997,7 @@ namespace dd {
 
             assert(e.p->ref == 0);
             for ([[maybe_unused]] const auto& edge: edges)
-                assert(edge.p->v == var - 1 || edge.isTerminal());
+                assert(edge.p != nullptr || edge.p->v == var - 1 || edge.isTerminal());
 
             // set specific node properties for matrices
 
@@ -1362,9 +1362,11 @@ namespace dd {
         }
 
     public:
+        long mulCallCounter = 0;
         template<class Node>
-        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<> lim = {}) {
+        Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             // TODO limdd
+            auto tmpMulCallCounter = ++mulCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -1381,7 +1383,8 @@ namespace dd {
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 return r;
             }
-            if (x.p == y.p) {
+            //            if (x.p == y.p) {
+            if (x.p == y.p && x.l == y.l) {
                 auto r = y;
                 r.w    = cn.addCached(x.w, y.w);
                 if (r.w.approximatelyZero()) {
@@ -1416,8 +1419,10 @@ namespace dd {
             std::array<Edge<Node>, N> edge{};
             for (auto i = 0U; i < N; i++) {
                 Edge<Node> e1{};
+                LimEntry<> limX2;
                 if (!x.isTerminal() && x.p->v == w) {
-                    e1 = x.p->e[i];
+                    std::tie(e1, limX2) = follow(x, i, limX); //todo; do I need to create copies of the nodes?
+                    //                    e1 = x.p->e[i];
 
                     if (e1.w != Complex::zero) {
                         e1.w = cn.mulCached(e1.w, x.w);
@@ -1429,12 +1434,10 @@ namespace dd {
                     }
                 }
                 Edge<Node> e2{};
-                LimEntry<> lim2;
-                auto       yCopy = y;
+                LimEntry<> limY2;
                 if (!y.isTerminal() && y.p->v == w) {
                     //e2 = y.p->e[i];
-
-                    std::tie(e2, lim2) = follow(yCopy, i, lim);
+                    std::tie(e2, limY2) = follow(y, i, limY);
 
                     if (e2.w != Complex::zero) {
                         e2.w = cn.mulCached(e2.w, y.w);
@@ -1448,11 +1451,12 @@ namespace dd {
 
                 if constexpr (std::is_same_v<Node, dNode>) {
                     dEdge::applyDmChangesToEdges(e1, e2);
-                    edge[i] = add2(e1, e2, lim2);
-                    unfollow(yCopy, i, lim2);
+                    edge[i] = add2(e1, e2, limX2, limY2);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    edge[i] = add2(e1, e2);
+                    edge[i] = add2(e1, e2, limX2, limY2);
+                    unfollow(x, i, limX2);
+                    unfollow(y, i, limY2);
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1701,11 +1705,13 @@ namespace dd {
         }
 
     private:
+        long callCounter = 0;
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<> lim = {}) {
             using LEdge          = Edge<LeftOperandNode>;
             using REdge          = Edge<RightOperandNode>;
             using ResultEdge     = Edge<RightOperandNode>;
+            auto tempCallCounter = ++callCounter;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
@@ -1844,6 +1850,7 @@ namespace dd {
                                 //e2 = y.p->e[j + COLS * k];
                                 std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
                             } else {
+                                //todo do I have to follow in this branch?
                                 e2 = yCopy;
                             }
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, lim2);
@@ -1861,7 +1868,6 @@ namespace dd {
                     }
                 }
             }
-
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 e = makeDDNode(var, edge, true, {});
             } else {
