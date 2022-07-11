@@ -104,7 +104,11 @@ namespace dd {
          * @param qubit
          * @return char of {I, X, Y, Z}
          */
-        char getQubit(dd::Qubit qubit) const {
+        [[nodiscard]] char getQubit(dd::Qubit qubit) const {
+            if(qubit == -1){
+                // Reached terminal
+                return 'I';
+            }
             if (!paulis.test(2 * qubit + 1) && !paulis.test(2 * qubit)) {
                 return 'I';
             } else if (!paulis.test(2 * qubit + 1) && paulis.test(2 * qubit)) {
