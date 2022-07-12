@@ -38,6 +38,10 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 		qmddState   = qmdd ->applyGate(circuit.gates[gate], qmddState);
 		std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD.\n";
 		limddState  = limdd->applyGate(circuit.gates[gate], limddState);
+
+        dd::export2Dot(qmddState, "pre_qmdd.dot", true, true, false, false, false);
+        dd::export2Dot(limddState, "pre_limdd.dot", true, true, false, false, false);
+
 		resultQMDD  = qmdd ->getVector(qmddState);
 		resultLIMDD = limdd->getVector(limddState);
 		std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
@@ -942,7 +946,7 @@ TEST(LimTest, simpleCircuit93) {
 }
 
 TEST(LimTest, simpleCircuit94) {
-	dd::QuantumCircuit c(4);
+	dd::QuantumCircuit c(5);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Hmat, 1);
 	c.addGate(dd::Hmat, 2);
@@ -963,7 +967,7 @@ TEST(LimTest, simpleCircuit94) {
 }
 
 TEST(LimTest, simpleCircuit95) {
-	dd::QuantumCircuit c(4);
+	dd::QuantumCircuit c(5);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Hmat, 1);
 	c.addGate(dd::Hmat, 2);
@@ -988,7 +992,7 @@ TEST(LimTest, simpleCircuit95) {
 }
 
 TEST(LimTest, simpleCircuit96) {
-	dd::QuantumCircuit c(4);
+	dd::QuantumCircuit c(5);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Hmat, 0_pc, 1);
 	c.addGate(dd::Hmat, 1_pc, 2);
@@ -1047,7 +1051,7 @@ TEST(LimTest, simpleCircuit98) {
 }
 
 TEST(LimTest, simpleCircuit99) {
-	dd::QuantumCircuit c(4);
+	dd::QuantumCircuit c(5);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Hmat, 1);
 	c.addGate(dd::Hmat, 2);
