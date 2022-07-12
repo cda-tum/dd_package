@@ -1383,8 +1383,9 @@ namespace dd {
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 return r;
             }
-            //            if (x.p == y.p) {
-            if (x.p == y.p && x.l == y.l) {
+            //                        if (x.p == y.p) {
+            if (x.p == y.p && LimEntry<NUM_QUBITS>::Equal(x.l, y.l)) {
+                //            if (x.p == y.p && x.l == y.l) {
                 auto r = y;
                 r.w    = cn.addCached(x.w, y.w);
                 if (r.w.approximatelyZero()) {
@@ -1454,6 +1455,8 @@ namespace dd {
                     edge[i] = add2(e1, e2, limX2, limY2);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
+//                    std::cout << "e1.l: " << LimEntry<NUM_QUBITS>::to_string(e1.l) << std::endl;
+//                    std::cout << "e2.l: " << LimEntry<NUM_QUBITS>::to_string(e2.l) << std::endl;
                     edge[i] = add2(e1, e2, limX2, limY2);
                     unfollow(x, i, limX2);
                     unfollow(y, i, limY2);
@@ -1633,6 +1636,10 @@ namespace dd {
 
         template<class Node>
         void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
+            return;
+
+            if (e.p->flags == 0) return;
+
             e.p->flags = 0;
 
             switch (lim.getQubit(e.p->v)) {
@@ -1668,11 +1675,15 @@ namespace dd {
         template<class Node>
         std::pair<Edge<Node>, LimEntry<>> follow(Edge<Node>& e, const short path, const LimEntry<> lim) {
             assert(e.p != nullptr);
-
+            //            assert(e.p->flags == 0);
             LimEntry<> lim2(lim);
             lim2.multiplyBy(e.l);
 
-            e.p->flags = 1;
+            std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
+            std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
+            std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
+
+            Edge<Node> newE = {};
 
             switch (lim2.getQubit(e.p->v)) {
                 case 'I':
@@ -1686,19 +1697,23 @@ namespace dd {
                 case 'Y':
                     Log::log << "[Follow] encountered Y ";
                     Log::log.flush();
+                    newE = e.p->e[1 - path];
                     if (path == 0) {
-                        e.p->e[1 - path].w.multiplyByMinusi(false);
+                        newE.w.multiplyByMinusi(false);
                     } else {
-                        e.p->e[1 - path].w.multiplyByi(false);
+                        newE.w.multiplyByi(false);
                     }
-                    return {e.p->e[1 - path], lim2};
+                    return {newE, lim2};
                 case 'Z':
                     Log::log << "[Follow] encountered Z ";
                     Log::log.flush();
                     if (path == 1) {
-                        e.p->e[path].w.multiplyByMinusOne(false);
+                        newE = e.p->e[path];
+                        newE.w.multiplyByMinusOne(false);
+                        return {newE, lim2};
+                    } else {
+                        return {e.p->e[path], lim2};
                     }
-                    return {e.p->e[path], lim2};
                 default:
                     throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
             }
