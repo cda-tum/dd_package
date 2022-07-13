@@ -328,6 +328,58 @@ namespace dd {
             return r;
         }
 
+    public:
+            // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
+            // Sets the
+            // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
+            // since they will be assigned values but will not be looked up in the ComplexTable
+            // TODO limdd:
+            //   1. make NUM_QUBITS a template parameter
+            LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x) {
+            	Log::log << "[highLabelPauli] weight * lim = " << highWeight << " * " << *vLabel << '\n';
+            	LimEntry<>* newHighLabel;
+            	if (u == v) {
+            		newHighLabel = Pauli::GramSchmidt(u->limVector, vLabel);
+                	highWeight.multiplyByPhase(newHighLabel->getPhase());
+                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << Pauli::phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                	newHighLabel->setPhase(phase_t::phase_one);
+
+                	fp lomag2 = ComplexNumbers::mag2(lowWeight);
+                	fp himag2 = ComplexNumbers::mag2(highWeight);
+                	if (himag2 > lomag2) {
+                		// Swap low, high
+                		vEdge lo{v, highWeight, nullptr};
+                		vEdge hi{u, lowWeight, nullptr};
+                		// Normalize low, high
+                		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
+                		vEdge tempEdge{&tempNode, Complex::one, nullptr};
+                		tempEdge = normalize(tempEdge, true);
+                		// Now the weights are normalized
+                	}
+        			if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
+        				highWeight.multiplyByMinusOne(true);
+        				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
+        			}
+
+            	}
+            	else {
+            		StabilizerGroup GH = Pauli::groupConcatenate(u->limVector, v->limVector);
+            		Pauli::toColumnEchelonForm(GH);
+            		newHighLabel = Pauli::GramSchmidt(GH, vLabel);
+                	highWeight.multiplyByPhase(newHighLabel->getPhase());
+                	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << Pauli::phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                	newHighLabel->setPhase(phase_t::phase_one);
+            		if (highWeight.lexSmallerThanxMinusOne()) {
+            			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
+            			highWeight.multiplyByMinusOne(true);
+            			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
+            		}
+            		x = false;
+            	}
+
+            	return newHighLabel;
+            }
+
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
@@ -422,7 +474,7 @@ namespace dd {
             bool        x                  = false;
             Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w);
             Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // TODO return to cache
-            LimEntry<>* higLimTemp2        = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, x, this);
+            LimEntry<>* higLimTemp2        = highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, x);
             r.p->e[1].l                    = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
@@ -3458,6 +3510,8 @@ namespace dd {
                 checkConsistencyCounter(child, weight_map, node_map);
             }
         }
+
+
 
         ///
         /// Printing and Statistics

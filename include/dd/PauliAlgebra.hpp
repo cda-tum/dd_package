@@ -1188,57 +1188,6 @@ public:
         return newHighLabel;
     }
 
-    // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
-    // Sets the
-    // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
-    // since they will be assigned values but will not be looked up in the ComplexTable
-    // TODO limdd:
-    //   1. make NUM_QUBITS a template parameter
-    static LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x, Package<>* dd) {
-    	Log::log << "[highLabelPauli] weight * lim = " << highWeight << " * " << *vLabel << '\n';
-    	LimEntry<>* newHighLabel;
-    	if (u == v) {
-    		newHighLabel = GramSchmidt(u->limVector, vLabel);
-        	highWeight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-        	newHighLabel->setPhase(phase_t::phase_one);
-
-        	fp lomag2 = ComplexNumbers::mag2(lowWeight);
-        	fp himag2 = ComplexNumbers::mag2(highWeight);
-        	if (himag2 > lomag2) {
-        		// Swap low, high
-        		vEdge lo{v, highWeight, nullptr};
-        		vEdge hi{u, lowWeight, nullptr};
-        		// Normalize low, high
-        		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
-        		vEdge tempEdge{&tempNode, Complex::one, nullptr};
-        		tempEdge = dd->normalize(tempEdge, true);
-        		// Now the weights are normalized
-        	}
-			if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
-				highWeight.multiplyByMinusOne(true);
-				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
-			}
-
-    	}
-    	else {
-    		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
-    		toColumnEchelonForm(GH);
-    		newHighLabel = GramSchmidt(GH, vLabel);
-        	highWeight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-        	newHighLabel->setPhase(phase_t::phase_one);
-    		if (highWeight.lexSmallerThanxMinusOne()) {
-    			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
-    			highWeight.multiplyByMinusOne(true);
-    			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
-    		}
-    		x = false;
-    	}
-
-    	return newHighLabel;
-    }
-
     static LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
     	Log::log << "[highLabelZ] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
         throw std::exception();
