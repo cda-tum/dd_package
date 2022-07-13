@@ -2,15 +2,17 @@
 // Created by lieuwe on 13/12/2021.
 //
 
-#ifndef DDPACKAGE_PAULIALGEBRA_HPP
-#define DDPACKAGE_PAULIALGEBRA_HPP
+//#ifndef DDPACKAGE_PAULIALGEBRA_HPP
+//#define DDPACKAGE_PAULIALGEBRA_HPP
+
+#pragma once
 
 #include "ComplexNumbers.hpp"
-#include "DDPackageConfig.hpp"
 #include "Edge.hpp"
 #include "Node.hpp"
 #include "LimTable.hpp"
 #include "Log.hpp"
+#include "Package.hpp"
 
 #include <iostream>
 #include <array>
@@ -28,26 +30,6 @@ enum LIMDD_group {
 	Z_group,
 	Pauli_group
 };
-template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
-         std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
-         std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
-         std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
-         std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
-         std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
-         std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
-         std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
-         std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
-         std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
-         std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
-         std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
-         std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
-         std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_DM_NOISE_NBUCKET,
-         std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
-         std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
-         std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
-         std::size_t CT_DM_ADD_NBUCKET              = DDPackageConfig::CT_DM_ADD_NBUCKET,
-         std::size_t STOCHASTIC_CACHE_OPS           = DDPackageConfig::STOCHASTIC_CACHE_OPS>
-class Package;
 
 class Pauli {
 public:
@@ -1290,4 +1272,4 @@ public:
 
 
 } // namespace dd
-#endif //DDPACKAGE_PAULIALGEBRA_HPP
+//#endif //DDPACKAGE_PAULIALGEBRA_HPP
