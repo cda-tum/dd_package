@@ -61,6 +61,11 @@ public:
 
     }
 
+    static phase_t getPhaseaMinusB(phase_t a, phase_t b) {
+    	phase_t minb = getPhaseInverse(b);
+    	return (phase_t) ((a + minb) & 0x3);
+    }
+
     static std::string phaseToString(phase_t a) {
     	switch(a) {
     	case phase_t::phase_one:
