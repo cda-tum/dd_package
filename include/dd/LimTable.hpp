@@ -105,6 +105,7 @@ namespace dd {
          * @return char of {I, X, Y, Z}
          */
         [[nodiscard]] char getQubit(dd::Qubit qubit) const {
+            // todo return a pauli_t
             if(qubit == -1){
                 // Reached terminal
                 return 'I';
@@ -440,7 +441,7 @@ namespace dd {
     // A wrapper containing a LimEntry and a std::bitset
     // used in Gaussian Elimination, when the matrix of checkvectors is split up into two parts:
     //   a LIM-part and a '0/1 matrix' part, which is used for finding linear combinations
-    template <std::size_t NUM_QUBITS=32>
+    template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     class LimBitset {
     public:
         LimEntry<NUM_QUBITS> lim;
