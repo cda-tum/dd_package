@@ -444,10 +444,12 @@ namespace dd {
             Log::log << "[normalizeLIMDD] Step 3: pick High Label; edge is currently " << r;
             vNode       oldNode            = *(r.p); // make a copy of the old node
             bool        x                  = false;
-            Complex     highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i)); // TODO return to cache
-            LimEntry<>* higLimTemp2        = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, x);
+            Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w);
+            Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // TODO return to cache
+            LimEntry<>* higLimTemp2        = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, x, dd);
             r.p->e[1].l                    = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
+            r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             //			cn.returnToCache(highEdgeWeightTemp);   // TODO return to cache. Uncommenting this line gives an error
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
@@ -1346,7 +1348,7 @@ namespace dd {
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
             // TODO limdd
-            [[maybe_unused]] const auto before = cn.cacheCount();
+        	[[maybe_unused]] const auto before = cn.cacheCount();
 
             auto result = add2(x, y);
 
@@ -1366,7 +1368,7 @@ namespace dd {
         template<class Node>
         Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             // TODO limdd
-            auto tmpMulCallCounter = ++mulCallCounter;
+            [[maybe_unused]] auto tmpMulCallCounter = ++mulCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -1402,7 +1404,7 @@ namespace dd {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
-                    return {r.p, cn.getCached(r.w), nullptr};
+                    return {r.p, cn.getCached(r.w), nullptr};  // TODO limdd why nullptr? Maybe the result has a non-trivial LIM
                 }
             }
 
@@ -1726,7 +1728,7 @@ namespace dd {
             using LEdge          = Edge<LeftOperandNode>;
             using REdge          = Edge<RightOperandNode>;
             using ResultEdge     = Edge<RightOperandNode>;
-            auto tempCallCounter = ++callCounter;
+            [[maybe_unused]] auto tempCallCounter = ++callCounter;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 

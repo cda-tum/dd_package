@@ -242,6 +242,11 @@ namespace dd {
             return getCached(c.r, c.i);
         }
 
+        // TODO limdd LV: I added this function; is that ok? was there a reason it wasn't there before?
+        inline Complex getCached(const Complex& c) {
+        	return getCached(CTEntry::val(c.r), CTEntry::val(c.i));
+        }
+
         void returnToCache(Complex& c) {
             complexCache.returnToCache(c);
         }

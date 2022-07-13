@@ -1190,24 +1190,32 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& x) {
+    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x, Package& dd) {
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
-        	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
+        	highWeight.multiplyByPhase(newHighLabel->getPhase());
+        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
 
-    		if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
-    			weight.multiplyByMinusOne(true);
-    			Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
-    		}
-    		fp norm = ComplexNumbers::mag2(weight);
-    		if (norm > 1) {
-    			ComplexNumbers::div(weight, Complex::one, weight);
-    			x = true;
-    		}
+        	fp lomag2 = ComplexNumbers::mag2(lowWeight);
+        	fp himag2 = ComplexNumbers::mag2(highWeight);
+        	if (himag2 > lomag2) {
+        		// Swap low, high
+        		vEdge lo{v, highWeight, nullptr};
+        		vEdge hi{u, lowWeight, nullptr};
+        		// Normalize low, high
+        		vNode tempNode{{lo, hi}, nullptr, {}, 0, u->v + 1};
+        		vEdge tempEdge{tempNode, Complex::one, nullptr};
+        		temp = dd->normalize(tempEdge, true);
+        		// Now the weights are normalized
+        	}
+			if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
+				weight.multiplyByMinusOne(true);
+				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
+			}
+
     	}
     	else {
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
@@ -1216,11 +1224,10 @@ public:
         	weight.multiplyByPhase(newHighLabel->getPhase());
         	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
-    		if (weight.lexSmallerThanxMinusOne()) {
-    			Log::log << "[highLabelPauli] before multiplication by -1, weight.r->value = " << weight.r->value << "; weight.i->value = " << weight.i->value << "\n";
-    			weight.multiplyByMinusOne(true);
-    			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << weight << ".\n";
-    			Log::log << "[highLabelPauli] after  multiplication by -1, weight.r->value = " << weight.r->value << "; weight.i->value = " << weight.i->value << "\n";
+    		if (highWeight.lexSmallerThanxMinusOne()) {
+    			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
+    			highWweight.multiplyByMinusOne(true);
+    			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
     		}
     		x = false;
     	}
