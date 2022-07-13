@@ -5,11 +5,13 @@
 #ifndef DDPACKAGE_PAULIALGEBRA_HPP
 #define DDPACKAGE_PAULIALGEBRA_HPP
 
+#include "ComplexNumbers.hpp"
+#include "DDPackageConfig.hpp"
 #include "Edge.hpp"
 #include "Node.hpp"
 #include "LimTable.hpp"
-#include "ComplexNumbers.hpp"
 #include "Log.hpp"
+
 #include <iostream>
 #include <array>
 
@@ -26,6 +28,26 @@ enum LIMDD_group {
 	Z_group,
 	Pauli_group
 };
+template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
+         std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
+         std::size_t UT_MAT_NBUCKET                 = DDPackageConfig::UT_MAT_NBUCKET,
+         std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_MAT_INITIAL_ALLOCATION_SIZE,
+         std::size_t CT_VEC_ADD_NBUCKET             = DDPackageConfig::CT_VEC_ADD_NBUCKET,
+         std::size_t CT_MAT_ADD_NBUCKET             = DDPackageConfig::CT_MAT_ADD_NBUCKET,
+         std::size_t CT_MAT_TRANS_NBUCKET           = DDPackageConfig::CT_MAT_TRANS_NBUCKET,
+         std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = DDPackageConfig::CT_MAT_CONJ_TRANS_NBUCKET,
+         std::size_t CT_MAT_VEC_MULT_NBUCKET        = DDPackageConfig::CT_MAT_VEC_MULT_NBUCKET,
+         std::size_t CT_MAT_MAT_MULT_NBUCKET        = DDPackageConfig::CT_MAT_MAT_MULT_NBUCKET,
+         std::size_t CT_VEC_KRON_NBUCKET            = DDPackageConfig::CT_VEC_KRON_NBUCKET,
+         std::size_t CT_MAT_KRON_NBUCKET            = DDPackageConfig::CT_MAT_KRON_NBUCKET,
+         std::size_t CT_VEC_INNER_PROD_NBUCKET      = DDPackageConfig::CT_VEC_INNER_PROD_NBUCKET,
+         std::size_t CT_DM_NOISE_NBUCKET            = DDPackageConfig::CT_DM_NOISE_NBUCKET,
+         std::size_t UT_DM_NBUCKET                  = DDPackageConfig::UT_DM_NBUCKET,
+         std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = DDPackageConfig::UT_DM_INITIAL_ALLOCATION_SIZE,
+         std::size_t CT_DM_DM_MULT_NBUCKET          = DDPackageConfig::CT_DM_DM_MULT_NBUCKET,
+         std::size_t CT_DM_ADD_NBUCKET              = DDPackageConfig::CT_DM_ADD_NBUCKET,
+         std::size_t STOCHASTIC_CACHE_OPS           = DDPackageConfig::STOCHASTIC_CACHE_OPS>
+class Package;
 
 class Pauli {
 public:
@@ -1190,8 +1212,8 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x, Package& dd) {
-    	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
+    static LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x, Package<>* dd) {
+    	Log::log << "[highLabelPauli] weight * lim = " << highWeight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
@@ -1206,14 +1228,14 @@ public:
         		vEdge lo{v, highWeight, nullptr};
         		vEdge hi{u, lowWeight, nullptr};
         		// Normalize low, high
-        		vNode tempNode{{lo, hi}, nullptr, {}, 0, u->v + 1};
-        		vEdge tempEdge{tempNode, Complex::one, nullptr};
-        		temp = dd->normalize(tempEdge, true);
+        		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
+        		vEdge tempEdge{&tempNode, Complex::one, nullptr};
+        		tempEdge = dd->normalize(tempEdge, true);
         		// Now the weights are normalized
         	}
-			if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
-				weight.multiplyByMinusOne(true);
-				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
+			if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
+				highWeight.multiplyByMinusOne(true);
+				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
 			}
 
     	}
@@ -1221,12 +1243,12 @@ public:
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
-        	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
+        	highWeight.multiplyByPhase(newHighLabel->getPhase());
+        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
     		if (highWeight.lexSmallerThanxMinusOne()) {
     			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
-    			highWweight.multiplyByMinusOne(true);
+    			highWeight.multiplyByMinusOne(true);
     			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
     		}
     		x = false;
