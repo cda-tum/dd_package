@@ -177,6 +177,33 @@ namespace dd {
             return os.str();
         }
 
+        // Prints operators [0, ... , nQubits], i.e., including index 'nQubits'
+        static std::string to_string(const LimEntry<NUM_QUBITS>* lim, Qubit nQubits) {
+        	if (lim == nullptr) {
+                return std::string(nQubits, 'I');
+        	}
+            if (lim == noLIM) {
+                return "(no LIM)";
+            }
+
+            std::ostringstream os;
+            // Write the phase
+            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+                os << 'i';
+            }
+            if ( lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
+                os << '-';
+            }
+            if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+                os << "-i";
+            }
+            // Write the Pauli operators
+            for (unsigned int i = 0; i <= (unsigned int) nQubits; i++) {
+                os << getQubit(lim, i);
+            }
+            return os.str();
+        }
+
         // TODO: static versions as well to cover nullptr case?
         bool operator==(const LimEntry<NUM_QUBITS>& other) const {
             return paulis == other.paulis;
