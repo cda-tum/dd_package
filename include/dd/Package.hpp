@@ -2013,13 +2013,13 @@ namespace dd {
                 }
             }
 
-            makePrintIdent(var);
-//            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Creating edge with weights: (redacted)\n";
-//            std::ostringstream s1;
-//            exportEdgeWeights(e, s1);
-//            std::cout << s1.str() << std::endl;
+            //            makePrintIdent(var);
+            //            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Creating edge with weights: (redacted)\n";
+            //            std::ostringstream s1;
+            //            exportEdgeWeights(e, s1);
+            //            std::cout << s1.str() << std::endl;
 
-//            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
+            //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
 
             return e;
         }
@@ -2882,10 +2882,10 @@ namespace dd {
             LimEntry<> lim2;
             vEdge      e2{};
             // recursive case
-            std::tie(e2, lim2) = follow(e, 0, lim, true);
+            std::tie(e2, lim2) = follow(e, 0, lim);
             if (!e2.w.approximatelyZero()) getVector(e2, c, i, vec, lim2);
 
-            std::tie(e2, lim2) = follow(e, 1, lim, true);
+            std::tie(e2, lim2) = follow(e, 1, lim);
             if (!e2.w.approximatelyZero()) getVector(e2, c, x, vec, lim2);
 
             cn.returnToCache(c);
