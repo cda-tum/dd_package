@@ -1094,16 +1094,46 @@ public:
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
             Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; Log::log.flush(); superFlush();
-			// TODO should we refactor this last part and just call getIsomorphismZ?
-			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
-            // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
-            if (uLow.p == uHigh.p) {
-            	// TODO cover this case
-            	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
-            }
+            // Set the weight of the isomorphism
+            iso->weight = cn.getCached();  // TODO return to cache, and, actually, ideally only retrieve from cache if / when an iso is found
 
             Complex rhoU        = cn.getCached();  // Eventually returned to cache
             Complex rhoV        = cn.getCached();  // Eventually returned to cache
+            if (uLow.p == uHigh.p) {
+            	// TODO cover this case
+				Complex rhoUrhoV    = cn.getCached();
+            	ComplexNumbers::div(rhoU, u->e[0].w, u->e[1].w);
+            	ComplexNumbers::div(rhoV, v->e[0].w, v->e[1].w);
+            	ComplexNumbers::mul(rhoUrhoV, rhoU, rhoV);
+            	phase_t lambda = rhoUrhoV.toPhase();
+            	cn.returnToCache(rhoUrhoV);
+            	if (lambda != phase_t::no_phase) {
+
+            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, u->e[1].l, v->e[1].l, lambda);
+            		if (iso->lim != LimEntry<>::noLIM) {
+            			iso->lim = LimEntry<>::multiply(v->e[1].l, iso->lim);
+                        iso->lim->setOperator(u->v, pauli_op::pauli_x);
+                        cn.div(iso->weight, v->e[1].w, u->e[0].w);
+                        Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
+            			return iso;
+            		}
+
+                    lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
+            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, u->e[1].l, v->e[1].l, lambda);
+            		if (iso->lim != LimEntry<>::noLIM) {
+            			iso->lim = LimEntry<>::multiply(v->e[1].l, iso->lim);
+                        iso->lim->setOperator(u->v, pauli_op::pauli_y);
+                        cn.div(iso->weight, v->e[1].w, u->e[0].w);
+                        iso->weight.multiplyByMinusi();
+                        Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
+            			return iso;
+            		}
+            	}
+            }
+
+            // TODO if u==v and lambda is the same as here, we may be able to skip this stuff
+			// TODO should we refactor this last part and just call getIsomorphismZ?
+			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             Complex rhoVdivRhoU = cn.getCached();
             ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
             ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
@@ -1120,14 +1150,13 @@ public:
             }
             Log::log << "[getIsomorphismPauli] edge weights are approximately equal modulo +/-{1,i}.\n"; Log::log.flush(); superFlush();
 
-            iso->weight = cn.getCached();
-            ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
 
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
 //            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             Log::log << "[getIsomorphismPauli] completed coset intersection element.\n"; Log::log.flush();
             if (iso->lim != LimEntry<>::noLIM) {
-                Log::log << "[getIsomorphismPauli] The coset was non-empty; returning element.\n"; Log::log.flush();
+                ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
+                Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
                 return iso;
             }
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
@@ -1137,11 +1166,12 @@ public:
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
 //            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
             if (iso->lim != LimEntry<>::noLIM) {
+                ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
                 iso->lim->setOperator(u->v, pauli_op::pauli_z);
-                Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; Log::log.flush();
+                Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
             }
             else {
-                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n"; Log::log.flush();
+                Log::log << "[getIsomorphismPauli] No isomorphism was found. Returning noLIM.\n"; Log::log.flush();
 //                cn.returnToCache(iso->weight);
                 iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
