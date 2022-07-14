@@ -337,7 +337,7 @@ namespace dd {
             // TODO limdd:
             //   1. make NUM_QUBITS a template parameter
             LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, bool& x) {
-            	Log::log << "[highLabelPauli] weight * lim = " << highWeight << " * " << *vLabel << '\n';
+            	Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
             	LimEntry<>* newHighLabel;
             	if (u == v) {
             		newHighLabel = Pauli::GramSchmidt(u->limVector, vLabel);
@@ -348,20 +348,29 @@ namespace dd {
                 	fp lomag2 = ComplexNumbers::mag2(lowWeight);
                 	fp himag2 = ComplexNumbers::mag2(highWeight);
                 	if (himag2 > lomag2) {
+                		Log::log << "[highLabelPauli] high is larger than low.\n";
                 		// Swap low, high
-                		vEdge lo{u, highWeight, nullptr};
-                		vEdge hi{u, lowWeight, nullptr};
+                		Complex hiTemp = cn.getCached(lowWeight);  // TODO return to cache
+                		Complex loTemp = cn.getCached(highWeight); // TODO return to cache
+                		vEdge lo{u, hiTemp, nullptr};
+                		vEdge hi{u, loTemp, nullptr};
+                		Log::log << "[highLabelPauli] before normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
                 		// Normalize low, high
                 		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
                 		vEdge tempEdge{&tempNode, Complex::one, nullptr};
 //                		Complex lowWeightTemp = cn.getCached(lowWeight);
 //                		Complex highWeightTemp = cn.getCached(highWeight);
                 		tempEdge = normalize(tempEdge, false);
+                		Log::log << "[highlabelPauli] after  normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
+                		Log::log << "[highlabelPauli] after  normalize: lo edge= " << tempEdge.p->e[0].w << "; hiEdge = " << tempEdge.p->e[1].w << '\n';
+
                 		// Now the weights are normalized
                 		highWeight.r->value = CTEntry::val(tempEdge.p->e[0].w.r);
                 		highWeight.i->value = CTEntry::val(tempEdge.p->e[0].w.i);
                 		lowWeight.r->value  = CTEntry::val(tempEdge.p->e[1].w.r);
                 		lowWeight.i->value  = CTEntry::val(tempEdge.p->e[1].w.i);
+
+                		Log::log << "[highLabelPauli] (case high > low) new low = " << lowWeight << "; new high = " << highWeight << "\n";
 //                		lowWeight = tempEdge.p->e[0].w;
 //                		lowWeight  = tempEdge.p->e[1].w;
                 	}
