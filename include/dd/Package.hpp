@@ -1373,7 +1373,7 @@ namespace dd {
             LimEntry<> trueLimY = limY;
             trueLimY.multiplyBy(y.l);
 
-            auto tmpMulCallCounter = ++mulCallCounter;
+            [[maybe_unused]] auto tmpMulCallCounter = ++mulCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -1495,7 +1495,21 @@ namespace dd {
             //            export2Dot(edge[1], "e2.dot", true, true, false, false, false);
             auto e = makeDDNode(w, edge, true);
 
-            //            export2Dot(e, "ei.dot", true, true, false, false, false);
+			CVec vectorArg0 = getVectorLIMDD(x, limX);
+			CVec vectorArg1 = getVectorLIMDD(y, limY);
+			CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+			CVec vectorResult = getVectorLIMDD(e);
+			if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+				Log::log << "[multiply2] ERROR addition went wrong.\n";
+				Log::log << "arg0:    "; printCVec(vectorArg0);     Log::log << '\n';
+				Log::log << "arg1     "; printCVec(vectorArg1);     Log::log << '\n';
+				Log::log << "expected "; printCVec(vectorExpected); Log::log << '\n';
+				Log::log << "result   "; printCVec(vectorResult);   Log::log << '\n';
+				export2Dot(x, "add-error-x.dot", true, true, false, false, false);
+				export2Dot(y, "add-error-y.dot", true, true, false, false, false);
+				export2Dot(e, "add-error-result.dot", true, true, false, false, false);
+				throw std::runtime_error("[multiply2] ERROR Add did not return expected result.");
+			}
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
@@ -1752,7 +1766,7 @@ namespace dd {
             using LEdge          = Edge<LeftOperandNode>;
             using REdge          = Edge<RightOperandNode>;
             using ResultEdge     = Edge<RightOperandNode>;
-            auto tempCallCounter = ++callCounter;
+            [[maybe_unused]] auto tempCallCounter = ++callCounter;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
@@ -1765,8 +1779,7 @@ namespace dd {
             }
 
             if (var == start - 1) {
-                auto r = y;
-                auto tmp = trueLim.getPhase();
+//                auto r = y;
                 auto yw    = cn.getTemporary(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                 yw.multiplyByPhase(trueLim.getPhase());
 //                r.w.multiplyByPhase(trueLim.getPhase());
@@ -1844,6 +1857,7 @@ namespace dd {
             constexpr std::size_t ROWS = RADIX;
             constexpr std::size_t COLS = N == NEDGE ? RADIX : 1U;
 
+            CVec vectorArg0, vectorArg1, vectorResult, vectorExpected;
             std::array<ResultEdge, N> edge{};
             for (auto i = 0U; i < ROWS; i++) {
                 for (auto j = 0U; j < COLS; j++) {
@@ -1912,7 +1926,20 @@ namespace dd {
                                 auto old_e = edge[idx];
 //                                export2Dot(edge[idx], "edge0.dot", true, true, false, false, false);
 //                                export2Dot(m, "edge1.dot", true, true, false, false, false);
+//                                vectorArg0 = getVectorLIMDD(old_e);
+//                                vectorArg1 = getVectorLIMDD(m);
+//                                vectorExpected = addVectors(vectorArg0, vectorArg1);
                                 edge[idx] = add2(edge[idx], m);
+//                                vectorResult = getVectorLIMDD(edge[idx]);
+//                                if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+//                                	Log::log << "[multiply2] ERROR addition went wrong.\n";
+//									Log::log << "arg0:    "; printCVec(vectorArg0);     Log::log << '\n';
+//                                	Log::log << "arg1     "; printCVec(vectorArg1);     Log::log << '\n';
+//                                	Log::log << "expected "; printCVec(vectorExpected); Log::log << '\n';
+//                                	Log::log << "result   "; printCVec(vectorResult);   Log::log << '\n';
+//                                	throw std::runtime_error("[multiply2] ERROR Add did not return expected result.");
+//                                }
+
 //                                export2Dot(edge[idx], "temp_limdd.dot", true, true, false, false, false);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
@@ -2813,8 +2840,27 @@ namespace dd {
             cn.returnToCache(c);
         }
 
-        CVec
-        getVectorLIMDD(const vEdge& e) {
+        CVec getVectorLIMDD(const vEdge& e, const LimEntry<>& lim) {
+            const std::size_t dim = 2ULL << e.p->v;
+            // allocate resulting vector
+            auto       vec = CVec(dim, {0.0, 0.0});
+            getVectorLIMDD(e, Complex::one, 0, vec, lim);
+            //std::cout << "[getVectorLIMDD] complete; constructed vector.\n";
+            return vec;
+        }
+
+
+        CVec getVectorLIMDD([[maybe_unused]] const mEdge& e) {
+        	CVec vec;
+        	return vec;
+        }
+
+        CVec getVectorLIMDD([[maybe_unused]] const mEdge& e, [[maybe_unused]] const LimEntry<>& lim) {
+        	CVec vec;
+        	return vec;
+        }
+
+        CVec getVectorLIMDD(const vEdge& e) {
             //std::cout << "[getVectorLIMDD] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n";
             const std::size_t dim = 2ULL << e.p->v;
             // allocate resulting vector
@@ -2950,6 +2996,15 @@ namespace dd {
                 std::cout << ": " << std::setw(width) << ComplexValue::toString(amplitude.r, amplitude.i, false, precision) << "\n";
             }
             std::cout << std::flush;
+        }
+
+        CVec addVectors(const CVec a, const CVec b) {
+        	unsigned int N = a.size();
+        	CVec c(N, {0.0, 0.0});
+        	for (unsigned int i=0; i<N; i++) {
+        		c[i] = a[i] + b[i];
+        	}
+        	return c;
         }
 
         void printMatrix(const mEdge& e) {
