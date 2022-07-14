@@ -1076,6 +1076,93 @@ TEST(LimTest, simpleCircuit99) {
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
 
+TEST(LimTest, simpleCircuit100) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit101) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Xmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit102) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit103) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Xmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit104) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit105) {
+	dd::QuantumCircuit c(1);
+	c.addGate(dd::Xmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Tmat, 0);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
 
 
 
