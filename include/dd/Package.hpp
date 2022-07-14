@@ -353,6 +353,19 @@ namespace dd {
             return r;
         }
 
+        void sanityCheckNormalize(const vEdge& originalEdge, const vEdge& normalizedEdge) {
+        	CVec vec0 = getVectorLIMDD(originalEdge);
+        	CVec vec1 = getVectorLIMDD(normalizedEdge);
+        	if (!vectorsApproximatelyEqual(vec0, vec1)) {
+        		Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
+        		Log::log << "[normalizeLIMDD] original:   "; printCVec(vec0); Log::log << '\n';
+        		Log::log << "[normalizeLIMDD] normalized: "; printCVec(vec1); Log::log << '\n';
+        		export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
+        		export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
+        		throw std::runtime_error("[normalizeLIMDD] ERROR normalized edge has different vector than original edge! See files originalEdge.svg and normalizedEdge.svg\n");
+        	}
+        }
+
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
@@ -491,6 +504,7 @@ namespace dd {
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
             // Should we *not* call normalize at the beginning of the procedure?
+            sanityCheckNormalize(e, r);
 
             return r;
         }
