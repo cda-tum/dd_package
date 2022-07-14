@@ -17,6 +17,7 @@
 #include "Definitions.hpp"
 #include "DensityNoiseTable.hpp"
 #include "Edge.hpp"
+#include "Export.hpp"
 #include "GateMatrixDefinitions.hpp"
 #include "LimTable.hpp"
 #include "Log.hpp"
@@ -348,13 +349,21 @@ namespace dd {
                 	fp himag2 = ComplexNumbers::mag2(highWeight);
                 	if (himag2 > lomag2) {
                 		// Swap low, high
-                		vEdge lo{v, highWeight, nullptr};
+                		vEdge lo{u, highWeight, nullptr};
                 		vEdge hi{u, lowWeight, nullptr};
                 		// Normalize low, high
                 		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
                 		vEdge tempEdge{&tempNode, Complex::one, nullptr};
-                		tempEdge = normalize(tempEdge, true);
+//                		Complex lowWeightTemp = cn.getCached(lowWeight);
+//                		Complex highWeightTemp = cn.getCached(highWeight);
+                		tempEdge = normalize(tempEdge, false);
                 		// Now the weights are normalized
+                		highWeight.r->value = CTEntry::val(tempEdge.p->e[0].w.r);
+                		highWeight.i->value = CTEntry::val(tempEdge.p->e[0].w.i);
+                		lowWeight.r->value  = CTEntry::val(tempEdge.p->e[1].w.r);
+                		lowWeight.i->value  = CTEntry::val(tempEdge.p->e[1].w.i);
+//                		lowWeight = tempEdge.p->e[0].w;
+//                		lowWeight  = tempEdge.p->e[1].w;
                 	}
         			if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
         				highWeight.multiplyByMinusOne(true);
@@ -509,12 +518,12 @@ namespace dd {
                 r.l->setPhase(phase_t::phase_one);
             }
             // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
-            if (x) {
-                LimEntry<> XP(higLim);
-                XP.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(XP);
-                // TODO limdd multiply weight by old high edge weight
-            }
+            //            if (x) {
+            //                LimEntry<> XP(higLim);
+            //                XP.setOperator(r.p->v, 'X');
+            //                r.l->multiplyBy(XP);
+            //                // TODO limdd multiply weight by old high edge weight
+            //            }
 
             if (swappedChildren) {
                 LimEntry<> X;
@@ -1396,6 +1405,12 @@ namespace dd {
         template<class Node>
         Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             // TODO limdd
+            LimEntry<> trueLimX = limX;
+            trueLimX.multiplyBy(x.l);
+
+            LimEntry<> trueLimY = limY;
+            trueLimY.multiplyBy(y.l);
+
             [[maybe_unused]] auto tmpMulCallCounter = ++mulCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
@@ -1406,22 +1421,31 @@ namespace dd {
                 }
                 auto r = y;
                 r.w    = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                r.w.multiplyByPhase(trueLimY.getPhase());
+                trueLimY.setPhase(phase_t::phase_one);
+                r.l = limTable.lookup(trueLimY);
                 return r;
             }
             if (y.w.exactlyZero()) {
                 auto r = x;
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
+                r.w.multiplyByPhase(trueLimX.getPhase());
+                trueLimX.setPhase(phase_t::phase_one);
+                r.l = limTable.lookup(trueLimX);
                 return r;
             }
-            //                        if (x.p == y.p) {
-            if (x.p == y.p && LimEntry<NUM_QUBITS>::Equal(x.l, y.l)) {
-                //            if (x.p == y.p && x.l == y.l) {
-                auto r = y;
-                r.w    = cn.addCached(x.w, y.w);
+
+            if (x.p == y.p && LimEntry<>::EqualModuloPhase(&trueLimX, &trueLimY)) {
+                auto    r            = y;
+                phase_t currentPhase = Pauli::getPhaseaMinusB(LimEntry<>::getPhase(&trueLimX), LimEntry<>::getPhase(&trueLimY));
+                r.w.multiplyByPhase(currentPhase);
+                r.w = cn.addCached(x.w, r.w);
                 if (r.w.approximatelyZero()) {
                     cn.returnToCache(r.w);
                     return Edge<Node>::zero;
                 }
+                trueLimY.setPhase(phase_t::phase_one);
+                r.l = limTable.lookup(trueLimY);
                 return r;
             }
 
@@ -1485,9 +1509,13 @@ namespace dd {
                     edge[i] = add2(e1, e2, limX2, limY2);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-//                    std::cout << "e1.l: " << LimEntry<NUM_QUBITS>::to_string(e1.l) << std::endl;
-//                    std::cout << "e2.l: " << LimEntry<NUM_QUBITS>::to_string(e2.l) << std::endl;
+                    //                    std::cout << "e1.l: " << LimEntry<NUM_QUBITS>::to_string(e1.l) << std::endl;
+                    //                    std::cout << "e2.l: " << LimEntry<NUM_QUBITS>::to_string(e2.l) << std::endl;
+                    //                    export2Dot(e1, "e1.dot", true, true, false, false, false);
+                    //                    export2Dot(e2, "e2.dot", true, true, false, false, false);
+
                     edge[i] = add2(e1, e2, limX2, limY2);
+                    //                    export2Dot(edge[i], "ei.dot", true, true, false, false, false);
                     unfollow(x, i, limX2);
                     unfollow(y, i, limY2);
                 }
@@ -1501,7 +1529,11 @@ namespace dd {
                 }
             }
 
+            //            export2Dot(edge[0], "e1.dot", true, true, false, false, false);
+            //            export2Dot(edge[1], "e2.dot", true, true, false, false, false);
             auto e = makeDDNode(w, edge, true);
+
+            //            export2Dot(e, "ei.dot", true, true, false, false, false);
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
@@ -1708,14 +1740,16 @@ namespace dd {
             //            assert(e.p->flags == 0);
             LimEntry<> lim2(lim);
             lim2.multiplyBy(e.l);
-
-            std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
-            std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
-            std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
+//            std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
+//            std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
+//            std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
 
             Edge<Node> newE = {};
 
-            switch (lim2.getQubit(e.p->v)) {
+            const auto op = lim2.getQubit(e.p->v);
+            lim2.setOperator(e.p->v, 'I');
+
+            switch (op) {
                 case 'I':
                     Log::log << "[Follow] encountered I ";
                     Log::log.flush();
@@ -1760,12 +1794,23 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
+
+            LimEntry<> trueLim = lim;
+            trueLim.multiplyBy(y.l);
+
             if (x.w.exactlyZero() || y.w.exactlyZero()) {
                 return ResultEdge::zero;
             }
 
             if (var == start - 1) {
-                return ResultEdge::terminal(cn.mulCached(x.w, y.w));
+                auto r = y;
+                auto tmp = trueLim.getPhase();
+                auto yw    = cn.getTemporary(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                yw.multiplyByPhase(trueLim.getPhase());
+//                r.w.multiplyByPhase(trueLim.getPhase());
+//                trueLimY.setPhase(phase_t::phase_one);
+//                r.l = limTable.lookup(trueLimY);
+                return ResultEdge::terminal(cn.mulCached(x.w, yw));
             }
 
             auto xCopy = x;
@@ -1895,17 +1940,18 @@ namespace dd {
                                 //e2 = y.p->e[j + COLS * k];
                                 std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
                             } else {
-                                //todo do I have to follow in this branch?
                                 e2 = yCopy;
                             }
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, lim2);
-                            unfollow(yCopy, j + COLS * k, lim2);
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
                                 auto old_e = edge[idx];
-                                edge[idx]  = add2(edge[idx], m);
+//                                export2Dot(edge[idx], "edge0.dot", true, true, false, false, false);
+//                                export2Dot(m, "edge1.dot", true, true, false, false, false);
+                                edge[idx] = add2(edge[idx], m);
+//                                export2Dot(edge[idx], "temp_limdd.dot", true, true, false, false, false);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
                             }
@@ -1913,6 +1959,7 @@ namespace dd {
                     }
                 }
             }
+
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 e = makeDDNode(var, edge, true, {});
             } else {
@@ -1936,6 +1983,9 @@ namespace dd {
                     return ResultEdge::zero;
                 }
             }
+
+//            export2Dot(e, "temp_limdd.dot", true, true, false, false, false);
+
             return e;
         }
 
