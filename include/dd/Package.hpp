@@ -354,16 +354,14 @@ namespace dd {
         }
 
         template<class Edge>
-        void sanityCheckNormalize(const Edge& originalEdge, const Edge& normalizedEdge) {
-            CVec vec0 = getVectorLIMDD(originalEdge);
-            CVec vec1 = getVectorLIMDD(normalizedEdge);
-            if (!vectorsApproximatelyEqual(vec0, vec1)) {
+        void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
+            if (!vectorsApproximatelyEqual(before, after)) {
                 Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
                 Log::log << "[normalizeLIMDD] original:   ";
-                printCVec(vec0);
+                printCVec(before);
                 Log::log << '\n';
                 Log::log << "[normalizeLIMDD] normalized: ";
-                printCVec(vec1);
+                printCVec(after);
                 Log::log << '\n';
                 export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
                 export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
@@ -384,8 +382,10 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-
             Edge<vNode> r = normalize(e, cached);
+            Edge<vNode> rOld = r;
+
+            CVec amplitudeVecBeforeNormalize = getVector(r);
 
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
@@ -401,10 +401,6 @@ namespace dd {
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
                 // Step 4: multiply the root edge weight by the low edge weight
-                //                auto rootWeight = cn.getCached();  // TODO return to cache
-                //                cn.mul(rootWeight, r.w, r.p->e[0].w);
-                //                auto rootWeight = cn.mulCached(r.w, r.p->e[0].w);
-                //                r.w = cn.lookup(rootWeight);
                 r.w = cn.mulCached(r.w, r.p->e[0].w);
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
@@ -428,9 +424,6 @@ namespace dd {
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
                 // Step ??: Set the weight right
-                //                auto rootWeight = cn.getCached();  // TODO return to cache
-                //                cn.mul(rootWeight, r.w, r.p->e[1].w);
-                //                auto rootWeight = cn.mulCached(r.w, r.p->e[1].w);
                 r.w = cn.mulCached(r.w, r.p->e[1].w);
                 //                r.w = cn.lookup(rootWeight);
                 //                cn.returnToCache(rootWeight);
@@ -508,7 +501,8 @@ namespace dd {
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
             // Should we *not* call normalize at the beginning of the procedure?
-            sanityCheckNormalize(e, r);
+            CVec amplitudeVecAfterNormalize = getVector(r);
+            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, r, rOld);
 
             return r;
         }
@@ -1747,25 +1741,25 @@ namespace dd {
             }
 
             Edge<Node> newE = {};
-            auto       tmp  = LimEntry<>::getPhase(&lim2);
+//            auto       tmp  = LimEntry<>::getPhase(&lim2);
 
             const auto op = lim2.getQubit(e.p->v);
             lim2.setOperator(e.p->v, 'I');
 
-            auto tmp2 = LimEntry<>::getPhase(&lim2);
+//            auto tmp2 = LimEntry<>::getPhase(&lim2);
 
             switch (op) {
                 case 'I':
                     Log::log << "[Follow] encountered I ";
-                    Log::log.flush();
+//                    Log::log.flush();
                     return {e.p->e[path], lim2};
                 case 'X':
                     Log::log << "[Follow] encountered X ";
-                    Log::log.flush();
+//                    Log::log.flush();
                     return {e.p->e[1 - path], lim2};
                 case 'Y':
                     Log::log << "[Follow] encountered Y ";
-                    Log::log.flush();
+//                    Log::log.flush();
                     newE = e.p->e[1 - path];
                     if (path == 0) {
                         newE.w.multiplyByMinusi(false);
@@ -1777,7 +1771,7 @@ namespace dd {
                     return {newE, lim2};
                 case 'Z':
                     Log::log << "[Follow] encountered Z ";
-                    Log::log.flush();
+//                    Log::log.flush();
                     if (path == 1) {
                         newE = e.p->e[path];
                         newE.w.multiplyByMinusOne(false);
@@ -2020,12 +2014,12 @@ namespace dd {
             }
 
             makePrintIdent(var);
-            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Creating edge with weights: " << std::endl;
-            std::ostringstream s1;
-            exportEdgeWeights(e, s1);
-            std::cout << s1.str() << std::endl;
+//            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Creating edge with weights: (redacted)\n";
+//            std::ostringstream s1;
+//            exportEdgeWeights(e, s1);
+//            std::cout << s1.str() << std::endl;
 
-            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
+//            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
 
             return e;
         }
@@ -2859,9 +2853,14 @@ namespace dd {
 
         CVec getVector(vEdge& e) {
             // TODO limdd
-            const std::size_t dim = 2ULL << e.p->v;
+            std::size_t dim = 0;
+            if (e.p->v >= 0)
+            	dim = 2ULL << e.p->v;
+            else
+            	dim = 1;
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
+            Log::log << "[getVector] vector has size " << vec.size() << " after 2ULL << " << (int)(e.p->v) << '\n';
 
             getVector(e, Complex::one, 0, vec);
             return vec;
