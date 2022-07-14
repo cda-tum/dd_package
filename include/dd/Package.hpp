@@ -1505,9 +1505,9 @@ namespace dd {
 				Log::log << "arg1     "; printCVec(vectorArg1);     Log::log << '\n';
 				Log::log << "expected "; printCVec(vectorExpected); Log::log << '\n';
 				Log::log << "result   "; printCVec(vectorResult);   Log::log << '\n';
-				export2Dot(x, "add-error-x.dot", true, true, false, false, false);
-				export2Dot(y, "add-error-y.dot", true, true, false, false, false);
-				export2Dot(e, "add-error-result.dot", true, true, false, false, false);
+				export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
+				export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
+				export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
 				throw std::runtime_error("[multiply2] ERROR Add did not return expected result.");
 			}
 
