@@ -471,28 +471,22 @@ namespace dd {
             r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
             cn.mul(r.w, r.w, iso->weight);
 
-            // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            Log::log << "[normalizeLIMDD] Step 6: Set the LIM phase to 1.\n";
-            if (r.l->getPhase() == phase_t::phase_minus_one) {
-                // Step 6.1: multiply the weight 'r.w' by -1
-                r.w.multiplyByMinusOne();
-                // Step 6.2: Make the phase of r.l '+1'
-                r.l->setPhase(phase_t::phase_one);
-            }
-            // Step 7: lastly, we should multiply by II...IZ if the highLabel method multiplied the high edge weight by -1
-            //            if (x) {
-            //                LimEntry<> XP(higLim);
-            //                XP.setOperator(r.p->v, 'X');
-            //                r.l->multiplyBy(XP);
-            //                // TODO limdd multiply weight by old high edge weight
-            //            }
 
             if (swappedChildren) {
+            	Log::log << "[normalizeLIMDD] Step 6: We swapped the children, so we correct for this by multiplying with X.\n";
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
                 r.l->multiplyBy(X);
             }
 
+            // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
+            Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1.\n";
+            if (r.l->getPhase() != phase_t::phase_one) {
+                // Step 6.1: multiply the weight 'r.w' by -1
+            	r.w.multiplyByPhase(r.l->getPhase());
+                // Step 6.2: Make the phase of r.l '+1'
+                r.l->setPhase(phase_t::phase_one);
+            }
             Log::log << "[normalizeLIMDD] Final root edge: " << LimEntry<>::to_string(r.l) << '\n';
 
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
