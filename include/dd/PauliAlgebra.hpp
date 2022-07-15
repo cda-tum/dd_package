@@ -1006,8 +1006,8 @@ public:
         // Assert that neither u nor v is the Zero vector
         assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
-        Log::log << "[getIsomorphismPauli] uLow .l = " << LimEntry<>::to_string(uLow.l) <<  " vLow.l  = " << LimEntry<>::to_string(vLow.l) << Log::endl;
-        Log::log << "[getIsomorphismPauli] uHigh.l = " << LimEntry<>::to_string(uHigh.l) << " vHigh.l = " << LimEntry<>::to_string(vHigh.l) << Log::endl;
+        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
+        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
         	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
         if (!LimEntry<>::isIdentityOperator(vLow.l))
@@ -1089,7 +1089,7 @@ public:
             Log::log << "[getIsomorphismPauli] case Fork with weights ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << Log::endl; superFlush();
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
-            Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; Log::log.flush(); superFlush();
+            Log::log << "[getIsomorphismPauli] u and v have the same chidlren.\n"; Log::log.flush(); superFlush();
 			// TODO should we refactor this last part and just call getIsomorphismZ?
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh

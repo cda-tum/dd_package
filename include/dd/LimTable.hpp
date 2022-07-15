@@ -197,7 +197,7 @@ namespace dd {
 				return "";
         	}
         	if (lim == nullptr) {
-                return std::string(nQubits, 'I');
+                return std::string(nQubits+1, 'I');
         	}
             if (lim == noLIM) {
                 return "(no LIM)";

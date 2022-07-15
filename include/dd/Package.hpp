@@ -383,7 +383,7 @@ namespace dd {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
             Edge<vNode> r = normalize(e, cached);
-            Edge<vNode> rOld = r;
+            Edge<vNode> rOld = copyEdge(r);
 
             CVec amplitudeVecBeforeNormalize = getVector(r);
 
@@ -443,7 +443,7 @@ namespace dd {
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            Log::log << "[normalizeLIMDD] case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r;
+            Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r;
             LimEntry<>* lowLim = r.p->e[0].l;
             LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
@@ -475,7 +475,7 @@ namespace dd {
             }
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
-            Log::log << "[normalizeLIMDD] Found isomorphism: [weight redacted]  * " << LimEntry<>::to_string(iso->lim) << "\n";
+            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso->weight << " * " << LimEntry<>::to_string(iso->lim) << "\n";
             Log::log << "[normalizeLIMDD] Step 5: Repair the root edge from " << LimEntry<>::to_string(r.l) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim)) << ".\n";
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
             Log::log << "[normalizeLIMDD] Step 5.1: Second multiplication, root edge becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim)) << ".\n";
@@ -502,7 +502,7 @@ namespace dd {
             // TODO this procedure changes the weights on the low and high edges. Should we call normalize again?
             // Should we *not* call normalize at the beginning of the procedure?
             CVec amplitudeVecAfterNormalize = getVector(r);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, r, rOld);
+            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
 
             return r;
         }
@@ -1060,6 +1060,19 @@ namespace dd {
             return e;
         }
 
+        Edge<vNode> copyEdge(vEdge edge) {
+        	vNode* node = new vNode();
+        	node->e[0] = edge.p->e[0];
+        	node->e[0].l = new LimEntry<>(edge.p->e[0].l);
+        	node->e[1] = edge.p->e[1];
+        	node->e[1].l = new LimEntry<>(edge.p->e[1].l);
+        	node->limVector = edge.p->limVector;
+        	node->v = edge.p->v;
+        	vEdge copiedEdge{node, Complex::one, new LimEntry<>(edge.l)};
+//        	Log::log << "[copyEdge] Copied edge " << edge << " into edge " << copiedEdge;
+        	return copiedEdge;
+        }
+
         template<class Node>
         Edge<Node> deleteEdge(const Edge<Node>& e, dd::Qubit v, std::size_t edgeIdx) {
             std::unordered_map<Node*, Edge<Node>> nodes{};
@@ -1501,10 +1514,10 @@ namespace dd {
             //            export2Dot(edge[1], "e2.dot", true, true, false, false, false);
             auto e = makeDDNode(w, edge, true);
 
-            CVec vectorArg0     = getVectorLIMDD(x, limX);
-            CVec vectorArg1     = getVectorLIMDD(y, limY);
+            CVec vectorArg0     = getVector(x, limX);
+            CVec vectorArg1     = getVector(y, limY);
             CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-            CVec vectorResult   = getVectorLIMDD(e);
+            CVec vectorResult   = getVector(e);
             if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
                 Log::log << "[multiply2] ERROR addition went wrong.\n";
                 Log::log << "arg0:    ";
@@ -2851,8 +2864,17 @@ namespace dd {
             return path;
         }
 
-        CVec getVector(vEdge& e) {
-            // TODO limdd
+        CVec getVector(mEdge& e, LimEntry<> lim) {
+        	CVec vec;
+        	return vec;
+        }
+
+        CVec getVector(mEdge& e) {
+        	CVec vec;
+        	return vec;
+        }
+
+        CVec getVector(vEdge& e, LimEntry<> lim) {
             std::size_t dim = 0;
             if (e.p->v >= 0)
             	dim = 2ULL << e.p->v;
@@ -2860,7 +2882,19 @@ namespace dd {
             	dim = 1;
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
-            Log::log << "[getVector] vector has size " << vec.size() << " after 2ULL << " << (int)(e.p->v) << '\n';
+
+            getVector(e, Complex::one, 0, vec, lim);
+            return vec;
+        }
+
+        CVec getVector(vEdge& e) {
+            std::size_t dim = 0;
+            if (e.p->v >= 0)
+            	dim = 2ULL << e.p->v;
+            else
+            	dim = 1;
+            // allocate resulting vector
+            auto vec = CVec(dim, {0.0, 0.0});
 
             getVector(e, Complex::one, 0, vec);
             return vec;
