@@ -180,8 +180,7 @@ namespace dd {
 
         // Prints operators [0, ... , nQubits], i.e., including index 'nQubits'
         static std::string to_string(const LimEntry<NUM_QUBITS>* lim, Qubit nQubits) {
-        	int nQubitsInt = (int) nQubits;
-        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
+//        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
         	if (nQubits < 0) {
             	if (lim == nullptr) {
                     return "";
@@ -215,9 +214,6 @@ namespace dd {
             if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
                 os << "-i";
             }
-//            if (nQubitsInt < 0) {
-//            	return os.str();
-//            }
             // Write the Pauli operators
 			for (int i = 0; i <= (int) nQubits; i++) {
 				os << getQubit(lim, i);

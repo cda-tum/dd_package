@@ -1732,12 +1732,12 @@ namespace dd {
             lim2.multiplyBy(e.l);
 
             if (verbose) {
-                makePrintIdent(e.p->v);
-                std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
-                makePrintIdent(e.p->v);
-                std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
-                makePrintIdent(e.p->v);
-                std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
+//                makePrintIdent(e.p->v);
+//                std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
+//                makePrintIdent(e.p->v);
+//                std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
+//                makePrintIdent(e.p->v);
+//                std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
             }
 
             Edge<Node> newE = {};
@@ -1750,15 +1750,15 @@ namespace dd {
 
             switch (op) {
                 case 'I':
-                    Log::log << "[Follow] encountered I ";
+//                    Log::log << "[Follow] encountered I ";
 //                    Log::log.flush();
                     return {e.p->e[path], lim2};
                 case 'X':
-                    Log::log << "[Follow] encountered X ";
+//                    Log::log << "[Follow] encountered X ";
 //                    Log::log.flush();
                     return {e.p->e[1 - path], lim2};
                 case 'Y':
-                    Log::log << "[Follow] encountered Y ";
+//                    Log::log << "[Follow] encountered Y ";
 //                    Log::log.flush();
                     newE = e.p->e[1 - path];
                     if (path == 0) {
@@ -1770,7 +1770,7 @@ namespace dd {
                     //                    lim2.setPhase(phase_one);
                     return {newE, lim2};
                 case 'Z':
-                    Log::log << "[Follow] encountered Z ";
+//                    Log::log << "[Follow] encountered Z ";
 //                    Log::log.flush();
                     if (path == 1) {
                         newE = e.p->e[path];
