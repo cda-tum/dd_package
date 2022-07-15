@@ -70,9 +70,9 @@ namespace dd {
 
     template<typename Node>
     std::ostream& operator<<(std::ostream& out, const Edge<Node> & edge) {
-    	return out << "Edge  on " << edge.p->v + 1 << " qubits. root: " << LimEntry<>::to_string(edge.l, edge.p->v)
+    	return out << "Edge on " << edge.p->v + 1 << " qubits. root: " << LimEntry<>::to_string(edge.l, edge.p->v)
 			<< "  {low = " << edge.p->e[0].w << " * " << LimEntry<>::to_string(edge.p->e[0].l, edge.p->e[0].p->v) << "}"
-			<< "  {high = " << edge.p->e[1].w << " * " << LimEntry<>::to_string(edge.p->e[1].l, edge.p->e[1].p->v) << "}\n";
+			<< "  {high = " << edge.p->e[1].w << " * " << LimEntry<>::to_string(edge.p->e[1].l, edge.p->e[1].p->v) << "}";
     }
 
     template<typename Node>

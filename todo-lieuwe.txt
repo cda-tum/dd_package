@@ -15,6 +15,8 @@ document the getHighLabelPauli function
 in normalizeLIMDDPauli, in the knife cases, make sure the two edges point to the same node.
     ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted.
 
+make tests for intersectGroupsPauli
+
 incorporate weights into the getIsomorphismPauli procedure
     Use a cached weight in getHighLabelPauli
     in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
