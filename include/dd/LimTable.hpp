@@ -105,6 +105,7 @@ namespace dd {
          * @return char of {I, X, Y, Z}
          */
         [[nodiscard]] char getQubit(dd::Qubit qubit) const {
+            // todo return a pauli_t
             if(qubit == -1){
                 // Reached terminal
                 return 'I';
@@ -179,6 +180,23 @@ namespace dd {
 
         // Prints operators [0, ... , nQubits], i.e., including index 'nQubits'
         static std::string to_string(const LimEntry<NUM_QUBITS>* lim, Qubit nQubits) {
+        	int nQubitsInt = (int) nQubits;
+        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
+        	if (nQubits < 0) {
+            	if (lim == nullptr) {
+                    return "";
+            	}
+	            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+	                return "i";
+	            }
+	            if ( lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
+	                return "-";
+	            }
+	            if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+	                return "-i";
+	            }
+				return "";
+        	}
         	if (lim == nullptr) {
                 return std::string(nQubits, 'I');
         	}
@@ -197,10 +215,13 @@ namespace dd {
             if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
                 os << "-i";
             }
+//            if (nQubitsInt < 0) {
+//            	return os.str();
+//            }
             // Write the Pauli operators
-            for (unsigned int i = 0; i <= (unsigned int) nQubits; i++) {
-                os << getQubit(lim, i);
-            }
+			for (int i = 0; i <= (int) nQubits; i++) {
+				os << getQubit(lim, i);
+			}
             return os.str();
         }
 
@@ -467,7 +488,7 @@ namespace dd {
     // A wrapper containing a LimEntry and a std::bitset
     // used in Gaussian Elimination, when the matrix of checkvectors is split up into two parts:
     //   a LIM-part and a '0/1 matrix' part, which is used for finding linear combinations
-    template <std::size_t NUM_QUBITS=32>
+    template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     class LimBitset {
     public:
         LimEntry<NUM_QUBITS> lim;

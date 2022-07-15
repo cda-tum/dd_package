@@ -170,7 +170,7 @@ namespace dd {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l, e.p->v) << "</font>>";
         }
 
         os << "]\n";
@@ -192,9 +192,9 @@ namespace dd {
         } else {
             os << toplabel;
         }
-        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "\",color=\"" << color << "\"";
+        os << "[penwidth=\"" << mag << "\",tooltip=\"" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l, e.p->v) << "\",color=\"" << color << "\"";
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(e.w, formatAsPolar) << " " << LimEntry<>::to_string(e.l, e.p->v) << "</font>>";
         }
         os << "]\n";
         return os;
@@ -416,7 +416,7 @@ namespace dd {
             os << ",style=dashed";
         }
         if (edgeLabels) {
-            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l) << "</font>>";
+            os << ",label=<<font point-size=\"8\">&nbsp;" << conditionalFormat(to.w, formatAsPolar) << " " << LimEntry<>::to_string(to.l, to.p->v) << "</font>>";
         }
         os << "]\n";
 
