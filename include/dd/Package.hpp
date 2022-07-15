@@ -468,9 +468,9 @@ namespace dd {
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
-            r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[0].w.i));
-//            r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase()); // TODO uncomenting these should make sense, but in fact gives an error
-//            r.p->e[1].l->setPhase(phase_t::phase_one);
+            r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
+            r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase()); // TODO uncomenting these should make sense, but in fact gives an error
+            r.p->e[1].l->setPhase(phase_t::phase_one);
             // Step 2: Make the left LIM Identity
             Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
