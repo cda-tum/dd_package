@@ -133,6 +133,16 @@ public:
         }
     }
 
+    static std::string groupToString(const StabilizerGroup& G, Qubit nQubits) {
+    	std::stringstream ss;
+        ss << "Group (" << G.size() << " elements) = {";
+        for (unsigned int i=0; i<G.size(); i++) {
+            ss << LimEntry<>::to_string(G[i], nQubits) << ", ";
+        }
+        ss << "}";
+    	return ss.str();
+    }
+
     static StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup concat = G;
         for (unsigned int i=0; i<H.size(); i++) {
@@ -713,7 +723,7 @@ public:
     // or returns LimEntry::noLIM, if this set is empty
     // TODO refactor to allocate less dynamic memory
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda) {
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, Qubit nQubits = 5) {
     	if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
@@ -726,19 +736,10 @@ public:
     	phase_t alpha = multiplyPhases(acb->getPhase(), getPhaseInverse(lambda));
     	// Retrieve the phase of acb in H
     	phase_t tau = recoverPhase(H, acb);
+    	Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
+    	Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
     	if (alpha == tau) {
     		return c;
-//    		for (unsigned int i=0; i<GintersectH.size(); i++) {
-//    			beta = GintersectH[i]->commutesWith(b) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]));
-//    			if (beta == 0) return GintersectH[i];
-//    			else if (j1 == -1) {
-//    				j1 = i;
-//    			}
-//    			else {
-//    				// TODO refactor to avoid dynamic allocation of new LIM
-//    				return LimEntry<>::multiply(new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[j1])), new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
-//    			}
-//    		}
     	}
     	// TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
     	//    Check if this conjecture is true.
@@ -922,7 +923,7 @@ public:
     static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn) {
         assert( u != nullptr );
         assert( v != nullptr );
-        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
+//        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
         assert (u->v == v->v);  // Assert u and v have the same nubmer of qubits
         Edge<vNode> uLow  = u->e[0];
         Edge<vNode> uHigh = u->e[1];
@@ -931,8 +932,12 @@ public:
         // Assert that neither u nor v is the Zero vector
         assert (!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert (!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
-        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
-        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
+        Log::log << "[getIsomorphismPauli] Start. u = {" << uLow.w << " * " <<  LimEntry<>::to_string(uLow.l, uLow.p->v) << ", " << uHigh.w << " * "
+        		 << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << "}   v = {"
+				 << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << ", "
+				 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
+//        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
+//        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
         	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
         if (!LimEntry<>::isIdentityOperator(vLow.l))
@@ -1011,52 +1016,49 @@ public:
 				return R;
 			}
         	// Case 3.2: uLow == vLow and uHigh == vHigh
-            Log::log << "[getIsomorphismPauli] case Fork with weights ulw " << uLow.w << " uhw " << uHigh.w << " vlw " << vLow.w << " vhw " << vHigh.w << Log::endl;
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
-            Log::log << "[getIsomorphismPauli] u and v have the same chidlren.\n";
+//            Log::log << "[getIsomorphismPauli] u and v have the same chidlren.\n";
 			// TODO should we refactor this last part and just call getIsomorphismZ?
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
-            // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
             if (uLow.p == uHigh.p) {
             	// TODO cover this case
             	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
             }
 
+            // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
             Complex rhoU        = cn.getCached();  // Eventually returned to cache
             Complex rhoV        = cn.getCached();  // Eventually returned to cache
             Complex rhoVdivRhoU = cn.getCached();
             ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
             ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
             ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU); // TODO since we only need to know whether this is +/- {1,i} or not, we can optimize and skip this last division
-            Log::log << "[getIsomorphismPauli] weights u0 v1 / u1 v0 = " << rhoVdivRhoU << "\n";
             phase_t lambda = rhoVdivRhoU.toPhase();
 
             cn.returnToCache(rhoVdivRhoU);
             cn.returnToCache(rhoV);
             cn.returnToCache(rhoU);
             if (lambda == phase_t::no_phase) {
-            	Log::log << "[getIsomorphismPauli] Weights do not multiply to +/- {1,i}, so returning noLIM.\n";
+            	Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
             	return LimWeight<>::noLIM;
             }
-            Log::log << "[getIsomorphismPauli] edge weights are approximately equal modulo +/-{1,i}.\n";
+            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
 
             iso->weight = cn.getCached();
             ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
 
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
-//            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
-            Log::log << "[getIsomorphismPauli] completed coset intersection element.\n"; Log::log.flush();
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (iso->lim != LimEntry<>::noLIM) {
-                Log::log << "[getIsomorphismPauli] The coset was non-empty; returning element.\n"; Log::log.flush();
+                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
                 return iso;
+            }
+            else {
+            	Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
             }
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n"; Log::log.flush();
-//            isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
             lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, u->e[1].l, v->e[1].l, lambda);
-//            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (iso->lim != LimEntry<>::noLIM) {
                 iso->lim->setOperator(u->v, pauli_op::pauli_z);
                 Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; Log::log.flush();
@@ -1119,8 +1121,7 @@ public:
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
-    		Log::log << "[highLabelPauli] stabgenset is: ";
-    		printStabilizerGroup(u->limVector, u->v);
+    		Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
     		newHighLabel = GramSchmidt(u->limVector, vLabel);
         	weight.multiplyByPhase(newHighLabel->getPhase());
         	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
@@ -1136,11 +1137,12 @@ public:
 //    		}
     	}
     	else {
+    		Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
     		newHighLabel = GramSchmidt(GH, vLabel);
         	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
+        	Log::log << "[highLabelPauli] Found canonical label: " << LimEntry<>::to_string(newHighLabel, u->v) << ", so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
         	newHighLabel->setPhase(phase_t::phase_one);
     		if (weight.lexSmallerThanxMinusOne()) {
     			Log::log << "[highLabelPauli] before multiplication by -1 for canonicity, weight = " << weight << "\n";

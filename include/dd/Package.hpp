@@ -388,6 +388,28 @@ namespace dd {
         	}
         }
 
+        // Checks whether a == iso * b
+        template <class Edge>
+        void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
+        	Edge edgeA{&a, Complex::one, nullptr};
+        	Edge edgeB{&b, Complex::one, nullptr};
+        	CVec avec = getVector(edgeA);
+        	CVec isobvec = getVector(edgeB, *iso);
+        	if (!vectorsApproximatelyEqual(avec, isobvec)) {
+        		CVec bvec = getVector(edgeB);
+        		Log::log << "[sanity check isomorphism] ERROR isomorphism is not an isomorphism\n"
+        				 << "[sanity check isomorphism] node A is " << a << "\n"
+        				 << "[sanity check isomorphism] node B is " << b << "\n"
+        				 << "[sanity check isomorphism] iso = " << LimEntry<>::to_string(iso, a.v) << '\n';
+				Log::log << "[sanity check isomorphism] node a = "; printCVec(avec);
+				Log::log << "\n[sanity check isomorphism] node b = "; printCVec(bvec);
+				Log::log << "\n[sanity check isomorphism] iso * node b = "; printCVec(isobvec);
+				export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
+				export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
+        		throw std::runtime_error("[sanity check isomorphism] ERROR Purported isomorphism is not actually an isomorphism.\n");
+        	}
+        }
+
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
@@ -486,7 +508,7 @@ namespace dd {
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
-            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
+            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism; vector is\n";
 
             LimWeight<>* iso = new LimWeight<>();
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
@@ -494,10 +516,11 @@ namespace dd {
             if (iso == LimWeight<>::noLIM) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
+            sanityCheckIsomorphism(oldNode, *r.p, iso->lim, vEdge{});
             // Root label := root label * (Id tensor (A)) * K   TODO what are 'A' and 'K'?
             // Step 5: Use R as the LIM for the incoming edge e
             Log::log << "[normalizeLIMDD] Found isomorphism: " << iso->weight << " * " << LimEntry<>::to_string(iso->lim, r.p->v) << "\n";
-            Log::log << "[normalizeLIMDD] Step 5: Multiply root LIM by old low LIM, from " << LimEntry<>::to_string(r.l, r.p->v) << " to " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
+            Log::log << "[normalizeLIMDD] Step 5: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
             r.l = LimEntry<>::multiply(r.l, lowLim); // TODO memory leak
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim), r.p->v) << ".\n";
             r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
@@ -511,14 +534,14 @@ namespace dd {
             }
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1.\n";
+            Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
             if (r.l->getPhase() != phase_t::phase_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByPhase(r.l->getPhase());
                 // Step 6.2: Make the phase of r.l '+1'
                 r.l->setPhase(phase_t::phase_one);
             }
-            Log::log << "[normalizeLIMDD] Final root edge: " << LimEntry<>::to_string(r.l) << '\n';
+            Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
 
             CVec amplitudeVecAfterNormalize = getVector(r);
             sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
