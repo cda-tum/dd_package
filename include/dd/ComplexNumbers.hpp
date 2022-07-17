@@ -242,6 +242,10 @@ namespace dd {
             return getCached(c.r, c.i);
         }
 
+        inline Complex getCached(const Complex& c) {
+        	return getCached(CTEntry::val(c.r), CTEntry::val(c.i));
+        }
+
         void returnToCache(Complex& c) {
             complexCache.returnToCache(c);
         }

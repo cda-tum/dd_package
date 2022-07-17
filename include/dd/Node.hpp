@@ -202,6 +202,9 @@ namespace dd {
 
 //    template<typename Node>
     std::ostream& operator<<(std::ostream& out, const vNode& node) {
+    	if (node.v < 0) {
+    		return out << "Terminal node";
+    	}
     	return out << "Node on " << node.v + 1 << " qubits."
 			<< "  {low = "  << node.e[0].w << " * " << LimEntry<>::to_string(node.e[0].l, node.e[0].p->v) << "}"
 			<< "  {high = " << node.e[1].w << " * " << LimEntry<>::to_string(node.e[1].l, node.e[1].p->v) << "}";

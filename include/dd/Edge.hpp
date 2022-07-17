@@ -69,10 +69,15 @@ namespace dd {
     };
 
     template<typename Node>
-    std::ostream& operator<<(std::ostream& out, const Edge<Node> & edge) {
-    	return out << "Edge on " << edge.p->v + 1 << " qubits. root: " << LimEntry<>::to_string(edge.l, edge.p->v)
-			<< "  {low = " << edge.p->e[0].w << " * " << LimEntry<>::to_string(edge.p->e[0].l, edge.p->e[0].p->v) << "}"
-			<< "  {high = " << edge.p->e[1].w << " * " << LimEntry<>::to_string(edge.p->e[1].l, edge.p->e[1].p->v) << "}";
+    std::ostream& operator<<(std::ostream& out, const Edge<Node>& edge) {
+    	if (edge.p->v >= 0) {
+			return out << "Edge on " << edge.p->v + 1 << " qubits. root: " << edge.w << " * " << LimEntry<>::to_string(edge.l, edge.p->v)
+				<< "  {low = " << edge.p->e[0].w << " * " << LimEntry<>::to_string(edge.p->e[0].l, edge.p->e[0].p->v) << "}"
+				<< "  {high = " << edge.p->e[1].w << " * " << LimEntry<>::to_string(edge.p->e[1].l, edge.p->e[1].p->v) << "}";
+    	}
+    	else {
+    		return out << "Terminal edge; weight=" << edge.w;
+    	}
     }
 
     template<typename Node>

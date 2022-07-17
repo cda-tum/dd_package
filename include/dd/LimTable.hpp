@@ -183,8 +183,11 @@ namespace dd {
 //        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
         	if (nQubits < 0) {
             	if (lim == nullptr) {
-                    return "";
+                    return "1";
             	}
+	            if (!lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
+	                return "1";
+	            }
 	            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
 	                return "i";
 	            }
