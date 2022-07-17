@@ -3139,6 +3139,19 @@ namespace dd {
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
             //std::cout << "[vectors approximately equal] start.\n";
             //std::cout.flush();
+        	if (v.size() < w.size()) {
+        		// We demand that w is approximately zero
+        		for (unsigned int i=0; i<w.size(); i++) {
+        			if (!Complex::approximatelyZero(w[i])) return false;
+        		}
+        		return true;
+        	}
+        	else if (w.size() < v.size()){
+        		for (unsigned int i=0; i<v.size(); i++) {
+        			if (!Complex::approximatelyZero(v[i])) return false;
+        		}
+        		return true;
+        	}
             if (v.size() != w.size()) return false;
             // find the factor d with which the vectors differ
             std::complex<fp> d = 0;
@@ -3211,6 +3224,17 @@ namespace dd {
                 c[i] = a[i] + b[i];
             }
             return c;
+        }
+
+        CVec multiplyMatrixVector(const CMat mat, const CVec x) {
+        	unsigned int N = x.size();
+        	CVec y(N, {0.0, 0.0});
+        	for (unsigned int row=0; row<N; row++) {
+        		for (unsigned int col=0; col<N; col++) {
+        			y[row] += x[col] * mat[row][col];
+        		}
+        	}
+			return y;
         }
 
         void printMatrix(const mEdge& e) {
