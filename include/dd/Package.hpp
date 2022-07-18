@@ -1863,7 +1863,7 @@ namespace dd {
         }
 
         template<class Node>
-        std::pair<Edge<Node>, LimEntry<>> follow(Edge<Node>& e, const short path, const LimEntry<> lim, bool verbose = false) {
+        std::pair<Edge<Node>, LimEntry<>> follow(const Edge<Node>& e, const short path, const LimEntry<> lim, bool verbose = false) {
             assert(e.p != nullptr);
             //            assert(e.p->flags == 0);
             LimEntry<> lim2(lim);
@@ -1937,6 +1937,10 @@ namespace dd {
 
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
+            CMat mat_x = getMatrix(x);
+            CVec vec_y = getVector(y, lim);
+            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+
 
             //            makePrintIdent(var);
             //            std::cout << "trueLim: " << LimEntry<NUM_QUBITS>::to_string(&trueLim) << std::endl;
@@ -1956,10 +1960,6 @@ namespace dd {
             xCopy.w    = Complex::one;
             auto yCopy = y;
             yCopy.w    = Complex::one;
-
-            CMat mat_x = getMatrix(xCopy);
-            CVec vec_y = getVector(yCopy);
-            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix);
@@ -2135,6 +2135,7 @@ namespace dd {
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
+            // Last step: sanity check to see whether the resulting vector is what was expected
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
                 if (e.w.exactlyOne()) {
                     e.w = cn.mulCached(x.w, y.w);
@@ -2153,7 +2154,6 @@ namespace dd {
                 }
             }
 
-            // Last step: sanity check to see whether the resulting vector is what was expected
             CVec vecResult = getVector(e);
             if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
             	Log::log << "[multiply2] ERROR.\n"
@@ -2168,6 +2168,7 @@ namespace dd {
 				printCVec(vecResult);
             	throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
             }
+
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
 
             return e;
@@ -3000,12 +3001,12 @@ namespace dd {
             return path;
         }
 
-        CVec getVector([[maybe_unused]] mEdge& e, [[maybe_unused]] LimEntry<> lim = {}) {
+        CVec getVector([[maybe_unused]] const mEdge& e, [[maybe_unused]] LimEntry<> lim = {}) {
         	CVec vec;
         	return vec;
         }
 
-        CVec getVector(vEdge& e, LimEntry<> lim) {
+        CVec getVector(const vEdge& e, LimEntry<> lim) {
             // TODO limdd
             std::size_t dim = 0;
             if (e.p->v >= 0)
@@ -3020,7 +3021,7 @@ namespace dd {
             return vec;
         }
 
-        CVec getVector(vEdge& e) {
+        CVec getVector(const vEdge& e) {
             std::size_t dim = 0;
             if (e.p->v >= 0)
                 dim = 2ULL << e.p->v;
@@ -3032,7 +3033,7 @@ namespace dd {
             getVector(e, Complex::one, 0, vec);
             return vec;
         }
-        void getVector(vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
+        void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
             // calculate new accumulated amplitude
             auto c = cn.mulCached(e.w, amp);
 //            Log::log << "[getVector] i=" << i << " qubit=" << (int)(e.p->v) << " e.w=" << e.w << " amp=" << amp << " c=" << c << " lim = " << LimEntry<>::to_string(&lim, e.p->v) << '\n';
@@ -3244,8 +3245,8 @@ namespace dd {
         	CVec y(N, {0.0, 0.0});
         	for (unsigned int row=0; row<N; row++) {
         		for (unsigned int col=0; col<N; col++) {
-        			y[row] += x[col] * mat[col][row];
-//        			y[row] += x[col] * mat[row][col]; // Or is this the right order?
+//        			y[row] += x[col] * mat[col][row];
+        			y[row] += x[col] * mat[row][col]; // Or is this the right order?
         		}
         	}
 			return y;
@@ -3268,6 +3269,10 @@ namespace dd {
         }
 
         CMat getMatrix(const mEdge& e) {
+        	if (e.p->v < 0) {
+        		auto mat = CMat(1, CVec(1, {CTEntry::val(e.w.r), CTEntry::val(e.w.i)}));
+        		return mat;
+        	}
             const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
