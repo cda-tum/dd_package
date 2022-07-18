@@ -1957,6 +1957,10 @@ namespace dd {
             auto yCopy = y;
             yCopy.w    = Complex::one;
 
+            CMat mat_x = getMatrix(xCopy);
+            CVec vec_y = getVector(yCopy);
+            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
@@ -2149,12 +2153,21 @@ namespace dd {
                 }
             }
 
-            //            makePrintIdent(var);
-            //            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Creating edge with weights: (redacted)\n";
-            //            std::ostringstream s1;
-            //            exportEdgeWeights(e, s1);
-            //            std::cout << s1.str() << std::endl;
-
+            // Last step: sanity check to see whether the resulting vector is what was expected
+            CVec vecResult = getVector(e);
+            if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
+            	Log::log << "[multiply2] ERROR.\n"
+            			 << "[multiply2] state: " << y << "\n"
+            			 << "[multiply2] amplitude vector: ";
+            	printCVec(vec_y);
+            	Log::log << "[multiply2] Matrix:\n";
+            	printMatrix(xCopy);
+				Log::log << "\n[multiply2] Expected result: ";
+				printCVec(vecExpected);
+				Log::log << "\n[multiply2] Actual result:  ";
+				printCVec(vecResult);
+            	throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
+            }
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
 
             return e;
@@ -3231,7 +3244,8 @@ namespace dd {
         	CVec y(N, {0.0, 0.0});
         	for (unsigned int row=0; row<N; row++) {
         		for (unsigned int col=0; col<N; col++) {
-        			y[row] += x[col] * mat[row][col];
+        			y[row] += x[col] * mat[col][row];
+//        			y[row] += x[col] * mat[row][col]; // Or is this the right order?
         		}
         	}
 			return y;
