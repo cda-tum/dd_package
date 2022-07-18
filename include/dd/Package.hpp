@@ -410,6 +410,62 @@ namespace dd {
         	}
         }
 
+        bool isZeroVector(const CVec& vec) {
+        	for (unsigned int i=0; i<vec.size(); i++) {
+        		if (!Complex::approximatelyEqual(vec[i], 0)) {
+        			return false;
+        		}
+        	}
+        	return true;
+        }
+
+        bool isZeroVector(const CVec& vec, unsigned int start, unsigned int end) {
+        	if (vec.size() >= start || vec.size() >= end) {
+        		throw std::runtime_error("[isZeroVector] ERROR received start and end which are out of bounds.");
+        	}
+        	for (unsigned int i=start; i<end; i++) {
+        		if (!Complex::approximatelyEqual(vec[i], 0)) {
+        			return false;
+        		}
+        	}
+        	return true;
+        }
+
+        bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
+        	if (result.size() == 0) {
+        		return (isZeroVector(left) && isZeroVector(right));
+        	}
+        	unsigned int d = result.size() / 2;
+        	if ((left.size() != d && left.size() != 0) || (right.size() != d && right.size() != 0)) {
+        		Log::log << "[sanity check makeDDNode] left = " << left.size() <<  "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
+        		throw std::runtime_error("[sanity check makeDDNode] received vectors of unexpected sizes.\n");
+        	}
+        	if (left.size() == 0) {
+        		// check if result is zero here
+        		if (!isZeroVector(result, 0, d)) {
+        			return false;
+        		}
+        	}
+        	else {
+        		for (unsigned int i=0; i<left.size(); i++) {
+					if (!Complex::approximatelyEqual(left[i],  result[i])) {
+						return false;
+					}
+				}
+        	}
+        	if (right.size() == 0) {
+        		if (!isZeroVector(result, d, 2*d)) return false;
+        	}
+        	else {
+				for (unsigned int i=0; i<d; i++) {
+					if (!Complex::approximatelyEqual(right[i],  result[i + d])) {
+						return false;
+					}
+				}
+        	}
+        	return true;
+        }
+
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
@@ -423,7 +479,10 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
+            CVec amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
             Edge<vNode> r = normalize(e, cached);
+            CVec amplitudeVecAfternormalizeQ = getVector(r, e.p->v);
+            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             Edge<vNode> rOld = copyEdge(r);
 
             CVec amplitudeVecBeforeNormalize = getVector(r);
@@ -477,14 +536,16 @@ namespace dd {
                 return r;
             }
 
-            bool swappedChildren = false;
+            Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
             if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
-                swappedChildren = true;
                 std::swap(r.p->e[0], r.p->e[1]);
+                Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
+                LimEntry<> X;
+                X.setOperator(r.p->v, 'X');
+                r.l = LimEntry<>::multiply(r.l, &X); // TODO memory leak
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
             LimEntry<>* lowLim = r.p->e[0].l;
             LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
@@ -525,13 +586,6 @@ namespace dd {
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim), r.p->v) << ".\n";
             r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO memory leak
             cn.mul(r.w, r.w, iso->weight);
-
-            if (swappedChildren) {
-                Log::log << "[normalizeLIMDD] Step 6: We swapped the children, so we correct for this by multiplying with X.\n";
-                LimEntry<> X;
-                X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X);
-            }
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
@@ -1122,14 +1176,27 @@ namespace dd {
                 assert(edge.p != nullptr || edge.p->v == var - 1 || edge.isTerminal());
 
             // set specific node properties for matrices
-
+            CVec vece0, vece1, vece;
             // normalize it
             switch (group) {
                 case Z_group:
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
+            		vece0 = getVector(edges[0], var-1);
+					vece1 = getVector(edges[1], var-1);
                     e = normalizeLIMDDPauli(e, cached);
+					vece = getVector(e, var);
+					if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
+						Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
+								 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
+								 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
+								 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
+								 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
+								 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
+								 << "[makeDDNode] result   : " << e << '\n';
+						throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
+					}
                     break;
                 case QMDD_group:
                     e = normalize(e, cached);
@@ -1637,11 +1704,11 @@ namespace dd {
             auto e = makeDDNode(w, edge, true);
 
 //            Log::log << "[add2] computing vector x.\n";
-            CVec vectorArg0     = getVector(x, limX);
+            CVec vectorArg0     = getVector(x, w, limX);
 //            Log::log << "[add2] computing vector y.\n";
-            CVec vectorArg1     = getVector(y, limY);
+            CVec vectorArg1     = getVector(y, w, limY);
             CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-            CVec vectorResult   = getVector(e);
+            CVec vectorResult   = getVector(e, w);
             if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
                 Log::log << "[add2] ERROR addition went wrong.\n";
                 Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
@@ -1938,7 +2005,7 @@ namespace dd {
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
             CMat mat_x = getMatrix(x);
-            CVec vec_y = getVector(y, lim);
+            CVec vec_y = getVector(y, var, lim);
             CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 
 
@@ -2119,11 +2186,27 @@ namespace dd {
                 }
             }
 
-            //            export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
-            //            export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
+//			export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
+//			export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
 
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-                e = makeDDNode(var, edge, true, {});
+				CVec vece0 = getVector(edge[0], var-1);
+				CVec vece1 = getVector(edge[1], var-1);
+                e = makeDDNode(var, edge, true, nullptr);
+                CVec vece = getVector(e, var);
+                if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                	Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
+                			 << "[multiply2] edge[0]    = " << edge[0] << '\n'
+                			 << "[multiply2] edge[1]    = " << edge[1] << '\n'
+							 << "[multiply2] e (result) = " << e << '\n'
+							 << "[multiply2] vece0         = ";
+                	printCVec(vece0);
+                	Log::log << "[multiply2] vece1         = ";
+                	printCVec(vece1);
+                	Log::log << "[multiply2] vece (result) = ";
+                	printCVec(vece);
+                	throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
+                }
             } else {
                 e = makeDDNode(var, edge, true, generateDensityMatrix);
                 computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}); // Caching is disabled for limdds
@@ -2135,7 +2218,6 @@ namespace dd {
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
-            // Last step: sanity check to see whether the resulting vector is what was expected
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
                 if (e.w.exactlyOne()) {
                     e.w = cn.mulCached(x.w, y.w);
@@ -2154,6 +2236,7 @@ namespace dd {
                 }
             }
 
+            // Last step: sanity check to see whether the resulting vector is what was expected
             CVec vecResult = getVector(e);
             if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
             	Log::log << "[multiply2] ERROR.\n"
@@ -3001,7 +3084,7 @@ namespace dd {
             return path;
         }
 
-        CVec getVector([[maybe_unused]] const mEdge& e, [[maybe_unused]] LimEntry<> lim = {}) {
+        CVec getVector([[maybe_unused]] const mEdge& e, [[maybe_unused]] Qubit q = 0, [[maybe_unused]] LimEntry<> lim = {}) {
         	CVec vec;
         	return vec;
         }
@@ -3021,6 +3104,18 @@ namespace dd {
             return vec;
         }
 
+        CVec getVector(const vEdge& e, Qubit nQubits, LimEntry<> lim = {}) {
+        	std::size_t dim;
+        	if (nQubits >= 0) {
+				dim = 2ULL << nQubits;
+        	} else {
+        		dim = 1;
+        	}
+            auto vec = CVec(dim, {0.0, 0.0});
+            getVector(e, Complex::one, 0, vec, lim);
+            return vec;
+        }
+
         CVec getVector(const vEdge& e) {
             std::size_t dim = 0;
             if (e.p->v >= 0)
@@ -3033,6 +3128,7 @@ namespace dd {
             getVector(e, Complex::one, 0, vec);
             return vec;
         }
+
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
             // calculate new accumulated amplitude
             auto c = cn.mulCached(e.w, amp);
@@ -3207,12 +3303,16 @@ namespace dd {
             return vectorsApproximatelyEqual(phi1, phi2);
         }
 
-        void printCVec(const std::vector<std::complex<fp>>& vec) {
-            std::cout << "[";
+        _Log& outputCVec(const CVec& vec) {
+            Log::log << "[";
             for (unsigned int i = 0; i < vec.size(); i++) {
-                std::cout << vec[i] << ", ";
+                Log::log << vec[i] << ", ";
             }
-            std::cout << "]";
+            return Log::log << "]";
+        }
+
+        void printCVec(const std::vector<std::complex<fp>>& vec) {
+        	Log::log << outputCVec(vec);
         }
 
         void printVector(const vEdge& e) {
@@ -3241,8 +3341,11 @@ namespace dd {
         }
 
         CVec multiplyMatrixVector(const CMat mat, const CVec x) {
-        	unsigned int N = x.size();
+        	unsigned int N = std::max(mat.size(), x.size());
         	CVec y(N, {0.0, 0.0});
+        	if (mat.size() != x.size()) {
+        		return y;
+        	}
         	for (unsigned int row=0; row<N; row++) {
         		for (unsigned int col=0; col<N; col++) {
 //        			y[row] += x[col] * mat[col][row];

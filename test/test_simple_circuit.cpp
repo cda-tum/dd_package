@@ -492,7 +492,7 @@ TEST(LimTest, simpleCircuit54) {
 
 TEST(LimTest, simpleCircuit55) {
 	dd::QuantumCircuit c(1);
-	c.addGate(dd::Hmat, 1);
+	c.addGate(dd::Hmat, 0);
 
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }

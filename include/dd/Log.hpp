@@ -37,6 +37,10 @@ namespace dd {
 		}
 	};
 
+	std::ostream& operator<<(std::ostream& out, [[maybe_unused]] const _Log& log) {
+		return out;
+	}
+
 	class Log {
 	public:
 		static inline _Log log = _Log(1);
