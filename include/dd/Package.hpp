@@ -371,99 +371,102 @@ namespace dd {
 
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
-        	CVec nodeVec = getVector(edge);
-        	CVec stabVec;
-        	for (unsigned int i=0; i<stabilizerGroup.size(); i++) {
-        		stabVec = getVector(edge, *stabilizerGroup[i]);
-        		if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
-        			Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element.\n";
-        			Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
-        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :";
-        			Pauli::printStabilizerGroup(stabilizerGroup, edge.p->v);
-        			Log::log << "\n[sanity check stabilizer group] node's vector: "; printCVec(nodeVec);
-        			Log::log << "[sanity check stabilizer group] stabilizer vec:"; printCVec(stabVec);
-        			export2Dot(edge, "errorStabilizer.dot", false, true, false, true, true, false);
-        			throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
-        		}
-        	}
+            CVec nodeVec = getVector(edge);
+            CVec stabVec;
+            for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
+                stabVec = getVector(edge, *stabilizerGroup[i]);
+                if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
+                    Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element.\n";
+                    Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
+                    Log::log << "[sanity check stabilizer group] Node's stabilizer group is :";
+                    Pauli::printStabilizerGroup(stabilizerGroup, edge.p->v);
+                    Log::log << "\n[sanity check stabilizer group] node's vector: ";
+                    printCVec(nodeVec);
+                    Log::log << "[sanity check stabilizer group] stabilizer vec:";
+                    printCVec(stabVec);
+                    export2Dot(edge, "errorStabilizer.dot", false, true, false, true, true, false);
+                    throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
+                }
+            }
         }
 
         // Checks whether a == iso * b
-        template <class Edge>
+        template<class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
-        	Edge edgeA{&a, Complex::one, nullptr};
-        	Edge edgeB{&b, Complex::one, nullptr};
-        	CVec avec = getVector(edgeA);
-        	CVec isobvec = getVector(edgeB, *iso);
-        	if (!vectorsApproximatelyEqual(avec, isobvec)) {
-        		CVec bvec = getVector(edgeB);
-        		Log::log << "[sanity check isomorphism] ERROR isomorphism is not an isomorphism\n"
-        				 << "[sanity check isomorphism] node A is " << a << "\n"
-        				 << "[sanity check isomorphism] node B is " << b << "\n"
-        				 << "[sanity check isomorphism] iso = " << LimEntry<>::to_string(iso, a.v) << '\n';
-				Log::log << "[sanity check isomorphism] node a = "; printCVec(avec);
-				Log::log << "\n[sanity check isomorphism] node b = "; printCVec(bvec);
-				Log::log << "\n[sanity check isomorphism] iso * node b = "; printCVec(isobvec);
-				export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
-				export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
-        		throw std::runtime_error("[sanity check isomorphism] ERROR Purported isomorphism is not actually an isomorphism.\n");
-        	}
+            Edge edgeA{&a, Complex::one, nullptr};
+            Edge edgeB{&b, Complex::one, nullptr};
+            CVec avec    = getVector(edgeA);
+            CVec isobvec = getVector(edgeB, *iso);
+            if (!vectorsApproximatelyEqual(avec, isobvec)) {
+                CVec bvec = getVector(edgeB);
+                Log::log << "[sanity check isomorphism] ERROR isomorphism is not an isomorphism\n"
+                         << "[sanity check isomorphism] node A is " << a << "\n"
+                         << "[sanity check isomorphism] node B is " << b << "\n"
+                         << "[sanity check isomorphism] iso = " << LimEntry<>::to_string(iso, a.v) << '\n';
+                Log::log << "[sanity check isomorphism] node a = ";
+                printCVec(avec);
+                Log::log << "\n[sanity check isomorphism] node b = ";
+                printCVec(bvec);
+                Log::log << "\n[sanity check isomorphism] iso * node b = ";
+                printCVec(isobvec);
+                export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
+                export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
+                throw std::runtime_error("[sanity check isomorphism] ERROR Purported isomorphism is not actually an isomorphism.\n");
+            }
         }
 
         bool isZeroVector(const CVec& vec) {
-        	for (unsigned int i=0; i<vec.size(); i++) {
-        		if (!Complex::approximatelyEqual(vec[i], 0)) {
-        			return false;
-        		}
-        	}
-        	return true;
+            for (unsigned int i = 0; i < vec.size(); i++) {
+                if (!Complex::approximatelyEqual(vec[i], 0)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         bool isZeroVector(const CVec& vec, unsigned int start, unsigned int end) {
-        	if (vec.size() >= start || vec.size() >= end) {
-        		throw std::runtime_error("[isZeroVector] ERROR received start and end which are out of bounds.");
-        	}
-        	for (unsigned int i=start; i<end; i++) {
-        		if (!Complex::approximatelyEqual(vec[i], 0)) {
-        			return false;
-        		}
-        	}
-        	return true;
+            if (vec.size() >= start || vec.size() >= end) {
+                throw std::runtime_error("[isZeroVector] ERROR received start and end which are out of bounds.");
+            }
+            for (unsigned int i = start; i < end; i++) {
+                if (!Complex::approximatelyEqual(vec[i], 0)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
-        	if (result.size() == 0) {
-        		return (isZeroVector(left) && isZeroVector(right));
-        	}
-        	unsigned int d = result.size() / 2;
-        	if ((left.size() != d && left.size() != 0) || (right.size() != d && right.size() != 0)) {
-        		Log::log << "[sanity check makeDDNode] left = " << left.size() <<  "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
-        		throw std::runtime_error("[sanity check makeDDNode] received vectors of unexpected sizes.\n");
-        	}
-        	if (left.size() == 0) {
-        		// check if result is zero here
-        		if (!isZeroVector(result, 0, d)) {
-        			return false;
-        		}
-        	}
-        	else {
-        		for (unsigned int i=0; i<left.size(); i++) {
-					if (!Complex::approximatelyEqual(left[i],  result[i])) {
-						return false;
-					}
-				}
-        	}
-        	if (right.size() == 0) {
-        		if (!isZeroVector(result, d, 2*d)) return false;
-        	}
-        	else {
-				for (unsigned int i=0; i<d; i++) {
-					if (!Complex::approximatelyEqual(right[i],  result[i + d])) {
-						return false;
-					}
-				}
-        	}
-        	return true;
+            if (result.size() == 0) {
+                return (isZeroVector(left) && isZeroVector(right));
+            }
+            unsigned int d = result.size() / 2;
+            if ((left.size() != d && left.size() != 0) || (right.size() != d && right.size() != 0)) {
+                Log::log << "[sanity check makeDDNode] left = " << left.size() << "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
+                throw std::runtime_error("[sanity check makeDDNode] received vectors of unexpected sizes.\n");
+            }
+            if (left.size() == 0) {
+                // check if result is zero here
+                if (!isZeroVector(result, 0, d)) {
+                    return false;
+                }
+            } else {
+                for (unsigned int i = 0; i < left.size(); i++) {
+                    if (!Complex::approximatelyEqual(left[i], result[i])) {
+                        return false;
+                    }
+                }
+            }
+            if (right.size() == 0) {
+                if (!isZeroVector(result, d, 2 * d)) return false;
+            } else {
+                for (unsigned int i = 0; i < d; i++) {
+                    if (!Complex::approximatelyEqual(right[i], result[i + d])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         // Returns an edge to a node isomorphic to e.p
@@ -479,9 +482,9 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
-            Edge<vNode> r = normalize(e, cached);
-            CVec amplitudeVecAfternormalizeQ = getVector(r, e.p->v);
+            CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
+            Edge<vNode> r                            = normalize(e, cached);
+            CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
             sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             Edge<vNode> rOld = copyEdge(r);
 
@@ -559,7 +562,7 @@ namespace dd {
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
             Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-            vNode       oldNode            = *(r.p); // make a copy of the old node
+            vNode       oldNode            = *(r.p);                                                                 // make a copy of the old node
             Complex     highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i)); // TODO return to cache
             LimEntry<>* higLimTemp2        = Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp);
             r.p->e[1].l                    = limTable.lookup(*higLimTemp2);
@@ -604,13 +607,13 @@ namespace dd {
         }
 
         // Construct the stabilizer generator set of 'node' in the Pauli group
-    	// TODO limdd store stab in LimTable
+        // TODO limdd store stab in LimTable
         static StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode& node) {
             Edge<vNode> low, high;
-            low  = node.e[0];
-            high = node.e[1];
-            unsigned int n = node.v;
-            auto zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
+            low               = node.e[0];
+            high              = node.e[1];
+            unsigned int n    = node.v;
+            auto         zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
 
             StabilizerGroup stabgenset;
             // Case 0: Check if this node is the terminal node (aka the Leaf)
@@ -646,31 +649,33 @@ namespace dd {
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
                 // Gather the stabilizer groups of the two children
-                Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
-    			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
-    			// Step 1: Compute the intersection
-    			StabilizerGroup* stabLow  = &(low. p->limVector);
-    			StabilizerGroup* stabHigh = &(high.p->limVector);
-            	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; Pauli::printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
-    			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
-    			LimEntry<>* stab = LimEntry<>::noLIM;
-    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
-    			if (stab != LimEntry<>::noLIM) {
-    				stab->setOperator(n, 'Z');
-    			}
-    			else if (low.p == high.p) {
-                	// check for X
-    //				Complex rho = cn.mulCached(low.w, high.w);
-    //				phase_t rho_phase = rho.getPhase();
-    				// Check for Y
-
+                Log::log << "[constructStabilizerGeneratorSet] Case fork; " << node << "\n";
+                // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
+                // Step 1: Compute the intersection
+                StabilizerGroup* stabLow  = &(low.p->limVector);
+                StabilizerGroup* stabHigh = &(high.p->limVector);
+                StabilizerGroup  PHP      = Pauli::conjugateGroup(*stabHigh, high.l);
+                Log::log << "[constructStabilizerGeneratorSet] conjugate group: ";
+                Pauli::printStabilizerGroup(PHP, node.e[1].p->v);
+                Log::log << '\n';
+                stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
+                Log::log << "[constructStabilizerGeneratorSet] intersection: ";
+                Pauli::printStabilizerGroup(stabgenset, node.v);
+                Log::log << '\n';
+                LimEntry<>* stab = LimEntry<>::noLIM;
+                stab             = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
+                if (stab != LimEntry<>::noLIM) {
+                    stab->setOperator(n, 'Z');
+                } else if (low.p == high.p) {
+                    // check for X
+                    //				Complex rho = cn.mulCached(low.w, high.w);
+                    //				phase_t rho_phase = rho.getPhase();
+                    // Check for Y
                 }
-    			if (stab != LimEntry<>::noLIM) {
-    				stabgenset.push_back(stab);
-    			}
-    			Pauli::toColumnEchelonForm(stabgenset);
+                if (stab != LimEntry<>::noLIM) {
+                    stabgenset.push_back(stab);
+                }
+                Pauli::toColumnEchelonForm(stabgenset);
             }
 
             return stabgenset;
@@ -1183,20 +1188,20 @@ namespace dd {
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
-            		vece0 = getVector(edges[0], var-1);
-					vece1 = getVector(edges[1], var-1);
-                    e = normalizeLIMDDPauli(e, cached);
-					vece = getVector(e, var);
-					if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
-						Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
-								 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
-								 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
-								 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
-								 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
-								 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
-								 << "[makeDDNode] result   : " << e << '\n';
-						throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
-					}
+                    vece0 = getVector(edges[0], var - 1);
+                    vece1 = getVector(edges[1], var - 1);
+                    e     = normalizeLIMDDPauli(e, cached);
+                    vece  = getVector(e, var);
+                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                        Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
+                                 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
+                                 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
+                                 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
+                                 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
+                                 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
+                                 << "[makeDDNode] result   : " << e << '\n';
+                        throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
+                    }
                     break;
                 case QMDD_group:
                     e = normalize(e, cached);
@@ -1244,16 +1249,16 @@ namespace dd {
         }
 
         Edge<vNode> copyEdge(vEdge edge) {
-        	vNode* node = new vNode();
-        	node->e[0] = edge.p->e[0];
-        	node->e[0].l = new LimEntry<>(edge.p->e[0].l);
-        	node->e[1] = edge.p->e[1];
-        	node->e[1].l = new LimEntry<>(edge.p->e[1].l);
-        	node->limVector = edge.p->limVector;
-        	node->v = edge.p->v;
-        	vEdge copiedEdge{node, Complex::one, new LimEntry<>(edge.l)};
-//        	Log::log << "[copyEdge] Copied edge " << edge << " into edge " << copiedEdge;
-        	return copiedEdge;
+            vNode* node     = new vNode();
+            node->e[0]      = edge.p->e[0];
+            node->e[0].l    = new LimEntry<>(edge.p->e[0].l);
+            node->e[1]      = edge.p->e[1];
+            node->e[1].l    = new LimEntry<>(edge.p->e[1].l);
+            node->limVector = edge.p->limVector;
+            node->v         = edge.p->v;
+            vEdge copiedEdge{node, Complex::one, new LimEntry<>(edge.l)};
+            //        	Log::log << "[copyEdge] Copied edge " << edge << " into edge " << copiedEdge;
+            return copiedEdge;
         }
 
         template<class Node>
@@ -1600,13 +1605,13 @@ namespace dd {
             }
 
             if (x.p == y.p && LimEntry<>::EqualModuloPhase(&trueLimX, &trueLimY)) {
-                auto    r            = y;
+                auto    r   = y;
                 Complex xwp = cn.getCached(x.w);
                 xwp.multiplyByPhase(trueLimX.getPhase());
                 Complex ywp = cn.getCached(y.w);
                 ywp.multiplyByPhase(trueLimY.getPhase());
-//                phase_t currentPhase = Pauli::getPhaseaMinusB(LimEntry<>::getPhase(&trueLimX), LimEntry<>::getPhase(&trueLimY));
-//                r.w.multiplyByPhase(currentPhase);
+                //                phase_t currentPhase = Pauli::getPhaseaMinusB(LimEntry<>::getPhase(&trueLimX), LimEntry<>::getPhase(&trueLimY));
+                //                r.w.multiplyByPhase(currentPhase);
                 r.w = cn.addCached(xwp, ywp);
                 if (r.w.approximatelyZero()) {
                     cn.returnToCache(r.w);
@@ -1614,7 +1619,7 @@ namespace dd {
                 }
                 trueLimY.setPhase(phase_t::phase_one);
                 r.l = limTable.lookup(trueLimY);
-//                Log::log << "[add2] Case x.p == y.p; x.w = " << LimEntry<>::to_string(&trueLimX, x.p->v) << "*" << x.w << " y.w = " << LimEntry<>::to_string(&trueLimY, y.p->v) << "*" << y.w << "  x.w+y.w = " << r.w << '\n';
+                //                Log::log << "[add2] Case x.p == y.p; x.w = " << LimEntry<>::to_string(&trueLimX, x.p->v) << "*" << x.w << " y.w = " << LimEntry<>::to_string(&trueLimY, y.p->v) << "*" << y.w << "  x.w+y.w = " << r.w << '\n';
                 return r;
             }
 
@@ -1682,9 +1687,9 @@ namespace dd {
                     //                    std::cout << "e2.l: " << LimEntry<NUM_QUBITS>::to_string(e2.l) << std::endl;
                     //                    export2Dot(e1, "e1.dot", true, true, false, false, false);
                     //                    export2Dot(e2, "e2.dot", true, true, false, false, false);
-//                	Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
+                    //                	Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
                     edge[i] = add2(e1, e2, limX2, limY2);
-//                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
+                    //                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
                     //                    export2Dot(edge[i], "ei.dot", true, true, false, false, false);
                     unfollow(x, i, limX2);
                     unfollow(y, i, limY2);
@@ -1703,9 +1708,9 @@ namespace dd {
             //            export2Dot(edge[1], "e2.dot", true, true, false, false, false);
             auto e = makeDDNode(w, edge, true);
 
-//            Log::log << "[add2] computing vector x.\n";
-            CVec vectorArg0     = getVector(x, w, limX);
-//            Log::log << "[add2] computing vector y.\n";
+            //            Log::log << "[add2] computing vector x.\n";
+            CVec vectorArg0 = getVector(x, w, limX);
+            //            Log::log << "[add2] computing vector y.\n";
             CVec vectorArg1     = getVector(y, w, limY);
             CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
             CVec vectorResult   = getVector(e, w);
@@ -2002,12 +2007,13 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
-            LimEntry<> trueLim = lim;
-            trueLim.multiplyBy(y.l);
-            CMat mat_x = getMatrix(x);
-            CVec vec_y = getVector(y, var, lim);
-            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+            LimEntry<> trueLim1 = lim;
+            trueLim1.multiplyBy(y.l);
+            auto trueLim = LimTable().lookup(trueLim1);
 
+            CMat mat_x       = getMatrix(x);
+            CVec vec_y       = getVector(y, var, lim);
+            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 
             //            makePrintIdent(var);
             //            std::cout << "trueLim: " << LimEntry<NUM_QUBITS>::to_string(&trueLim) << std::endl;
@@ -2018,7 +2024,7 @@ namespace dd {
 
             if (var == start - 1) {
                 auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim.getPhase());
+                newWeight.multiplyByPhase(trueLim->getPhase());
                 ComplexNumbers::mul(newWeight, x.w, newWeight);
                 return ResultEdge::terminal(newWeight);
             }
@@ -2029,7 +2035,7 @@ namespace dd {
             yCopy.w    = Complex::one;
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix);
+            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLim);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -2186,35 +2192,36 @@ namespace dd {
                 }
             }
 
-//			export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
-//			export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
+            //			export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
+            //			export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
 
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-				CVec vece0 = getVector(edge[0], var-1);
-				CVec vece1 = getVector(edge[1], var-1);
-                e = makeDDNode(var, edge, true, nullptr);
-                CVec vece = getVector(e, var);
+                CVec vece0 = getVector(edge[0], var - 1);
+                CVec vece1 = getVector(edge[1], var - 1);
+                e          = makeDDNode(var, edge, true, nullptr);
+                CVec vece  = getVector(e, var);
                 if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                	Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
-                			 << "[multiply2] edge[0]    = " << edge[0] << '\n'
-                			 << "[multiply2] edge[1]    = " << edge[1] << '\n'
-							 << "[multiply2] e (result) = " << e << '\n'
-							 << "[multiply2] vece0         = ";
-                	printCVec(vece0);
-                	Log::log << "[multiply2] vece1         = ";
-                	printCVec(vece1);
-                	Log::log << "[multiply2] vece (result) = ";
-                	printCVec(vece);
-                	throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
+                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
+                             << "[multiply2] edge[0]    = " << edge[0] << '\n'
+                             << "[multiply2] edge[1]    = " << edge[1] << '\n'
+                             << "[multiply2] e (result) = " << e << '\n'
+                             << "[multiply2] vece0         = ";
+                    printCVec(vece0);
+                    Log::log << "[multiply2] vece1         = ";
+                    printCVec(vece1);
+                    Log::log << "[multiply2] vece (result) = ";
+                    printCVec(vece);
+                    throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
                 }
             } else {
                 e = makeDDNode(var, edge, true, generateDensityMatrix);
-                computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}); // Caching is disabled for limdds
             }
 
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
             //                std::cout << "Caching error detected in mul" << std::endl;
             //            }
+
+            //            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLim);
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
@@ -2226,9 +2233,9 @@ namespace dd {
                     ComplexNumbers::mul(e.w, e.w, y.w);
                 }
 
-//                CVec vectorE = getVector(e);
-//                std::cout << "(" << std::to_string(tempCallCounter) << ")";
-//                printCVec(vectorE);
+                //                CVec vectorE = getVector(e);
+                //                std::cout << "(" << std::to_string(tempCallCounter) << ")";
+                //                printCVec(vectorE);
 
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
@@ -2239,17 +2246,17 @@ namespace dd {
             // Last step: sanity check to see whether the resulting vector is what was expected
             CVec vecResult = getVector(e);
             if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
-            	Log::log << "[multiply2] ERROR.\n"
-            			 << "[multiply2] state: " << y << "\n"
-            			 << "[multiply2] amplitude vector: ";
-            	printCVec(vec_y);
-            	Log::log << "[multiply2] Matrix:\n";
-            	printMatrix(xCopy);
-				Log::log << "\n[multiply2] Expected result: ";
-				printCVec(vecExpected);
-				Log::log << "\n[multiply2] Actual result:  ";
-				printCVec(vecResult);
-            	throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
+                Log::log << "[multiply2] ERROR.\n"
+                         << "[multiply2] state: " << y << "\n"
+                         << "[multiply2] amplitude vector: ";
+                printCVec(vec_y);
+                Log::log << "[multiply2] Matrix:\n";
+                printMatrix(xCopy);
+                Log::log << "\n[multiply2] Expected result: ";
+                printCVec(vecExpected);
+                Log::log << "\n[multiply2] Actual result:  ";
+                printCVec(vecResult);
+                throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
             }
 
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
@@ -3085,8 +3092,8 @@ namespace dd {
         }
 
         CVec getVector([[maybe_unused]] const mEdge& e, [[maybe_unused]] Qubit q = 0, [[maybe_unused]] LimEntry<> lim = {}) {
-        	CVec vec;
-        	return vec;
+            CVec vec;
+            return vec;
         }
 
         CVec getVector(const vEdge& e, LimEntry<> lim) {
@@ -3098,19 +3105,19 @@ namespace dd {
                 dim = 1;
             // allocate resulting vector
             auto vec = CVec(dim, {0.0, 0.0});
-//            Log::log << "[getVector] vector has size " << vec.size() << " after 2ULL << " << (int)(e.p->v) << '\n';
+            //            Log::log << "[getVector] vector has size " << vec.size() << " after 2ULL << " << (int)(e.p->v) << '\n';
 
             getVector(e, Complex::one, 0, vec, lim);
             return vec;
         }
 
         CVec getVector(const vEdge& e, Qubit nQubits, LimEntry<> lim = {}) {
-        	std::size_t dim;
-        	if (nQubits >= 0) {
-				dim = 2ULL << nQubits;
-        	} else {
-        		dim = 1;
-        	}
+            std::size_t dim;
+            if (nQubits >= 0) {
+                dim = 2ULL << nQubits;
+            } else {
+                dim = 1;
+            }
             auto vec = CVec(dim, {0.0, 0.0});
             getVector(e, Complex::one, 0, vec, lim);
             return vec;
@@ -3132,7 +3139,7 @@ namespace dd {
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
             // calculate new accumulated amplitude
             auto c = cn.mulCached(e.w, amp);
-//            Log::log << "[getVector] i=" << i << " qubit=" << (int)(e.p->v) << " e.w=" << e.w << " amp=" << amp << " c=" << c << " lim = " << LimEntry<>::to_string(&lim, e.p->v) << '\n';
+            //            Log::log << "[getVector] i=" << i << " qubit=" << (int)(e.p->v) << " e.w=" << e.w << " amp=" << amp << " c=" << c << " lim = " << LimEntry<>::to_string(&lim, e.p->v) << '\n';
 
             // base case
             if (e.isTerminal()) {
@@ -3151,7 +3158,7 @@ namespace dd {
             if (!e2.w.approximatelyZero()) getVector(e2, c, i, vec, lim2);
 
             std::tie(e2, lim2) = follow(e, 1, lim);
-//            Log::log << "[getVector] follow(e, 1, " << LimEntry<>::to_string(&lim, e.p->v) << ") = (" << e2 << ",  " << LimEntry<>::to_string(&lim2, e2.p->v) << '\n';
+            //            Log::log << "[getVector] follow(e, 1, " << LimEntry<>::to_string(&lim, e.p->v) << ") = (" << e2 << ",  " << LimEntry<>::to_string(&lim2, e2.p->v) << '\n';
             if (!e2.w.approximatelyZero()) getVector(e2, c, x, vec, lim2);
 
             cn.returnToCache(c);
@@ -3249,19 +3256,18 @@ namespace dd {
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
             //std::cout << "[vectors approximately equal] start.\n";
             //std::cout.flush();
-        	if (v.size() < w.size()) {
-        		// We demand that w is approximately zero
-        		for (unsigned int i=0; i<w.size(); i++) {
-        			if (!Complex::approximatelyZero(w[i])) return false;
-        		}
-        		return true;
-        	}
-        	else if (w.size() < v.size()){
-        		for (unsigned int i=0; i<v.size(); i++) {
-        			if (!Complex::approximatelyZero(v[i])) return false;
-        		}
-        		return true;
-        	}
+            if (v.size() < w.size()) {
+                // We demand that w is approximately zero
+                for (unsigned int i = 0; i < w.size(); i++) {
+                    if (!Complex::approximatelyZero(w[i])) return false;
+                }
+                return true;
+            } else if (w.size() < v.size()) {
+                for (unsigned int i = 0; i < v.size(); i++) {
+                    if (!Complex::approximatelyZero(v[i])) return false;
+                }
+                return true;
+            }
             if (v.size() != w.size()) return false;
             // find the factor d with which the vectors differ
             std::complex<fp> d = 0;
@@ -3312,7 +3318,7 @@ namespace dd {
         }
 
         void printCVec(const std::vector<std::complex<fp>>& vec) {
-        	Log::log << outputCVec(vec);
+            Log::log << outputCVec(vec);
         }
 
         void printVector(const vEdge& e) {
@@ -3341,18 +3347,18 @@ namespace dd {
         }
 
         CVec multiplyMatrixVector(const CMat mat, const CVec x) {
-        	unsigned int N = std::max(mat.size(), x.size());
-        	CVec y(N, {0.0, 0.0});
-        	if (mat.size() != x.size()) {
-        		return y;
-        	}
-        	for (unsigned int row=0; row<N; row++) {
-        		for (unsigned int col=0; col<N; col++) {
-//        			y[row] += x[col] * mat[col][row];
-        			y[row] += x[col] * mat[row][col]; // Or is this the right order?
-        		}
-        	}
-			return y;
+            unsigned int N = std::max(mat.size(), x.size());
+            CVec         y(N, {0.0, 0.0});
+            if (mat.size() != x.size()) {
+                return y;
+            }
+            for (unsigned int row = 0; row < N; row++) {
+                for (unsigned int col = 0; col < N; col++) {
+                    //        			y[row] += x[col] * mat[col][row];
+                    y[row] += x[col] * mat[row][col]; // Or is this the right order?
+                }
+            }
+            return y;
         }
 
         void printMatrix(const mEdge& e) {
@@ -3372,10 +3378,10 @@ namespace dd {
         }
 
         CMat getMatrix(const mEdge& e) {
-        	if (e.p->v < 0) {
-        		auto mat = CMat(1, CVec(1, {CTEntry::val(e.w.r), CTEntry::val(e.w.i)}));
-        		return mat;
-        	}
+            if (e.p->v < 0) {
+                auto mat = CMat(1, CVec(1, {CTEntry::val(e.w.r), CTEntry::val(e.w.i)}));
+                return mat;
+            }
             const unsigned long long dim = 2ULL << e.p->v;
             // allocate resulting matrix
             auto mat = CMat(dim, CVec(dim, {0.0, 0.0}));
@@ -3456,8 +3462,6 @@ namespace dd {
 
             cn.returnToCache(c);
         }
-
-
 
         void exportAmplitudesRec(const vEdge& edge, std::ostream& oss, const std::string& path, Complex& amplitude, dd::QubitCount level, bool binary = false) {
             if (edge.isTerminal()) {

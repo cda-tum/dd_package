@@ -63,13 +63,16 @@ namespace dd {
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
-            if (entry.trueLim != trueLim) return result;
+            if (!LimEntry<>::Equal(entry.trueLim, trueLim)) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
                 if (dNode::isDensityMatrixNode(entry.result.p->flags) != useDensityMatrix) return result;
             }
             hits++;
+            Log::log << LimEntry<>::to_string(entry.trueLim) << "\n";
+            Log::log << LimEntry<>::to_string(trueLim) << "\n";
+            Log::log << "[ComputeTable] Found hit in compute table!\n";
             return entry.result;
         }
 
