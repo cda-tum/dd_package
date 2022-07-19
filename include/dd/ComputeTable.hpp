@@ -27,9 +27,10 @@ namespace dd {
         ComputeTable() = default;
 
         struct Entry {
-            LeftOperandType  leftOperand;
-            RightOperandType rightOperand;
-            ResultType       result;
+            LeftOperandType   leftOperand;
+            RightOperandType  rightOperand;
+            ResultType        result;
+            LimTable<NUM_QUBITS>::Entry* trueLim = nullptr;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
@@ -44,13 +45,17 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
-            const auto key = hash(leftOperand, rightOperand);
-            table[key]     = {leftOperand, rightOperand, result};
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry *trueLim = {}) {
+            const auto key          = hash(leftOperand, rightOperand);
+            table[key].leftOperand  = leftOperand;
+            table[key].rightOperand = rightOperand;
+            table[key].result       = result;
+            table[key].trueLim      = trueLim;
+            //            table[key]     = {leftOperand, rightOperand, result, trueLim};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry *trueLim = {}) {
             ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
@@ -58,6 +63,7 @@ namespace dd {
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
+            if (entry.trueLim != trueLim) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
@@ -77,8 +83,8 @@ namespace dd {
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
         std::ostream&    printStatistics(std::ostream& os = std::cout) {
-            os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
-            return os;
+               os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
+               return os;
         }
 
     private:
