@@ -1939,26 +1939,26 @@ namespace dd {
             assert(e.p != nullptr);
             LimEntry<> lim2(lim);
             lim2.multiplyBy(e.l);
-            auto e1 = follow2(e, path, lim2);
+
+            const auto op = lim2.getPauliForQubit(e.p->v);
+            lim2.setOperator(e.p->v, 'I');
+
+            auto e1 = follow2(e, path, op);
             return {e1, lim2};
         }
 
         template<class Node>
-        Edge<Node> follow2(const Edge<Node>& e, const short path, LimEntry<> &lim2) {
+        Edge<Node> follow2(const Edge<Node>& e, const short path, pauli_op op) {
             assert(e.p != nullptr);
             Edge<Node> newE = {};
-
-            const auto op = lim2.getQubit(e.p->v);
-            lim2.setOperator(e.p->v, 'I');
-
             switch (op) {
-                case 'I':
+                case pauli_id:
                     Log::log << "[Follow] encountered I ";
                     return e.p->e[path];
-                case 'X':
+                case pauli_x:
                     Log::log << "[Follow] encountered X ";
                     return e.p->e[1 - path];
-                case 'Y':
+                case pauli_y:
                     Log::log << "[Follow] encountered Y ";
                     newE = e.p->e[1 - path];
                     if (path == 0) {
@@ -1967,7 +1967,7 @@ namespace dd {
                         newE.w.multiplyByi(false);
                     }
                     return newE;
-                case 'Z':
+                case pauli_z:
                     Log::log << "[Follow] encountered Z ";
                     if (path == 1) {
                         newE = e.p->e[path];
@@ -2092,6 +2092,9 @@ namespace dd {
 
             CVec                      vectorArg0, vectorArg1, vectorResult, vectorExpected;
             std::array<ResultEdge, N> edge{};
+            const auto op = trueLim1.getPauliForQubit(y.p->v);
+            trueLim1.setOperator(y.p->v, 'I');
+
             for (auto i = 0U; i < ROWS; i++) {
                 for (auto j = 0U; j < COLS; j++) {
                     const auto idx = COLS * i + j;
@@ -2147,13 +2150,14 @@ namespace dd {
                             LimEntry<> lim2;
                             if (!y.isTerminal() && y.p->v == var) {
                                 //e2 = y.p->e[j + COLS * k];
-                                std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
+//                                std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
+                                e2 = follow2(yCopy, j + COLS * k, op);
                             } else {
                                 e2 = yCopy;
                             }
                             //                            makePrintIdent(var);
                             //                            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Calculating: edge[" << std::to_string(idx) << "]" << std::endl;
-                            auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, lim2);
+                            auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim1);
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
