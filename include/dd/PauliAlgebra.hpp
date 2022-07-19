@@ -10,6 +10,7 @@
 #include "LimTable.hpp"
 #include "ComplexNumbers.hpp"
 #include "Log.hpp"
+#include "PauliUtilities.hpp"
 #include <iostream>
 #include <array>
 
@@ -19,7 +20,6 @@
 
 namespace dd {
 
-typedef std::vector<LimEntry<>*> StabilizerGroup;
 
 enum LIMDD_group {
 	QMDD_group,
@@ -27,150 +27,50 @@ enum LIMDD_group {
 	Pauli_group
 };
 
-class Pauli {
-public:
+//namespace Pauli {
 
-    // todo find an appropriate place for this utility function
-    template <std::size_t N, std::size_t M>
-    static void bitsetCopySegment(std::bitset<N>& x, const std::bitset<M> y, unsigned int begin_x, unsigned int begin_y, unsigned int end_y) {
-        assert(end_y <= N && end_y <= M);
-        for (unsigned int i=begin_y; i<end_y; i++) {
-            x.set(i+begin_x-begin_y, y.test(i));
-        }
-    }
+	// TODO write a test
+	// TODO refactor to use recoverElement
+	template<std::size_t NUM_QUBITS>
+	phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
+		if (a == LimEntry<NUM_QUBITS>::noLIM) {
+			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+		}
+		LimEntry<NUM_QUBITS> A(a);
+		LimEntry<NUM_QUBITS> B;
+		for (unsigned int g=0; g<G.size(); g++) {
+			for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+				if (A.paulis.test(i) && G[g]->paulis.test(i)) {
+					A.multiplyBy(G[g]);
+					B.multiplyBy(G[g]);
+					break;
+				}
+			}
+		}
+		return B.getPhase();
+	}
 
-    static phase_t multiplyPhases(phase_t a, phase_t b) {
-    	short x = (short) a;
-    	short y = (short) b;
-    	short xy = ((x & 0x1) ^ (y & 0x1)) | ((x & 0x2) ^ (y & 0x2) ^ ((x & y & 0x1) << 1));
-    	return (phase_t) xy;
-//    	return (phase_t) (((int) a + (int)b) & 0x3);
-    }
+	// TODO implement
+	// TODO write a test
+	template <std::size_t NUM_QUBITS>
+	LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
+		if (a == LimEntry<NUM_QUBITS>::noLIM) {
+			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+		}
+		LimEntry<NUM_QUBITS> A(a);
+		LimEntry<NUM_QUBITS> B;
+		for (unsigned int g=0; g<G.size(); g++) {
+			for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+				if (A.paulis.test(i) && G[g]->paulis.test(i)) {
+					A.multiplyBy(G[g]);
+					B.multiplyBy(G[g]);
+					break;
+				}
+			}
+		}
+		return B;
+	}
 
-    static phase_t getPhaseInverse(phase_t a) {
-    	int A = (int) a;
-    	A = (A & 0x1) | ( ((A&1) << 1) ^ (A&2) );
-    	return (phase_t) A;
-//    	return (4 - (int) a) & 0x3;
-
-    }
-
-    static phase_t getPhaseaMinusB(phase_t a, phase_t b) {
-    	phase_t minb = getPhaseInverse(b);
-    	return (phase_t) ((a + minb) & 0x3);
-    }
-
-    static std::string phaseToString(phase_t a) {
-    	switch(a) {
-    	case phase_t::phase_one:
-    		return "+1";
-    	case phase_t::phase_i:
-    		return "i";
-    	case phase_t::phase_minus_one:
-    		return "-1";
-    	case phase_t::phase_minus_i:
-    		return "-i";
-    	case phase_t::no_phase: ;
-    	}
-		return "(no phase)";
-    }
-
-    // Returns whether the two groups have the same vector of generators
-    // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
-    // even if they have different orders
-    static bool stabilizerGroupsEqual(const StabilizerGroup& G, const StabilizerGroup& H) {
-//        Log::log << "[stabilizerGroupsEqual] start.\n";  Log::log.flush();
-        if (G.size() != H.size()) return false;
-        for (unsigned int i=0; i<G.size(); i++) {
-            if (G[i]->operator!=(*H[i])) return false;
-        }
-//        Log::log << "[stabilizerGroupsEqual] groups are equal.\n"; Log::log.flush();
-        return true;
-    }
-
-    // Returns whether the group G is sorted descending,
-    // i.e., whether all the zeros are in the top right quadrant
-    static bool stabilizerGroupIsSorted(const StabilizerGroup& G) {
-        for (unsigned int i=0; i+1<G.size(); i++) {
-            if (LimEntry<>::leneq(G[i], G[i+1]))
-                return false;
-        }
-        return true;
-    }
-
-    static void printStabilizerGroup(const StabilizerGroup& G) {
-        Log::log << "Stabilizer group (" << G.size() << " elements)\n";
-        for (unsigned int i=0; i<G.size(); i++) {
-            Log::log << LimEntry<>::to_string(G[i]) << Log::endl;
-        }
-    }
-
-    static void printStabilizerGroup(const StabilizerGroup& G, unsigned int nQubits) {
-        Log::log << "Stabilizer group (" << G.size() << " elements) = {";
-        for (unsigned int i=0; i<G.size(); i++) {
-            Log::log << LimEntry<>::to_string(G[i], nQubits) << ", ";
-        }
-        Log::log << "}";
-    }
-
-    template <std::size_t NUM_QUBITS>
-    static void printStabilizerGroup(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        if (G.size() == 0) {
-            Log::log << "  (empty group)\n";
-        }
-        for (unsigned int i=0; i<G.size(); i++) {
-            Log::log << *G[i] << Log::endl; Log::log.flush();
-        }
-    }
-
-    template <std::size_t NUM_QUBITS>
-    static void printKernel(const std::vector<std::bitset<NUM_QUBITS> >& kernel) {
-        for (unsigned int i=0; i<kernel.size(); i++) {
-            for (unsigned int j=0; j<NUM_QUBITS; j++) {
-                Log::log << kernel[i].test(j);
-            }
-            Log::log << '\n';
-        }
-    }
-
-    static std::string groupToString(const StabilizerGroup& G, Qubit nQubits) {
-    	std::stringstream ss;
-        ss << "Group (" << G.size() << " elements) = {";
-        for (unsigned int i=0; i<G.size(); i++) {
-            ss << LimEntry<>::to_string(G[i], nQubits) << ", ";
-        }
-        ss << "}";
-    	return ss.str();
-    }
-
-    static StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
-        StabilizerGroup concat = G;
-        for (unsigned int i=0; i<H.size(); i++) {
-            concat.push_back(H[i]);
-        }
-        return concat;
-    }
-
-//    static StabilizerGroup deepcopy(const StabilizerGroup& G) {
-//        StabilizerGroup copy;
-//        for (unsigned int i=0; i<G.size(); i++) {
-//            copy.push_back(new LimEntry<>(G[i]));
-//        }
-//        return copy;
-//    }
-
-    template <std::size_t NUM_QUBITS>
-    static std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<NUM_QUBITS>*> GI;
-        LimBitset<NUM_QUBITS>* col;
-        for (unsigned int i=0; i<G.size(); i++) {
-            col = new LimBitset<NUM_QUBITS>();
-            col->lim = *G[i];
-            col->bits.set(i, 1);
-            GI.push_back(col);
-        }
-        return GI;
-    }
 
     // Performs Gaussian elimination on G
     // We assume that G is not stored in the LimTable.
@@ -178,7 +78,7 @@ public:
     // Therefore, the LimEntry objects should NOT be stored in the LimTable;
     // todo this algorithm allocates many new LIMs; by modifying in place, less memory can be allocated, and we solve a memory leak
     template <std::size_t NUM_QUBITS>
-    static void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
+    void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -205,7 +105,7 @@ public:
     }
 
     template <std::size_t NUM_QUBITS>
-    static bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
     	for (unsigned int i=0; i<G.size(); i++) {
     		for (unsigned int j=i+1; j<G.size(); j++) {
     			if (!G[i]->lim.commutesWith(&(G[j]->lim))) {
@@ -221,7 +121,7 @@ public:
     // TODO there is a faster version if the group is sorted
     //    (calls to GaussianElimination from getKernel do not sort their group before calling)
     template <std::size_t NUM_QUBITS>
-    static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -269,7 +169,7 @@ public:
     // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
     // todo it is possible to write a faster procedure, if we are allowed to assume that G is sorted
     template <std::size_t NUM_QUBITS>
-    static void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -295,58 +195,11 @@ public:
         }
     }
 
-    // TODO this procedure should reduce the refcount of the LimEntry objects it removes from G
-    //   or should deallocate these objects in some other way
-    template <std::size_t NUM_QUBITS>
-    static void pruneZeroColumns(std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        unsigned int i=0;
-        while (i<G.size()) {
-            if (G[i]->isAllZeroVector()) {
-                // Remove this all-zero vector from the matrix
-                // Step 1: replace it with the last vector in the matrix
-                G[i] = G[G.size()-1];
-                G.pop_back();
-            } else {
-                i++;
-            }
-        }
-    }
-
-    template <std::size_t NUM_QUBITS>
-    static void pruneZeroColumns(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        unsigned int i=0;
-        while (i<G.size()) {
-            if (G[i]->lim.isAllZeroVector()) {
-                // Remove this all-zero vector from the matrix
-                // Step 1: replace it with the last vector in the matrix
-                G[i] = G[G.size()-1];
-                G.pop_back();
-            } else {
-                i++;
-            }
-        }
-    }
-
-    template <std::size_t NUM_QUBITS>
-    static void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        unsigned int i=0;
-        while (i<G.size()) {
-            if (G[i]->lim.isIdentityModuloPhase()) {
-                // Remove this all-zero vector from the matrix
-                // Step 1: replace it with the last vector in the matrix
-                G[i] = G[G.size()-1];
-                G.pop_back();
-            } else {
-                i++;
-            }
-        }
-    }
-
     // Puts the stabilizer group in column echelon form; specifically:
     //   1. performs Gaussian elimination on G
     //   2. prunes the all-zero columns
     //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
-    static void toColumnEchelonForm(StabilizerGroup& G) {
+    void toColumnEchelonForm(StabilizerGroup& G) {
 //        Log::log << "[toColumnEchelonForm] Before CEF, group is:\n"; Log::log.flush();
 //        printStabilizerGroup(G);
         GaussianElimination(G);
@@ -360,7 +213,7 @@ public:
     }
 
     template <std::size_t NUM_QUBITS>
-    static void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
 //        Log::log << "[toColumnEchelonForm] start, |G| = " << G.size() << "\n";
         GaussianElimination(G);
         pruneZeroColumns(G);
@@ -368,7 +221,7 @@ public:
     }
 
     template <std::size_t NUM_QUBITS>
-    static void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>* >& G) {
+    void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>* >& G) {
         GaussianEliminationModuloPhase(G);
         pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
@@ -377,7 +230,7 @@ public:
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+    LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
 //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) return new LimEntry<NUM_QUBITS>(y);
@@ -401,7 +254,7 @@ public:
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
     template <std::size_t NUM_QUBITS>
-    static LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
+    LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
 //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
         LimBitset<NUM_QUBITS> y(x);
         if (G.size() == 0) return y;
@@ -429,7 +282,7 @@ public:
     //   The decomposition that is found, is recorded in the bitset 'indicator'
     // todo this algorithm can be sped up if the group G is sorted
     template <std::size_t NUM_QUBITS>
-    static void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
+    void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
 //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
 //        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         LimEntry<NUM_QUBITS> y(x);
@@ -461,7 +314,7 @@ public:
     //   returns the product of the indicated elements of G
     //   e.g., with G={ZIZ, IZZ, IXY} and indicator = '110', we return ZZI
     template<std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
+    LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
         LimEntry<NUM_QUBITS>* g = LimEntry<NUM_QUBITS>::getIdentityOperator();
         assert(G.size() <= NUM_QUBITS);
         for (unsigned int i=0; i<G.size(); i++) {
@@ -474,7 +327,7 @@ public:
 
     // TODO free / deallocate G_Id and its elements
     template <std::size_t NUM_QUBITS>
-    static std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+    std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
         GaussianElimination(G_Id);
 //        Log::log << "[getKernelZ] after Gaussian elimination, G_Id:\n";
@@ -494,7 +347,7 @@ public:
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
     // TODO free / deallocate G_Id and its elements
     template <std::size_t NUM_QUBITS>
-    static std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+    std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
         GaussianEliminationModuloPhase(G_Id);
         std::vector<std::bitset<NUM_QUBITS> > kernel;
@@ -509,7 +362,7 @@ public:
 
     // Given two groups G, H, computes the intersection, <G> intersect <H>
     // TODO refactor with NUM_QUBITS template parameter
-    static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
+    StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup intersection;
         StabilizerGroup GH = groupConcatenate(G, H);
         std::vector<std::bitset<dd::NUM_QUBITS> > kernel = getKernelZ(GH);
@@ -528,7 +381,7 @@ public:
     //    J may contain elements that are equal up to phase
     // todo verify: does this method work for Pauli groups? it certainly works for Z groups
     // TODO refactor with template parameter NUM_QUBITS
-    static StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
+    StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
 //        Log::log << "[intersectGroups mod phase] start  |G|=" << G.size() << "  |H| = " << H.size() << Log::endl;
 //        Log::log << "[intersectGroups mod phase] Group G:\n";
 //        printStabilizerGroup(G);
@@ -549,7 +402,7 @@ public:
         return intersection;
     }
 
-    static StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
+    StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
     	StabilizerGroup intersection = intersectGroupsModuloPhase(G, H);
     	// Remove all elements from intersection where the G-phase is not equal to the H-phase
     	unsigned int s = intersection.size();
@@ -569,7 +422,7 @@ public:
         return intersection;
     }
 
-    static StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
+    StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
     	StabilizerGroup H;
     	for (unsigned int i=0; i<G.size(); i++) {
     		H.push_back(new LimEntry<>(G[i]));
@@ -581,11 +434,11 @@ public:
     }
 
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
     	// How do I do this?
     	// it's just modulo F2
-    	std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
-    	std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
+    	std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H); // TODO memory leak
+    	std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH); // TODO memory leak
     	toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition;   // decomposition of 'a'
@@ -598,7 +451,7 @@ public:
         LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
 //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS>* a_H = getProductOfElements(H, decomposition_H);
-        LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
+        LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);  // TODO memory leak
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             return LimEntry<NUM_QUBITS>::noLIM;
         }
@@ -610,7 +463,7 @@ public:
     // Note that '<G>' is a group, and '<H>+a' is a coset
     // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
 //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
         std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
         assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
@@ -676,54 +529,12 @@ public:
         return LimEntry<NUM_QUBITS>::noLIM;
     }
 
-	// TODO write a test
-    // TODO refactor to use recoverElement
-    template<std::size_t NUM_QUBITS>
-    static phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
-    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
-    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
-    	}
-    	LimEntry<NUM_QUBITS> A(a);
-    	LimEntry<NUM_QUBITS> B;
-    	for (unsigned int g=0; g<G.size(); g++) {
-    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
-    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
-    				A.multiplyBy(G[g]);
-    				B.multiplyBy(G[g]);
-    				break;
-    			}
-    		}
-    	}
-    	return B.getPhase();
-    }
-
-    // TODO implement
-    // TODO write a test
-    template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
-    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
-    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
-    	}
-    	LimEntry<NUM_QUBITS> A(a);
-    	LimEntry<NUM_QUBITS> B;
-    	for (unsigned int g=0; g<G.size(); g++) {
-    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
-    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
-    				A.multiplyBy(G[g]);
-    				B.multiplyBy(G[g]);
-    				break;
-    			}
-    		}
-    	}
-    	return B;
-    }
-
     // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
     // Finds an element in the set G intersect lambda a H b,
     // or returns LimEntry::noLIM, if this set is empty
     // TODO refactor to allocate less dynamic memory
     template <std::size_t NUM_QUBITS>
-    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, Qubit nQubits = 5) {
+    LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, Qubit nQubits = 5) {
     	if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
@@ -757,7 +568,7 @@ public:
 
     // We assume that only vNodes are passed
     // todo deallocate minus, m
-    static StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
+    StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
         //empty
         Edge<vNode> low, high;
         low  = node.e[0];
@@ -824,7 +635,7 @@ public:
     // Assumes that the low edges of u and v have an Identity LIM
     // TODO should we add assertions that u and v do not represent zero vectors?
     // TODO this function does not take into account the different phases... but maybe it doesn't need to...
-    static LimEntry<>* getIsomorphismZ(const vNode* u, const vNode* v) {
+    LimEntry<>* getIsomorphismZ(const vNode* u, const vNode* v) {
         assert( u != nullptr );
         assert( v != nullptr );
 //        Log::log << "[getIsomorphismZ] Start.\n";
@@ -920,7 +731,7 @@ public:
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
-    static LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn) {
+    LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn) {
         assert( u != nullptr );
         assert( v != nullptr );
 //        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
@@ -1023,7 +834,6 @@ public:
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             if (uLow.p == uHigh.p) {
             	// TODO cover this case
-            	// Then the high weights can be uHigh = 1 / vHigh or uHigh = - 1 / vHigh
             }
 
             // Step 1.2: check if the weights satisfy uHigh = -1 * vHigh
@@ -1090,7 +900,7 @@ public:
 //    }
 
     // Choose the label on the High edge, in the Z group
-    static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
+    LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
         // We assert that the LIM has phase +1  (we expect normalizeLIMDD to guarantee this)
         assert(LimEntry<>::getPhase(vLabel) == phase_t::phase_one);
 //        Log::log << "[highLabelZWeight] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; Log::log.flush();
@@ -1117,7 +927,7 @@ public:
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    static LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight) {
+    LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight) {
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	LimEntry<>* newHighLabel;
     	if (u == v) {
@@ -1154,35 +964,15 @@ public:
     	return newHighLabel;
     }
 
-    static LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
-    	Log::log << "[highLabelZ] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
-        throw std::exception();
-    }
-
-    static LimEntry<>* highLabelPauli(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
-        Log::log << "[highLabelPauli] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
-        throw std::exception();
-    }
-
-    static LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
-        Log::log << "[getIsomorphismZ] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
-        throw std::exception();
-    }
-
-    static LimEntry<>* getIsomorphismPauli(const mNode* u, const mNode* v) {
-        Log::log << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
-        throw std::exception();
-    }
-
     // Returns the lexicographically smallest LIM R such that R * |v> == lim * |v>
     // This is useful when a canonical edge is needed for a cache entry
-    // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
-    //    make sure the left and right-handed multiplications go well
-    static LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
+    // TODO do we need to left-multiply in GramSchmidt, or right-multiply?
+    //   I think right-multiply, but we should check this
+    LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
     	return GramSchmidt(v->limVector, lim);
     }
 
-};
+//}
 
 
 

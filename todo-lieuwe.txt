@@ -1,10 +1,5 @@
 ====    TODO
 
-Talk to Thomas and Jurgen about:
-    - large groups, very large groups
-Talk to Stefan about:
-    - better variable reordering strategies
-
 Documentation:
     HighLabelpauli
     getStabilizerGeneratorSet
@@ -20,14 +15,46 @@ add Pauli-LIMDD functionality to
     ComputeTable of multiplyMatrix
     make inventory of places where LIMDD functionality needs to be added in order to support simulation
 
+bool isTower()
+
 Remove memory leaks
     in PauliAlgebra
         make inventory of memory leaks
     in normalizeLIMDD
 
--- TESTS
+--  INVENTORY OF MEMORY LEAKS
 
-All 'simpleCircuit' tests pass
+in normalizeLIMDDPauli:
+    via lots of LimEntry<>::multiply calls
+    many complex values are not returned to the cache
+in constuctStabilizerGeneratorSet:
+in getIsomorphismPauli, :
+    maybe return a LimEntry<> by value?, or give that LimEntry<> to the function by value, and use a separate bit to indicate whether the isomorphism was found?
+in getHighlabel:
+    return a LimEntry<> by value
+in constructStabilizerGeneratorSetPauli:
+    ?
+in makeDDNode:
+    (done) put the LIMs of the stabilizer generator group in the LimTable
+    delete the LIMs
+    construct the stabilizer group ONLY if it was not previously computed
+getCosetIntersectionElementPauli
+    LimEntry<>::multiply; solution is to use local LIMs
+getCosetIntersectionModuloPhase:
+    return a LimEntry<> by value
+groupConcatenate
+    return std::vector<LimEntry<> > instead of vector<LimEntry<>*>
+appendIdentityMatrixBitset:
+    return vector<LimBitset> instead of vector<LimBitset*>
+getKernelModuloPhase:
+    do everything by value
+getProductofElements:
+    return entry by value
+GaussianElimination:
+    do multiplyBy instead of Limentry<>::multiply
+
+
+-- TESTS
 
 fuzz more circuits:
 nqubits = 2 ... 5
@@ -45,6 +72,10 @@ write test for recoverPhase(G, a)
 write test for recoverElement
 
 -- REFACTORING (low priority)
+
+in new file PauliUtilities.hpp,
+    put the easy Pauli algebra stuff, like printing groups,
+    copying bitset segments, stuff with phases
 
 refactor LimEntry<>::setOperator so that one function is called,
     instead of two different setOperators
@@ -86,6 +117,13 @@ rewrite GaussianElimination so that it takes into account the phase
 
 -- LOW PRIORITY
 
+refactor CVec utilities into a separate file
+    print
+    is zero
+    add
+    multiply(CMat, CVec)
+put sanity checks in a separate file
+
 make Hamming weight circuits
 
 getLIMDDFromVector() turn a ket-vector into a LIMDD
@@ -103,6 +141,13 @@ in tests, call isIsomorphism instead of defining a handwritten isomorphism
 
 ====    DONE
 
+
+All 'simpleCircuit' tests pass
+
+Talk to Thomas and Jurgen about:
+    - large groups, very large groups
+Talk to Stefan about:
+    - better variable reordering strategies
 
 incorporate weights into the getIsomorphismPauli procedure
     Use a cached weight in getHighLabelPauli
