@@ -1935,55 +1935,46 @@ namespace dd {
         }
 
         template<class Node>
-        std::pair<Edge<Node>, LimEntry<>> follow(const Edge<Node>& e, const short path, const LimEntry<> lim, bool verbose = false) {
+        std::pair<Edge<Node>, LimEntry<>> follow(const Edge<Node>& e, const short path, LimEntry<> lim) {
             assert(e.p != nullptr);
-            //            assert(e.p->flags == 0);
             LimEntry<> lim2(lim);
             lim2.multiplyBy(e.l);
+            auto e1 = follow2(e, path, lim2);
+            return {e1, lim2};
+        }
 
-            if (verbose) {
-                //                makePrintIdent(e.p->v);
-                //                std::cout << "e.l: " << LimEntry<NUM_QUBITS>::to_string(e.l) << std::endl;
-                //                makePrintIdent(e.p->v);
-                //                std::cout << "lim: " << LimEntry<NUM_QUBITS>::to_string(&lim) << std::endl;
-                //                makePrintIdent(e.p->v);
-                //                std::cout << "lim2: " << LimEntry<NUM_QUBITS>::to_string(&lim2) << std::endl;
-            }
-
+        template<class Node>
+        Edge<Node> follow2(const Edge<Node>& e, const short path, LimEntry<> &lim2) {
+            assert(e.p != nullptr);
             Edge<Node> newE = {};
-            //            auto       tmp  = LimEntry<>::getPhase(&lim2);
 
             const auto op = lim2.getQubit(e.p->v);
             lim2.setOperator(e.p->v, 'I');
 
-            //            auto tmp2 = LimEntry<>::getPhase(&lim2);
-
             switch (op) {
                 case 'I':
-                    //                    Log::log << "[Follow] encountered I ";
-                    return {e.p->e[path], lim2};
+                    Log::log << "[Follow] encountered I ";
+                    return e.p->e[path];
                 case 'X':
-                    //                    Log::log << "[Follow] encountered X ";
-                    return {e.p->e[1 - path], lim2};
+                    Log::log << "[Follow] encountered X ";
+                    return e.p->e[1 - path];
                 case 'Y':
-                    //                    Log::log << "[Follow] encountered Y ";
+                    Log::log << "[Follow] encountered Y ";
                     newE = e.p->e[1 - path];
                     if (path == 0) {
                         newE.w.multiplyByMinusi(false);
                     } else {
                         newE.w.multiplyByi(false);
                     }
-                    //                    newE.w.multiplyByPhase(LimEntry<>::getPhase(&lim2));
-                    //                    lim2.setPhase(phase_one);
-                    return {newE, lim2};
+                    return newE;
                 case 'Z':
-                    //                    Log::log << "[Follow] encountered Z ";
+                    Log::log << "[Follow] encountered Z ";
                     if (path == 1) {
                         newE = e.p->e[path];
                         newE.w.multiplyByMinusOne(false);
-                        return {newE, lim2};
+                        return newE;
                     } else {
-                        return {e.p->e[path], lim2};
+                        return e.p->e[path];
                     }
                 default:
                     throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
@@ -2009,7 +2000,6 @@ namespace dd {
 
             LimEntry<> trueLim1 = lim;
             trueLim1.multiplyBy(y.l);
-            auto trueLim = LimTable().lookup(trueLim1);
 
             CMat mat_x       = getMatrix(x);
             CVec vec_y       = getVector(y, var, lim);
@@ -2024,7 +2014,7 @@ namespace dd {
 
             if (var == start - 1) {
                 auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim->getPhase());
+                newWeight.multiplyByPhase(trueLim1.getPhase());
                 ComplexNumbers::mul(newWeight, x.w, newWeight);
                 return ResultEdge::terminal(newWeight);
             }
@@ -2033,6 +2023,8 @@ namespace dd {
             xCopy.w    = Complex::one;
             auto yCopy = y;
             yCopy.w    = Complex::one;
+
+            auto trueLim = LimTable().lookup(trueLim1);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLim);
