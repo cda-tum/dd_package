@@ -34,6 +34,7 @@ target_sources(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexValue.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComputeTable.hpp>
+        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComputeTableLIM.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/LimTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Control.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Definitions.hpp>
