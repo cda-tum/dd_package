@@ -1953,13 +1953,13 @@ namespace dd {
             Edge<Node> newE = {};
             switch (op) {
                 case pauli_id:
-                    Log::log << "[Follow] encountered I ";
+                    Log::log << "[Follow] encountered I \n";
                     return e.p->e[path];
                 case pauli_x:
-                    Log::log << "[Follow] encountered X ";
+                    Log::log << "[Follow] encountered X \n";
                     return e.p->e[1 - path];
                 case pauli_y:
-                    Log::log << "[Follow] encountered Y ";
+                    Log::log << "[Follow] encountered Y \n";
                     newE = e.p->e[1 - path];
                     if (path == 0) {
                         newE.w.multiplyByMinusi(false);
@@ -1968,7 +1968,7 @@ namespace dd {
                     }
                     return newE;
                 case pauli_z:
-                    Log::log << "[Follow] encountered Z ";
+                    Log::log << "[Follow] encountered Z \n";
                     if (path == 1) {
                         newE = e.p->e[path];
                         newE.w.multiplyByMinusOne(false);
@@ -1977,7 +1977,7 @@ namespace dd {
                         return e.p->e[path];
                     }
                 default:
-                    throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
+                    throw std::runtime_error("[Follow] Encountered unknown group element!\n");
             }
         }
 
@@ -2024,7 +2024,7 @@ namespace dd {
             auto yCopy = y;
             yCopy.w    = Complex::one;
 
-            auto trueLim = LimTable().lookup(trueLim1);
+            auto trueLim = limTable.lookup(trueLim1);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLim);
@@ -2033,7 +2033,7 @@ namespace dd {
                 if (r.w.approximatelyZero()) {
                     return ResultEdge::zero;
                 } else {
-                    auto e = ResultEdge{r.p, cn.getCached(r.w), nullptr};
+                    auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
                     if (e.w.approximatelyZero()) {
@@ -2092,7 +2092,7 @@ namespace dd {
 
             CVec                      vectorArg0, vectorArg1, vectorResult, vectorExpected;
             std::array<ResultEdge, N> edge{};
-            const auto op = trueLim1.getPauliForQubit(y.p->v);
+            const auto                op = trueLim1.getPauliForQubit(y.p->v);
             trueLim1.setOperator(y.p->v, 'I');
 
             for (auto i = 0U; i < ROWS; i++) {
@@ -2150,7 +2150,7 @@ namespace dd {
                             LimEntry<> lim2;
                             if (!y.isTerminal() && y.p->v == var) {
                                 //e2 = y.p->e[j + COLS * k];
-//                                std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
+                                //                                std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
                                 e2 = follow2(yCopy, j + COLS * k, op);
                             } else {
                                 e2 = yCopy;
@@ -2187,9 +2187,8 @@ namespace dd {
                     }
                 }
             }
-
-            //			export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
-            //			export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
+            //            export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
+            //            export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
 
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 CVec vece0 = getVector(edge[0], var - 1);
@@ -2215,9 +2214,11 @@ namespace dd {
 
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
             //                std::cout << "Caching error detected in mul" << std::endl;
+            //            } else {
+            //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            //            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLim);
+            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLim);
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 

@@ -27,9 +27,9 @@ namespace dd {
         ComputeTable() = default;
 
         struct Entry {
-            LeftOperandType   leftOperand;
-            RightOperandType  rightOperand;
-            ResultType        result;
+            LeftOperandType              leftOperand;
+            RightOperandType             rightOperand;
+            ResultType                   result;
             LimTable<NUM_QUBITS>::Entry* trueLim = nullptr;
         };
 
@@ -45,34 +45,41 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry *trueLim = {}) {
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry* trueLim = {}) {
             const auto key          = hash(leftOperand, rightOperand);
             table[key].leftOperand  = leftOperand;
             table[key].rightOperand = rightOperand;
             table[key].result       = result;
             table[key].trueLim      = trueLim;
             //            table[key]     = {leftOperand, rightOperand, result, trueLim};
+
+            Log::log << "[ComputeTable] Inserting (key=" << std::to_string(key)
+                     << ") rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
+                     << " and trueLim=" << LimEntry<>::to_string(trueLim)
+                     << "\n";
+
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry *trueLim = {}) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry* trueLim = {}) {
             ResultType result{};
             lookups++;
-            const auto key   = hash(leftOperand, rightOperand);
+            const auto key   = hash(leftOperand, rightOperand); //todo use lim for calculating hash
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
-            if (!LimEntry<>::Equal(entry.trueLim, trueLim)) return result;
+            if (entry.trueLim != trueLim) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
                 if (dNode::isDensityMatrixNode(entry.result.p->flags) != useDensityMatrix) return result;
             }
             hits++;
-            Log::log << LimEntry<>::to_string(entry.trueLim) << "\n";
-            Log::log << LimEntry<>::to_string(trueLim) << "\n";
-            Log::log << "[ComputeTable] Found hit in compute table!\n";
+            Log::log << "[ComputeTable] Lookup hit (key=" << std::to_string(key)
+                     << ") rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
+                     << " and trueLim=" << LimEntry<>::to_string(trueLim)
+                     << "\n";
             return entry.result;
         }
 
