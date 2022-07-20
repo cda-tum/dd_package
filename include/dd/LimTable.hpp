@@ -663,6 +663,15 @@ namespace dd {
         };
         ~LimTable() = default;
 
+        static std::size_t hash(const Entry *a) {
+            if (a != nullptr){
+                return hash(a->paulis);
+            } else {
+                return hash(PauliBitSet{});
+            }
+        }
+
+
         static std::size_t hash(const Entry& a) {
             return hash(a.paulis);
         }

@@ -2024,7 +2024,7 @@ namespace dd {
             auto yCopy = y;
             yCopy.w    = Complex::one;
 
-            auto trueLim = limTable.lookup(trueLim1);
+            const auto trueLim = limTable.lookup(trueLim1);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLim);

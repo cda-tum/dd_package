@@ -35,10 +35,12 @@ namespace dd {
 
         static constexpr std::size_t MASK = NBUCKET - 1;
 
-        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand) {
-            const auto h1   = std::hash<LeftOperandType>{}(leftOperand);
-            const auto h2   = std::hash<RightOperandType>{}(rightOperand);
-            const auto hash = dd::combineHash(h1, h2);
+        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const LimTable<>::Entry* trueLim) {
+            const auto h1    = std::hash<LeftOperandType>{}(leftOperand);
+            const auto h2    = std::hash<RightOperandType>{}(rightOperand);
+            const auto h3    = LimTable<>::hash(trueLim);
+            const auto h4    = dd::combineHash(h1, h2);
+            const auto hash = dd::combineHash(h4, h3);
             return hash & MASK;
         }
 
@@ -46,25 +48,20 @@ namespace dd {
         [[nodiscard]] const auto& getTable() const { return table; }
 
         void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry* trueLim = {}) {
-            const auto key          = hash(leftOperand, rightOperand);
-            table[key].leftOperand  = leftOperand;
-            table[key].rightOperand = rightOperand;
-            table[key].result       = result;
-            table[key].trueLim      = trueLim;
-            //            table[key]     = {leftOperand, rightOperand, result, trueLim};
+            const auto key = hash(leftOperand, rightOperand, trueLim);
+            table[key]     = {leftOperand, rightOperand, result, trueLim};
 
             Log::log << "[ComputeTable] Inserting (key=" << std::to_string(key)
                      << ") rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
                      << " and trueLim=" << LimEntry<>::to_string(trueLim)
                      << "\n";
-
             ++count;
         }
 
         ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry* trueLim = {}) {
             ResultType result{};
             lookups++;
-            const auto key   = hash(leftOperand, rightOperand); //todo use lim for calculating hash
+            const auto key   = hash(leftOperand, rightOperand, trueLim);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
             if (entry.leftOperand != leftOperand) return result;
