@@ -12,6 +12,7 @@
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "ComputeTable.hpp"
+#include "ComputeTableLim.hpp"
 #include "Control.hpp"
 #include "Definitions.hpp"
 #include "DensityNoiseTable.hpp"
@@ -1536,9 +1537,9 @@ namespace dd {
         /// Addition
         ///
     public:
-        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
-        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
+        ComputeTableTwoLim<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
+        ComputeTableTwoLim<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
+        ComputeTableTwoLim<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -1644,13 +1645,18 @@ namespace dd {
                 }
             }
 
+            const auto opX = trueLimX.getPauliForQubit(x.p->v);
+            trueLimX.setOperator(x.p->v, 'I');
+
+            const auto opY = trueLimY.getPauliForQubit(y.p->v);
+            trueLimY.setOperator(y.p->v, 'I');
+
             constexpr std::size_t     N = std::tuple_size_v<decltype(x.p->e)>;
             std::array<Edge<Node>, N> edge{};
             for (auto i = 0U; i < N; i++) {
                 Edge<Node> e1{};
-                LimEntry<> limX2;
                 if (!x.isTerminal() && x.p->v == w) {
-                    std::tie(e1, limX2) = follow(x, i, limX); //todo; do I need to create copies of the nodes?
+                    e1 = follow2(x, i, opX);
                     //                    e1 = x.p->e[i];
 
                     if (e1.w != Complex::zero) {
@@ -1663,10 +1669,9 @@ namespace dd {
                     }
                 }
                 Edge<Node> e2{};
-                LimEntry<> limY2;
                 if (!y.isTerminal() && y.p->v == w) {
                     //e2 = y.p->e[i];
-                    std::tie(e2, limY2) = follow(y, i, limY);
+                    e2 = follow2(y, i, opY);
 
                     if (e2.w != Complex::zero) {
                         e2.w = cn.mulCached(e2.w, y.w);
@@ -1680,7 +1685,7 @@ namespace dd {
 
                 if constexpr (std::is_same_v<Node, dNode>) {
                     dEdge::applyDmChangesToEdges(e1, e2);
-                    edge[i] = add2(e1, e2, limX2, limY2);
+                    edge[i] = add2(e1, e2, trueLimX,trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
                     //                    std::cout << "e1.l: " << LimEntry<NUM_QUBITS>::to_string(e1.l) << std::endl;
@@ -1688,11 +1693,9 @@ namespace dd {
                     //                    export2Dot(e1, "e1.dot", true, true, false, false, false);
                     //                    export2Dot(e2, "e2.dot", true, true, false, false, false);
                     //                	Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
-                    edge[i] = add2(e1, e2, limX2, limY2);
+                    edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     //                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
                     //                    export2Dot(edge[i], "ei.dot", true, true, false, false, false);
-                    unfollow(x, i, limX2);
-                    unfollow(y, i, limY2);
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1817,9 +1820,9 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
-        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
-        ComputeTable<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
+        ComputeTableOneLim<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
+        ComputeTableOneLim<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
+        ComputeTableOneLim<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
 
         template<class LeftOperandNode, class RightOperandNode>
         [[nodiscard]] auto& getMultiplicationComputeTable() {
