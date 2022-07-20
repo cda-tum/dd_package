@@ -1571,17 +1571,16 @@ namespace dd {
         }
 
     public:
-        long mulCallCounter = 0;
+        long addCallCounter = 0;
         template<class Node>
         Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
-            // TODO limdd
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
 
             LimEntry<> trueLimY = limY;
             trueLimY.multiplyBy(y.l);
 
-            [[maybe_unused]] auto tmpMulCallCounter = ++mulCallCounter;
+            [[maybe_unused]] auto tmpAddCallCounter = ++addCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -1625,13 +1624,18 @@ namespace dd {
             }
 
             auto& computeTable = getAddComputeTable<Node>();
-            auto  r            = computeTable.lookup({x.p, x.w, x.l}, {y.p, y.w, y.l});
+
+            const auto trueLimXTable = limTable.lookup(trueLimX);
+            const auto trueLimYTable = limTable.lookup(trueLimY);
+
+            auto r = computeTable.lookup({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable});
+
             //           if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
-                    return {r.p, cn.getCached(r.w), nullptr};
+                    return {r.p, cn.getCached(r.w), r.l};
                 }
             }
 
@@ -1685,17 +1689,15 @@ namespace dd {
 
                 if constexpr (std::is_same_v<Node, dNode>) {
                     dEdge::applyDmChangesToEdges(e1, e2);
-                    edge[i] = add2(e1, e2, trueLimX,trueLimY);
+                    edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    //                    std::cout << "e1.l: " << LimEntry<NUM_QUBITS>::to_string(e1.l) << std::endl;
-                    //                    std::cout << "e2.l: " << LimEntry<NUM_QUBITS>::to_string(e2.l) << std::endl;
-                    //                    export2Dot(e1, "e1.dot", true, true, false, false, false);
-                    //                    export2Dot(e2, "e2.dot", true, true, false, false, false);
-                    //                	Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
+                    //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
+                    //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
+                    //                    Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     //                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
-                    //                    export2Dot(edge[i], "ei.dot", true, true, false, false, false);
+                    //                    export2Dot(edge[i], "ei.dot", true, true, false, false, true);
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1707,9 +1709,11 @@ namespace dd {
                 }
             }
 
-            //            export2Dot(edge[0], "e1.dot", true, true, false, false, false);
-            //            export2Dot(edge[1], "e2.dot", true, true, false, false, false);
+            //            export2Dot(edge[0], "e1.dot", true, true, false, false, true);
+            //            export2Dot(edge[1], "e2.dot", true, true, false, false, true);
             auto e = makeDDNode(w, edge, true);
+
+            //            export2Dot(e, "e3.dot", true, true, false, false, true);
 
             //            Log::log << "[add2] computing vector x.\n";
             CVec vectorArg0 = getVector(x, w, limX);
@@ -1741,7 +1745,7 @@ namespace dd {
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
-            //computeTable.insert({x.p, x.w, x.l}, {y.p, y.w, y.l}, {e.p, e.w, e.l});
+            computeTable.insert({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable}, {e.p, e.w, e.l});
             return e;
         }
 
@@ -1956,13 +1960,13 @@ namespace dd {
             Edge<Node> newE = {};
             switch (op) {
                 case pauli_id:
-                    Log::log << "[Follow] encountered I \n";
+                    //                    Log::log << "[Follow] encountered I \n";
                     return e.p->e[path];
                 case pauli_x:
-                    Log::log << "[Follow] encountered X \n";
+                    //                    Log::log << "[Follow] encountered X \n";
                     return e.p->e[1 - path];
                 case pauli_y:
-                    Log::log << "[Follow] encountered Y \n";
+                    //                    Log::log << "[Follow] encountered Y \n";
                     newE = e.p->e[1 - path];
                     if (path == 0) {
                         newE.w.multiplyByMinusi(false);
@@ -1971,7 +1975,7 @@ namespace dd {
                     }
                     return newE;
                 case pauli_z:
-                    Log::log << "[Follow] encountered Z \n";
+                    //                    Log::log << "[Follow] encountered Z \n";
                     if (path == 1) {
                         newE = e.p->e[path];
                         newE.w.multiplyByMinusOne(false);
@@ -2001,15 +2005,15 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
-            LimEntry<> trueLim1 = lim;
-            trueLim1.multiplyBy(y.l);
+            LimEntry<> trueLim = lim;
+            trueLim.multiplyBy(y.l);
 
             CMat mat_x       = getMatrix(x);
             CVec vec_y       = getVector(y, var, lim);
             CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 
             //            makePrintIdent(var);
-            //            std::cout << "trueLim: " << LimEntry<NUM_QUBITS>::to_string(&trueLim) << std::endl;
+            //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
 
             if (x.w.exactlyZero() || y.w.exactlyZero()) {
                 return ResultEdge::zero;
@@ -2017,7 +2021,7 @@ namespace dd {
 
             if (var == start - 1) {
                 auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim1.getPhase());
+                newWeight.multiplyByPhase(trueLim.getPhase());
                 ComplexNumbers::mul(newWeight, x.w, newWeight);
                 return ResultEdge::terminal(newWeight);
             }
@@ -2027,10 +2031,10 @@ namespace dd {
             auto yCopy = y;
             yCopy.w    = Complex::one;
 
-            const auto trueLim = limTable.lookup(trueLim1);
+            const auto trueLimTable = limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLim);
+            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLimTable);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -2095,8 +2099,8 @@ namespace dd {
 
             CVec                      vectorArg0, vectorArg1, vectorResult, vectorExpected;
             std::array<ResultEdge, N> edge{};
-            const auto                op = trueLim1.getPauliForQubit(y.p->v);
-            trueLim1.setOperator(y.p->v, 'I');
+            const auto                op = trueLim.getPauliForQubit(y.p->v);
+            trueLim.setOperator(y.p->v, 'I');
 
             for (auto i = 0U; i < ROWS; i++) {
                 for (auto j = 0U; j < COLS; j++) {
@@ -2160,7 +2164,7 @@ namespace dd {
                             }
                             //                            makePrintIdent(var);
                             //                            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Calculating: edge[" << std::to_string(idx) << "]" << std::endl;
-                            auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim1);
+                            auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim);
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
@@ -2221,7 +2225,7 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLim);
+            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLimTable);
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
