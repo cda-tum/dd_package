@@ -569,8 +569,9 @@ namespace dd {
             Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
             vNode       oldNode            = *(r.p); // make a copy of the old node
             Complex     highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
-            LimEntry<>* higLimTemp        = highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp); // TODO memory leak; delete highLimTemp
-            r.p->e[1].l                    = limTable.lookup(*higLimTemp);
+            LimEntry<>  higLimTemp;
+            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, higLimTemp); // TODO memory leak; delete highLimTemp
+            r.p->e[1].l                    = limTable.lookup(higLimTemp);
             limTable.incRef(r.p->e[1].l);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
 			cn.returnToCache(highEdgeWeightTemp);   // TODO RESOLVED return to cache. Uncommenting this line gives an error

@@ -926,46 +926,38 @@ enum LIMDD_group {
     }
 
     // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
-    // Sets the
+    // Sets the object 'highLabel' to the new label
     // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    LimEntry<>* highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight) {
+    void highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, LimEntry<>& highLabel) {
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
-    	LimEntry<>* newHighLabel;
     	if (u == v) {
     		Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
-    		newHighLabel = GramSchmidt(u->limVector, vLabel);
-        	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
-        	newHighLabel->setPhase(phase_t::phase_one);
-
+    		highLabel = *GramSchmidt(u->limVector, vLabel);
+        	weight.multiplyByPhase(highLabel.getPhase());
+        	Log::log << "[highLabelPauli] case u = v; canonical lim is " << LimEntry<>::to_string(&highLabel, u->v) << " so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
+        	highLabel.setPhase(phase_t::phase_one);
     		if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
     			weight.multiplyByMinusOne(true);
     			Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
     		}
-//    		fp norm = ComplexNumbers::mag2(weight);
-//    		if (norm > 1) {
-//    			ComplexNumbers::div(weight, Complex::one, weight);
-//    		}
     	}
     	else {
     		Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
     		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
     		toColumnEchelonForm(GH);
-    		newHighLabel = GramSchmidt(GH, vLabel);
-        	weight.multiplyByPhase(newHighLabel->getPhase());
-        	Log::log << "[highLabelPauli] Found canonical label: " << LimEntry<>::to_string(newHighLabel, u->v) << ", so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << weight << '\n';
-        	newHighLabel->setPhase(phase_t::phase_one);
+    		highLabel = *GramSchmidt(GH, vLabel);
+        	weight.multiplyByPhase(highLabel.getPhase());
+        	Log::log << "[highLabelPauli] Found canonical label: " << LimEntry<>::to_string(&highLabel, u->v) << ", so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
+        	highLabel.setPhase(phase_t::phase_one);
     		if (weight.lexSmallerThanxMinusOne()) {
     			Log::log << "[highLabelPauli] before multiplication by -1 for canonicity, weight = " << weight << "\n";
     			weight.multiplyByMinusOne(true);
     			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << weight << ".\n";
     		}
     	}
-
-    	return newHighLabel;
     }
 
     // Returns the lexicographically smallest LIM R such that R * |v> == lim * |v>

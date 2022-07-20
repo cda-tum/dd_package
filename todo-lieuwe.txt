@@ -24,11 +24,13 @@ Remove memory leaks
 
 in normalizeLIMDDPauli:
     (done) via lots of LimEntry<>::multiply calls
+    - use leftMultiplyBy instead of LimEntry<>::multiply
     many complex values are not returned to the cache
 in getIsomorphismPauli, :
-    maybe return a LimEntry<> by value?, or give that LimEntry<> to the function by value, and use a separate bit to indicate whether the isomorphism was found?
+    - return a LimEntry<> by value
+    - use a separate bit to indicate whether the isomorphism was found?
 in getHighlabel:
-    return a LimEntry<> by value
+    (done) return a LimEntry<> by value
 in constructStabilizerGeneratorSetPauli:
     ?
 in makeDDNode:
@@ -36,7 +38,9 @@ in makeDDNode:
     delete the LIMs
     construct the stabilizer group ONLY if it was not previously computed
 getCosetIntersectionElementPauli
-    LimEntry<>::multiply; solution is to use local LIMs
+    - LimEntry<>::multiply; solution is to use local LIMs
+    - return a LimEntry object by value
+    - use a separate bit to indicate whether the isomorphism was found?
 getCosetIntersectionModuloPhase:
     return a LimEntry<> by value
 groupConcatenate
@@ -51,6 +55,9 @@ GaussianElimination:
     do multiplyBy instead of Limentry<>::multiply
 in LimWeight
     make the LimEntry<> object a data field instead of a pointer
+GramSchmidt
+    - return by value
+
 
 -- TESTS
 
