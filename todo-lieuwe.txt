@@ -18,16 +18,13 @@ add Pauli-LIMDD functionality to
 bool isTower()
 
 Remove memory leaks
-    in PauliAlgebra
-        make inventory of memory leaks
-    in normalizeLIMDD
+    make inventory of memory leaks
 
 --  INVENTORY OF MEMORY LEAKS
 
 in normalizeLIMDDPauli:
-    via lots of LimEntry<>::multiply calls
+    (done) via lots of LimEntry<>::multiply calls
     many complex values are not returned to the cache
-in constuctStabilizerGeneratorSet:
 in getIsomorphismPauli, :
     maybe return a LimEntry<> by value?, or give that LimEntry<> to the function by value, and use a separate bit to indicate whether the isomorphism was found?
 in getHighlabel:
@@ -52,7 +49,8 @@ getProductofElements:
     return entry by value
 GaussianElimination:
     do multiplyBy instead of Limentry<>::multiply
-
+in LimWeight
+    make the LimEntry<> object a data field instead of a pointer
 
 -- TESTS
 
