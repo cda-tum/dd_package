@@ -731,11 +731,12 @@ enum LIMDD_group {
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
-    LimWeight<>* getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn) {
+    void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism) {
         assert( u != nullptr );
         assert( v != nullptr );
 //        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
         assert (u->v == v->v);  // Assert u and v have the same nubmer of qubits
+        foundIsomorphism = false;
         Edge<vNode> uLow  = u->e[0];
         Edge<vNode> uHigh = u->e[1];
         Edge<vNode> vLow  = v->e[0];
@@ -749,8 +750,6 @@ enum LIMDD_group {
 				 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
 //        Log::log << "[getIsomorphismPauli] u = " << u << "   v = " << v << '\n';
 //        Log::log << "[getIsomorphismPauli] uLow = " << uLow.p << "   uHigh = " << uHigh.p << '\n';
-//        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
-//        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
         	throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
         if (!LimEntry<>::isIdentityOperator(vLow.l))
@@ -758,31 +757,32 @@ enum LIMDD_group {
         auto zeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
         auto zeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
 
+        iso.lim = new LimEntry<>();
 
-        LimWeight<>* iso = new LimWeight<>();
         // Case 0: the nodes are equal
         if (u == v) {
             Log::log << "[getIsomorphismPauli] case u == v.\n"; Log::log.flush();
             // In this case, we return the Identity operator, which is represented by a null pointer
-            iso = new LimWeight<>((LimEntry<>*)nullptr);
+            iso.lim->setToIdentityOperator();
+            foundIsomorphism = true;
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
         else if (zeroU[1]) {
             Log::log << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
             if (zeroV[1]) {
-            	if (uLow.p == vLow.p) iso = new LimWeight<>((LimEntry<>*)nullptr);
-            	else iso = LimWeight<>::noLIM;
+            	if (uLow.p == vLow.p) {
+//            		iso = new LimWeight<>((LimEntry<>*)nullptr);
+            		iso.lim->setToIdentityOperator();
+            		foundIsomorphism = true;
+            	}
             }
             else if (zeroV[0]) {
             	if (uLow.p == vHigh.p) {
 					// TODO limdd inspect weight on high edge
-            		iso->lim = new LimEntry<>(vHigh.l);
-            		iso->lim->setOperator(u->v, 'X');
+            		*iso.lim = vHigh.l;
+            		iso.lim->setOperator(u->v, 'X');
+            		foundIsomorphism = true;
             	}
-            	else iso = LimWeight<>::noLIM;
-            }
-            else {
-            	iso = LimWeight<>::noLIM;
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
@@ -790,22 +790,27 @@ enum LIMDD_group {
             Log::log << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
         	if (zeroV[0]) {
         		// TODO limdd inspect weights
-        		if (uHigh.p == vHigh.p) return new LimWeight<>(LimEntry<>::multiply(uHigh.l, vHigh.l));
+        		if (uHigh.p == vHigh.p) {
+        			*iso.lim = uHigh.l;
+        			iso.lim->multiplyBy(vHigh.l);
+        			foundIsomorphism = true;
+        		}
         	}
         	else if (zeroV[1]) {
         		// TODO limdd inspect weights
         		if (uHigh.p == vLow.p) {
-					iso->lim = new LimEntry<>(uHigh.l);
-					iso->lim->setOperator(u->v, 'X');
+					*iso.lim = uHigh.l;
+					iso.lim->setOperator(u->v, 'X');
+					foundIsomorphism = true;
         		}
         	}
-        	else iso = LimWeight<>::noLIM;
         }
         // Case 3 ("Fork"): Both children are nonzero
         else {
         	// Case 3.1: uLow == vHigh, uHigh == vLow but uLow != uHigh, i.e., the isomorphism's first Pauli operator is an X or Y
         	// TODO by handling case 3.1 more efficiently, we can prevent unnecessary copying of u->limVector
 			if (uLow.p == vHigh.p && uHigh.p == vLow.p && uLow.p != uHigh.p) {
+				// TODO inspect the weights; if they're wrong, then no isomorphism
 				// Return lambda^-1 * R * (X tensor P), where
 				//    P is the uHigh's edge label
 				//    lambda is uHigh's weight
@@ -821,17 +826,20 @@ enum LIMDD_group {
 				uPrime.e[1]   = u->e[0];
 				uPrime.e[1].l = u->e[1].l;
 				uPrime.e[1].w = u->e[0].w;
-				LimWeight<>* R = getIsomorphismPauli(&uPrime, v, cn);
-				if (R == LimWeight<>::noLIM) return LimWeight<>::noLIM;
-				LimEntry<> P = *(u->e[1].l);
-				P.setOperator(u->v, pauli_op::pauli_x);
-				R->multiplyBy(P);
-				return R;
+				getIsomorphismPauli(&uPrime, v, cn, iso, foundIsomorphism);
+				if (!foundIsomorphism) return;
+				LimEntry<> X = *(u->e[1].l);
+				X.setOperator(u->v, pauli_op::pauli_x);
+				iso.lim->multiplyBy(X);
+            	foundIsomorphism = true;
+				return;
 			}
         	// Case 3.2: uLow == vLow and uHigh == vHigh
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
-            if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
-//            Log::log << "[getIsomorphismPauli] u and v have the same chidlren.\n";
+            if (uLow.p != vLow.p || uHigh.p != vHigh.p) {
+            	foundIsomorphism = false;
+            	return;
+            }
 			// TODO should we refactor this last part and just call getIsomorphismZ?
 			//      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             if (uLow.p == uHigh.p) {
@@ -844,7 +852,7 @@ enum LIMDD_group {
             Complex rhoVdivRhoU = cn.getCached();
             ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
             ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
-            ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU); // TODO since we only need to know whether this is +/- {1,i} or not, we can optimize and skip this last division
+            ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU); // TODO it suffices to allocate only two cached Complex objects
             phase_t lambda = rhoVdivRhoU.toPhase();
 
             cn.returnToCache(rhoVdivRhoU);
@@ -852,38 +860,38 @@ enum LIMDD_group {
             cn.returnToCache(rhoU);
             if (lambda == phase_t::no_phase) {
             	Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
-            	return LimWeight<>::noLIM;
+            	foundIsomorphism = false;
+            	return;
             }
             Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
 
-            iso->weight = cn.getCached();
-            ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
+            iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
+//            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
 
 //            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
 //            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
-            if (iso->lim != LimEntry<>::noLIM) {
-                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
-                return iso;
+            LimEntry<>* temp = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
+            if (temp != LimEntry<>::noLIM) {
+            	*iso.lim = *temp;
+            	foundIsomorphism = true;
+//                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
+            	return;
             }
-            else {
-            	Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
-            }
+			Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n"; Log::log.flush();
             lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
-            iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
-            if (iso->lim != LimEntry<>::noLIM) {
-                iso->lim->setOperator(u->v, pauli_op::pauli_z);
+            temp = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
+            if (temp != LimEntry<>::noLIM) {
+            	*iso.lim = *temp;
+                iso.lim->setOperator(u->v, pauli_op::pauli_z);
+            	foundIsomorphism = true;
                 Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n"; Log::log.flush();
             }
             else {
                 Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n"; Log::log.flush();
-//                cn.returnToCache(iso->weight);
-                iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
         }
-        return iso;
     }
 
 //    static LimWeight<>* getIsomorphismPauliBruteForce(const vNode* u, const vNode* v, ComplexNumbers& cn) {

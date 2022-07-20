@@ -423,6 +423,13 @@ namespace dd {
         	setPhase(phase_t::phase_one);
         }
 
+        void operator=(const LimEntry<>* other) {
+        	if (other == nullptr) setToIdentityOperator();
+        	else {
+        		*this = *other;
+        	}
+        }
+
         bool commutesWith(const LimEntry<NUM_QUBITS>& b) const {
         	unsigned int anticommute_count = 0;
         	char op1, op2;

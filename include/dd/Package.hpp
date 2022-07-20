@@ -584,23 +584,24 @@ namespace dd {
             Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
             		 << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
 
-            LimWeight<>* iso = new LimWeight<>();
+            LimWeight<> iso;
+            bool foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
-            iso = getIsomorphismPauli(r.p, &oldNode, cn); // TODO RESOLVED memory leak: LIM 'iso' is not freed
-            if (iso == LimWeight<>::noLIM) {
+            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism); // TODO RESOLVED memory leak: LIM 'iso' is not freed
+            if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
-            sanityCheckIsomorphism(oldNode, *r.p, iso->lim, vEdge{});
-            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso->weight << " * " << LimEntry<>::to_string(iso->lim, r.p->v) << "\n";
+            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
 //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
             r.l->multiplyBy(lowLim);
-            Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso->lim), r.p->v) << ".\n";
+            Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
 //            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
-            r.l->multiplyBy(iso->lim);
-            cn.mul(r.w, r.w, iso->weight);
-            delete iso->lim;
-            delete iso;
+            r.l->multiplyBy(iso.lim);
+            cn.mul(r.w, r.w, iso.weight);
+            delete iso.lim;
+//            delete iso;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
