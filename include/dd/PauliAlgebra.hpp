@@ -747,6 +747,8 @@ enum LIMDD_group {
         		 << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << "}   v = {"
 				 << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << ", "
 				 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
+//        Log::log << "[getIsomorphismPauli] u = " << u << "   v = " << v << '\n';
+//        Log::log << "[getIsomorphismPauli] uLow = " << uLow.p << "   uHigh = " << uHigh.p << '\n';
 //        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
 //        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
@@ -857,6 +859,8 @@ enum LIMDD_group {
             iso->weight = cn.getCached();
             ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
 
+//            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
+//            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (iso->lim != LimEntry<>::noLIM) {
                 Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';

@@ -320,7 +320,7 @@ namespace dd {
 
         // Right-Multiply this Pauli operator with the 'other' Pauli operator, obtaining this * other
         // todo the 'bitset' data structure supports XOR natively,
-        //   so use that to speed up this operation. When you implement this,
+        //   so use that to speed up this operation. When you implement this optimization,
         //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char op1, op2;
