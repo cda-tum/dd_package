@@ -44,6 +44,15 @@ public:
 	bool isControlledGate() const {
 		return controls.size() != 0;
 	}
+
+	bool isCliffordGate() const {
+		if (mat == dd::Hmat && !isControlledGate()) return true;
+		if (mat == dd::Smat && !isControlledGate()) return true;
+		if (mat == dd::Xmat && controls.size() <= 1) return true;
+		if (mat == dd::Ymat && controls.size() <= 1) return true;
+		if (mat == dd::Zmat && controls.size() <= 1) return true;
+		return false;
+	}
 };
 
 

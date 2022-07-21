@@ -323,7 +323,7 @@ TEST(LimTest, getVectorLIMDD1) {
     // make edge e0 = Z|0>
     auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
 
-    auto     vec = dd->getVectorLIMDD(e0);
+    auto     vec = dd->getVector(e0);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -338,7 +338,7 @@ TEST(LimTest, getVectorLIMDD2) {
     dd::LimEntry<>* lim = new dd::LimEntry<>("Z");
     auto            e0  = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, lim);
 
-    auto     vec = dd->getVectorLIMDD(e0);
+    auto     vec = dd->getVector(e0);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({-1.0, 0.0});
@@ -355,7 +355,7 @@ TEST(LimTest, getVectorLIMDD3) {
 
     std::cout << "[getVector3] constructing amplitude vector.\n";
     std::cout.flush();
-    auto     vec = dd->getVectorLIMDD(e0);
+    auto     vec = dd->getVector(e0);
     dd::CVec expectedVec;
     expectedVec.push_back({0.0, 0.0});
     expectedVec.push_back({-1.0, 0.0});
@@ -370,7 +370,7 @@ TEST(LimTest, getVectorLIMDD4) {
     auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::zero, dd::vEdge::one}, false, nullptr);
     dd::export2Dot(e0, "getVectorLIMDD4-e0.dot", false, true, true, false, true, false);
 
-    auto vec0 = dd->getVectorLIMDD(e0);
+    auto vec0 = dd->getVector(e0);
     std::cout << "[getVectorLIMDD4 test] intermediate vec0: " << vec0 << '\n';
 
     // make edge ZI|1>|1>
@@ -384,7 +384,7 @@ TEST(LimTest, getVectorLIMDD4) {
     dd::Log::log << "root label: " << dd::LimEntry<>::to_string(e1.l) << '\n';
     dd::Log::log << "root weight: " << e1.w << '\n';
     dd::Log::log << "root node children LIMs: " << dd::LimEntry<>::to_string(e1.p->e[0].l) << " " << dd::LimEntry<>::to_string(e1.p->e[1].l) << '\n';
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {-1.0,0.0}};
 //    expectedVec.push_back({0.0, 0.0});
 //    expectedVec.push_back({0.0, 0.0});
@@ -408,7 +408,7 @@ TEST(LimTest, getVectorLIMDD5) {
     auto            e1   = dd->makeDDNode(1, std::array{e0, e0}, false, lim1);
     e1.p->e[0].w = dd::Complex::zero;
 
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec;
     expectedVec.push_back({0.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -429,7 +429,7 @@ TEST(LimTest, getVectorLIMDD6) {
     auto            e1  = dd->makeDDNode(1, std::array{e0, e0}, false, lim);
     e1.p->e[0].w = dd::Complex::zero;
 
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec;
     expectedVec.push_back({0.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -452,7 +452,7 @@ TEST(LimTest, getVectorLIMDD7) {
     auto            e1  = dd->makeDDNode(1, std::array{e0_zero, e0}, false, lim);
     std::cout << "[getVectorLIMDD7] e1 = " << e1 << std::endl;
 
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec;
     expectedVec.push_back({0.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -477,7 +477,7 @@ TEST(LimTest, getVectorLIMDD8) {
     auto e1 = dd->makeDDNode(1, std::array{e0, e0}, false, lim1);
     e1.p->e[0].w = dd::Complex::zero;
 
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec;
     expectedVec.push_back({0.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -500,7 +500,7 @@ TEST(LimTest, getVectorLIMDD9) {
     auto            e1  = dd->makeDDNode(1, std::array{e0, e0}, false, lim);
     e1.p->e[1].w = dd::Complex::zero;
 
-    auto     vec = dd->getVectorLIMDD(e1);
+    auto     vec = dd->getVector(e1);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({1.0, 0.0});
@@ -524,7 +524,7 @@ TEST(LimTest, getVectorLIMDD10) {
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
     auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
 
-    auto     vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVector(e2);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -547,7 +547,7 @@ TEST(LimTest, getVectorLIMDD11) {
     dd::LimEntry<>* lim2 = new dd::LimEntry<>("ZZ");
     auto            e2   = dd->makeDDNode(1, std::array{e0, e1}, false, lim2);
 
-    auto     vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVector(e2);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({0.0, 0.0});
@@ -578,7 +578,7 @@ TEST(LimTest, getVectorLIMDD12) {
     dd::export2Dot(e2, "getVectorLIMDD12.dot", false, true, true, false, true, false);
 
     std::cout << "[getVectorLIMDD12 test] Root edge: " << e2;
-    auto     vec = dd->getVectorLIMDD(e2);
+    auto     vec = dd->getVector(e2);
     dd::CVec expectedVec;
     expectedVec.push_back({1.0, 0.0});
     expectedVec.push_back({-1.0, 0.0});
@@ -2307,7 +2307,7 @@ TEST(LimTest, nextTest) {
     dd::export2Dot(state3, "state3.dot", false, true, true, false, true, false);
     auto str = dd::LimEntry<>::to_string(state3.l);
     std::cout << "resulting LIM with Z:" << str << '\n';
-    auto state3_vec = dd->getVectorLIMDD(state3);
+    auto state3_vec = dd->getVector(state3);
     for (const auto& i: state3_vec) {
         std::cout << "  " << i << "\n";
     }
@@ -2317,7 +2317,7 @@ TEST(LimTest, nextTest) {
 
     str = dd::LimEntry<>::to_string(state4.l);
     std::cout << "resulting LIM with Z^2:" << str << '\n';
-    auto state4_vec = dd->getVectorLIMDD(state4);
+    auto state4_vec = dd->getVector(state4);
     for (const auto& i: state4_vec) {
         std::cout << "  " << i << "\n";
     }
@@ -2335,7 +2335,7 @@ TEST(LimTest, simpleMultiplicationBellState) {
     auto bell_state = dd->multiply(dd->multiply(cx_gate, h_gate), zero_state);
     dd::export2Dot(bell_state, "BellStateTest.dot", false, true, true, false, true, false);
 
-    auto result = dd->getVectorLIMDD(bell_state);
+    auto result = dd->getVector(bell_state);
     dd->printVector(bell_state);
 
     EXPECT_TRUE(abs(result[0].real() - 0.707) < 0.001 && abs(result[0].imag()) < 0.001);
@@ -2656,6 +2656,63 @@ TEST(LimTest, returnToCache1) {
 	dd->cn.returnToCache(z);
 }
 
+TEST(LimTest, isTowerTest1) {
+    auto dd = std::make_unique<dd::Package<>>(1);
+
+    // make edge e0 = |+>
+    std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
+    auto ePlus = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
+    EXPECT_TRUE(dd->isTower(ePlus));
+}
+
+TEST(LimTest, isTowerTest2) {
+    auto dd = std::make_unique<dd::Package<>>(1);
+
+    dd::LimEntry<>* Z = new dd::LimEntry<>("Z");
+    auto eMinus = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, Z);
+    EXPECT_TRUE(dd->isTower(eMinus));
+}
+
+TEST(LimTest, isTowerTest3) {
+    auto dd = std::make_unique<dd::Package<>>(1);
+
+    // make edge e0 = |+>
+    std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
+    auto e = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
+    EXPECT_TRUE(dd->isTower(e));
+}
+
+TEST(LimTest, isTowerTest4) {
+    auto dd = std::make_unique<dd::Package<>>(2);
+
+    // make edge e0 = |+>
+    std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
+    auto ePlus = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
+
+    // make edge e0Z = Z|+> = |->
+    dd::LimEntry<>* Z = new dd::LimEntry<>("Z");
+    auto eMinus = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, Z);
+
+    // make edge e1 = |++>
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(1, std::array{ePlus, eMinus}, false, nullptr);
+    EXPECT_TRUE(dd->isTower(e1));
+}
+
+TEST(LimTest, isTowerTest5) {
+    auto dd = std::make_unique<dd::Package<>>(2);
+
+    // make edge e0 = |+>
+    std::cout << "[getIsomorpismPauli10 test] making edge |+> by calling MakeDDNode.\n";
+    auto ePlus = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
+
+    // make edge e0 = |0>
+    auto e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::zero}, false, nullptr);
+
+    // make edge e1 = |++>
+    dd::Edge<dd::vNode> e1 = dd->makeDDNode(1, std::array{ePlus, e0}, false, nullptr);
+    EXPECT_FALSE(dd->isTower(e1));
+}
+
 TEST(LimTest, simpleCliffordCircuit_1) {
     auto dd = std::make_unique<dd::Package<>>(2);
 
@@ -2671,7 +2728,7 @@ TEST(LimTest, simpleCliffordCircuit_1) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
 
-    auto result = dd->getVectorLIMDD(state);
+    auto result = dd->getVector(state);
 
     EXPECT_TRUE(abs(result[0].real() - 1) < 0.0001 && abs(result[0].imag()) < 0.001);
     EXPECT_TRUE(abs(result[1].real()) < 0.0001 && abs(result[1].imag()) < 0.001);
@@ -2688,7 +2745,7 @@ TEST(LimTest, simpleCliffordCircuit_2) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
 
-    auto result = dd->getVectorLIMDD(state);
+    auto result = dd->getVector(state);
 
     EXPECT_TRUE(abs(result[0].real() - 0.5) < 0.0001 && abs(result[0].imag()) < 0.001);
     EXPECT_TRUE(abs(result[1].real() - 0.5) < 0.0001 && abs(result[1].imag()) < 0.001);
@@ -2708,7 +2765,7 @@ TEST(LimTest, simpleCliffordCircuit_3) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 0), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 2, 1), state);
 
-    auto result = dd->getVectorLIMDD(state);
+    auto result = dd->getVector(state);
 
     EXPECT_TRUE(abs(result[0].real() - 1) < 0.0001 && abs(result[0].imag()) < 0.001);
     EXPECT_TRUE(abs(result[1].real()) < 0.0001 && abs(result[1].imag()) < 0.001);
@@ -2742,7 +2799,7 @@ TEST(LimTest, simpleCliffordCircuit_4) {
 	state = qmdd->multiply(qmdd->makeGateDD(dd::Xmat, 3, 2_pc, 1), state);  // cx q[2],q[1];
 
 
-	auto result_qmdd = qmdd->getVectorLIMDD(state);
+	auto result_qmdd = qmdd->getVector(state);
 
 	std::cout << "[simpleCliffordCircuit 4] QMDD result: " << result_qmdd << "\n";
 
@@ -2769,7 +2826,7 @@ TEST(LimTest, simpleCliffordCircuit_4) {
 	stateLIMDD = limdd->multiply(limdd->makeGateDD(dd::Tmat, 3, 1), stateLIMDD);        // t q[1];
 	stateLIMDD = limdd->multiply(limdd->makeGateDD(dd::Hmat, 3, 2), stateLIMDD);        // h q[2];
 	stateLIMDD = limdd->multiply(limdd->makeGateDD(dd::Xmat, 3, 2_pc, 1), stateLIMDD);  // cx q[2],q[1];
-	auto result_limdd = limdd->getVectorLIMDD(stateLIMDD);
+	auto result_limdd = limdd->getVector(stateLIMDD);
 
 	std::cout << "[simpleCliffordCircuit 4] LIMDD result: " << result_limdd << "\n";
 	// assertions
@@ -2811,7 +2868,7 @@ TEST(LimTest, simpleCliffordCircuit_5) {
 //	stateLIMDD = limdd->multiply(limdd->makeGateDD(dd::Hmat, 3, 2), stateLIMDD);        // x q[0];
 //	dd::export2Dot(stateLIMDD, "simpleCliffordCircuit_5_7");
 
-	auto resultLIMDD = limdd->getVectorLIMDD(stateLIMDD);
+	auto resultLIMDD = limdd->getVector(stateLIMDD);
 
 	std::cout << "[simpleCliffordCircuit 5] LIMDDresult: " << resultLIMDD << '\n';
 	EXPECT_TRUE(qmdd->vectorsApproximatelyEqual(resultQMDD, resultLIMDD));
@@ -2826,7 +2883,7 @@ TEST(LimTest, simpleTCircuit) {
     state = dd->multiply(dd->makeGateDD(dd::Tmat, dd->qubits(), 0), state); // t q[0];
     state = dd->multiply(dd->makeGateDD(dd::Hmat, dd->qubits(), 0), state); // h q[0];
 
-    auto   result    = dd->getVectorLIMDD(state);
+    auto   result    = dd->getVector(state);
     double tolerance = 1e-5;
     EXPECT_NEAR(result[0].real(), 0.853553, tolerance);
     EXPECT_NEAR(result[0].imag(), 0.353553, tolerance);
@@ -2849,7 +2906,7 @@ TEST(LimTest, multiQubitTCircuit) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, dd->qubits(), 1), state); // h q[1];
     state = dd->multiply(dd->makeGateDD(dd::Hmat, dd->qubits(), 2), state); // h q[1];
 
-    auto result = dd->getVectorLIMDD(state);
+    auto result = dd->getVector(state);
 
     double tolerance = 1e-5;
     EXPECT_NEAR(result[0].real(), 0.301777, tolerance);
@@ -2876,7 +2933,7 @@ TEST(LimTest, simpleU3Circuit) {
 
     state = dd->multiply(dd->makeGateDD(dd::U3mat(1, 2, 3), dd->qubits(), 0), state);
 
-    auto   result    = dd->getVectorLIMDD(state);
+    auto   result    = dd->getVector(state);
     double tolerance = 1e-5;
 
     EXPECT_NEAR(result[0].real(), 0.0707372, tolerance);
@@ -2899,7 +2956,7 @@ TEST(LimTest, multiQubitU3Circuit) {
     state = dd->multiply(dd->makeGateDD(dd::U3mat(0.4, 0.5, 0.6), dd->qubits(), 1), state);
     state = dd->multiply(dd->makeGateDD(dd::U3mat(0.7, 0.8, 0.9), dd->qubits(), 0), state);
 
-    auto   result    = dd->getVectorLIMDD(state);
+    auto   result    = dd->getVector(state);
     double tolerance = 1e-5;
 
     EXPECT_NEAR(result[0].real(), 0.130746, tolerance);

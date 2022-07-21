@@ -3230,6 +3230,21 @@ struct DDPackageConfig {
             cn.returnToCache(c);
         }
 
+        // Returns whether the diagram is a Tower.
+        bool isTower(const vEdge& edge) {
+        	if (edge.isTerminal()) return true;
+        	if (edge.p->e[0].w.approximatelyZero()) {
+        		return isTower(edge.p->e[1]);
+        	}
+        	if (edge.p->e[1].w.approximatelyZero()) {
+        		return isTower(edge.p->e[0]);
+        	}
+        	if (edge.p->e[0].p == edge.p->e[1].p) {
+        		return isTower(edge.p->e[0]);
+        	}
+        	return false;
+        }
+
         //        CVec getVector(const vEdge& e, const LimEntry<>& lim) {
         //            const std::size_t dim = 2ULL << e.p->v;
         //            // allocate resulting vector

@@ -34,6 +34,8 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 	dd::CVec resultQMDD, resultLIMDD;
 	std::stringstream dotfilenameStream;
 
+	bool circuitIsCliffordSoFar = true;  // Flag is set to false as soon as a non-Clifford gate is applied
+
 	for (unsigned int gate=0; gate<circuit.gates.size(); gate++) {
 		std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to QMDD.\n";
 		qmddState   = qmdd ->applyGate(circuit.gates[gate], qmddState);
@@ -52,6 +54,24 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 			EXPECT_TRUE(false);
 			break;
 		}
+		if (circuitIsCliffordSoFar && circuit.gates[gate].isCliffordGate()) {
+			if (!limdd->isTower(limddState)) {
+				std::cout << "[simulate circuit] ERROR Expected a tower, but the LIMDD is not a tower. Exporting:\n";
+				dd::export2Dot(limddState, "limdd.dot", false, true, true, false, true, false);
+				EXPECT_TRUE(false);
+			}
+			if (limddState.p->limVector.size() != circuit.n) {
+				std::cout << "[simulate circuit] ERROR Stabilizer state does not have n stabilizers.\n";
+				dd::export2Dot(limddState, "limdd-less-than-n-stabilizers.dot", false, true, true, false, true, false);
+				EXPECT_TRUE(false);
+			}
+		}
+		else {
+			circuitIsCliffordSoFar = false;
+		}
+//		dotfilenameStream = std::stringstream();
+//		dotfilenameStream << "limdd-gate" << gate << ".dot";
+//		dd::export2Dot(limddState, dotfilenameStream.str(), false, true, true, false, true, false);
 	}
 }
 
@@ -489,8 +509,10 @@ TEST(LimTest, simpleCircuit54) {
 }
 
 TEST(LimTest, simpleCircuit55) {
-	dd::QuantumCircuit c(1);
-	c.addGate(dd::Hmat, 0);
+	dd::QuantumCircuit c(2);
+	c.addGate(dd::Hmat, 1);
+	c.addGate(dd::Tmat, 1_pc, 0);
+	c.addGate(dd::Tmat, 1_pc, 0);
 
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
@@ -498,7 +520,7 @@ TEST(LimTest, simpleCircuit55) {
 TEST(LimTest, simpleCircuit56) {
 	dd::QuantumCircuit c(2);
 	c.addGate(dd::Xmat, 0);
-	c.addGate(dd::Xmat, 0_nc, 1);
+	c.addGate(dd::Tmat, 0_nc, 1);
 
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
@@ -1087,23 +1109,23 @@ TEST(LimTest, simpleCircuit93_9) {
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
 
-//TEST(LimTest, simpleCircuit93_10) {
-//	dd::QuantumCircuit c(4);
-//	c.addGate(dd::Hmat, 0);
-//	c.addGate(dd::Hmat, 1);
-//	c.addGate(dd::Hmat, 3);
-////	c.addGate(dd::Zmat, 0_pc, 1);
-////	c.addGate(dd::Zmat, 1_pc, 3);
-////	c.addGate(dd::Xmat, 1_pc, 2);
-////	c.addGate(dd::Xmat, 0_pc, 2);
-////	c.addGate(dd::Xmat, 0_pc, 1_pc, 2);
-//	c.addGate(dd::Hmat, 1_pc, 3);
-//	c.addGate(dd::Tmat, 3);
-//	c.addGate(dd::Hmat, 3);
-//	c.addGate(dd::Xmat, 3_pc, 2);
-//
-//	simulateCircuitQMDDvsLIMDDGateByGate(c);
-//}
+TEST(LimTest, simpleCircuit93_10) {
+	dd::QuantumCircuit c(4);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Hmat, 1);
+	c.addGate(dd::Hmat, 3);
+//	c.addGate(dd::Zmat, 0_pc, 1);
+//	c.addGate(dd::Zmat, 1_pc, 3);
+//	c.addGate(dd::Xmat, 1_pc, 2);
+//	c.addGate(dd::Xmat, 0_pc, 2);
+//	c.addGate(dd::Xmat, 0_pc, 1_pc, 2);
+	c.addGate(dd::Hmat, 1_pc, 3);
+	c.addGate(dd::Tmat, 3);
+	c.addGate(dd::Hmat, 3);
+	c.addGate(dd::Xmat, 3_pc, 2);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
 
 TEST(LimTest, simpleCircuit94) {
 	dd::QuantumCircuit c(5);
@@ -1319,6 +1341,45 @@ TEST(LimTest, simpleCircuit105) {
 	c.addGate(dd::Tmat, 0);
 	c.addGate(dd::Hmat, 0);
 	c.addGate(dd::Xmat, 0);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit106) {
+	dd::QuantumCircuit c(5);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Hmat, 1);
+	c.addGate(dd::Hmat, 2);
+	c.addGate(dd::Hmat, 3);
+	c.addGate(dd::Hmat, 4);
+	c.addGate(dd::Zmat, 0_pc, 1);
+	c.addGate(dd::Zmat, 1_pc, 2);
+	c.addGate(dd::Zmat, 3_pc, 4);
+	c.addGate(dd::Zmat, 2_pc, 3);
+	c.addGate(dd::Zmat, 2_pc, 0);
+	c.addGate(dd::Zmat, 2_pc, 3);
+	c.addGate(dd::Zmat, 2_pc, 4);
+	c.addGate(dd::Xmat, 0);
+	c.addGate(dd::Ymat, 1);
+	c.addGate(dd::Zmat, 2);
+	c.addGate(dd::Hmat, 3);
+	c.addGate(dd::Smat, 4);
+	c.addGate(dd::Hmat, 3);
+
+	simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit107) {
+	dd::QuantumCircuit c(5);
+	c.addGate(dd::Hmat, 0);
+	c.addGate(dd::Hmat, 1);
+	c.addGate(dd::Hmat, 2);
+	c.addGate(dd::Hmat, 3);
+	c.addGate(dd::Hmat, 4);
+	c.addGate(dd::Zmat, 0_pc, 2);
+	c.addGate(dd::Zmat, 1_pc, 2);
+	c.addGate(dd::Zmat, 3_pc, 2);
+	c.addGate(dd::Zmat, 4_pc, 2);
 
 	simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
