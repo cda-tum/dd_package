@@ -116,9 +116,10 @@ struct DDPackageConfig {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
-            cn(ComplexNumbers()), nqubits(nq), group(_group) {
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = true, bool outputToLog = false):
+            cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
             resize(nq);
+			Log::log.verbose = outputToLog;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -153,6 +154,7 @@ struct DDPackageConfig {
     private:
         std::size_t nqubits;
         LIMDD_group group;
+        bool performSanityChecks;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -425,6 +427,7 @@ struct DDPackageConfig {
 
 		template<class Edge>
         void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
+			if (!performSanityChecks) return;
             if (!vectorsApproximatelyEqual(before, after)) {
                 Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
                 Log::log << "[normalizeLIMDD] original:   ";
@@ -441,6 +444,7 @@ struct DDPackageConfig {
 
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
+			if (!performSanityChecks) return;
         	CVec nodeVec = getVector(edge);
         	CVec stabVec;
         	for (unsigned int i=0; i<stabilizerGroup.size(); i++) {
@@ -461,6 +465,7 @@ struct DDPackageConfig {
         // Checks whether a == iso * b
         template <class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
+			if (!performSanityChecks) return;
         	Edge edgeA{&a, Complex::one, nullptr};
         	Edge edgeB{&b, Complex::one, nullptr};
         	CVec avec = getVector(edgeA);
@@ -502,6 +507,7 @@ struct DDPackageConfig {
         }
 
         bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
+			if (!performSanityChecks) return true;
         	if (result.size() == 0) {
         		return (isZeroVector(left) && isZeroVector(right));
         	}
@@ -727,21 +733,57 @@ struct DDPackageConfig {
             	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
             	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; Pauli::printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
     			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
+    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, n); Log::log << '\n';
     			LimEntry<>* stab = LimEntry<>::noLIM;
-    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
+				Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
+    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n-1);
     			if (stab != LimEntry<>::noLIM) {
     				stab->setOperator(n, 'Z');
+    				stabgenset.push_back(stab);
+					Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
     			}
     			else if (low.p == high.p) {
-                	// check for X
-    //				Complex rho = cn.mulCached(low.w, high.w);
-    //				phase_t rho_phase = rho.getPhase();
-    				// Check for Y
-
+    				Complex rho = cn.divCached(node.e[1].w, node.e[0].w);
+    				phase_t rhoPhase = rho.toPhase();
+    				if (rhoPhase != phase_t::no_phase) {
+    					phase_t rhoSquared = Pauli::multiplyPhases(rhoPhase, rhoPhase);
+						// check for X
+    					Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
+    					stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n-1);
+    					if (stab != LimEntry<>::noLIM) {
+    						LimEntry<> X;
+							X.setOperator(n, pauli_op::pauli_x);
+        					Log::log << "[constructStabilizerGeneratorSet] Just set the X in " << LimEntry<>::to_string(&X) << "\n";
+    						X.multiplyBy(high.l);
+    						X.multiplyBy(stab);
+    						X.multiplyPhaseBy(rhoPhase);
+    						Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+    						stabgenset.push_back(new LimEntry<>(X));
+    					}
+    					else {
+							// Check for Y
+        					Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
+							phase_t minusRhoSquared = Pauli::multiplyPhases(rhoSquared, phase_t::phase_minus_one);
+							stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
+							if (stab != LimEntry<>::noLIM) {
+								LimEntry<> X;
+								X.setOperator(n, pauli_op::pauli_y);
+	        					Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X) << "\n";
+								X.multiplyBy(high.l);
+								X.multiplyBy(stab);
+								X.multiplyPhaseBy(rhoPhase);
+								X.multiplyPhaseBy(phase_t::phase_minus_i);
+	    						Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+								Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+								stabgenset.push_back(new LimEntry<>(X));
+							}
+    					}
+    				}
+                } else {
+					Log::log << "[constructStabilizerGeneratorSet] Failed to find additional stabilizers.\n";
                 }
     			if (stab != LimEntry<>::noLIM) {
-    				stabgenset.push_back(stab);
     			}
     			Pauli::toColumnEchelonForm(stabgenset);
             }
