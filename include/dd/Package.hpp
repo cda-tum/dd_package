@@ -1051,6 +1051,7 @@ namespace dd {
             auto vCollect = vUniqueTable.garbageCollect(force);
             auto mCollect = mUniqueTable.garbageCollect(force);
             auto dCollect = dUniqueTable.garbageCollect(force);
+            //todo garbage collect lim table
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0) {
@@ -1628,7 +1629,10 @@ namespace dd {
             const auto trueLimXTable = limTable.lookup(trueLimX);
             const auto trueLimYTable = limTable.lookup(trueLimY);
 
-            auto r = computeTable.lookup({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable});
+            const auto trueLimC      = Pauli::createCanonicalLabel(trueLimX, trueLimY);
+            const auto trueLimCTable = limTable.lookup(trueLimC);
+
+            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
 
             //           if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
@@ -1745,7 +1749,7 @@ namespace dd {
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
-            computeTable.insert({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable}, {e.p, e.w, e.l});
+//            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l});
             return e;
         }
 
@@ -1824,9 +1828,9 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTableOneLim<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
-        ComputeTableOneLim<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
-        ComputeTableOneLim<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
+        ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
+        ComputeTable<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
 
         template<class LeftOperandNode, class RightOperandNode>
         [[nodiscard]] auto& getMultiplicationComputeTable() {
@@ -1858,7 +1862,6 @@ namespace dd {
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
-            // TODO limdd
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             Qubit        var = -1;
@@ -2034,7 +2037,7 @@ namespace dd {
             const auto trueLimTable = limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLimTable);
+            auto  r            = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -2225,7 +2228,7 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLimTable);
+            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l});
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
