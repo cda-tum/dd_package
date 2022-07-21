@@ -12,7 +12,7 @@
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "ComputeTable.hpp"
-#include "ComputeTableLim.hpp"
+//#include "ComputeTableLim.hpp"
 #include "Control.hpp"
 #include "Definitions.hpp"
 #include "DensityNoiseTable.hpp"
@@ -1538,9 +1538,9 @@ namespace dd {
         /// Addition
         ///
     public:
-        ComputeTableTwoLim<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
-        ComputeTableTwoLim<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTableTwoLim<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
+        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
+        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -1632,13 +1632,22 @@ namespace dd {
             const auto trueLimC      = Pauli::createCanonicalLabel(trueLimX, trueLimY);
             const auto trueLimCTable = limTable.lookup(trueLimC);
 
-            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
+            //            auto r = computeTable.lookup({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable}, false, trueLimCTable);
+            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, false, trueLimXTable, trueLimYTable);
+            //            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
 
             //           if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
+                    auto       weight = cn.getCached(r.w);
+                    LimEntry<> lim    = trueLimX;
+                    if (r.l != nullptr) {
+                        lim.multiplyBy(r.l);
+                        Pauli::movePhaseIntoWeight(lim, weight);
+                    }
+                    return {r.p, weight, limTable.lookup(lim)};
                     return {r.p, cn.getCached(r.w), r.l};
                 }
             }
@@ -1696,12 +1705,33 @@ namespace dd {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
-                    //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
-                    //                    Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
+                    CVec vectorArg0     = getVector(e1, w, trueLimX);
+                    CVec vectorArg1     = getVector(e2, w, trueLimY);
+                    CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
-                    //                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
-                    //                    export2Dot(edge[i], "ei.dot", true, true, false, false, true);
+
+                    CVec vectorResult = getVector(edge[i], w);
+                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+                        Log::log << "[add2] ERROR addition went wrong.\n";
+                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+                        Log::log << "arg0:    ";
+                        printCVec(vectorArg0);
+                        Log::log << '\n';
+                        Log::log << "arg1     ";
+                        printCVec(vectorArg1);
+                        Log::log << '\n';
+                        Log::log << "expected ";
+                        printCVec(vectorExpected);
+                        Log::log << '\n';
+                        Log::log << "result   ";
+                        printCVec(vectorResult);
+                        Log::log << '\n';
+                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
+                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
+                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
+                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                    }
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1712,6 +1742,8 @@ namespace dd {
                     cn.returnToCache(e2.w);
                 }
             }
+
+            //            export2Dot(e, "e3.dot", true, true, false, false, true);
 
             //            export2Dot(edge[0], "e1.dot", true, true, false, false, true);
             //            export2Dot(edge[1], "e2.dot", true, true, false, false, true);
@@ -1743,13 +1775,23 @@ namespace dd {
                 export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
                 export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
                 export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[multiply2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
             }
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
-//            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l});
+            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l});
+
+            //            auto weight = cn.getCached(e.w);
+            //            auto lim2 = trueLimX;
+            //            lim2.setPhase(Pauli::getPhaseInverse(lim2.getPhase()));
+            //            lim2.multiplyBy(e.l);
+            //            Pauli::movePhaseIntoWeight(lim2, weight);
+            //
+            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, weight,  limTable.lookup(lim2)}, trueLimXTable, trueLimYTable );
+            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l}, trueLimXTable, trueLimYTable);
+
             return e;
         }
 

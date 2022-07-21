@@ -63,6 +63,13 @@ namespace dd {
             return c;
         }
 
+        static void movePhaseIntoWeight(LimEntry<>& lim, Complex& weight) {
+            if (lim.getPhase() != phase_one) {
+                weight.multiplyByPhase(lim.getPhase());
+                lim.setPhase(phase_one);
+            }
+        }
+
         static phase_t getPhaseaMinusB(phase_t a, phase_t b) {
             phase_t minb = getPhaseInverse(b);
             return (phase_t)((a + minb) & 0x3);

@@ -27,9 +27,11 @@ namespace dd {
         ComputeTable() = default;
 
         struct Entry {
-            LeftOperandType  leftOperand;
-            RightOperandType rightOperand;
-            ResultType       result;
+            LeftOperandType              leftOperand;
+            RightOperandType             rightOperand;
+            ResultType                   result;
+            LimTable<NUM_QUBITS>::Entry* trueLimX = nullptr;
+            LimTable<NUM_QUBITS>::Entry* trueLimY = nullptr;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
@@ -44,20 +46,42 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry* trueLimX = {}, LimTable<>::Entry* trueLimY = {}) {
             const auto key = hash(leftOperand, rightOperand);
-            table[key]     = {leftOperand, rightOperand, result};
+            table[key]     = {leftOperand, rightOperand, result, trueLimX, trueLimY};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry* trueLimX = {}, LimTable<>::Entry* trueLimY = {}) {
             ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
+
+            auto first  = (LimEntry<>::Equal(entry.trueLimX, trueLimX)) && (LimEntry<>::Equal(entry.trueLimY, trueLimY));
+            auto second = (LimEntry<>::Equal(entry.leftOperand.l, leftOperand.l) && LimEntry<>::Equal(entry.rightOperand.l, rightOperand.l));
+            Log::log << "[ComputeTable] Lookup hit (key=" << std::to_string(key)
+                     << ")result with l=" << LimEntry<>::to_string(result.l)
+                     << ")\nleftOperand with l=" << LimEntry<>::to_string(leftOperand.l)
+                     << " rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
+                     << " and trueLimX=" << LimEntry<>::to_string(trueLimX)
+                     << " and trueLimY=" << LimEntry<>::to_string(trueLimY)
+                     << " \nentry.leftOperand with l=" << LimEntry<>::to_string(entry.leftOperand.l)
+                     << " entry.rightOperand with l=" << LimEntry<>::to_string(entry.rightOperand.l)
+                     << " and entry.trueLimX=" << LimEntry<>::to_string(entry.trueLimX)
+                     << " and entry.trueLimY=" << LimEntry<>::to_string(entry.trueLimY)
+                     << "\n";
+
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
+            //            if (entry.leftOperand.p != leftOperand.p) return result;
+            //            if (!entry.leftOperand.w.approximatelyEquals(leftOperand.w)) return result;
+            //
+            //            if (entry.rightOperand.p != rightOperand.p) return result;
+            //            if (!entry.rightOperand.w.approximatelyEquals(rightOperand.w)) return result;
+
+            //            if (entry.rightOperand != rightOperand) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
