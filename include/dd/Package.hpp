@@ -742,7 +742,7 @@ struct DDPackageConfig {
     				stabgenset.push_back(stab);
 					Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
     			}
-    			else if (low.p == high.p) {
+    			if (low.p == high.p) {
     				Complex rho = cn.divCached(node.e[1].w, node.e[0].w);
     				phase_t rhoPhase = rho.toPhase();
     				if (rhoPhase != phase_t::no_phase) {
@@ -761,7 +761,7 @@ struct DDPackageConfig {
 							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
     						stabgenset.push_back(new LimEntry<>(X));
     					}
-    					else {
+//    					else {
 							// Check for Y
         					Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
 							phase_t minusRhoSquared = Pauli::multiplyPhases(rhoSquared, phase_t::phase_minus_one);
@@ -778,13 +778,11 @@ struct DDPackageConfig {
 								Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
 								stabgenset.push_back(new LimEntry<>(X));
 							}
-    					}
+//    					}
     				}
                 } else {
 					Log::log << "[constructStabilizerGeneratorSet] Failed to find additional stabilizers.\n";
                 }
-    			if (stab != LimEntry<>::noLIM) {
-    			}
     			Pauli::toColumnEchelonForm(stabgenset);
             }
 
