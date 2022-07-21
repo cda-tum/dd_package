@@ -939,7 +939,8 @@ public:
         Log::log << "[getIsomorphismPauli] Start. u = {" << uLow.w << " * " <<  LimEntry<>::to_string(uLow.l, uLow.p->v) << ", " << uHigh.w << " * "
         		 << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << "}   v = {"
 				 << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << ", "
-				 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
+				 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n"
+				 << "[getIsomorphismPauli] Stab(u) = " << groupToString(u->limVector, u->v) << "  Stab(v) = " << groupToString(v->limVector, v->v) << "\n";
 //        Log::log << "[getIsomorphismPauli] uLow  = " << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v)   << " vLow.l  = " << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << Log::endl;
 //        Log::log << "[getIsomorphismPauli] uHigh = " << uHigh.w<< " * " << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << " vHigh.l = " << vHigh.w << " * "<< LimEntry<>::to_string(vHigh.l, vLow.p->v) << Log::endl;
         if (!LimEntry<>::isIdentityOperator(uLow.l))
@@ -1022,14 +1023,14 @@ public:
         	// Case 3.2: uLow == vLow and uHigh == vHigh
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) return LimWeight<>::noLIM;
-            Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n"; Log::log.flush(); superFlush();
+            Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n";
             // Set the weight of the isomorphism
             iso->weight = cn.getCached();  // TODO return to cache, and, actually, ideally only retrieve from cache if / when an iso is found
 
             Complex rhoU        = cn.getCached();  // Eventually returned to cache
             Complex rhoV        = cn.getCached();  // Eventually returned to cache
             if (uLow.p == uHigh.p) {
-            	// TODO cover this case
+            	Log::log << "[getIsomorphismPauli] case low == high.\n";
 				Complex rhoUrhoV    = cn.getCached();
             	ComplexNumbers::div(rhoU, u->e[0].w, u->e[1].w);
             	ComplexNumbers::div(rhoV, v->e[0].w, v->e[1].w);
@@ -1038,23 +1039,23 @@ public:
             	cn.returnToCache(rhoUrhoV);
             	if (lambda != phase_t::no_phase) {
 
-            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, u->e[1].l, v->e[1].l, lambda);
+            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v - 1);
             		if (iso->lim != LimEntry<>::noLIM) {
             			iso->lim = LimEntry<>::multiply(v->e[1].l, iso->lim);
                         iso->lim->setOperator(u->v, pauli_op::pauli_x);
                         cn.div(iso->weight, v->e[1].w, u->e[0].w);
-                        Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
+                        Log::log << "[getIsomorphismPauli] Case X: Coset was not empty; returning isomorphism " << LimEntry<>::to_string(iso->lim, u->v) << ".\n";
             			return iso;
             		}
 
                     lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
-            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, u->e[1].l, v->e[1].l, lambda);
+            		iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v - 1);
             		if (iso->lim != LimEntry<>::noLIM) {
             			iso->lim = LimEntry<>::multiply(v->e[1].l, iso->lim);
                         iso->lim->setOperator(u->v, pauli_op::pauli_y);
                         cn.div(iso->weight, v->e[1].w, u->e[0].w);
                         iso->weight.multiplyByMinusi();
-                        Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
+                        Log::log << "[getIsomorphismPauli] Case Y: Coset was not empty; returning isomorphism " << LimEntry<>::to_string(iso->lim, u->v) << ".\n";
             			return iso;
             		}
             	}
@@ -1079,6 +1080,7 @@ public:
             Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
 
 
+            Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (iso->lim != LimEntry<>::noLIM) {
                 ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
@@ -1089,8 +1091,9 @@ public:
             	Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
             }
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
-            Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n"; Log::log.flush();
+            Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n";
             lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
+            Log::log << "[getIsomorphismPauli] Looking for isomorphism X tensor P.\n";
             iso->lim = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (iso->lim != LimEntry<>::noLIM) {
                 ComplexNumbers::div(iso->weight, v->e[0].w, u->e[0].w);
@@ -1098,7 +1101,7 @@ public:
                 Log::log << "[getIsomorphismPauli] Coset was not empty; returning isomorphism " << *iso->lim << ".\n";
             }
             else {
-                Log::log << "[getIsomorphismPauli] No isomorphism was found. Returning noLIM.\n"; Log::log.flush();
+                Log::log << "[getIsomorphismPauli] No isomorphism was found. Returning noLIM.\n";
 //                cn.returnToCache(iso->weight);
                 iso = LimWeight<>::noLIM;  // TODO limdd I added this, is this right? -LV
             }
