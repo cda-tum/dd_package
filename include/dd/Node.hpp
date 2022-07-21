@@ -200,6 +200,16 @@ namespace dd {
     using dCachedEdge = CachedEdge<dNode>;
     inline dNode dNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}}, nullptr, std::vector<LimTable<>::Entry*>{}, 0, -1, 0};
 
+//    template<typename Node>
+    std::ostream& operator<<(std::ostream& out, const vNode& node) {
+    	if (node.v < 0) {
+    		return out << "Terminal node";
+    	}
+    	return out << "Node on " << node.v + 1 << " qubits."
+			<< "  {low = "  << node.e[0].w << " * " << LimEntry<>::to_string(node.e[0].l, node.e[0].p->v) << "}"
+			<< "  {high = " << node.e[1].w << " * " << LimEntry<>::to_string(node.e[1].l, node.e[1].p->v) << "}";
+    }
+
     static inline dEdge densityFromMatrixEdge(const mEdge& e) {
         return dEdge{reinterpret_cast<dNode*>(e.p), e.w, e.l};
     }

@@ -197,12 +197,12 @@ namespace dd {
         //   a < 0, or a=0 and b<0
         bool lexSmallerThanxMinusOne() const {
             if (!ComplexTable<>::Entry::approximatelyZero(r)) {
-                Log::log << "[lexSmallerThanxMinusOne] real part of " << toString() << " is not zero, so testing real part\n";
+//                Log::log << "[lexSmallerThanxMinusOne] real part of " << toString() << " is not zero, so testing real part\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(i); // TODO limdd this may be faster than current implementation on next line
                 return ComplexTable<>::Entry::val(r) < 0;
             }
             if (!ComplexTable<>::Entry::approximatelyZero(i)) {
-                Log::log << "[lexSmallerThanxMinusOne] imag part of " << toString() << " is not zero\n";
+//                Log::log << "[lexSmallerThanxMinusOne] imag part of " << toString() << " is not zero\n";
 //                return !ComplexTable<>::Entry::isNegativePointer(r); // TODO limdd this may be faster than current implementation on next line
                 return ComplexTable<>::Entry::val(i) < 0;
             }

@@ -1,89 +1,60 @@
 ====    TODO
 
-Talk to Thomas about:
-    - do we need documentation for the new LIMDD functionality? I can make long algorithms
+Talk to Thomas and Jurgen about:
     - large groups, very large groups
 Talk to Stefan about:
     - better variable reordering strategies
 
-make functionality in Package which allows me to execute a circuit
-refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
+Documentation:
+    HighLabelpauli
+    getStabilizerGeneratorSet
 
-document the getHighLabelPauli function
-    use this to double-check the u==v case, with division.
+-- coding, functionality
 
-in normalizeLIMDDPauli, in the knife cases, make sure the two edges point to the same node.
-    ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted.
+incorporate X,Y cases into getIsomorphism's case u==v, see branch limdd-pauli-better-isomorphisms
 
-incorporate weights into the getIsomorphismPauli procedure
-    Use a cached weight in getHighLabelPauli
-    in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
-        so that highLabelPauli doesn't need to receive the whole complexTable
-    do not assume that the low weight is 1 
-    cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
-    	work out on paper first
+ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted, in the knife case of normalizeLIMDDPauli().
 
+add Pauli-LIMDD functionality to
+    ComputeTable of Add
+    ComputeTable of multiplyMatrix
+    make inventory of places where LIMDD functionality needs to be added in order to support simulation
+
+Remove memory leaks
+    in PauliAlgebra
+        make inventory of memory leaks
+    in normalizeLIMDD
+
+-- TESTS
+
+All 'simpleCircuit' tests pass
+
+fuzz more circuits:
+nqubits = 2 ... 5
+    ngates = 5, 10, 15, 20, 25
+        make 300 clifford circuits
+        make 300 non-Clifford circuits
+
+make tests for intersectGroupsPauli
+
+Write many tests for
+    GaussianElimination,
+        when -I is generated
+    getVector
 write test for recoverPhase(G, a)
 write test for recoverElement
 
-Implement automation of stabilizer group checking:
-    iterate over all 4^n pauli operators; check if the operator stabilizes the state (using cvec?)
-    expand the set of 
-
-implement 'follow' and 'unfollow' for the Pauli group
-	amounts to implementing X and Y
-
-all tests pass under Z group
-
-make very detailed writeup of getIsomorphismPauli in pdf, explaining all the reasoning.
-    This is also important for other people, and myself, to understand the algorithms.
-
-refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
-	(maybe not, since the returnToCache() obligations on normalizeLIMDD() would be more complicated
-
-Is the 's' and 'x' parameters useful?
-    write this algorithm on paper, or find it in notebook
-    If the 's' or 'x' is not used, then remove it from the highlabel parameters
-
-incorporate weights into getAutomorphismGroup
-    Write algorithm on paper, or find algorithm in notebook
-
-- make 10 stabilizer circuits
-- make 10 non-stabilizer circuits, with T gates
-make Hamming weight circuits
-
-getLIMDDFromVector() turn a ket-vector into a LIMDD
-use some tests to test whether the isomorphism-finding machinery works:
-vector := [ ... ]
-iso := xyziy
-transformedVector := iso * vector
-LIMDD a := getLIMDDFromVector(vector)
-LIMDD b := getLIMDDFromVector(vector)
-isoFound := getIsomorphism(a, b)
-if isValidIsomorphism(a, b, isoFound) party else error
-
-in tests, call isIsomorphism instead of defining a handwritten isomorphism
-
+-- REFACTORING (low priority)
 
 refactor LimEntry<>::setOperator so that one function is called,
     instead of two different setOperators
     note that pauli_op is already defined in terms of 'I' and 'X' and so on, so it should already translate correctly
 
-refactor getIsomorphismPauli so that it returns a LIM with a weight
-
-in normalizeLIMDD, in the high knife case, do we remove the high label, if it is present?
-	it seemes counterintuitive to do, but we should set the label to I
-
-Write many tests for
-	GaussianElimination,
-		when -I is generated
-	getVector
-
 In getKernelZ, getKernelPauli,
     Refactor LimBitset* into LimBitset, i.e., make them local, temporary variables,
     to reduce memory management problems
 
-Refactor 'limVector' into 'stabilizerGroup'
+Refactor 'limVector' into 'StabilizerGroup'
 refactor StabilizerGroup into its own class
     Methods:
     GramSchmidt
@@ -104,13 +75,6 @@ highLabelZ uses GramSchmidt(Group, LimEntry*)
     result is returned as pointer
     but we don't want to use it as pointer
 
-add <Z>-LIMDD functionality to
-    add
-    cache of Add
-    multiplyMatrix
-    cache of multiplyMatrix
-    make inventory of places where LIMDD functionality needs to be added in order to support simulation
-
 rewrite GaussianElimination so that it takes into account the phase
     - toColumnEchelonForm(StabilizerGroup)
         - constructStabilizerGroupZ
@@ -120,11 +84,66 @@ rewrite GaussianElimination so that it takes into account the phase
     in these applications, is it important to handle the case when -I is generated?
     If so, then neither of these methods will suffer from the "not handling -I correctly"-deficiency.
 
+-- LOW PRIORITY
 
+make Hamming weight circuits
+
+getLIMDDFromVector() turn a ket-vector into a LIMDD
+use some tests to test whether the isomorphism-finding machinery works:
+vector := [ ... ]
+iso := xyziy
+transformedVector := iso * vector
+LIMDD a := getLIMDDFromVector(vector)
+LIMDD b := getLIMDDFromVector(vector)
+isoFound := getIsomorphism(a, b)
+if isValidIsomorphism(a, b, isoFound) party else error
+
+in tests, call isIsomorphism instead of defining a handwritten isomorphism
 
 
 ====    DONE
 
+
+incorporate weights into the getIsomorphismPauli procedure
+    Use a cached weight in getHighLabelPauli
+    in normalizeLIMDDPauli, allocate a cached weight, weightInv that highLabel can use,
+        so that highLabelPauli doesn't need to receive the whole complexTable
+    do not assume that the low weight is 1 
+    cover the case when u.high = 1 / v.high, in the spoon case when u.p == v.p
+        work out on paper first
+
+in normalizeLIMDD, in the high knife case, do we remove the high label, if it is present?
+    it seemes counterintuitive to do, but we should set the label to I
+
+- make 10 stabilizer circuits
+- make 10 non-stabilizer circuits, with T gates
+
+all tests pass under Pauli group
+
+add <Z>-LIMDD functionality to
+    add
+    multiplyMatrix
+    make inventory of places where LIMDD functionality needs to be added in order to support simulation
+
+refactor getIsomorphismPauli so that it returns a LIM with a weight
+
+refactor highLabelPauli so that it returns a LimWeight object, with the new weight and new LIM
+    (maybe not, since the returnToCache() obligations on normalizeLIMDD() would be more complicated
+
+Is the 's' and 'x' parameters useful?
+    write this algorithm on paper, or find it in notebook
+    If the 's' or 'x' is not used, then remove it from the highlabel parameters
+
+make very detailed writeup of getIsomorphismPauli in pdf, explaining all the reasoning.
+    This is also important for other people, and myself, to understand the algorithms.
+
+implement 'follow' and 'unfollow' for the Pauli group
+    amounts to implementing X and Y
+
+in normalizeLIMDDPauli, in the knife cases, make sure the two edges point to the same node.
+
+make functionality in Package which allows me to execute a circuit
+refactor the simpleCliffordCircuit tests to first execute a circuit as qmdd, then as limdd; then compare the CVec of the final states
 
 Log
     all debugging statements in the limdd go to Log instead of to std::cout
