@@ -1648,7 +1648,7 @@ namespace dd {
                         Pauli::movePhaseIntoWeight(lim, weight);
                     }
                     return {r.p, weight, limTable.lookup(lim)};
-                    return {r.p, cn.getCached(r.w), r.l};
+                    //                    return {r.p, cn.getCached(r.w), r.l};
                 }
             }
 
@@ -1709,7 +1709,10 @@ namespace dd {
                     CVec vectorArg1     = getVector(e2, w, trueLimY);
                     CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
 
+//                    export2Dot(e1, "e1.dot", true, true, false, false, true);
+//                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
+//                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
 
                     CVec vectorResult = getVector(edge[i], w);
                     if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
@@ -1783,15 +1786,15 @@ namespace dd {
             //           }
             //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l});
 
-            //            auto weight = cn.getCached(e.w);
-            //            auto lim2 = trueLimX;
-            //            lim2.setPhase(Pauli::getPhaseInverse(lim2.getPhase()));
-            //            lim2.multiplyBy(e.l);
-            //            Pauli::movePhaseIntoWeight(lim2, weight);
+            auto lim2 = *trueLimXTable;
+            lim2.setPhase(Pauli::getPhaseInverse(lim2.getPhase()));
+            lim2.multiplyBy(e.l);
+            auto weight = cn.getCached(e.w);
+            Pauli::movePhaseIntoWeight(lim2, weight);
             //
-            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, weight,  limTable.lookup(lim2)}, trueLimXTable, trueLimYTable );
-            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l}, trueLimXTable, trueLimYTable);
-
+            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, weight, limTable.lookup(lim2)}, trueLimXTable, trueLimYTable);
+            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l}, trueLimXTable, trueLimYTable);
+            cn.returnToCache(weight);
             return e;
         }
 
