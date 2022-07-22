@@ -1577,6 +1577,8 @@ namespace dd {
         Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
+            // Making a copy from trueLimX as I need it later for inserting the result into the cache
+            auto trueLimXCopy = trueLimX;
 
             LimEntry<> trueLimY = limY;
             trueLimY.multiplyBy(y.l);
@@ -1626,14 +1628,10 @@ namespace dd {
 
             auto& computeTable = getAddComputeTable<Node>();
 
-            const auto trueLimXTable = limTable.lookup(trueLimX);
-            const auto trueLimYTable = limTable.lookup(trueLimY);
-
-            const auto trueLimC      = Pauli::createCanonicalLabel(trueLimX, trueLimY);
+            const auto trueLimC      = Pauli::createCanonicalLabel(trueLimX, trueLimY, y);
             const auto trueLimCTable = limTable.lookup(trueLimC);
 
-            //            auto r = computeTable.lookup({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable}, false, trueLimCTable);
-            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, false, trueLimXTable, trueLimYTable);
+            auto r = computeTable.lookup({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, false);
             //            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
 
             //           if (r.p != nullptr && false) { // activate for debugging caching only
@@ -1648,7 +1646,6 @@ namespace dd {
                         Pauli::movePhaseIntoWeight(lim, weight);
                     }
                     return {r.p, weight, limTable.lookup(lim)};
-                    //                    return {r.p, cn.getCached(r.w), r.l};
                 }
             }
 
@@ -1784,16 +1781,13 @@ namespace dd {
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
-            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l});
 
-            auto lim2 = *trueLimXTable;
-            lim2.setPhase(Pauli::getPhaseInverse(lim2.getPhase()));
-            lim2.multiplyBy(e.l);
+            trueLimXCopy.setPhase(Pauli::getPhaseInverse(trueLimXCopy.getPhase()));
+            trueLimXCopy.multiplyBy(e.l);
             auto weight = cn.getCached(e.w);
-            Pauli::movePhaseIntoWeight(lim2, weight);
+            Pauli::movePhaseIntoWeight(trueLimXCopy, weight);
             //
-            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, weight, limTable.lookup(lim2)}, trueLimXTable, trueLimYTable);
-            //            computeTable.insert({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr}, {e.p, e.w, e.l}, trueLimXTable, trueLimYTable);
+            computeTable.insert({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, {e.p, weight, limTable.lookup(trueLimXCopy)});
             cn.returnToCache(weight);
             return e;
         }

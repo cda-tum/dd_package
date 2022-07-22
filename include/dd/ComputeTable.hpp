@@ -27,11 +27,9 @@ namespace dd {
         ComputeTable() = default;
 
         struct Entry {
-            LeftOperandType              leftOperand;
-            RightOperandType             rightOperand;
-            ResultType                   result;
-            LimTable<NUM_QUBITS>::Entry* trueLimX = nullptr;
-            LimTable<NUM_QUBITS>::Entry* trueLimY = nullptr;
+            LeftOperandType  leftOperand;
+            RightOperandType rightOperand;
+            ResultType       result;
         };
 
         static constexpr std::size_t MASK = NBUCKET - 1;
@@ -46,32 +44,32 @@ namespace dd {
         // access functions
         [[nodiscard]] const auto& getTable() const { return table; }
 
-        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result, LimTable<>::Entry* trueLimX = {}, LimTable<>::Entry* trueLimY = {}) {
+        void insert(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, const ResultType& result) {
             const auto key = hash(leftOperand, rightOperand);
-            table[key]     = {leftOperand, rightOperand, result, trueLimX, trueLimY};
+            table[key]     = {leftOperand, rightOperand, result};
             ++count;
         }
 
-        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false, LimTable<>::Entry* trueLimX = {}, LimTable<>::Entry* trueLimY = {}) {
+        ResultType lookup(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] const bool useDensityMatrix = false) {
             ResultType result{};
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
 
-            auto first  = (LimEntry<>::Equal(entry.trueLimX, trueLimX)) && (LimEntry<>::Equal(entry.trueLimY, trueLimY));
-            auto second = (LimEntry<>::Equal(entry.leftOperand.l, leftOperand.l) && LimEntry<>::Equal(entry.rightOperand.l, rightOperand.l));
-            Log::log << "[ComputeTable] Lookup hit (key=" << std::to_string(key)
-                     << ")result with l=" << LimEntry<>::to_string(result.l)
-                     << ")\nleftOperand with l=" << LimEntry<>::to_string(leftOperand.l)
-                     << " rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
-                     << " and trueLimX=" << LimEntry<>::to_string(trueLimX)
-                     << " and trueLimY=" << LimEntry<>::to_string(trueLimY)
-                     << " \nentry.leftOperand with l=" << LimEntry<>::to_string(entry.leftOperand.l)
-                     << " entry.rightOperand with l=" << LimEntry<>::to_string(entry.rightOperand.l)
-                     << " and entry.trueLimX=" << LimEntry<>::to_string(entry.trueLimX)
-                     << " and entry.trueLimY=" << LimEntry<>::to_string(entry.trueLimY)
-                     << "\n";
+            //            auto first  = (LimEntry<>::Equal(entry.trueLimX, trueLimX)) && (LimEntry<>::Equal(entry.trueLimY, trueLimY));
+            //            auto second = (LimEntry<>::Equal(entry.leftOperand.l, leftOperand.l) && LimEntry<>::Equal(entry.rightOperand.l, rightOperand.l));
+            //            Log::log << "[ComputeTable] Lookup hit (key=" << std::to_string(key)
+            //                     << ")result with l=" << LimEntry<>::to_string(result.l)
+            //                     << ")\nleftOperand with l=" << LimEntry<>::to_string(leftOperand.l)
+            //                     << " rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
+            //                     << " and trueLimX=" << LimEntry<>::to_string(trueLimX)
+            //                     << " and trueLimY=" << LimEntry<>::to_string(trueLimY)
+            //                     << " \nentry.leftOperand with l=" << LimEntry<>::to_string(entry.leftOperand.l)
+            //                     << " entry.rightOperand with l=" << LimEntry<>::to_string(entry.rightOperand.l)
+            //                     << " and entry.trueLimX=" << LimEntry<>::to_string(entry.trueLimX)
+            //                     << " and entry.trueLimY=" << LimEntry<>::to_string(entry.trueLimY)
+            //                     << "\n";
 
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
@@ -105,7 +103,7 @@ namespace dd {
                return os;
         }
 
-    protected:
+    private:
         std::array<Entry, NBUCKET> table{};
         // compute table lookup statistics
         std::size_t hits    = 0;

@@ -55,12 +55,17 @@ namespace dd {
         }
 
         template<std::size_t NUM_QUBITS>
-        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel(LimEntry<NUM_QUBITS>& x, LimEntry<NUM_QUBITS>& y) {
+        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel(const LimEntry<NUM_QUBITS>& x, const LimEntry<NUM_QUBITS>& y, const vEdge w) {
             auto c = x;
             c.setPhase(getPhaseInverse(c.getPhase()));
             c.multiplyBy(y);
-            //        getRootLabel()
-            return c;
+            const auto d = *getRootLabel(w.p, &c);
+//            if (d==c){
+//                std::cout << "RootLabelEqual" << std::endl;
+//            } else {
+//                std::cout << "RootLabelNotEqual" << std::endl;
+//            }
+            return d;
         }
 
         static void movePhaseIntoWeight(LimEntry<>& lim, Complex& weight) {
