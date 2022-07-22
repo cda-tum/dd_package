@@ -883,6 +883,7 @@ TEST(LimTest, intersectGroupsPauli6) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("X"));
     G.push_back(new dd::LimEntry<>("Z"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("-iY"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -894,6 +895,7 @@ TEST(LimTest, intersectGroupsPauli7) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("X"));
     G.push_back(new dd::LimEntry<>("-Z"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("iY"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -905,6 +907,7 @@ TEST(LimTest, intersectGroupsPauli8) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("ZZ"));
     G.push_back(new dd::LimEntry<>("XX"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("XX"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -916,6 +919,7 @@ TEST(LimTest, intersectGroupsPauli9) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("YY"));
     G.push_back(new dd::LimEntry<>("XX"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("XX"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -927,6 +931,7 @@ TEST(LimTest, intersectGroupsPauli10) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("YY"));
     G.push_back(new dd::LimEntry<>("XX"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("YY"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -938,6 +943,7 @@ TEST(LimTest, intersectGroupsPauli11) {
     dd::StabilizerGroup G, H;
     G.push_back(new dd::LimEntry<>("XX"));
     G.push_back(new dd::LimEntry<>("YY"));
+    dd::Pauli::toColumnEchelonForm(G);
     H.push_back(new dd::LimEntry<>("-ZZ"));
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
@@ -951,6 +957,8 @@ TEST(LimTest, intersectGroupsPauli12) {
     G.push_back(new dd::LimEntry<>("YY"));
     H.push_back(new dd::LimEntry<>("ZI"));
     H.push_back(new dd::LimEntry<>("-IZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("-ZZ"));
@@ -963,6 +971,8 @@ TEST(LimTest, intersectGroupsPauli13) {
     G.push_back(new dd::LimEntry<>("YY"));
     H.push_back(new dd::LimEntry<>("-ZI"));
     H.push_back(new dd::LimEntry<>("IZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("-ZZ"));
@@ -975,6 +985,8 @@ TEST(LimTest, intersectGroupsPauli14) {
     G.push_back(new dd::LimEntry<>("XX"));
     H.push_back(new dd::LimEntry<>("-iZI"));
     H.push_back(new dd::LimEntry<>("iIZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("ZZ"));
@@ -986,6 +998,7 @@ TEST(LimTest, intersectGroupsPauli15) {
     G.push_back(new dd::LimEntry<>("ZZ"));
     G.push_back(new dd::LimEntry<>("XX"));
     H.push_back(new dd::LimEntry<>("-YY"));
+    dd::Pauli::toColumnEchelonForm(G);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("-YY"));
@@ -998,6 +1011,8 @@ TEST(LimTest, intersectGroupsPauli16) {
     G.push_back(new dd::LimEntry<>("XX"));
     H.push_back(new dd::LimEntry<>("-YI"));
     H.push_back(new dd::LimEntry<>("iXZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::Pauli::toColumnEchelonForm(intersection);
     dd::StabilizerGroup expectedIntersection;
@@ -1011,6 +1026,8 @@ TEST(LimTest, intersectGroupsPauli17) {
     G.push_back(new dd::LimEntry<>("XX"));
     H.push_back(new dd::LimEntry<>("-YY"));
     H.push_back(new dd::LimEntry<>("XX"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::Pauli::toColumnEchelonForm(intersection);
     dd::StabilizerGroup expectedIntersection;
@@ -1050,6 +1067,8 @@ TEST(LimTest, intersectGroupsPauli20) {
     G.push_back(new dd::LimEntry<>("ZX"));
     H.push_back(new dd::LimEntry<>("iYZ"));
     H.push_back(new dd::LimEntry<>("IX"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("YY"));
@@ -1064,9 +1083,41 @@ TEST(LimTest, intersectGroupsPauli21) {
     H.push_back(new dd::LimEntry<>("ZIZ"));
     H.push_back(new dd::LimEntry<>("IYI"));
     H.push_back(new dd::LimEntry<>("IIZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
     dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
     dd::StabilizerGroup expectedIntersection;
     expectedIntersection.push_back(new dd::LimEntry<>("IIZ"));
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli22) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    H.push_back(new dd::LimEntry<>("-ZI"));
+    H.push_back(new dd::LimEntry<>("IZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("IZ"));
+    std::cout << "[intersectGroupsZ1 test] intersection: " << dd::Pauli::groupToString(intersection, 2) << "; expected = " << dd::Pauli::groupToString(expectedIntersection, 2) << "\n";
+    EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
+}
+
+TEST(LimTest, intersectGroupsPauli23) {
+    dd::StabilizerGroup G, H;
+    G.push_back(new dd::LimEntry<>("ZI"));
+    G.push_back(new dd::LimEntry<>("IZ"));
+    H.push_back(new dd::LimEntry<>("ZI"));
+    H.push_back(new dd::LimEntry<>("-IZ"));
+    dd::Pauli::toColumnEchelonForm(G);
+    dd::Pauli::toColumnEchelonForm(H);
+    dd::StabilizerGroup intersection = dd::Pauli::intersectGroupsPauli(G, H);
+    dd::StabilizerGroup expectedIntersection;
+    expectedIntersection.push_back(new dd::LimEntry<>("ZI"));
+    std::cout << "[intersectGroupsZ1 test] intersection: " << dd::Pauli::groupToString(intersection, 2) << "; expected = " << dd::Pauli::groupToString(expectedIntersection, 2) << "\n";
     EXPECT_TRUE(dd::Pauli::stabilizerGroupsEqual(intersection, expectedIntersection));
 }
 
@@ -1430,20 +1481,17 @@ TEST(LimTest, CreateNode2_simple) {
     std::cout << "[CreateNode2 simple test].\n";
 
     dd::Edge<dd::vNode> e0 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, nullptr);
-    std::cout << "[CreateNode2 simple test] e0 is " << e0;
+    std::cout << "[CreateNode2 simple test] e0 is " << e0 << '\n';
 
     dd::LimEntry<>*     z  = new dd::LimEntry<>("Z");
     dd::Edge<dd::vNode> e1 = dd->makeDDNode(0, std::array{dd::vEdge::one, dd::vEdge::one}, false, z);
 
-    std::cout << "[CreateNode2 simple test] e1 is " << e1;
+    std::cout << "[CreateNode2 simple test] e1 is " << e1 << '\n';
 
     // Create edge |0>|e0> + |1>|e1>
     dd::Edge<dd::vNode> e = dd->makeDDNode(1, std::array{e0, e1}, false, nullptr);
-    std::cout << "[CreateNode2 simple test] e is " << e;
-    // normalize the edge / node
+    std::cout << "[CreateNode2 simple test] e is " << e << '\n';
 
-    std::cout << "[CreateNode2 test] root label: (should be I): " << dd::LimEntry<>::to_string(e.l) << '\n';
-    EXPECT_EQ(dd::LimEntry<>::isIdentityOperator(e.l), true);
     std::cout << "[CreateNode2 test] high label: (should be Z):  " << dd::LimEntry<>::to_string(e.p->e[1].l) << '\n';
     EXPECT_EQ(dd::LimEntry<>::Equal(e.p->e[1].l, z), true);
 }

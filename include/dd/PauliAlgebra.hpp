@@ -147,6 +147,14 @@ public:
     	return ss.str();
     }
 
+    static Qubit getMaximumQubitIndex(const StabilizerGroup G) {
+    	Qubit maxid = 0;
+    	for (unsigned int i=0; i<G.size(); i++) {
+    		maxid = std::max(maxid, G[i]->getMaximumIndex());
+    	}
+    	return maxid;
+    }
+
     static StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup concat = G;
         for (unsigned int i=0; i<H.size(); i++) {
@@ -378,6 +386,13 @@ public:
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
     }
 
+    // TODO
+    template <std::size_t NUM_QUBITS>
+    static bool isInColumnEchelonForm(const StabilizerGroup& G) {
+    	// TODO
+    	return false;
+    }
+
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
@@ -553,8 +568,13 @@ public:
         return intersection;
     }
 
+    // Precondition: G and H are in column echelon form
     static StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
+    	Qubit n = getMaximumQubitIndex(G);
+    	Log::log << "[intersect groups Pauli] G = " << groupToString(G, n) << " H = " << groupToString(H, n) << '\n';
     	StabilizerGroup intersection = intersectGroupsModuloPhase(G, H);
+    	toColumnEchelonForm(intersection);
+    	Log::log << "[intersect groups Pauli] intersection mod phase = " << groupToString(intersection, n) << '\n';
     	// Remove all elements from intersection where the G-phase is not equal to the H-phase
     	unsigned int s = intersection.size();
     	phase_t phaseG, phaseH;
@@ -567,9 +587,11 @@ public:
 				g++;
     		} else {
     			// remove this from the intersection
+    			intersection[i] = intersection[intersection.size() - 1];
     			intersection.pop_back();
     		}
     	}
+    	Log::log << "[intersect groups Pauli] intersection = " << groupToString(intersection, n) << '\n';
         return intersection;
     }
 
@@ -682,6 +704,7 @@ public:
 
 	// TODO write a test
     // TODO refactor to use recoverElement
+    // precondition: group is in column echelon form
     template<std::size_t NUM_QUBITS>
     static phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
     	if (a == LimEntry<NUM_QUBITS>::noLIM) {
@@ -703,6 +726,7 @@ public:
 
     // TODO implement
     // TODO write a test
+    // precondition: group is in column echelon form
     template <std::size_t NUM_QUBITS>
     static LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
     	if (a == LimEntry<NUM_QUBITS>::noLIM) {

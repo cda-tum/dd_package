@@ -436,6 +436,27 @@ namespace dd {
             return Id;
         }
 
+        LimEntry<NUM_QUBITS> getInverse() const {
+        	LimEntry<NUM_QUBITS> inverse(*this);
+        	phase_t phase = getPhase();
+        	if (phase == phase_t::phase_i) {
+        		inverse.setPhase(phase_t::phase_minus_i);
+        	}
+        	else if (phase == phase_t::phase_minus_i) {
+        		inverse.setPhase(phase_t::phase_i);
+        	}
+        	return inverse;
+        }
+
+        Qubit getMaximumIndex() const {
+        	for (Qubit v=NUM_QUBITS-1; v >= 0; v--) {
+        		if (getQubit(v) != pauli_op::pauli_id) {
+        			return v;
+        		}
+        	}
+        	return (Qubit) 0;
+        }
+
         // Returns the index of the first nonzero entry in the checkvector
         unsigned int pivotPosition() const {
             for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
