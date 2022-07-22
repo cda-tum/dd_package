@@ -573,6 +573,7 @@ public:
     	Qubit n = getMaximumQubitIndex(G);
     	Log::log << "[intersect groups Pauli] G = " << groupToString(G, n) << " H = " << groupToString(H, n) << '\n';
     	StabilizerGroup intersection = intersectGroupsModuloPhase(G, H);
+    	StabilizerGroup oppositePhaseGenerators;
     	toColumnEchelonForm(intersection);
     	Log::log << "[intersect groups Pauli] intersection mod phase = " << groupToString(intersection, n) << '\n';
     	// Remove all elements from intersection where the G-phase is not equal to the H-phase
@@ -586,10 +587,18 @@ public:
     			intersection[g]->setPhase(phaseG);
 				g++;
     		} else {
+    			// add it to the wrong phase stuff
+    			oppositePhaseGenerators.push_back(intersection[i]);
     			// remove this from the intersection
     			intersection[i] = intersection[intersection.size() - 1];
     			intersection.pop_back();
     		}
+    	}
+    	if (oppositePhaseGenerators.size() >= 2) {
+    		LimEntry<>* a = LimEntry<>::multiply(oppositePhaseGenerators[0], oppositePhaseGenerators[1]);
+    		phaseG = recoverPhase(G, a);
+    		a->setPhase(phaseG);
+    		intersection.push_back(a);
     	}
     	Log::log << "[intersect groups Pauli] intersection = " << groupToString(intersection, n) << '\n';
         return intersection;

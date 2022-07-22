@@ -116,7 +116,7 @@ struct DDPackageConfig {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = true, bool outputToLog = false):
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = true, bool outputToLog = true):
             cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
             resize(nq);
 			Log::log.verbose = outputToLog;
@@ -683,7 +683,7 @@ struct DDPackageConfig {
         }
 
         // Construct the stabilizer generator set of 'node' in the Pauli group
-    	// TODO limdd store stab in LimTable
+        // Puts these generators in column echelon form
         StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode& node) {
             Edge<vNode> low, high;
             low  = node.e[0];
@@ -726,14 +726,16 @@ struct DDPackageConfig {
             else {
                 // Gather the stabilizer groups of the two children
                 Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
-    			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
     			// Step 1: Compute the intersection
     			StabilizerGroup* stabLow  = &(low. p->limVector);
     			StabilizerGroup* stabHigh = &(high.p->limVector);
             	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; Pauli::printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << Pauli::groupToString(*stabLow, n-1) << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << Pauli::groupToString(*stabHigh, n-1) << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] PHP: " << Pauli::groupToString(PHP, node.e[1].p->v) << '\n';
     			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, n); Log::log << '\n';
+    			Log::log << "[constructStabilizerGeneratorSet] intersection: " << Pauli::groupToString(stabgenset, n) << '\n';
+    			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
     			LimEntry<>* stab = LimEntry<>::noLIM;
 				Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
     			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n-1);
@@ -761,27 +763,23 @@ struct DDPackageConfig {
 							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
     						stabgenset.push_back(new LimEntry<>(X));
     					}
-//    					else {
 							// Check for Y
-        					Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
-							phase_t minusRhoSquared = Pauli::multiplyPhases(rhoSquared, phase_t::phase_minus_one);
-							stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
-							if (stab != LimEntry<>::noLIM) {
-								LimEntry<> X;
-								X.setOperator(n, pauli_op::pauli_y);
-	        					Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X) << "\n";
-								X.multiplyBy(high.l);
-								X.multiplyBy(stab);
-								X.multiplyPhaseBy(rhoPhase);
-								X.multiplyPhaseBy(phase_t::phase_minus_i);
-	    						Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
-								Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
-								stabgenset.push_back(new LimEntry<>(X));
-							}
-//    					}
+						Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
+						phase_t minusRhoSquared = Pauli::multiplyPhases(rhoSquared, phase_t::phase_minus_one);
+						stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
+						if (stab != LimEntry<>::noLIM) {
+							LimEntry<> X;
+							X.setOperator(n, pauli_op::pauli_y);
+							Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X, n) << "\n";
+							X.multiplyBy(high.l);
+							X.multiplyBy(stab);
+							X.multiplyPhaseBy(rhoPhase);
+							X.multiplyPhaseBy(phase_t::phase_minus_i);
+							Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+							stabgenset.push_back(new LimEntry<>(X));
+						}
     				}
-                } else {
-					Log::log << "[constructStabilizerGeneratorSet] Failed to find additional stabilizers.\n";
                 }
     			Pauli::toColumnEchelonForm(stabgenset);
             }
