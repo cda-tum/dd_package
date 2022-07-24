@@ -104,6 +104,23 @@ namespace dd {
          * @param qubit
          * @return char of {I, X, Y, Z}
          */
+
+        [[nodiscard]] pauli_op getPauliForQubit(dd::Qubit qubit) const {
+            if(qubit == -1){
+                // Reached terminal
+                return pauli_id;
+            }
+            if (!paulis.test(2 * qubit + 1) && !paulis.test(2 * qubit)) {
+                return pauli_id;
+            } else if (!paulis.test(2 * qubit + 1) && paulis.test(2 * qubit)) {
+                return pauli_z;
+            } else if (paulis.test(2 * qubit + 1) && !paulis.test(2 * qubit)) {
+                return pauli_x;
+            } else {
+                return pauli_y;
+            }
+        }
+
         [[nodiscard]] char getQubit(dd::Qubit qubit) const {
             // todo return a pauli_t
             if(qubit == -1){
@@ -683,6 +700,15 @@ namespace dd {
             allIdentity->refCount = 1;
         };
         ~LimTable() = default;
+
+        static std::size_t hash(const Entry *a) {
+            if (a != nullptr){
+                return hash(a->paulis);
+            } else {
+                return hash(PauliBitSet{});
+            }
+        }
+
 
         static std::size_t hash(const Entry& a) {
             return hash(a.paulis);
