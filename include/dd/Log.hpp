@@ -37,7 +37,7 @@ namespace dd {
 		}
 	};
 
-	std::ostream& operator<<(std::ostream& out, [[maybe_unused]] const _Log& log) {
+    inline std::ostream& operator<<(std::ostream& out, [[maybe_unused]] const _Log& log) {
 		return out;
 	}
 

@@ -70,8 +70,8 @@ namespace dd {
             return d;
         }
 
-        template<std::size_t NUM_QUBITS>
-        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel([[maybe_unused]] const LimEntry<NUM_QUBITS>& x, [[maybe_unused]] const LimEntry<NUM_QUBITS>& y, [[maybe_unused]] const mEdge w) {
+        template<std::size_t NUM_QUBITS, class Node>
+        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel([[maybe_unused]] const LimEntry<NUM_QUBITS>& x, [[maybe_unused]] const LimEntry<NUM_QUBITS>& y, [[maybe_unused]] const Edge<Node> w) {
         	throw std::exception();
         }
 

@@ -156,7 +156,7 @@ namespace dd {
     private:
         std::size_t nqubits;
         LIMDD_group group;
-        bool performSanityChecks;
+        bool        performSanityChecks;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -318,7 +318,7 @@ namespace dd {
             //            std::cout.flush();
             bool        s           = false;
             LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
-            r.p->e[1].l = limTable.lookup(*higLimTemp2);
+            r.p->e[1].l             = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             //            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
             //            std::cout.flush();
@@ -359,7 +359,7 @@ namespace dd {
 
         template<class Edge>
         void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
-			if (!performSanityChecks) return;
+            if (!performSanityChecks) return;
             if (!vectorsApproximatelyEqual(before, after)) {
                 Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
                 Log::log << "[normalizeLIMDD] original:   ";
@@ -376,7 +376,7 @@ namespace dd {
 
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
-        	if (!performSanityChecks) return;
+            if (!performSanityChecks) return;
             CVec nodeVec = getVector(edge);
             CVec stabVec;
             for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
@@ -399,7 +399,7 @@ namespace dd {
         // Checks whether a == iso * b
         template<class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
-        	if (!performSanityChecks) return;
+            if (!performSanityChecks) return;
             Edge edgeA{&a, Complex::one, nullptr};
             Edge edgeB{&b, Complex::one, nullptr};
             CVec avec    = getVector(edgeA);
@@ -444,7 +444,7 @@ namespace dd {
         }
 
         bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
-        	if (!performSanityChecks) return true;
+            if (!performSanityChecks) return true;
             if (result.size() == 0) {
                 return (isZeroVector(left) && isZeroVector(right));
             }
@@ -499,7 +499,7 @@ namespace dd {
             CVec amplitudeVecBeforeNormalize = getVector(r);
 
             if (r.l == nullptr) {
-            	r.l = LimEntry<>::getIdentityOperator();
+                r.l = LimEntry<>::getIdentityOperator();
             }
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
@@ -507,7 +507,7 @@ namespace dd {
             if (zero[1]) {
                 Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
-                r.l->multiplyBy(r.p->e[0].l);// = LimEntry<>::multiply(r.l, r.p->e[0].l);
+                r.l->multiplyBy(r.p->e[0].l); // = LimEntry<>::multiply(r.l, r.p->e[0].l);
                 // Step 2: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr;
                 r.p->e[1].l = nullptr;
@@ -529,11 +529,11 @@ namespace dd {
                 // TODO double-check if this logic makes sense
                 Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Multiply the root label by the high edge label
-                r.l->multiplyBy(r.p->e[1].l);// = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO resolved limdd memory leak
+                r.l->multiplyBy(r.p->e[1].l); // = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO resolved limdd memory leak
                 // Step 2: Right-multiply the root edge by X
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X);// = LimEntry<>::multiply(r.l, &X); // TODO resolved limdd memory leak
+                r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved limdd memory leak
                 // Step 3: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
@@ -556,18 +556,18 @@ namespace dd {
                 Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X);// = LimEntry<>::multiply(r.l, &X); // TODO resolved memory leak
+                r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved memory leak
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
-            LimEntry<>* lowLim = r.p->e[0].l;
+            LimEntry<>*                  lowLim = r.p->e[0].l;
             [[maybe_unused]] LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
             if (r.p->e[1].l == nullptr) {
-            	r.p->e[1].l = new LimEntry<>();
+                r.p->e[1].l = new LimEntry<>();
             }
-//            r.p->e[1].l->leftMultiplyBy(lowLim); // TODO doing this gives many errors
+            //            r.p->e[1].l->leftMultiplyBy(lowLim); // TODO doing this gives many errors
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
             r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
@@ -577,25 +577,25 @@ namespace dd {
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
             Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-            vNode       oldNode            = *(r.p); // make a copy of the old node
-            Complex     highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
-            LimEntry<>  higLimTemp;
+            vNode      oldNode            = *(r.p); // make a copy of the old node
+            Complex    highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
+            LimEntry<> higLimTemp;
             Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, higLimTemp); // TODO memory leak; delete highLimTemp
-            r.p->e[1].l                    = limTable.lookup(higLimTemp);
+            r.p->e[1].l = limTable.lookup(higLimTemp);
             limTable.incRef(r.p->e[1].l);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
-			cn.returnToCache(highEdgeWeightTemp);   // TODO RESOLVED return to cache. Uncommenting this line gives an error
+            cn.returnToCache(highEdgeWeightTemp); // TODO RESOLVED return to cache. Uncommenting this line gives an error
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
-            CVec rpVec = getVector(r.p);
+            CVec rpVec      = getVector(r.p);
             CVec oldNodeVec = getVector(&oldNode);
             Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
-            		 << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
+                     << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
 
             LimWeight<> iso;
-            bool foundIsomorphism = false;
+            bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             Pauli::getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism); // TODO RESOLVED memory leak: LIM 'iso' is not freed
             if (!foundIsomorphism) {
@@ -604,14 +604,14 @@ namespace dd {
             sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
             Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
-//            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
+            //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
             r.l->multiplyBy(lowLim);
             Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
-//            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
+            //            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
             delete iso.lim;
-//            delete iso;
+            //            delete iso;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
@@ -630,7 +630,7 @@ namespace dd {
         }
 
         // Construct the stabilizer generator set of 'node' in the Pauli group
-    	// TODO limdd store stab in LimTable
+        // TODO limdd store stab in LimTable
         StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode& node) {
             Edge<vNode> low, high;
             low               = node.e[0];
@@ -672,35 +672,37 @@ namespace dd {
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
                 // Gather the stabilizer groups of the two children
-                Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
-    			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
-    			// Step 1: Compute the intersection
-    			StabilizerGroup* stabLow  = &(low. p->limVector);
-    			StabilizerGroup* stabHigh = &(high.p->limVector);
-            	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; Pauli::printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
-    			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
-    			LimEntry<>* stab = LimEntry<>::noLIM;
-    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
-    			if (stab != LimEntry<>::noLIM) {
-    				stab->setOperator(n, 'Z');
-    			}
-    			else if (low.p == high.p) {
-                	// TODO check for X
-    //				Complex rho = cn.mulCached(low.w, high.w);
-    //				phase_t rho_phase = rho.getPhase();
-    				// TODO Check for Y
-
+                Log::log << "[constructStabilizerGeneratorSet] Case fork; " << node << "\n";
+                // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
+                // Step 1: Compute the intersection
+                StabilizerGroup* stabLow  = &(low.p->limVector);
+                StabilizerGroup* stabHigh = &(high.p->limVector);
+                StabilizerGroup  PHP      = Pauli::conjugateGroup(*stabHigh, high.l);
+                Log::log << "[constructStabilizerGeneratorSet] conjugate group: ";
+                Pauli::printStabilizerGroup(PHP, node.e[1].p->v);
+                Log::log << '\n';
+                stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
+                Log::log << "[constructStabilizerGeneratorSet] intersection: ";
+                Pauli::printStabilizerGroup(stabgenset, node.v);
+                Log::log << '\n';
+                LimEntry<>* stab = LimEntry<>::noLIM;
+                stab             = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
+                if (stab != LimEntry<>::noLIM) {
+                    stab->setOperator(n, 'Z');
+                } else if (low.p == high.p) {
+                    // TODO check for X
+                    //				Complex rho = cn.mulCached(low.w, high.w);
+                    //				phase_t rho_phase = rho.getPhase();
+                    // TODO Check for Y
                 }
-    			if (stab != LimEntry<>::noLIM) {
-    				stabgenset.push_back(stab);
-    			}
-    			Pauli::toColumnEchelonForm(stabgenset);
+                if (stab != LimEntry<>::noLIM) {
+                    stabgenset.push_back(stab);
+                }
+                Pauli::toColumnEchelonForm(stabgenset);
             }
-//            CVec amplitudeVec = getVector(&node);
-//            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
-//            		 << "[constructStabilizerGeneratorSet] Stab = "; printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
+            //            CVec amplitudeVec = getVector(&node);
+            //            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
+            //            		 << "[constructStabilizerGeneratorSet] Stab = "; printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
 
             return stabgenset;
         }
@@ -1195,21 +1197,21 @@ namespace dd {
 
         // TODO delete the old content of the group, which was dynamicalyl allocated on the heap
         void putStabilizersInTable(vEdge& edge) {
-        	[[maybe_unused]] LimEntry<>* limptr;
-        	for (unsigned int i=0; i<edge.p->limVector.size(); i++) {
-//        		limptr = edge.p->limVector[i];
-        		edge.p->limVector[i] = limTable.lookup(*(edge.p->limVector[i]));
-//        		delete limptr;
-        	}
+            [[maybe_unused]] LimEntry<>* limptr;
+            for (unsigned int i = 0; i < edge.p->limVector.size(); i++) {
+                //        		limptr = edge.p->limVector[i];
+                edge.p->limVector[i] = limTable.lookup(*(edge.p->limVector[i]));
+                //        		delete limptr;
+            }
         }
 
-    	_Log& outputCVec(const CVec& vec) {
-    		Log::log << "[";
-    		for (unsigned int i = 0; i < vec.size(); i++) {
-    			Log::log << vec[i] << ", ";
-    		}
-    		return Log::log << "]";
-    	}
+        _Log& outputCVec(const CVec& vec) {
+            Log::log << "[";
+            for (unsigned int i = 0; i < vec.size(); i++) {
+                Log::log << vec[i] << ", ";
+            }
+            return Log::log << "]";
+        }
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
@@ -1260,9 +1262,11 @@ namespace dd {
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
-                    vece = getVector(e.p);
+                    vece           = getVector(e.p);
                     Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                    		 << "[makeDDNode] Stab = "; Pauli::printStabilizerGroup(e.p->limVector); Log::log << '\n';
+                             << "[makeDDNode] Stab = ";
+                    Pauli::printStabilizerGroup(e.p->limVector);
+                    Log::log << '\n';
                     sanityCheckStabilizerGroup(e, e.p->limVector);
                     putStabilizersInTable(e);
                     break;
@@ -1378,7 +1382,6 @@ namespace dd {
         ///
     public:
         std::string measureAll(vEdge& rootEdge, const bool collapse, std::mt19937_64& mt, fp epsilon = 0.001) {
-            // TODO limdd
             if (std::abs(ComplexNumbers::mag2(rootEdge.w) - 1.0L) > epsilon) {
                 if (rootEdge.w.approximatelyZero()) {
                     throw std::runtime_error("Numerical instabilities led to a 0-vector! Abort simulation!");
@@ -1388,6 +1391,7 @@ namespace dd {
             }
 
             vEdge      cur            = rootEdge;
+            LimEntry<> lim            = {};
             const auto numberOfQubits = static_cast<QubitCount>(rootEdge.p->v + 1);
 
             std::string result(numberOfQubits, '0');
@@ -1406,10 +1410,10 @@ namespace dd {
 
                 const fp threshold = dist(mt);
                 if (threshold < p0) {
-                    cur = cur.p->e.at(0);
+                    std::tie(cur, lim) = follow(cur, 0, lim);
                 } else {
-                    result[cur.p->v] = '1';
-                    cur              = cur.p->e.at(1);
+                    result[cur.p->v]  = '1';
+                    std::tie(cur, lim) = follow(cur, 1, lim);
                 }
             }
 
@@ -1614,7 +1618,7 @@ namespace dd {
     public:
         long addCallCounter = 0;
         template<class Node>
-        Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
+        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
             // Making a copy from trueLimX as I need it later for inserting the result into the cache
@@ -1744,10 +1748,10 @@ namespace dd {
                     CVec vectorArg1     = getVector(e2, w, trueLimY);
                     CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
 
-//                    export2Dot(e1, "e1.dot", true, true, false, false, true);
-//                    export2Dot(e2, "e2.dot", true, true, false, false, true);
+                    //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
+                    //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
-//                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
+                    //                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
 
                     CVec vectorResult = getVector(edge[i], w);
                     if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
@@ -2296,7 +2300,7 @@ namespace dd {
                     throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
                 }
             } else {
-                e = makeDDNode(var, edge, true, generateDensityMatrix);
+            e = makeDDNode(var, edge, true, generateDensityMatrix);
             }
 
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
@@ -3221,8 +3225,8 @@ namespace dd {
         }
 
         CVec getVector(vNode* v) {
-        	vEdge edge{v, Complex::one, nullptr};
-        	return getVector(edge);
+            vEdge edge{v, Complex::one, nullptr};
+            return getVector(edge);
         }
 
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
