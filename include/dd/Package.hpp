@@ -118,9 +118,10 @@ namespace dd {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup):
-            cn(ComplexNumbers()), nqubits(nq), group(_group) {
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = false, bool outputToLog = false):
+            cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
             resize(nq);
+            Log::log.verbose = outputToLog;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -155,6 +156,7 @@ namespace dd {
     private:
         std::size_t nqubits;
         LIMDD_group group;
+        bool performSanityChecks;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -357,6 +359,7 @@ namespace dd {
 
         template<class Edge>
         void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
+			if (!performSanityChecks) return;
             if (!vectorsApproximatelyEqual(before, after)) {
                 Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
                 Log::log << "[normalizeLIMDD] original:   ";
@@ -373,6 +376,7 @@ namespace dd {
 
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
+        	if (!performSanityChecks) return;
             CVec nodeVec = getVector(edge);
             CVec stabVec;
             for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
@@ -395,6 +399,7 @@ namespace dd {
         // Checks whether a == iso * b
         template<class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
+        	if (!performSanityChecks) return;
             Edge edgeA{&a, Complex::one, nullptr};
             Edge edgeB{&b, Complex::one, nullptr};
             CVec avec    = getVector(edgeA);
@@ -439,6 +444,7 @@ namespace dd {
         }
 
         bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
+        	if (!performSanityChecks) return true;
             if (result.size() == 0) {
                 return (isZeroVector(left) && isZeroVector(right));
             }
