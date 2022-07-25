@@ -5,21 +5,22 @@
 #ifndef DDPACKAGE_PAULIALGEBRA_HPP
 #define DDPACKAGE_PAULIALGEBRA_HPP
 
-#include "Edge.hpp"
-#include "Node.hpp"
-#include "LimTable.hpp"
 #include "ComplexNumbers.hpp"
+#include "Edge.hpp"
+#include "LimTable.hpp"
 #include "Log.hpp"
 #include "PauliUtilities.hpp"
 #include <iostream>
+#include "Node.hpp"
+
 #include <array>
+#include <iostream>
 
 // note: my package won't compile unless I put my functions in a class
 // for now, I've called this class Pauli
 // - Lieuwe
 
 namespace dd {
-
 
 	enum LIMDD_group {
 		QMDD_group,
@@ -54,6 +55,32 @@ namespace dd {
 			return (phase_t)((4 - (int) a) & 0x3);
 
 		}
+
+        template<std::size_t NUM_QUBITS>
+        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel(const LimEntry<NUM_QUBITS>& x, const LimEntry<NUM_QUBITS>& y, const vEdge w) {
+            auto c = x;
+            c.setPhase(getPhaseInverse(c.getPhase()));
+            c.multiplyBy(y);
+            const auto d = *getRootLabel(w.p, &c);
+//            if (d==c){
+//                std::cout << "RootLabelEqual" << std::endl;
+//            } else {
+//                std::cout << "RootLabelNotEqual" << std::endl;
+//            }
+            return d;
+        }
+
+        template<std::size_t NUM_QUBITS>
+        [[nodiscard]] static LimEntry<NUM_QUBITS> createCanonicalLabel([[maybe_unused]] const LimEntry<NUM_QUBITS>& x, [[maybe_unused]] const LimEntry<NUM_QUBITS>& y, [[maybe_unused]] const mEdge w) {
+        	throw std::exception();
+        }
+
+        static void movePhaseIntoWeight(LimEntry<>& lim, Complex& weight) {
+            if (lim.getPhase() != phase_one) {
+                weight.multiplyByPhase(lim.getPhase());
+                lim.setPhase(phase_one);
+            }
+        }
 
 		static phase_t getPhaseaMinusB(phase_t a, phase_t b) {
 			phase_t minb = getPhaseInverse(b);
@@ -1183,7 +1210,6 @@ namespace dd {
 		}
 
 	};
-
 
 
 } // namespace dd

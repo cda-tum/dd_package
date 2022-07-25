@@ -12,7 +12,7 @@
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "ComputeTable.hpp"
-#include "ComputeTableLim.hpp"
+//#include "ComputeTableLim.hpp"
 #include "Control.hpp"
 #include "CVecUtilities.hpp"
 #include "Definitions.hpp"
@@ -381,7 +381,7 @@ namespace dd {
                     Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element.\n";
                     Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
                     Log::log << "[sanity check stabilizer group] Node's stabilizer group is :";
-                    printStabilizerGroup(stabilizerGroup, edge.p->v);
+                    Pauli::printStabilizerGroup(stabilizerGroup, edge.p->v);
                     Log::log << "\n[sanity check stabilizer group] node's vector: ";
                     printCVec(nodeVec);
                     Log::log << "[sanity check stabilizer group] stabilizer vec:";
@@ -643,12 +643,12 @@ namespace dd {
             else if (zero[1]) {
                 Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
                 stabgenset = low.p->limVector; // copies the stabilizer group of the left child
-                printStabilizerGroup(stabgenset);
+                Pauli::printStabilizerGroup(stabgenset);
                 LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
                 idZ->setOperator(n, 'Z');
                 stabgenset.push_back(idZ);
                 Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                Pauli::printStabilizerGroup(stabgenset);
                 // the matrix set is already in column echelon form,
                 // so we do not need to perform that step here
             }
@@ -656,12 +656,12 @@ namespace dd {
             else if (zero[0]) {
                 Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
                 stabgenset = high.p->limVector; // copy the stabilizer of the right child
-                printStabilizerGroup(stabgenset);
+                Pauli::printStabilizerGroup(stabgenset);
                 LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
                 minusIdZ->setOperator(n, 'Z');
                 stabgenset.push_back(minusIdZ);
                 Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                Pauli::printStabilizerGroup(stabgenset);
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
@@ -672,9 +672,9 @@ namespace dd {
     			StabilizerGroup* stabLow  = &(low. p->limVector);
     			StabilizerGroup* stabHigh = &(high.p->limVector);
             	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; Pauli::printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
     			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
+    			Log::log << "[constructStabilizerGeneratorSet] intersection: "; Pauli::printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
     			LimEntry<>* stab = LimEntry<>::noLIM;
     			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
     			if (stab != LimEntry<>::noLIM) {
@@ -1068,6 +1068,7 @@ namespace dd {
             auto vCollect = vUniqueTable.garbageCollect(force);
             auto mCollect = mUniqueTable.garbageCollect(force);
             auto dCollect = dUniqueTable.garbageCollect(force);
+            //todo garbage collect lim table
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0) {
@@ -1255,7 +1256,7 @@ namespace dd {
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
                     vece = getVector(e.p);
                     Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                    		 << "[makeDDNode] Stab = "; printStabilizerGroup(e.p->limVector); Log::log << '\n';
+                    		 << "[makeDDNode] Stab = "; Pauli::printStabilizerGroup(e.p->limVector); Log::log << '\n';
                     sanityCheckStabilizerGroup(e, e.p->limVector);
                     putStabilizersInTable(e);
                     break;
@@ -1571,9 +1572,9 @@ namespace dd {
         /// Addition
         ///
     public:
-        ComputeTableTwoLim<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
-        ComputeTableTwoLim<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
-        ComputeTableTwoLim<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
+        ComputeTable<vCachedEdge, vCachedEdge, vCachedEdge, CT_VEC_ADD_NBUCKET> vectorAdd{};
+        ComputeTable<mCachedEdge, mCachedEdge, mCachedEdge, CT_MAT_ADD_NBUCKET> matrixAdd{};
+        ComputeTable<dCachedEdge, dCachedEdge, dCachedEdge, CT_DM_ADD_NBUCKET>  densityAdd{};
 
         template<class Node>
         [[nodiscard]] auto& getAddComputeTable() {
@@ -1610,6 +1611,8 @@ namespace dd {
         Edge<Node> add2(Edge<Node>& x, Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
+            // Making a copy from trueLimX as I need it later for inserting the result into the cache
+            auto trueLimXCopy = trueLimX;
 
             LimEntry<> trueLimY = limY;
             trueLimY.multiplyBy(y.l);
@@ -1657,17 +1660,24 @@ namespace dd {
 
             auto& computeTable = getAddComputeTable<Node>();
 
-            const auto trueLimXTable = limTable.lookup(trueLimX);
-            const auto trueLimYTable = limTable.lookup(trueLimY);
+            const auto trueLimC      = Pauli::createCanonicalLabel(trueLimX, trueLimY, y);
+            const auto trueLimCTable = limTable.lookup(trueLimC);
 
-            auto r = computeTable.lookup({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable});
+            auto r = computeTable.lookup({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, false);
+            //            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
 
             //           if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
                     return Edge<Node>::zero;
                 } else {
-                    return {r.p, cn.getCached(r.w), r.l};
+                    auto       weight = cn.getCached(r.w);
+                    LimEntry<> lim    = trueLimX;
+                    if (r.l != nullptr) {
+                        lim.multiplyBy(r.l);
+                        Pauli::movePhaseIntoWeight(lim, weight);
+                    }
+                    return {r.p, weight, limTable.lookup(lim)};
                 }
             }
 
@@ -1724,12 +1734,36 @@ namespace dd {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
-                    //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
-                    //                    Log::log << "[add2] i=" << i << "; Now adding " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << '\n';
+                    CVec vectorArg0     = getVector(e1, w, trueLimX);
+                    CVec vectorArg1     = getVector(e2, w, trueLimY);
+                    CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+
+//                    export2Dot(e1, "e1.dot", true, true, false, false, true);
+//                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
-                    //                    Log::log << "[add2] i=" << i << "; added " << LimEntry<>::to_string(&limX2, e1.p->v) << "*" << e1 << "  +  " << LimEntry<>::to_string(&limY2, e2.p->v) << "*" << e2 << "  =  " << edge[i] << '\n';
-                    //                    export2Dot(edge[i], "ei.dot", true, true, false, false, true);
+//                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
+
+                    CVec vectorResult = getVector(edge[i], w);
+                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+                        Log::log << "[add2] ERROR addition went wrong.\n";
+                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+                        Log::log << "arg0:    ";
+                        printCVec(vectorArg0);
+                        Log::log << '\n';
+                        Log::log << "arg1     ";
+                        printCVec(vectorArg1);
+                        Log::log << '\n';
+                        Log::log << "expected ";
+                        printCVec(vectorExpected);
+                        Log::log << '\n';
+                        Log::log << "result   ";
+                        printCVec(vectorResult);
+                        Log::log << '\n';
+                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
+                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
+                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
+                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                    }
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1740,6 +1774,8 @@ namespace dd {
                     cn.returnToCache(e2.w);
                 }
             }
+
+            //            export2Dot(e, "e3.dot", true, true, false, false, true);
 
             //            export2Dot(edge[0], "e1.dot", true, true, false, false, true);
             //            export2Dot(edge[1], "e2.dot", true, true, false, false, true);
@@ -1771,13 +1807,20 @@ namespace dd {
                 export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
                 export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
                 export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[multiply2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
             }
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
             //           }
-            computeTable.insert({x.p, x.w, trueLimXTable}, {y.p, y.w, trueLimYTable}, {e.p, e.w, e.l});
+
+            trueLimXCopy.setPhase(Pauli::getPhaseInverse(trueLimXCopy.getPhase()));
+            trueLimXCopy.multiplyBy(e.l);
+            auto weight = cn.getCached(e.w);
+            Pauli::movePhaseIntoWeight(trueLimXCopy, weight);
+            //
+            computeTable.insert({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, {e.p, weight, limTable.lookup(trueLimXCopy)});
+            cn.returnToCache(weight);
             return e;
         }
 
@@ -1856,9 +1899,9 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        ComputeTableOneLim<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
-        ComputeTableOneLim<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
-        ComputeTableOneLim<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
+        ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
+        ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
+        ComputeTable<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
 
         template<class LeftOperandNode, class RightOperandNode>
         [[nodiscard]] auto& getMultiplicationComputeTable() {
@@ -1890,7 +1933,6 @@ namespace dd {
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
-            // TODO limdd
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             Qubit        var = -1;
@@ -2066,7 +2108,7 @@ namespace dd {
             const auto trueLimTable = limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup(xCopy, yCopy, generateDensityMatrix, trueLimTable);
+            auto  r            = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -2257,7 +2299,7 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            computeTable.insert(xCopy, yCopy, {e.p, e.w, e.l}, trueLimTable);
+            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l});
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 

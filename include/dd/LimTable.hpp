@@ -146,7 +146,7 @@ namespace dd {
             return lim->getQubit(qubit);
         }
 
-        phase_t getPhase() const {
+        [[nodiscard]] phase_t getPhase() const {
             int phase = ((int) paulis.test(2*NUM_QUBITS)) | ((int) paulis.test(2*NUM_QUBITS+1) << 1);
             return (phase_t) phase;
         }
