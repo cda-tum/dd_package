@@ -27,12 +27,14 @@ enum LIMDD_group {
 	Pauli_group
 };
 
-//namespace Pauli {
+class Pauli {
+public:
+
 
 	// TODO write a test
 	// TODO refactor to use recoverElement
 	template<std::size_t NUM_QUBITS>
-	phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
+	static phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
 		if (a == LimEntry<NUM_QUBITS>::noLIM) {
 			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
 		}
@@ -53,7 +55,7 @@ enum LIMDD_group {
 	// TODO implement
 	// TODO write a test
 	template <std::size_t NUM_QUBITS>
-	LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
+	static LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
 		if (a == LimEntry<NUM_QUBITS>::noLIM) {
 			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
 		}
@@ -78,7 +80,7 @@ enum LIMDD_group {
     // Therefore, the LimEntry objects should NOT be stored in the LimTable;
     // todo this algorithm allocates many new LIMs; by modifying in place, less memory can be allocated, and we solve a memory leak
     template <std::size_t NUM_QUBITS>
-    void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
+    static void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -105,7 +107,7 @@ enum LIMDD_group {
     }
 
     template <std::size_t NUM_QUBITS>
-    bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    static bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
     	for (unsigned int i=0; i<G.size(); i++) {
     		for (unsigned int j=i+1; j<G.size(); j++) {
     			if (!G[i]->lim.commutesWith(&(G[j]->lim))) {
@@ -121,7 +123,7 @@ enum LIMDD_group {
     // TODO there is a faster version if the group is sorted
     //    (calls to GaussianElimination from getKernel do not sort their group before calling)
     template <std::size_t NUM_QUBITS>
-    void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    static void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -169,7 +171,7 @@ enum LIMDD_group {
     // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
     // todo it is possible to write a faster procedure, if we are allowed to assume that G is sorted
     template <std::size_t NUM_QUBITS>
-    void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    static void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
 //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2*NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -199,7 +201,7 @@ enum LIMDD_group {
     //   1. performs Gaussian elimination on G
     //   2. prunes the all-zero columns
     //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
-    void toColumnEchelonForm(StabilizerGroup& G) {
+    static void toColumnEchelonForm(StabilizerGroup& G) {
 //        Log::log << "[toColumnEchelonForm] Before CEF, group is:\n"; Log::log.flush();
 //        printStabilizerGroup(G);
         GaussianElimination(G);
@@ -213,7 +215,7 @@ enum LIMDD_group {
     }
 
     template <std::size_t NUM_QUBITS>
-    void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    static void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
 //        Log::log << "[toColumnEchelonForm] start, |G| = " << G.size() << "\n";
         GaussianElimination(G);
         pruneZeroColumns(G);
@@ -221,7 +223,7 @@ enum LIMDD_group {
     }
 
     template <std::size_t NUM_QUBITS>
-    void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>* >& G) {
+    static void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>* >& G) {
         GaussianEliminationModuloPhase(G);
         pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
@@ -230,7 +232,7 @@ enum LIMDD_group {
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+    static LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
 //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) return new LimEntry<NUM_QUBITS>(y);
@@ -254,7 +256,7 @@ enum LIMDD_group {
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
     template <std::size_t NUM_QUBITS>
-    LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
+    static LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
 //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
         LimBitset<NUM_QUBITS> y(x);
         if (G.size() == 0) return y;
@@ -282,7 +284,7 @@ enum LIMDD_group {
     //   The decomposition that is found, is recorded in the bitset 'indicator'
     // todo this algorithm can be sped up if the group G is sorted
     template <std::size_t NUM_QUBITS>
-    void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
+    static void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
 //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
 //        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         LimEntry<NUM_QUBITS> y(x);
@@ -314,7 +316,7 @@ enum LIMDD_group {
     //   returns the product of the indicated elements of G
     //   e.g., with G={ZIZ, IZZ, IXY} and indicator = '110', we return ZZI
     template<std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
+    static LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
         LimEntry<NUM_QUBITS>* g = LimEntry<NUM_QUBITS>::getIdentityOperator();
         assert(G.size() <= NUM_QUBITS);
         for (unsigned int i=0; i<G.size(); i++) {
@@ -327,7 +329,7 @@ enum LIMDD_group {
 
     // TODO free / deallocate G_Id and its elements
     template <std::size_t NUM_QUBITS>
-    std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+    static std::vector<std::bitset<NUM_QUBITS> > getKernelZ(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
         GaussianElimination(G_Id);
 //        Log::log << "[getKernelZ] after Gaussian elimination, G_Id:\n";
@@ -347,7 +349,7 @@ enum LIMDD_group {
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
     // TODO free / deallocate G_Id and its elements
     template <std::size_t NUM_QUBITS>
-    std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
+    static std::vector<std::bitset<NUM_QUBITS> > getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>* >& G) {
         std::vector<LimBitset<NUM_QUBITS>* > G_Id = appendIdentityMatrixBitset(G);
         GaussianEliminationModuloPhase(G_Id);
         std::vector<std::bitset<NUM_QUBITS> > kernel;
@@ -362,7 +364,7 @@ enum LIMDD_group {
 
     // Given two groups G, H, computes the intersection, <G> intersect <H>
     // TODO refactor with NUM_QUBITS template parameter
-    StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
+    static StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup intersection;
         StabilizerGroup GH = groupConcatenate(G, H);
         std::vector<std::bitset<dd::NUM_QUBITS> > kernel = getKernelZ(GH);
@@ -381,7 +383,7 @@ enum LIMDD_group {
     //    J may contain elements that are equal up to phase
     // todo verify: does this method work for Pauli groups? it certainly works for Z groups
     // TODO refactor with template parameter NUM_QUBITS
-    StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
+    static StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
 //        Log::log << "[intersectGroups mod phase] start  |G|=" << G.size() << "  |H| = " << H.size() << Log::endl;
 //        Log::log << "[intersectGroups mod phase] Group G:\n";
 //        printStabilizerGroup(G);
@@ -402,7 +404,7 @@ enum LIMDD_group {
         return intersection;
     }
 
-    StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
+    static StabilizerGroup intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroup& H) {
     	StabilizerGroup intersection = intersectGroupsModuloPhase(G, H);
     	// Remove all elements from intersection where the G-phase is not equal to the H-phase
     	unsigned int s = intersection.size();
@@ -422,7 +424,7 @@ enum LIMDD_group {
         return intersection;
     }
 
-    StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
+    static StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
     	StabilizerGroup H;
     	for (unsigned int i=0; i<G.size(); i++) {
     		H.push_back(new LimEntry<>(G[i]));
@@ -434,7 +436,7 @@ enum LIMDD_group {
     }
 
     template <std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
     	// How do I do this?
     	// it's just modulo F2
     	std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H); // TODO memory leak
@@ -463,7 +465,7 @@ enum LIMDD_group {
     // Note that '<G>' is a group, and '<H>+a' is a coset
     // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
     template <std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
 //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
         std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
         assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
@@ -534,7 +536,7 @@ enum LIMDD_group {
     // or returns LimEntry::noLIM, if this set is empty
     // TODO refactor to allocate less dynamic memory
     template <std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, Qubit nQubits = 5) {
+    static LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, Qubit nQubits = 5) {
     	if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
     	// find an element in G intersect abH modulo phase
     	LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
@@ -568,7 +570,7 @@ enum LIMDD_group {
 
     // We assume that only vNodes are passed
     // todo deallocate minus, m
-    StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
+    static StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
         //empty
         Edge<vNode> low, high;
         low  = node.e[0];
@@ -635,7 +637,7 @@ enum LIMDD_group {
     // Assumes that the low edges of u and v have an Identity LIM
     // TODO should we add assertions that u and v do not represent zero vectors?
     // TODO this function does not take into account the different phases... but maybe it doesn't need to...
-    LimEntry<>* getIsomorphismZ(const vNode* u, const vNode* v) {
+    static LimEntry<>* getIsomorphismZ(const vNode* u, const vNode* v) {
         assert( u != nullptr );
         assert( v != nullptr );
 //        Log::log << "[getIsomorphismZ] Start.\n";
@@ -731,7 +733,7 @@ enum LIMDD_group {
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
-    void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism) {
+    static void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism) {
         assert( u != nullptr );
         assert( v != nullptr );
 //        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
@@ -912,7 +914,7 @@ enum LIMDD_group {
 //    }
 
     // Choose the label on the High edge, in the Z group
-    LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
+    static LimEntry<>* highLabelZ(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, bool& s) {
         // We assert that the LIM has phase +1  (we expect normalizeLIMDD to guarantee this)
         assert(LimEntry<>::getPhase(vLabel) == phase_t::phase_one);
 //        Log::log << "[highLabelZWeight] Start; |Gu| = " << u->limVector.size() << " |Gv| = " << v->limVector.size() << ".\n"; Log::log.flush();
@@ -939,7 +941,7 @@ enum LIMDD_group {
     // since they will be assigned values but will not be looked up in the ComplexTable
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
-    void highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, LimEntry<>& highLabel) {
+    static void highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, LimEntry<>& highLabel) {
     	Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
     	if (u == v) {
     		Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
@@ -972,11 +974,34 @@ enum LIMDD_group {
     // This is useful when a canonical edge is needed for a cache entry
     // TODO do we need to left-multiply in GramSchmidt, or right-multiply?
     //   I think right-multiply, but we should check this
-    LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
+    static LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
     	return GramSchmidt(v->limVector, lim);
     }
 
-//}
+
+    // ********** These functions catch PauliAlgebra functions when they are called on Matrix objects
+
+    static LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
+    	Log::log << "[highLabelZ] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
+    	throw std::exception();
+    }
+
+    static LimEntry<>* highLabelPauli(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
+    	Log::log << "[highLabelPauli] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
+    	throw std::exception();
+    }
+
+    static LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
+    	Log::log << "[getIsomorphismZ] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
+    	throw std::exception();
+    }
+
+    static LimEntry<>* getIsomorphismPauli(const mNode* u, const mNode* v) {
+    	Log::log << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
+    	throw std::exception();
+    }
+
+};
 
 
 

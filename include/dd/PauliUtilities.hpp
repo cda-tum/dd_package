@@ -189,28 +189,6 @@ void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
 		}
 	}
 }
-
-// ********** These functions catch PauliAlgebra functions when they are called on Matrix objects
-
-LimEntry<>* highLabelZ(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
-	Log::log << "[highLabelZ] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
-	throw std::exception();
-}
-
-LimEntry<>* highLabelPauli(const mNode* u, const mNode* v, LimEntry<>* vLabel) {
-	Log::log << "[highLabelPauli] Called with matrix node. Throwing exception.\n" << u << v << vLabel << Log::endl;
-	throw std::exception();
-}
-
-LimEntry<>* getIsomorphismZ(const mNode* u, const mNode* v) {
-	Log::log << "[getIsomorphismZ] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
-	throw std::exception();
-}
-
-LimEntry<>* getIsomorphismPauli(const mNode* u, const mNode* v) {
-	Log::log << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
-	throw std::exception();
-}
 //}
 
 }

@@ -315,7 +315,7 @@ namespace dd {
             //            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
             //            std::cout.flush();
             bool        s           = false;
-            LimEntry<>* higLimTemp2 = highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
+            LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             //            std::cout << "[normalizeLIMDD] Found high label: " << LimEntry<>::to_string(r.p->e[1].l) << "\n";
@@ -323,7 +323,7 @@ namespace dd {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             //            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             //            std::cout.flush();
-            LimEntry<>* iso = getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
+            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
             assert(iso != LimEntry<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
@@ -574,7 +574,7 @@ namespace dd {
             vNode       oldNode            = *(r.p); // make a copy of the old node
             Complex     highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
             LimEntry<>  higLimTemp;
-            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, higLimTemp); // TODO memory leak; delete highLimTemp
+            Pauli::highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, highEdgeWeightTemp, higLimTemp); // TODO memory leak; delete highLimTemp
             r.p->e[1].l                    = limTable.lookup(higLimTemp);
             limTable.incRef(r.p->e[1].l);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
@@ -591,7 +591,7 @@ namespace dd {
             LimWeight<> iso;
             bool foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
-            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism); // TODO RESOLVED memory leak: LIM 'iso' is not freed
+            Pauli::getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism); // TODO RESOLVED memory leak: LIM 'iso' is not freed
             if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
@@ -671,12 +671,12 @@ namespace dd {
     			// Step 1: Compute the intersection
     			StabilizerGroup* stabLow  = &(low. p->limVector);
     			StabilizerGroup* stabHigh = &(high.p->limVector);
-            	StabilizerGroup PHP = conjugateGroup(*stabHigh, high.l);
+            	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
             	Log::log << "[constructStabilizerGeneratorSet] conjugate group: "; printStabilizerGroup(PHP, node.e[1].p->v); Log::log << '\n';
-    			stabgenset = intersectGroupsPauli(*stabLow, PHP);
+    			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
     			Log::log << "[constructStabilizerGeneratorSet] intersection: "; printStabilizerGroup(stabgenset, node.v); Log::log << '\n';
     			LimEntry<>* stab = LimEntry<>::noLIM;
-    			stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
+    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
     			if (stab != LimEntry<>::noLIM) {
     				stab->setOperator(n, 'Z');
     			}
@@ -690,7 +690,7 @@ namespace dd {
     			if (stab != LimEntry<>::noLIM) {
     				stabgenset.push_back(stab);
     			}
-    			toColumnEchelonForm(stabgenset);
+    			Pauli::toColumnEchelonForm(stabgenset);
             }
 //            CVec amplitudeVec = getVector(&node);
 //            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
@@ -1249,7 +1249,7 @@ namespace dd {
             //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
             switch (group) {
                 case Z_group:
-                    e.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
+                    e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p));
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
