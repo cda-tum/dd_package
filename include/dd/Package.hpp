@@ -373,88 +373,6 @@ namespace dd {
             }
         }
 
-        template<class Edge>
-        void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
-            if (!performSanityChecks) return;
-            CVec nodeVec = getVector(edge);
-            CVec stabVec;
-            for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
-                stabVec = getVector(edge, *stabilizerGroup[i]);
-                if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
-                    Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element.\n";
-                    Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
-                    Log::log << "[sanity check stabilizer group] Node's stabilizer group is :";
-                    printStabilizerGroup(stabilizerGroup, edge.p->v);
-                    Log::log << "\n[sanity check stabilizer group] node's vector: ";
-                    printCVec(nodeVec);
-                    Log::log << "[sanity check stabilizer group] stabilizer vec:";
-                    printCVec(stabVec);
-                    export2Dot(edge, "errorStabilizer.dot", false, true, false, true, true, false);
-                    throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
-                }
-            }
-        }
-
-        // Checks whether a == iso * b
-        template<class Edge>
-        void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
-            if (!performSanityChecks) return;
-            Edge edgeA{&a, Complex::one, nullptr};
-            Edge edgeB{&b, Complex::one, nullptr};
-            CVec avec    = getVector(edgeA);
-            CVec isobvec = getVector(edgeB, *iso);
-            if (!vectorsApproximatelyEqual(avec, isobvec)) {
-                CVec bvec = getVector(edgeB);
-                Log::log << "[sanity check isomorphism] ERROR isomorphism is not an isomorphism\n"
-                         << "[sanity check isomorphism] node A is " << a << "\n"
-                         << "[sanity check isomorphism] node B is " << b << "\n"
-                         << "[sanity check isomorphism] iso = " << LimEntry<>::to_string(iso, a.v) << '\n';
-                Log::log << "[sanity check isomorphism] node a = ";
-                printCVec(avec);
-                Log::log << "\n[sanity check isomorphism] node b = ";
-                printCVec(bvec);
-                Log::log << "\n[sanity check isomorphism] iso * node b = ";
-                printCVec(isobvec);
-                export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
-                export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[sanity check isomorphism] ERROR Purported isomorphism is not actually an isomorphism.\n");
-            }
-        }
-
-        bool sanityCheckMakeDDNode(const CVec& left, const CVec& right, const CVec& result) {
-            if (!performSanityChecks) return true;
-            if (result.size() == 0) {
-                return (isZeroVector(left) && isZeroVector(right));
-            }
-            unsigned int d = result.size() / 2;
-            if ((left.size() != d && left.size() != 0) || (right.size() != d && right.size() != 0)) {
-                Log::log << "[sanity check makeDDNode] left = " << left.size() << "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
-                throw std::runtime_error("[sanity check makeDDNode] received vectors of unexpected sizes.\n");
-            }
-            if (left.size() == 0) {
-                // check if result is zero here
-                if (!isZeroVector(result, 0, d)) {
-                    return false;
-                }
-            } else {
-                for (unsigned int i = 0; i < left.size(); i++) {
-                    if (!Complex::approximatelyEqual(left[i], result[i])) {
-                        return false;
-                    }
-                }
-            }
-            if (right.size() == 0) {
-                if (!isZeroVector(result, d, 2 * d)) return false;
-            } else {
-                for (unsigned int i = 0; i < d; i++) {
-                    if (!Complex::approximatelyEqual(right[i], result[i + d])) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         // Returns an edge to a node isomorphic to e.p
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
@@ -468,13 +386,7 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
             Edge<vNode> r                            = normalize(e, cached);
-            CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
-            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
-            Edge<vNode> rOld = copyEdge(r);
-
-            CVec amplitudeVecBeforeNormalize = getVector(r);
 
             if (r.l == nullptr) {
                 r.l = LimEntry<>::getIdentityOperator();
@@ -566,11 +478,6 @@ namespace dd {
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
-            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
-            CVec rpVec      = getVector(r.p);
-            CVec oldNodeVec = getVector(&oldNode);
-            Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
-                     << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
 
             LimWeight<> iso;
             bool        foundIsomorphism = false;
@@ -579,7 +486,6 @@ namespace dd {
             if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
-            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
             Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
             //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
@@ -600,9 +506,6 @@ namespace dd {
                 r.l->setPhase(phase_t::phase_one);
             }
             Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
-
-            CVec amplitudeVecAfterNormalize = getVector(r);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
 
             return r;
         }
@@ -678,10 +581,6 @@ namespace dd {
                 }
                 toColumnEchelonForm(stabgenset);
             }
-            //            CVec amplitudeVec = getVector(&node);
-            //            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
-            //            		 << "[constructStabilizerGeneratorSet] Stab = "; printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
-
             return stabgenset;
         }
 
@@ -1203,20 +1102,7 @@ namespace dd {
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
-                    vece0 = getVector(edges[0], var - 1);
-                    vece1 = getVector(edges[1], var - 1);
                     e     = normalizeLIMDDPauli(e, cached);
-                    vece  = getVector(e, var);
-                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                        Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
-                                 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
-                                 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
-                                 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
-                                 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
-                                 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
-                                 << "[makeDDNode] result   : " << e << '\n';
-                        throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
-                    }
                     break;
                 case QMDD_group:
                     e = normalize(e, cached);
@@ -1232,12 +1118,6 @@ namespace dd {
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
-                    vece           = getVector(e.p);
-                    Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                             << "[makeDDNode] Stab = ";
-                    printStabilizerGroup(e.p->limVector);
-                    Log::log << '\n';
-                    sanityCheckStabilizerGroup(e, e.p->limVector);
                     putStabilizersInTable(e);
                     break;
                 case QMDD_group: break;
@@ -1722,36 +1602,7 @@ namespace dd {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    CVec vectorArg0     = getVector(e1, w, trueLimX);
-                    CVec vectorArg1     = getVector(e2, w, trueLimY);
-                    CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-
-                    //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
-                    //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
-                    //                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
-
-                    CVec vectorResult = getVector(edge[i], w);
-                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                        Log::log << "[add2] ERROR addition went wrong.\n";
-                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                        Log::log << "arg0:    ";
-                        printCVec(vectorArg0);
-                        Log::log << '\n';
-                        Log::log << "arg1     ";
-                        printCVec(vectorArg1);
-                        Log::log << '\n';
-                        Log::log << "expected ";
-                        printCVec(vectorExpected);
-                        Log::log << '\n';
-                        Log::log << "result   ";
-                        printCVec(vectorResult);
-                        Log::log << '\n';
-                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
-                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
-                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
-                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
-                    }
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1763,40 +1614,7 @@ namespace dd {
                 }
             }
 
-            //            export2Dot(e, "e3.dot", true, true, false, false, true);
-
-            //            export2Dot(edge[0], "e1.dot", true, true, false, false, true);
-            //            export2Dot(edge[1], "e2.dot", true, true, false, false, true);
             auto e = makeDDNode(w, edge, true);
-
-            //            export2Dot(e, "e3.dot", true, true, false, false, true);
-
-            //            Log::log << "[add2] computing vector x.\n";
-            CVec vectorArg0 = getVector(x, w, limX);
-            //            Log::log << "[add2] computing vector y.\n";
-            CVec vectorArg1     = getVector(y, w, limY);
-            CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-            CVec vectorResult   = getVector(e, w);
-            if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                Log::log << "[add2] ERROR addition went wrong.\n";
-                Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                Log::log << "arg0:    ";
-                printCVec(vectorArg0);
-                Log::log << '\n';
-                Log::log << "arg1     ";
-                printCVec(vectorArg1);
-                Log::log << '\n';
-                Log::log << "expected ";
-                printCVec(vectorExpected);
-                Log::log << '\n';
-                Log::log << "result   ";
-                printCVec(vectorResult);
-                Log::log << '\n';
-                export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
-                export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
-                export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
-            }
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
@@ -2032,10 +1850,6 @@ namespace dd {
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
 
-            CMat mat_x       = getMatrix(x);
-            CVec vec_y       = getVector(y, var, lim);
-            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
-
             //            makePrintIdent(var);
             //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
 
@@ -2194,23 +2008,7 @@ namespace dd {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
                                 auto old_e = edge[idx];
-                                //                                export2Dot(edge[idx], "edge0.dot", true, true, false, false, false);
-                                //                                export2Dot(m, "edge1.dot", true, true, false, false, false);
-                                //                                vectorArg0 = getVector(old_e);
-                                //                                vectorArg1 = getVector(m);
-                                //                                vectorExpected = addVectors(vectorArg0, vectorArg1);
                                 edge[idx] = add2(edge[idx], m);
-                                //                                vectorResult = getVector(edge[idx]);
-                                //                                if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                                //                                	Log::log << "[multiply2] ERROR addition went wrong.\n";
-                                //									Log::log << "arg0:    "; printCVec(vectorArg0);     Log::log << '\n';
-                                //                                	Log::log << "arg1     "; printCVec(vectorArg1);     Log::log << '\n';
-                                //                                	Log::log << "expected "; printCVec(vectorExpected); Log::log << '\n';
-                                //                                	Log::log << "result   "; printCVec(vectorResult);   Log::log << '\n';
-                                //                                	throw std::runtime_error("[multiply2] ERROR Add did not return expected result.");
-                                //                                }
-
-                                //                                export2Dot(edge[idx], "temp_limdd.dot", true, true, false, false, false);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
                             }
@@ -2220,29 +2018,7 @@ namespace dd {
             }
             //            export2Dot(edge[0], "edge0.dot", true, true, false, false, true);
             //            export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
-
-            if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-                CVec vece0 = getVector(edge[0], var - 1);
-                CVec vece1 = getVector(edge[1], var - 1);
-                e          = makeDDNode(var, edge, true, nullptr);
-                CVec vece  = getVector(e, var);
-                if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
-                             << "[multiply2] edge[0]    = " << edge[0] << '\n'
-                             << "[multiply2] edge[1]    = " << edge[1] << '\n'
-                             << "[multiply2] e (result) = " << e << '\n'
-                             << "[multiply2] vece0         = ";
-                    printCVec(vece0);
-                    Log::log << "[multiply2] vece1         = ";
-                    printCVec(vece1);
-                    Log::log << "[multiply2] vece (result) = ";
-                    printCVec(vece);
-                    throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
-                }
-            } else {
-                e = makeDDNode(var, edge, true, generateDensityMatrix);
-            }
-
+            e = makeDDNode(var, edge, true, generateDensityMatrix);
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
             //                std::cout << "Caching error detected in mul" << std::endl;
             //            } else {
@@ -2261,34 +2037,11 @@ namespace dd {
                     ComplexNumbers::mul(e.w, e.w, y.w);
                 }
 
-                //                CVec vectorE = getVector(e);
-                //                std::cout << "(" << std::to_string(tempCallCounter) << ")";
-                //                printCVec(vectorE);
-
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
                     return ResultEdge::zero;
                 }
             }
-
-            // Last step: sanity check to see whether the resulting vector is what was expected
-            CVec vecResult = getVector(e);
-            if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
-                Log::log << "[multiply2] ERROR.\n"
-                         << "[multiply2] state: " << y << "\n"
-                         << "[multiply2] amplitude vector: ";
-                printCVec(vec_y);
-                Log::log << "[multiply2] Matrix:\n";
-                printMatrix(xCopy);
-                Log::log << "\n[multiply2] Expected result: ";
-                printCVec(vecExpected);
-                Log::log << "\n[multiply2] Actual result:  ";
-                printCVec(vecResult);
-                throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
-            }
-
-            //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
-
             return e;
         }
 
@@ -3202,94 +2955,6 @@ namespace dd {
             cn.returnToCache(c);
         }
 
-        //        CVec getVector(const vEdge& e, const LimEntry<>& lim) {
-        //            const std::size_t dim = 2ULL << e.p->v;
-        //            // allocate resulting vector
-        //            auto vec = CVec(dim, {0.0, 0.0});
-        //            getVector(e, Complex::one, 0, vec, lim);
-        //            //std::cout << "[getVector] complete; constructed vector.\n";
-        //            return vec;
-        //        }
-        //
-        //        CVec getVector([[maybe_unused]] const mEdge& e) {
-        //            CVec vec;
-        //            return vec;
-        //        }
-        //
-        //        CVec getVector([[maybe_unused]] const mEdge& e, [[maybe_unused]] const LimEntry<>& lim) {
-        //            CVec vec;
-        //            return vec;
-        //        }
-        //
-        //        CVec getVector(const vEdge& e) {
-        //            //std::cout << "[getVector] getting vector of " << (int)(e.p->v) << "-qubit state with label " << LimEntry<>::to_string(e.l) << ".\n";
-        //            const std::size_t dim = 2ULL << e.p->v;
-        //            // allocate resulting vector
-        //            auto       vec = CVec(dim, {0.0, 0.0});
-        //            LimEntry<> id;
-        //            getVector(e, Complex::one, 0, vec, id);
-        //            //std::cout << "[getVector] complete; constructed vector.\n";
-        //            return vec;
-        //        }
-        //        void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, const LimEntry<>& lim) {
-        //            Log::log << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] vector of " << (int)(e.p->v) + 1 << " qubits; i = " << i << "; e.w = " << e.w << " amp = " << amp << " cached count " << cn.complexCache.getCount() << " edge label " << LimEntry<>::to_string(e.l) << ", aux label " << LimEntry<>::to_string(&lim) << ".\n";
-        //            auto c = cn.mulCached(e.w, amp);
-        //            Log::log << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] c = " << c << " after multiplying with aux weight.\n";
-        //
-        //            // base case
-        //            if (e.isTerminal()) {
-        //                Log::log << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] base case: vec[" << i << "] = " << c << "\n";
-        //                vec.at(i) = {CTEntry::val(c.r), CTEntry::val(c.i)};
-        //                cn.returnToCache(c);
-        //                return;
-        //            }
-        //            const std::size_t x = i | (1ULL << e.p->v);
-        //
-        //            LimEntry<> lim2(e.l);
-        //            lim2.multiplyBy(lim);
-        //            c.multiplyByPhase(lim2.getPhase());
-        //            lim2.setPhase(phase_t::phase_one);
-        //
-        //            // recursive case
-        //            if (!e.p->e[0].w.approximatelyZero()) {
-        //                std::size_t id0 = i;
-        //                if (lim2.getQubit(e.p->v) == 'X') {
-        //                    // new index is x
-        //                    id0 = x;
-        //                }
-        //                if (lim2.getQubit(e.p->v) == 'Y') {
-        //                    // new index is x
-        //                    id0 = x;
-        //                    // multiply c0 by i
-        //                    c.multiplyByi();
-        //                }
-        //                Log::log << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] walking the low edge with c = " << c << ".\n";
-        //                getVector(e.p->e[0], c, id0, vec, lim2);
-        //                if (lim2.getQubit(e.p->v) == 'Y') {
-        //                    c.multiplyByMinusi();
-        //                }
-        //                //                cn.returnToCache(d0);
-        //            }
-        //            if (!e.p->e[1].w.approximatelyZero()) {
-        //                // if lim has Pauli Z operator, then multiply by -1
-        //                std::size_t id1 = x;
-        //                if (lim2.getQubit(e.p->v) == 'Z') {
-        //                    Log::log << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] c := " << c << " after encountering Z on high edge.\n";
-        //                    c.multiplyByMinusOne();
-        //                } else if (lim2.getQubit(e.p->v) == 'X') {
-        //                    // new index is i
-        //                    id1 = i;
-        //                } else if (lim2.getQubit(e.p->v) == 'Y') {
-        //                    // new index is i
-        //                    id1 = i;
-        //                    c.multiplyByMinusi();
-        //                }
-        //                std::cout << "[getVector rec n=" << e.p->v + 1 << " i=" << i << "] walking the high edge with c = " << c << ".\n";
-        //                getVector(e.p->e[1], c, id1, vec, lim2);
-        //            }
-        //            cn.returnToCache(c);
-        //        }
-
         // Returns whether v ~ w, up to a complex multiplicative factor
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {
             //std::cout << "[vectors approximately equal] start.\n";
@@ -3338,13 +3003,6 @@ namespace dd {
             }
 
             return true;
-        }
-
-        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
-            e1.l      = LimEntry<>::multiply(e1.l, iso);
-            CVec phi1 = getVector(e1);
-            CVec phi2 = getVector(e2);
-            return vectorsApproximatelyEqual(phi1, phi2);
         }
 
         void printVector(const vEdge& e) {
