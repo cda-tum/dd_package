@@ -201,7 +201,7 @@ namespace dd {
     inline dNode dNode::terminalNode{{{{nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}, {nullptr, Complex::zero, nullptr}}}, nullptr, std::vector<LimTable<>::Entry*>{}, 0, -1, 0};
 
 //    template<typename Node>
-    std::ostream& operator<<(std::ostream& out, const vNode& node) {
+    inline std::ostream& operator<<(std::ostream& out, const vNode& node) {
     	if (node.v < 0) {
     		return out << "Terminal node";
     	}

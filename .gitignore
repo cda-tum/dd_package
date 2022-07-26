@@ -14,4 +14,8 @@ test-output.txt
 notes meeting 04-03-2022.txt
 test/createNode-test-illustrations.drawio
 *.svg
-
+*.aux
+*.log
+*.out
+*.synctex.gz
+pics/*

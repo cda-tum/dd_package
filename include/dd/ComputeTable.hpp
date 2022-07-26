@@ -56,8 +56,30 @@ namespace dd {
             const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
             if (entry.result.p == nullptr) return result;
+
+            //            auto first  = (LimEntry<>::Equal(entry.trueLimX, trueLimX)) && (LimEntry<>::Equal(entry.trueLimY, trueLimY));
+            //            auto second = (LimEntry<>::Equal(entry.leftOperand.l, leftOperand.l) && LimEntry<>::Equal(entry.rightOperand.l, rightOperand.l));
+            //            Log::log << "[ComputeTable] Lookup hit (key=" << std::to_string(key)
+            //                     << ")result with l=" << LimEntry<>::to_string(result.l)
+            //                     << ")\nleftOperand with l=" << LimEntry<>::to_string(leftOperand.l)
+            //                     << " rightOperand with l=" << LimEntry<>::to_string(rightOperand.l)
+            //                     << " and trueLimX=" << LimEntry<>::to_string(trueLimX)
+            //                     << " and trueLimY=" << LimEntry<>::to_string(trueLimY)
+            //                     << " \nentry.leftOperand with l=" << LimEntry<>::to_string(entry.leftOperand.l)
+            //                     << " entry.rightOperand with l=" << LimEntry<>::to_string(entry.rightOperand.l)
+            //                     << " and entry.trueLimX=" << LimEntry<>::to_string(entry.trueLimX)
+            //                     << " and entry.trueLimY=" << LimEntry<>::to_string(entry.trueLimY)
+            //                     << "\n";
+
             if (entry.leftOperand != leftOperand) return result;
             if (entry.rightOperand != rightOperand) return result;
+            //            if (entry.leftOperand.p != leftOperand.p) return result;
+            //            if (!entry.leftOperand.w.approximatelyEquals(leftOperand.w)) return result;
+            //
+            //            if (entry.rightOperand.p != rightOperand.p) return result;
+            //            if (!entry.rightOperand.w.approximatelyEquals(rightOperand.w)) return result;
+
+            //            if (entry.rightOperand != rightOperand) return result;
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
@@ -77,8 +99,8 @@ namespace dd {
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
         std::ostream&    printStatistics(std::ostream& os = std::cout) {
-            os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
-            return os;
+               os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
+               return os;
         }
 
     private:
