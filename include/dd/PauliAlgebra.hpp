@@ -585,21 +585,24 @@ public:
     		phaseH = recoverPhase(H, intersection[g]);
     		if (phaseG == phaseH) {
     			intersection[g]->setPhase(phaseG);
+    			Log::log << "[intersect groups Pauli] Adding " << LimEntry<>::to_string(intersection[g], 3) << " to intersection.\n";
 				g++;
     		} else {
     			// add it to the wrong phase stuff
-    			oppositePhaseGenerators.push_back(intersection[i]);
+    			Log::log << "[intersect groups Pauli] Element " << LimEntry<>::to_string(intersection[g], 3) << " has phase(G)=" << phaseToString(phaseG) << " and phaseH=" << phaseToString(phaseH) << ".\n";
+    			oppositePhaseGenerators.push_back(intersection[g]);  // TODO should this be g instead of i??
     			// remove this from the intersection
-    			intersection[i] = intersection[intersection.size() - 1];
+    			intersection[g] = intersection[intersection.size() - 1];
     			intersection.pop_back();
     		}
     	}
-    	if (oppositePhaseGenerators.size() >= 2) {
-    		LimEntry<>* a = LimEntry<>::multiply(oppositePhaseGenerators[0], oppositePhaseGenerators[1]);
-    		phaseG = recoverPhase(G, a);
-    		a->setPhase(phaseG);
-    		intersection.push_back(a);
-    	}
+		LimEntry<>* a;
+		for (unsigned int i=1; i<oppositePhaseGenerators.size(); i++) {
+			a = LimEntry<>::multiply(oppositePhaseGenerators[0], oppositePhaseGenerators[i]);
+			phaseG = recoverPhase(G, a);
+			a->setPhase(phaseG);
+			intersection.push_back(a);
+		}
     	Log::log << "[intersect groups Pauli] intersection = " << groupToString(intersection, n) << '\n';
         return intersection;
     }
@@ -721,13 +724,13 @@ public:
     	}
     	LimEntry<NUM_QUBITS> A(a);
     	LimEntry<NUM_QUBITS> B;
+    	unsigned int pivot;
     	for (unsigned int g=0; g<G.size(); g++) {
-    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
-    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
-    				A.multiplyBy(G[g]);
-    				B.multiplyBy(G[g]);
-    				break;
-    			}
+    		pivot = G[g]->pivotPosition();
+    		if (A.paulis.test(pivot)) {
+				A.multiplyBy(G[g]);
+				B.multiplyBy(G[g]);
+				break;
     		}
     	}
     	return B.getPhase();
@@ -743,13 +746,13 @@ public:
     	}
     	LimEntry<NUM_QUBITS> A(a);
     	LimEntry<NUM_QUBITS> B;
+    	unsigned int pivot;
     	for (unsigned int g=0; g<G.size(); g++) {
-    		for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
-    			if (A.paulis.test(i) && G[g]->paulis.test(i)) {
-    				A.multiplyBy(G[g]);
-    				B.multiplyBy(G[g]);
-    				break;
-    			}
+    		pivot = G[g]->pivotPosition();
+    		if (A.paulis.test(pivot)) {
+				A.multiplyBy(G[g]);
+				B.multiplyBy(G[g]);
+				break;
     		}
     	}
     	return B;

@@ -2761,6 +2761,22 @@ TEST(LimTest, isTowerTest5) {
     EXPECT_FALSE(dd->isTower(e1));
 }
 
+TEST(LimTest, recoverPhaseTest1) {
+	dd::StabilizerGroup G;
+	G.push_back(new dd::LimEntry<>("ZXZ"));
+	G.push_back(new dd::LimEntry<>("-XIX"));
+	G.push_back(new dd::LimEntry<>("IZX"));
+
+	dd::Pauli::printStabilizerGroup(G);
+	dd::phase_t phase1 = dd::Pauli::recoverPhase(G, new dd::LimEntry<>("ZXZ"));
+	dd::phase_t phase2 = dd::Pauli::recoverPhase(G, new dd::LimEntry<>("-XIX"));
+	dd::phase_t phase3 = dd::Pauli::recoverPhase(G, new dd::LimEntry<>("IZX"));
+	std::cout << "[recoverPhaseTest1] phase1=" << dd::Pauli::phaseToString(phase1) << "; phase2=" << dd::Pauli::phaseToString(phase2) << "; phase3=" << dd::Pauli::phaseToString(phase3) << "\n";
+	EXPECT_EQ(phase1, dd::phase_t::phase_one);
+	EXPECT_EQ(phase2, dd::phase_t::phase_minus_one);
+	EXPECT_EQ(phase3, dd::phase_t::phase_one);
+}
+
 TEST(LimTest, simpleCliffordCircuit_1) {
     auto dd = std::make_unique<dd::Package<>>(2);
 

@@ -91,7 +91,7 @@ namespace dd {
             LimTable<NUM_QUBITS>::Entry* trueLimY = nullptr;
         };
 
-        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, LimTable<>::Entry* trueLimX, LimTable<>::Entry* trueLimY) {
+        static std::size_t hash(const LeftOperandType& leftOperand, const RightOperandType& rightOperand, [[maybe_unused]] LimTable<>::Entry* trueLimX, [[maybe_unused]] LimTable<>::Entry* trueLimY) {
             const auto h1 = std::hash<LeftOperandType>{}(leftOperand);
             const auto h2 = std::hash<RightOperandType>{}(rightOperand);
             //            const auto h3   = LimTable<>::hash(trueLimX);

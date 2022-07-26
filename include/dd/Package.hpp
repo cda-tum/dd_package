@@ -442,21 +442,36 @@ struct DDPackageConfig {
             }
         }
 
+		void outputDescendantsStabilizerGroups(vEdge edge) {
+			if (edge.isTerminal()) return;
+			Log::log << "[print stabs] n = " << (int) edge.p->v << "; Stab(v) = " << Pauli::groupToString(edge.p->limVector, edge.p->v) << "  edge = " << edge << "\n";
+			if (!edge.p->e[0].isTerminal()) {
+				outputDescendantsStabilizerGroups(edge.p->e[0]);
+			}
+			else if (!edge.p->e[1].isTerminal()) {
+				outputDescendantsStabilizerGroups(edge.p->e[1]);
+			}
+		}
+
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
 			if (!performSanityChecks) return;
-        	CVec nodeVec = getVector(edge);
+        	CVec nodeVec = getVector(edge.p);
+        	vEdge edgeId = edge;
+        	edgeId.l = nullptr;
         	CVec stabVec;
         	for (unsigned int i=0; i<stabilizerGroup.size(); i++) {
-        		stabVec = getVector(edge, *stabilizerGroup[i]);
+        		stabVec = getVector(edgeId, *stabilizerGroup[i]);
         		if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
-        			Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element.\n";
+                	CVec edgeVec = getVector(edge);
+        			Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element: " << LimEntry<>::to_string(stabilizerGroup[i], edge.p->v) << "\n";
         			Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
-        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :";
-        			Pauli::printStabilizerGroup(stabilizerGroup, edge.p->v);
-        			Log::log << "\n[sanity check stabilizer group] node's vector: "; printCVec(nodeVec);
-        			Log::log << "[sanity check stabilizer group] stabilizer vec:"; printCVec(stabVec);
-        			export2Dot(edge, "errorStabilizer.dot", false, true, false, true, true, false);
+        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :" << Pauli::groupToString(stabilizerGroup, edge.p->v) << "\n";
+        			Log::log << "[sanity check stabilizer group] node's vector: " << outputCVec(nodeVec) << "\n";
+        			Log::log << "[sanity check stabilizer group] stabilizer vec:" << outputCVec(stabVec) << "\n";
+        			Log::log << "[sanity check stabilizer group] edge vec:      " << outputCVec(edgeVec) << "\n";
+        			outputDescendantsStabilizerGroups(edge);
+        			export2Dot(edge, "errorStabilizer.dot", false, true, true, false, true, false);
         			throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
         		}
         	}
@@ -683,7 +698,7 @@ struct DDPackageConfig {
 
         // Construct the stabilizer generator set of 'node' in the Pauli group
         // Puts these generators in column echelon form
-        StabilizerGroup constructStabilizerGeneratorSetPauli(const vNode& node) {
+        StabilizerGroup constructStabilizerGeneratorSetPauli(vNode& node) {
             Edge<vNode> low, high;
             low               = node.e[0];
             high              = node.e[1];
@@ -723,6 +738,7 @@ struct DDPackageConfig {
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
+            	vEdge edgeDummy{&node, Complex::one, nullptr};
                 // Gather the stabilizer groups of the two children
                 Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
     			// Step 1: Compute the intersection
@@ -734,6 +750,7 @@ struct DDPackageConfig {
             	Log::log << "[constructStabilizerGeneratorSet] PHP: " << Pauli::groupToString(PHP, node.e[1].p->v) << '\n';
     			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
     			Log::log << "[constructStabilizerGeneratorSet] intersection: " << Pauli::groupToString(stabgenset, n) << '\n';
+				sanityCheckStabilizerGroup(edgeDummy, stabgenset);
     			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
     			LimEntry<>* stab = LimEntry<>::noLIM;
 				Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
@@ -742,6 +759,7 @@ struct DDPackageConfig {
     				stab->setOperator(n, 'Z');
     				stabgenset.push_back(stab);
 					Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
+					sanityCheckStabilizerGroup(edgeDummy, stabgenset);
     			}
     			if (low.p == high.p) {
     				Complex rho = cn.divCached(node.e[1].w, node.e[0].w);
@@ -761,6 +779,7 @@ struct DDPackageConfig {
     						Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
 							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
     						stabgenset.push_back(new LimEntry<>(X));
+    						sanityCheckStabilizerGroup(edgeDummy, stabgenset);
     					}
 							// Check for Y
 						Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
@@ -777,6 +796,7 @@ struct DDPackageConfig {
 							Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
 							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
 							stabgenset.push_back(new LimEntry<>(X));
+							sanityCheckStabilizerGroup(edgeDummy, stabgenset);
 						}
     				}
                 }
@@ -3242,6 +3262,11 @@ struct DDPackageConfig {
 
             getVector(e, Complex::one, 0, vec);
             return vec;
+        }
+
+        CVec getVector(vNode* v) {
+        	vEdge edge{v, Complex::one, nullptr};
+        	return getVector(edge);
         }
 
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
