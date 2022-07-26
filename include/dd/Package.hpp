@@ -316,7 +316,7 @@ struct DDPackageConfig {
             //            std::cout << "[normalizeLIMDD] Step 3: pick High Label.\n";
             //            std::cout.flush();
             bool        s           = false;
-            LimEntry<>* higLimTemp2 = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
+            LimEntry<>* higLimTemp2 = highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s);
             //            r.p->e[1].l = Pauli::highLabelZ(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, r.p->e[1].w, s); // TODO memory leak: this Lim is not freed
             r.p->e[1].l = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
@@ -325,7 +325,7 @@ struct DDPackageConfig {
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             //            std::cout << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             //            std::cout.flush();
-            LimEntry<>* iso = Pauli::getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
+            LimEntry<>* iso = getIsomorphismZ(r.p, &oldNode); // TODO memory leak: this Lim is not freed
             assert(iso != LimEntry<>::noLIM);
             // Root label := root label * (Id tensor (A)) * K
             // Step 5: Use R as the LIM for the incoming edge e
@@ -368,9 +368,9 @@ struct DDPackageConfig {
             	Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
             	LimEntry<>* newHighLabel;
             	if (u == v) {
-            		newHighLabel = Pauli::GramSchmidt(u->limVector, vLabel);
+            		newHighLabel = GramSchmidt(u->limVector, vLabel);
                 	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << Pauli::phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
                 	newHighLabel->setPhase(phase_t::phase_one);
 
                 	fp lomag2 = ComplexNumbers::mag2(lowWeight);
@@ -409,11 +409,11 @@ struct DDPackageConfig {
 
             	}
             	else {
-            		StabilizerGroup GH = Pauli::groupConcatenate(u->limVector, v->limVector);
-            		Pauli::toColumnEchelonForm(GH);
-            		newHighLabel = Pauli::GramSchmidt(GH, vLabel);
+            		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
+            		toColumnEchelonForm(GH);
+            		newHighLabel = GramSchmidt(GH, vLabel);
                 	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << Pauli::phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
                 	newHighLabel->setPhase(phase_t::phase_one);
             		if (highWeight.lexSmallerThanxMinusOne()) {
             			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
@@ -444,7 +444,7 @@ struct DDPackageConfig {
 
 		void outputDescendantsStabilizerGroups(vEdge edge) {
 			if (edge.isTerminal()) return;
-			Log::log << "[print stabs] n = " << (int) edge.p->v << "; Stab(v) = " << Pauli::groupToString(edge.p->limVector, edge.p->v) << "  edge = " << edge << "\n";
+			Log::log << "[print stabs] n = " << (int) edge.p->v << "; Stab(v) = " << groupToString(edge.p->limVector, edge.p->v) << "  edge = " << edge << "\n";
 			if (!edge.p->e[0].isTerminal()) {
 				outputDescendantsStabilizerGroups(edge.p->e[0]);
 			}
@@ -466,7 +466,7 @@ struct DDPackageConfig {
                 	CVec edgeVec = getVector(edge);
         			Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element: " << LimEntry<>::to_string(stabilizerGroup[i], edge.p->v) << "\n";
         			Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
-        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :" << Pauli::groupToString(stabilizerGroup, edge.p->v) << "\n";
+        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :" << groupToString(stabilizerGroup, edge.p->v) << "\n";
         			Log::log << "[sanity check stabilizer group] node's vector: " << outputCVec(nodeVec) << "\n";
         			Log::log << "[sanity check stabilizer group] stabilizer vec:" << outputCVec(stabVec) << "\n";
         			Log::log << "[sanity check stabilizer group] edge vec:      " << outputCVec(edgeVec) << "\n";
@@ -666,7 +666,7 @@ struct DDPackageConfig {
 
             LimWeight<>* iso = new LimWeight<>();
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
-            iso = Pauli::getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
+            iso = getIsomorphismPauli(r.p, &oldNode, cn); // TODO memory leak: LIM 'iso' is not freed
             if (iso == LimWeight<>::noLIM) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
@@ -716,12 +716,12 @@ struct DDPackageConfig {
             else if (zero[1]) {
                 Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
                 stabgenset = low.p->limVector; // copies the stabilizer group of the left child
-                Pauli::printStabilizerGroup(stabgenset);
+                printStabilizerGroup(stabgenset);
                 LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
                 idZ->setOperator(n, 'Z');
                 stabgenset.push_back(idZ);
                 Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
-                Pauli::printStabilizerGroup(stabgenset);
+                printStabilizerGroup(stabgenset);
                 // the matrix set is already in column echelon form,
                 // so we do not need to perform that step here
             }
@@ -729,12 +729,12 @@ struct DDPackageConfig {
             else if (zero[0]) {
                 Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
                 stabgenset = high.p->limVector; // copy the stabilizer of the right child
-                Pauli::printStabilizerGroup(stabgenset);
+                printStabilizerGroup(stabgenset);
                 LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
                 minusIdZ->setOperator(n, 'Z');
                 stabgenset.push_back(minusIdZ);
                 Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
-                Pauli::printStabilizerGroup(stabgenset);
+                printStabilizerGroup(stabgenset);
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
@@ -744,17 +744,17 @@ struct DDPackageConfig {
     			// Step 1: Compute the intersection
     			StabilizerGroup* stabLow  = &(low. p->limVector);
     			StabilizerGroup* stabHigh = &(high.p->limVector);
-            	StabilizerGroup PHP = Pauli::conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << Pauli::groupToString(*stabLow, n-1) << '\n';
-            	Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << Pauli::groupToString(*stabHigh, n-1) << '\n';
-            	Log::log << "[constructStabilizerGeneratorSet] PHP: " << Pauli::groupToString(PHP, node.e[1].p->v) << '\n';
-    			stabgenset = Pauli::intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: " << Pauli::groupToString(stabgenset, n) << '\n';
+            	StabilizerGroup PHP = conjugateGroup(*stabHigh, high.l);
+            	Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << groupToString(*stabLow, n-1) << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << groupToString(*stabHigh, n-1) << '\n';
+            	Log::log << "[constructStabilizerGeneratorSet] PHP: " << groupToString(PHP, node.e[1].p->v) << '\n';
+    			stabgenset = intersectGroupsPauli(*stabLow, PHP);
+    			Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
 				sanityCheckStabilizerGroup(edgeDummy, stabgenset);
     			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
     			LimEntry<>* stab = LimEntry<>::noLIM;
 				Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
-    			stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n-1);
+    			stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n-1);
     			if (stab != LimEntry<>::noLIM) {
     				stab->setOperator(n, 'Z');
     				stabgenset.push_back(stab);
@@ -765,10 +765,10 @@ struct DDPackageConfig {
     				Complex rho = cn.divCached(node.e[1].w, node.e[0].w);
     				phase_t rhoPhase = rho.toPhase();
     				if (rhoPhase != phase_t::no_phase) {
-    					phase_t rhoSquared = Pauli::multiplyPhases(rhoPhase, rhoPhase);
+    					phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
 						// check for X
     					Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
-    					stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n-1);
+    					stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n-1);
     					if (stab != LimEntry<>::noLIM) {
     						LimEntry<> X;
 							X.setOperator(n, pauli_op::pauli_x);
@@ -783,8 +783,8 @@ struct DDPackageConfig {
     					}
 							// Check for Y
 						Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
-						phase_t minusRhoSquared = Pauli::multiplyPhases(rhoSquared, phase_t::phase_minus_one);
-						stab = Pauli::getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
+						phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
+						stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
 						if (stab != LimEntry<>::noLIM) {
 							LimEntry<> X;
 							X.setOperator(n, pauli_op::pauli_y);
@@ -800,7 +800,7 @@ struct DDPackageConfig {
 						}
     				}
                 }
-    			Pauli::toColumnEchelonForm(stabgenset);
+    			toColumnEchelonForm(stabgenset);
             }
 
             return stabgenset;
@@ -1336,7 +1336,7 @@ struct DDPackageConfig {
 
             switch (group) {
                 case Z_group:
-                    e.p->limVector = Pauli::constructStabilizerGeneratorSetZ(*(e.p));
+                    e.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
