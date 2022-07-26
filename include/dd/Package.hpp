@@ -6,15 +6,14 @@
 #ifndef DDpackage_H
 #define DDpackage_H
 
+#include "CVecUtilities.hpp"
 #include "Complex.hpp"
 #include "ComplexCache.hpp"
 #include "ComplexNumbers.hpp"
 #include "ComplexTable.hpp"
 #include "ComplexValue.hpp"
 #include "ComputeTable.hpp"
-//#include "ComputeTableLim.hpp"
 #include "Control.hpp"
-#include "CVecUtilities.hpp"
 #include "Definitions.hpp"
 #include "DensityNoiseTable.hpp"
 #include "Edge.hpp"
@@ -116,7 +115,7 @@ namespace dd {
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
-        //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
+        //                static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
         explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = false, bool outputToLog = false):
             cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
@@ -1370,8 +1369,16 @@ namespace dd {
             std::uniform_real_distribution<fp> dist(0.0, 1.0L);
 
             for (Qubit i = rootEdge.p->v; i >= 0; --i) {
-                fp p0  = ComplexNumbers::mag2(cur.p->e.at(0).w);
-                fp p1  = ComplexNumbers::mag2(cur.p->e.at(1).w);
+                lim.multiplyBy(cur.l);
+                const auto op = lim.getPauliForQubit(cur.p->v);
+                lim.setOperator(cur.p->v, 'I');
+
+                // recursive case
+                auto const e0 = follow2(cur, 0, op);
+                auto const e1 = follow2(cur, 1, op);
+
+                fp p0  = ComplexNumbers::mag2(e0.w);
+                fp p1  = ComplexNumbers::mag2(e1.w);
                 fp tmp = p0 + p1;
 
                 if (std::abs(tmp - 1.0L) > epsilon) {
@@ -1381,10 +1388,10 @@ namespace dd {
 
                 const fp threshold = dist(mt);
                 if (threshold < p0) {
-                    std::tie(cur, lim) = follow(cur, 0, lim);
+                    cur = e0;
                 } else {
-                    result[cur.p->v]  = '1';
-                    std::tie(cur, lim) = follow(cur, 1, lim);
+                    result[cur.p->v] = '1';
+                    cur              = e1;
                 }
             }
 
@@ -1959,44 +1966,6 @@ namespace dd {
         }
 
         template<class Node>
-        void unfollow(Edge<Node>& e, const short path, const LimEntry<> lim) {
-            return;
-
-            if (e.p->flags == 0) return;
-
-            e.p->flags = 0;
-
-            switch (lim.getQubit(e.p->v)) {
-                case 'I':
-                    Log::log << "[Unfollow] encountered I ";
-                    Log::log.flush();
-                    break;
-                case 'X':
-                    Log::log << "[Unfollow] encountered X ";
-                    Log::log.flush();
-                    break;
-                case 'Y':
-                    Log::log << "[Unfollow] encountered Y ";
-                    Log::log.flush();
-                    if (path == 0) {
-                        e.p->e[1 - path].w.multiplyByi(false);
-                    } else {
-                        e.p->e[1 - path].w.multiplyByMinusi(false);
-                    }
-                    break;
-                case 'Z':
-                    Log::log << "[Unfollow] encountered Z ";
-                    Log::log.flush();
-                    if (path == 1) {
-                        e.p->e[path].w.multiplyByMinusOne(false);
-                    }
-                    break;
-                default:
-                    throw std::runtime_error("[Follow] Encountered unknown Stabilizer!");
-            }
-        }
-
-        template<class Node>
         std::pair<Edge<Node>, LimEntry<>> follow(const Edge<Node>& e, const short path, LimEntry<> lim) {
             assert(e.p != nullptr);
             LimEntry<> lim2(lim);
@@ -2152,9 +2121,9 @@ namespace dd {
             constexpr std::size_t ROWS = RADIX;
             constexpr std::size_t COLS = N == NEDGE ? RADIX : 1U;
 
-            CVec                      vectorArg0, vectorArg1, vectorResult, vectorExpected;
-            std::array<ResultEdge, N> edge{};
-            const auto                op = trueLim.getPauliForQubit(y.p->v);
+            CVec                        vectorArg0, vectorArg1, vectorResult, vectorExpected;
+            std::array<ResultEdge, N>   edge{};
+            [[maybe_unused]] const auto op = trueLim.getPauliForQubit(y.p->v);
             trueLim.setOperator(y.p->v, 'I');
 
             for (auto i = 0U; i < ROWS; i++) {
@@ -2271,7 +2240,7 @@ namespace dd {
                     throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
                 }
             } else {
-            e = makeDDNode(var, edge, true, generateDensityMatrix);
+                e = makeDDNode(var, edge, true, generateDensityMatrix);
             }
 
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
@@ -3215,15 +3184,20 @@ namespace dd {
 
             const std::size_t x = i | (1ULL << e.p->v);
 
-            LimEntry<> lim2;
-            vEdge      e2{};
-            // recursive case
-            std::tie(e2, lim2) = follow(e, 0, lim);
-            if (!e2.w.approximatelyZero()) getVector(e2, c, i, vec, lim2);
+            vEdge e2{};
 
-            std::tie(e2, lim2) = follow(e, 1, lim);
+            LimEntry<> trueLim = lim;
+            trueLim.multiplyBy(e.l);
+            const auto op = trueLim.getPauliForQubit(e.p->v);
+            trueLim.setOperator(e.p->v, 'I');
+
+            // recursive case
+            e2 = follow2(e, 0, op);
+            if (!e2.w.approximatelyZero()) getVector(e2, c, i, vec, trueLim);
+
+            e2 = follow2(e, 1, op);
             //            Log::log << "[getVector] follow(e, 1, " << LimEntry<>::to_string(&lim, e.p->v) << ") = (" << e2 << ",  " << LimEntry<>::to_string(&lim2, e2.p->v) << '\n';
-            if (!e2.w.approximatelyZero()) getVector(e2, c, x, vec, lim2);
+            if (!e2.w.approximatelyZero()) getVector(e2, c, x, vec, trueLim);
 
             cn.returnToCache(c);
         }
