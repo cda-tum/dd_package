@@ -24,13 +24,47 @@
 
 namespace dd {
 
-typedef std::vector<LimEntry<>*> StabilizerGroup;
+	// TODO write a test
+	// TODO refactor to use recoverElement
+	// precondition: group is in column echelon form
+	template<std::size_t NUM_QUBITS>
+	inline phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
+		if (a == LimEntry<NUM_QUBITS>::noLIM) {
+			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+		}
+		LimEntry<NUM_QUBITS> A(a);
+		LimEntry<NUM_QUBITS> B;
+		unsigned int pivot;
+		for (unsigned int g=0; g<G.size(); g++) {
+			pivot = G[g]->pivotPosition();
+			if (A.paulis.test(pivot)) {
+				A.multiplyBy(G[g]);
+				B.multiplyBy(G[g]);
+			}
+		}
+		return B.getPhase();
+	}
 
-enum LIMDD_group {
-	QMDD_group,
-	Z_group,
-	Pauli_group
-};
+	// TODO implement
+	// TODO write a test
+	// precondition: group is in column echelon form
+	template <std::size_t NUM_QUBITS>
+	inline LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
+		if (a == LimEntry<NUM_QUBITS>::noLIM) {
+			throw std::runtime_error("[recoverPhase] a is noLIM.\n");
+		}
+		LimEntry<NUM_QUBITS> A(a);
+		LimEntry<NUM_QUBITS> B;
+		unsigned int pivot;
+		for (unsigned int g=0; g<G.size(); g++) {
+			pivot = G[g]->pivotPosition();
+			if (A.paulis.test(pivot)) {
+				A.multiplyBy(G[g]);
+				B.multiplyBy(G[g]);
+			}
+		}
+		return B;
+	}
 
 
     // Performs Gaussian elimination on G
@@ -275,48 +309,6 @@ enum LIMDD_group {
             }
         }
 //        return y;
-    }
-
-	// TODO write a test
-    // TODO refactor to use recoverElement
-    // precondition: group is in column echelon form
-    template<std::size_t NUM_QUBITS>
-    inline phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>* >&G, const LimEntry<NUM_QUBITS>* a) {
-    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
-    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
-    	}
-    	LimEntry<NUM_QUBITS> A(a);
-    	LimEntry<NUM_QUBITS> B;
-    	unsigned int pivot;
-    	for (unsigned int g=0; g<G.size(); g++) {
-    		pivot = G[g]->pivotPosition();
-    		if (A.paulis.test(pivot)) {
-				A.multiplyBy(G[g]);
-				B.multiplyBy(G[g]);
-    		}
-    	}
-    	return B.getPhase();
-    }
-
-    // TODO implement
-    // TODO write a test
-    // precondition: group is in column echelon form
-    template <std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS> recoverElement(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* a) {
-    	if (a == LimEntry<NUM_QUBITS>::noLIM) {
-    		throw std::runtime_error("[recoverPhase] a is noLIM.\n");
-    	}
-    	LimEntry<NUM_QUBITS> A(a);
-    	LimEntry<NUM_QUBITS> B;
-    	unsigned int pivot;
-    	for (unsigned int g=0; g<G.size(); g++) {
-    		pivot = G[g]->pivotPosition();
-    		if (A.paulis.test(pivot)) {
-				A.multiplyBy(G[g]);
-				B.multiplyBy(G[g]);
-    		}
-    	}
-    	return B;
     }
 
 
