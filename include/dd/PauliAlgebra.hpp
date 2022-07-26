@@ -730,7 +730,6 @@ public:
     		if (A.paulis.test(pivot)) {
 				A.multiplyBy(G[g]);
 				B.multiplyBy(G[g]);
-				break;
     		}
     	}
     	return B.getPhase();
@@ -752,7 +751,6 @@ public:
     		if (A.paulis.test(pivot)) {
 				A.multiplyBy(G[g]);
 				B.multiplyBy(G[g]);
-				break;
     		}
     	}
     	return B;
