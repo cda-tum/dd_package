@@ -3,6 +3,7 @@
 #ifndef CVEC_UTITITIES_HPP
     #define CVEC_UTITITIES_HPP
 
+    #include "Complex.hpp"
     #include "Definitions.hpp"
     #include "Log.hpp"
 
