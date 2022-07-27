@@ -949,13 +949,13 @@ namespace dd {
                 // Collecting garbage in the complex numbers table requires collecting the node tables as well
                 force = true;
             }
-            auto vCollect = vUniqueTable.garbageCollect(force);
-            auto mCollect = mUniqueTable.garbageCollect(force);
-            auto dCollect = dUniqueTable.garbageCollect(force);
+            auto vCollect   = vUniqueTable.garbageCollect(force);
+            auto limCollect = limTable.garbageCollect(force);
+            auto mCollect   = mUniqueTable.garbageCollect(force);
+            auto dCollect   = dUniqueTable.garbageCollect(force);
 
             // invalidate all compute tables involving vectors if any vector node has been collected
-            if (vCollect > 0) {
-                limTable.clear();
+            if (vCollect > 0 || limCollect > 0) {
                 vectorAdd.clear();
                 vectorInnerProduct.clear();
                 vectorKronecker.clear();
@@ -1626,6 +1626,7 @@ namespace dd {
             //
             computeTable.insert({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, {e.p, weight, limTable.lookup(trueLimXCopy)});
             cn.returnToCache(weight);
+
             return e;
         }
 
