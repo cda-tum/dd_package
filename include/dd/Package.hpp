@@ -365,14 +365,14 @@ struct DDPackageConfig {
             // since they will be assigned values but will not be looked up in the ComplexTable
             // TODO limdd:
             //   1. make NUM_QUBITS a template parameter
-            LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight) {
+            void highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, LimEntry<>& newHighLabel) {
             	Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
-            	LimEntry<>* newHighLabel;
+//            	LimEntry<>* newHighLabel;
             	if (u == v) {
-            		newHighLabel = GramSchmidt(u->limVector, vLabel);
-                	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-                	newHighLabel->setPhase(phase_t::phase_one);
+            		newHighLabel = *GramSchmidt(u->limVector, vLabel);
+                	highWeight.multiplyByPhase(newHighLabel.getPhase());
+                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
+                	newHighLabel.setPhase(phase_t::phase_one);
 
                 	fp lomag2 = ComplexNumbers::mag2(lowWeight);
                 	fp himag2 = ComplexNumbers::mag2(highWeight);
@@ -407,23 +407,20 @@ struct DDPackageConfig {
         				highWeight.multiplyByMinusOne(true);
         				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
         			}
-
             	}
             	else {
             		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
             		toColumnEchelonForm(GH);
-            		newHighLabel = GramSchmidt(GH, vLabel);
-                	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-                	newHighLabel->setPhase(phase_t::phase_one);
+            		newHighLabel = *GramSchmidt(GH, vLabel);
+                	highWeight.multiplyByPhase(newHighLabel.getPhase());
+                	Log::log << "[highLabelPauli] canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
+                	newHighLabel.setPhase(phase_t::phase_one);
             		if (highWeight.lexSmallerThanxMinusOne()) {
             			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
             			highWeight.multiplyByMinusOne(true);
             			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
             		}
             	}
-
-            	return newHighLabel;
             }
 
 		template<class Edge>
@@ -640,14 +637,16 @@ struct DDPackageConfig {
             // Step 3: Choose a canonical right LIM
             Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
             vNode       oldNode            = *(r.p); // make a copy of the old node
-            Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w);
-            Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // TODO return to cache
-            LimEntry<>* higLimTemp2        = highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp);  // TODO memory leak; delete highLimTemp
-            r.p->e[1].l                    = limTable.lookup(*higLimTemp2);
+            Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
+            Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
+            LimEntry<>  highLimTemp;
+            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);  // TODO memory leak; delete highLimTemp
+            r.p->e[1].l                    = limTable.lookup(highLimTemp);
             limTable.incRef(r.p->e[1].l);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
-            cn.returnToCache(highEdgeWeightTemp); // TODO RESOLVED return to cache. Uncommenting this line gives an error
+            cn.returnToCache(highEdgeWeightTemp);
+            cn.returnToCache(lowEdgeWeightTemp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
@@ -660,21 +659,19 @@ struct DDPackageConfig {
             LimWeight<> iso;
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
-            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism); // TODO RESOLVED memory leak: LIM 'iso' is not freed
+            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+            delete oldNode.e[1].l;
             Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
-            //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
             r.l->multiplyBy(lowLim);
             Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
-            //            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
             delete iso.lim;
-            //            delete iso;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
