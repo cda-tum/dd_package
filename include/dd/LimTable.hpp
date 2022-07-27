@@ -146,7 +146,7 @@ namespace dd {
             return lim->getQubit(qubit);
         }
 
-        phase_t getPhase() const {
+        [[nodiscard]] phase_t getPhase() const {
             int phase = ((int) paulis.test(2*NUM_QUBITS)) | ((int) paulis.test(2*NUM_QUBITS+1) << 1);
             return (phase_t) phase;
         }
@@ -337,7 +337,7 @@ namespace dd {
 
         // Right-Multiply this Pauli operator with the 'other' Pauli operator, obtaining this * other
         // todo the 'bitset' data structure supports XOR natively,
-        //   so use that to speed up this operation. When you implement this,
+        //   so use that to speed up this operation. When you implement this optimization,
         //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char op1, op2;
@@ -362,9 +362,19 @@ namespace dd {
                 paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
                 paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
             }
-            // todo use paulis ^= other.paulis
-            //   this XORs all the bits at once, which is much faster
             multiplyPhaseBy(LimEntry<NUM_QUBITS>::getPhase(&other));
+        }
+
+        void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
+        	multiplyBy(other);
+        	if (!commutesWith(other)) {
+        		multiplyPhaseBy(phase_t::phase_minus_one);
+        	}
+        }
+
+        void leftMultiplyBy(const LimEntry<NUM_QUBITS>* other) {
+        	if (other == nullptr) return;
+        	leftMultiplyBy(*other);
         }
 
         void multiplyBy(const LimEntry<NUM_QUBITS>* other) {
@@ -423,18 +433,37 @@ namespace dd {
         	setOperator(v, (pauli_op) op);
         }
 
-        bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
+        void setToIdentityOperator() {
+        	for (Qubit qubit=0; qubit < (Qubit) NUM_QUBITS; qubit++) {
+        		setOperator(qubit, pauli_op::pauli_id);
+        	}
+        	setPhase(phase_t::phase_one);
+        }
+
+        void operator=(const LimEntry<>* other) {
+        	if (other == nullptr) setToIdentityOperator();
+        	else {
+        		*this = *other;
+        	}
+        }
+
+        bool commutesWith(const LimEntry<NUM_QUBITS>& b) const {
         	unsigned int anticommute_count = 0;
         	char op1, op2;
-        	for (unsigned int q=0; q<NUM_QUBITS; q++) {
+        	for (Qubit q=0; q<(Qubit) NUM_QUBITS; q++) {
         		op1 = getQubit(q);
-        		op2 = b->getQubit(q);
+        		op2 = b.getQubit(q);
         		if (op1 != op2 && op1 != pauli_id && op2 != pauli_id) {
         			anticommute_count++;
         		}
         	}
         	// the Pauli Lims commute iff they have an even number of anticommuting gates
         	return (anticommute_count % 2) == 0;
+        }
+
+        bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
+        	if (b == nullptr) return true;
+        	return commutesWith(*b);
         }
 
         // Returns I, the Identity operator
@@ -599,6 +628,15 @@ namespace dd {
     	LimWeight<NUM_QUBITS>(const std::string pauliString)
     			: lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
     		//
+    	}
+
+    	void setToIdentityOperator() {
+    		if (lim == nullptr) {
+    			lim = new LimEntry<>();
+    		}
+    		else {
+    			lim->setToIdentityOperator();
+    		}
     	}
 
     	void multiplyBy(const LimWeight<NUM_QUBITS>& other) {
