@@ -548,13 +548,13 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
-            Edge<vNode> r                            = normalize(e, cached);
-            CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
+            //            CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
+            Edge<vNode> r = normalize(e, cached);
+            //            CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
             //            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
-            Edge<vNode> rOld = copyEdge(r);
+            //            Edge<vNode> rOld = copyEdge(r);
 
-            CVec amplitudeVecBeforeNormalize = getVector(r);
+            //            CVec amplitudeVecBeforeNormalize = getVector(r);
 
             if (r.l == nullptr) {
                 r.l = LimEntry<>::getIdentityOperator();
@@ -647,8 +647,8 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             //Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
-            CVec rpVec      = getVector(r.p);
-            CVec oldNodeVec = getVector(&oldNode);
+            //            CVec rpVec      = getVector(r.p);
+            //            CVec oldNodeVec = getVector(&oldNode);
             //Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
             //            << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
 
@@ -729,7 +729,7 @@ namespace dd {
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
-                vEdge edgeDummy{&node, Complex::one, nullptr};
+                //                vEdge edgeDummy{&node, Complex::one, nullptr};
                 // Gather the stabilizer groups of the two children
                 //Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
                 // Step 1: Compute the intersection
@@ -1556,40 +1556,50 @@ namespace dd {
     public:
         std::pair<dd::fp, dd::fp> determineMeasurementProbabilities(const vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization) {
             // TODO limdd
-            std::map<vNode*, fp> probsMone;
-            std::set<vNode*>     visited;
-            std::queue<vNode*>   q;
+            std::map<vNode*, fp>                     probsMone;
+            std::set<vNode*>                         visited;
+            std::queue<std::pair<vEdge, LimEntry<>>> q;
+            LimEntry<>                               lim = {};
 
             probsMone[root_edge.p] = ComplexNumbers::mag2(root_edge.w);
             visited.insert(root_edge.p);
-            q.push(root_edge.p);
+            q.push({root_edge, lim});
 
-            while (q.front()->v != index) {
-                vNode* ptr = q.front();
+            while (q.front().first.p->v != index) {
+                auto ptr = q.front();
                 q.pop();
-                fp prob = probsMone[ptr];
 
-                if (!ptr->e.at(0).w.approximatelyZero()) {
-                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(0).w);
+                fp prob = probsMone[ptr.first.p];
 
-                    if (visited.find(ptr->e.at(0).p) != visited.end()) {
-                        probsMone[ptr->e.at(0).p] = probsMone[ptr->e.at(0).p] + tmp1;
+                lim.multiplyBy(ptr.first.l);
+                const auto op = lim.getPauliForQubit(ptr.first.p->v);
+                lim.setOperator(ptr.first.p->v, 'I');
+
+                // recursive case
+                auto const e0 = follow2(ptr.first, 0, op);
+                auto const e1 = follow2(ptr.first, 1, op);
+
+                if (!e0.w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(e0.w);
+
+                    if (visited.find(e0.p) != visited.end()) {
+                        probsMone[e0.p] = probsMone[e0.p] + tmp1;
                     } else {
-                        probsMone[ptr->e.at(0).p] = tmp1;
-                        visited.insert(ptr->e.at(0).p);
-                        q.push(ptr->e.at(0).p);
+                        probsMone[e0.p] = tmp1;
+                        visited.insert(e0.p);
+                        q.push({e0, lim});
                     }
                 }
 
-                if (!ptr->e.at(1).w.approximatelyZero()) {
-                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(1).w);
+                if (!e1.w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(e1.w);
 
-                    if (visited.find(ptr->e.at(1).p) != visited.end()) {
-                        probsMone[ptr->e.at(1).p] = probsMone[ptr->e.at(1).p] + tmp1;
+                    if (visited.find(e1.p) != visited.end()) {
+                        probsMone[e1.p] = probsMone[e1.p] + tmp1;
                     } else {
-                        probsMone[ptr->e.at(1).p] = tmp1;
-                        visited.insert(ptr->e.at(1).p);
-                        q.push(ptr->e.at(1).p);
+                        probsMone[e1.p] = tmp1;
+                        visited.insert(e1.p);
+                        q.push({e1, lim});
                     }
                 }
             }
@@ -1598,7 +1608,7 @@ namespace dd {
 
             if (assumeProbabilityNormalization) {
                 while (!q.empty()) {
-                    vNode* ptr = q.front();
+                    auto* ptr = q.front().first.p;
                     q.pop();
 
                     if (!ptr->e.at(0).w.approximatelyZero()) {
@@ -1614,7 +1624,7 @@ namespace dd {
                 assignProbabilities(root_edge, probs);
 
                 while (!q.empty()) {
-                    vNode* ptr = q.front();
+                    auto* ptr = q.front().first.p;
                     q.pop();
 
                     if (!ptr->e.at(0).w.approximatelyZero()) {
@@ -1632,7 +1642,14 @@ namespace dd {
         char measureOneCollapsing(vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization, std::mt19937_64& mt, fp epsilon = 0.001) {
             // TODO limdd
             const auto& [pzero, pone] = determineMeasurementProbabilities(root_edge, index, assumeProbabilityNormalization);
-            const fp sum              = pzero + pone;
+
+            if (std::abs(pzero - 1) < epsilon) {
+                return '0';
+            } else if (std::abs(pone - 1) < epsilon) {
+                return '1';
+            }
+
+            const fp sum = pzero + pone;
             if (std::abs(sum - 1) > epsilon) {
                 throw std::runtime_error("Numerical instability occurred during measurement: |alpha|^2 + |beta|^2 = " + std::to_string(pzero) + " + " + std::to_string(pone) + " = " +
                                          std::to_string(pzero + pone) + ", but should be 1!");
