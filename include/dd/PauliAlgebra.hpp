@@ -128,10 +128,10 @@ namespace dd {
         if (G.size() <= 1) return;
         unsigned int pivot;
 
-        for (unsigned int g=0; g+1<G.size(); g++) {
+        for (unsigned int g = 0; g + 1 < G.size(); g++) {
             pivot = G[g]->pivotPosition();
             if (pivot >= 2 * NUM_QUBITS) continue; // In this case G[g] is an all-zero column (i.e., is the identity)
-            for (unsigned int h=g+1; h<G.size(); h++) {
+            for (unsigned int h = g + 1; h < G.size(); h++) {
                 if (G[h]->paulis.test(pivot)) {
                     G[h] = LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
                 }
@@ -144,10 +144,10 @@ namespace dd {
         if (G.size() <= 1) return;
         unsigned int pivot;
 
-        for (unsigned int g=0; g+1<G.size(); g++) {
+        for (unsigned int g = 0; g + 1 < G.size(); g++) {
             pivot = G[g]->lim.pivotPosition();
-            if (pivot >= 2*NUM_QUBITS) continue;
-            for (unsigned int h=g+1; h<G.size(); h++) {
+            if (pivot >= 2 * NUM_QUBITS) continue;
+            for (unsigned int h = g + 1; h < G.size(); h++) {
                 if (G[h]->lim.paulis.test(pivot)) {
                     G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]);
                 }
