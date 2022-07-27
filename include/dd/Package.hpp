@@ -949,10 +949,16 @@ namespace dd {
                 // Collecting garbage in the complex numbers table requires collecting the node tables as well
                 force = true;
             }
-            auto vCollect   = vUniqueTable.garbageCollect(force);
             auto limCollect = limTable.garbageCollect(force);
-            auto mCollect   = mUniqueTable.garbageCollect(force);
-            auto dCollect   = dUniqueTable.garbageCollect(force);
+            auto vCollect   = 0;
+            if (limCollect > 0) {
+                vCollect = vUniqueTable.garbageCollect(true);
+            } else {
+                vCollect = vUniqueTable.garbageCollect(force);
+            }
+
+            auto mCollect = mUniqueTable.garbageCollect(force);
+            auto dCollect = dUniqueTable.garbageCollect(force);
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0 || limCollect > 0) {
