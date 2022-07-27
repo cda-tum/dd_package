@@ -953,10 +953,10 @@ namespace dd {
             auto vCollect = vUniqueTable.garbageCollect(force);
             auto mCollect = mUniqueTable.garbageCollect(force);
             auto dCollect = dUniqueTable.garbageCollect(force);
-            //todo garbage collect lim table
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0) {
+                limTable.clear();
                 vectorAdd.clear();
                 vectorInnerProduct.clear();
                 vectorKronecker.clear();
