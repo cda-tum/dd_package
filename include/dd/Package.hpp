@@ -1292,13 +1292,17 @@ struct DDPackageConfig {
             return l;
         }
 
-        // TODO delete the old content of the group, which was dynamicalyl allocated on the heap
         void putStabilizersInTable(vEdge& edge) {
             [[maybe_unused]] LimEntry<>* limptr;
             for (unsigned int i = 0; i < edge.p->limVector.size(); i++) {
-                //        		limptr = edge.p->limVector[i];
+                limptr = edge.p->limVector[i];
                 edge.p->limVector[i] = limTable.lookup(*(edge.p->limVector[i]));
-                //        		delete limptr;
+
+                // If the input LimEntry pointer isn't already in the table, it
+                // was dynamically allocated, in which case we delete it here.
+                if (limptr != edge.p->limVector[i]) {
+                    delete limptr;
+                }
             }
         }
 
