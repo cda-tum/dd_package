@@ -24,6 +24,8 @@ Remove memory leaks
 
 in normalizeLIMDDPauli:
     (done) via lots of LimEntry<>::multiply calls
+    - root node label should be a local variable; then it is looked up.
+    (done) high label is newly allocated; but is not necessary
     - use leftMultiplyBy instead of LimEntry<>::multiply
     many complex values are not returned to the cache
 in getIsomorphismPauli, :

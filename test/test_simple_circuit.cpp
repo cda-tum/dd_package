@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& out, const dd::CVec& vec) {
 
 void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 	auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
-	auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, true, true);
+	auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, true, false);
 
 	auto qmddState = qmdd->makeZeroState(circuit.n);
 	auto limddState= limdd->makeZeroState(circuit.n);
