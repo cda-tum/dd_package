@@ -398,9 +398,12 @@ namespace dd {
                 kernel.push_back(G_Id[i]->bits);
             }
         }
-        // TODO free / deallocate G_Id and its elements
         //        Log::log << "[getKernelZ] found kernel:\n";
         //        printKernel(kernel);
+        // free / deallocate G_Id and its elements
+        for (unsigned int i=0; i<G_Id.size(); i++) {
+            delete G_Id[i];
+        }
         return kernel;
     }
 
@@ -419,6 +422,9 @@ namespace dd {
             }
         }
         // TODO free / deallocate G_Id and its elements
+        for (unsigned int i=0; i<G_Id.size(); i++) {
+            delete G_Id[i];
+        }
         return kernel;
     }
 
