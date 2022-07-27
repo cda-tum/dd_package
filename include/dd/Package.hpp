@@ -56,31 +56,31 @@
 
 namespace dd {
 
-struct DDPackageConfig {
-    //Note the order of parameters here must be the *same* as in the template definition.
-    static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
-    static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
-    static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
-    static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
-    static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
-    static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
-    static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
-    static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
-    static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
-    static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
-    static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
-    static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
-    static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
-    static constexpr std::size_t CT_DM_NOISE_NBUCKET            = 1U;
-    static constexpr std::size_t UT_DM_NBUCKET                  = 1U;
-    static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 1U;
-    static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 1U;
-    static constexpr std::size_t CT_DM_ADD_NBUCKET              = 1U;
+    struct DDPackageConfig {
+        //Note the order of parameters here must be the *same* as in the template definition.
+        static constexpr std::size_t UT_VEC_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t UT_MAT_NBUCKET                 = 32768U;
+        static constexpr std::size_t UT_MAT_INITIAL_ALLOCATION_SIZE = 2048U;
+        static constexpr std::size_t CT_VEC_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_ADD_NBUCKET             = 16384U;
+        static constexpr std::size_t CT_MAT_TRANS_NBUCKET           = 4096U;
+        static constexpr std::size_t CT_MAT_CONJ_TRANS_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_MAT_VEC_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_MAT_MAT_MULT_NBUCKET        = 16384U;
+        static constexpr std::size_t CT_VEC_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_MAT_KRON_NBUCKET            = 4096U;
+        static constexpr std::size_t CT_VEC_INNER_PROD_NBUCKET      = 4096U;
+        static constexpr std::size_t CT_DM_NOISE_NBUCKET            = 1U;
+        static constexpr std::size_t UT_DM_NBUCKET                  = 1U;
+        static constexpr std::size_t UT_DM_INITIAL_ALLOCATION_SIZE  = 1U;
+        static constexpr std::size_t CT_DM_DM_MULT_NBUCKET          = 1U;
+        static constexpr std::size_t CT_DM_ADD_NBUCKET              = 1U;
 
-    // The number of different quantum operations. I.e., the number of operations defined in the QFR OpType.hpp
-    // This parameter is required to initialize the StochasticNoiseOperationTable.hpp
-    static constexpr std::size_t STOCHASTIC_CACHE_OPS = 1;
-};
+        // The number of different quantum operations. I.e., the number of operations defined in the QFR OpType.hpp
+        // This parameter is required to initialize the StochasticNoiseOperationTable.hpp
+        static constexpr std::size_t STOCHASTIC_CACHE_OPS = 1;
+    };
 
     template<std::size_t UT_VEC_NBUCKET                 = DDPackageConfig::UT_VEC_NBUCKET,
              std::size_t UT_VEC_INITIAL_ALLOCATION_SIZE = DDPackageConfig::UT_VEC_INITIAL_ALLOCATION_SIZE,
@@ -358,129 +358,126 @@ struct DDPackageConfig {
         }
 
     public:
-            // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
-            // Sets the
-            // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
-            // since they will be assigned values but will not be looked up in the ComplexTable
-            // TODO limdd:
-            //   1. make NUM_QUBITS a template parameter
-            LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight) {
-            	Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
-            	LimEntry<>* newHighLabel;
-            	if (u == v) {
-            		newHighLabel = GramSchmidt(u->limVector, vLabel);
-                	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-                	newHighLabel->setPhase(phase_t::phase_one);
+        // Finds a high label for a node with low child u and high child v, with current high edge label vLabel, and current high LIM vLabel
+        // Sets the
+        // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
+        // since they will be assigned values but will not be looked up in the ComplexTable
+        // TODO limdd:
+        //   1. make NUM_QUBITS a template parameter
+        LimEntry<>* highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight) {
+            //Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
+            LimEntry<>* newHighLabel;
+            if (u == v) {
+                newHighLabel = GramSchmidt(u->limVector, vLabel);
+                highWeight.multiplyByPhase(newHighLabel->getPhase());
+                //Log::log << "[highLabelPauli] case u = v; canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                newHighLabel->setPhase(phase_t::phase_one);
 
-                	fp lomag2 = ComplexNumbers::mag2(lowWeight);
-                	fp himag2 = ComplexNumbers::mag2(highWeight);
-                	if (himag2 > lomag2) {
-                		Log::log << "[highLabelPauli] high is larger than low.\n";
-                		// Swap low, high
-                		Complex hiTemp = cn.getCached(lowWeight);  // TODO return to cache
-                		Complex loTemp = cn.getCached(highWeight); // TODO return to cache
-                		vEdge lo{u, hiTemp, nullptr};
-                		vEdge hi{u, loTemp, nullptr};
-                		Log::log << "[highLabelPauli] before normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
-                		// Normalize low, high
-                		vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
-                		vEdge tempEdge{&tempNode, Complex::one, nullptr};
-//                		Complex lowWeightTemp = cn.getCached(lowWeight);
-//                		Complex highWeightTemp = cn.getCached(highWeight);
-                		tempEdge = normalize(tempEdge, false);
-                		Log::log << "[highlabelPauli] after  normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
-                		Log::log << "[highlabelPauli] after  normalize: lo edge= " << tempEdge.p->e[0].w << "; hiEdge = " << tempEdge.p->e[1].w << '\n';
+                fp lomag2 = ComplexNumbers::mag2(lowWeight);
+                fp himag2 = ComplexNumbers::mag2(highWeight);
+                if (himag2 > lomag2) {
+                    //Log::log << "[highLabelPauli] high is larger than low.\n";
+                    // Swap low, high
+                    Complex hiTemp = cn.getCached(lowWeight);  // TODO return to cache
+                    Complex loTemp = cn.getCached(highWeight); // TODO return to cache
+                    vEdge   lo{u, hiTemp, nullptr};
+                    vEdge   hi{u, loTemp, nullptr};
+                    //Log::log << "[highLabelPauli] before normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
+                    // Normalize low, high
+                    vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
+                    vEdge tempEdge{&tempNode, Complex::one, nullptr};
+                    //                		Complex lowWeightTemp = cn.getCached(lowWeight);
+                    //                		Complex highWeightTemp = cn.getCached(highWeight);
+                    tempEdge = normalize(tempEdge, false);
+                    //Log::log << "[highlabelPauli] after  normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
+                    //Log::log << "[highlabelPauli] after  normalize: lo edge= " << tempEdge.p->e[0].w << "; hiEdge = " << tempEdge.p->e[1].w << '\n';
 
-                		// Now the weights are normalized
-                		highWeight.r->value = CTEntry::val(tempEdge.p->e[0].w.r);
-                		highWeight.i->value = CTEntry::val(tempEdge.p->e[0].w.i);
-                		lowWeight.r->value  = CTEntry::val(tempEdge.p->e[1].w.r);
-                		lowWeight.i->value  = CTEntry::val(tempEdge.p->e[1].w.i);
+                    // Now the weights are normalized
+                    highWeight.r->value = CTEntry::val(tempEdge.p->e[0].w.r);
+                    highWeight.i->value = CTEntry::val(tempEdge.p->e[0].w.i);
+                    lowWeight.r->value  = CTEntry::val(tempEdge.p->e[1].w.r);
+                    lowWeight.i->value  = CTEntry::val(tempEdge.p->e[1].w.i);
+                    //Log::log << "[highLabelPauli] (case high > low) new low = " << lowWeight << "; new high = " << highWeight << "\n";
+                    //                		lowWeight = tempEdge.p->e[0].w;
+                    //                		lowWeight  = tempEdge.p->e[1].w;
+                }
+                if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
+                    highWeight.multiplyByMinusOne(true);
+                    //Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
+                }
 
-                		Log::log << "[highLabelPauli] (case high > low) new low = " << lowWeight << "; new high = " << highWeight << "\n";
-//                		lowWeight = tempEdge.p->e[0].w;
-//                		lowWeight  = tempEdge.p->e[1].w;
-                	}
-        			if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
-        				highWeight.multiplyByMinusOne(true);
-        				Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
-        			}
-
-            	}
-            	else {
-            		StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
-            		toColumnEchelonForm(GH);
-            		newHighLabel = GramSchmidt(GH, vLabel);
-                	highWeight.multiplyByPhase(newHighLabel->getPhase());
-                	Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
-                	newHighLabel->setPhase(phase_t::phase_one);
-            		if (highWeight.lexSmallerThanxMinusOne()) {
-            			Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
-            			highWeight.multiplyByMinusOne(true);
-            			Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
-            		}
-            	}
-
-            	return newHighLabel;
+            } else {
+                StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
+                toColumnEchelonForm(GH);
+                newHighLabel = GramSchmidt(GH, vLabel);
+                highWeight.multiplyByPhase(newHighLabel->getPhase());
+                //Log::log << "[highLabelPauli] canonical lim is " << *newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel->getPhase()) << ", result: weight = " << highWeight << '\n';
+                newHighLabel->setPhase(phase_t::phase_one);
+                if (highWeight.lexSmallerThanxMinusOne()) {
+                    //Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
+                    highWeight.multiplyByMinusOne(true);
+                    //Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
+                }
             }
 
-		template<class Edge>
+            return newHighLabel;
+        }
+
+        template<class Edge>
         void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
             if (!performSanityChecks) return;
             if (!vectorsApproximatelyEqual(before, after)) {
-                Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
-                Log::log << "[normalizeLIMDD] original:   ";
+                //Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
+                //Log::log << "[normalizeLIMDD] original:   ";
                 printCVec(before);
-                Log::log << '\n';
-                Log::log << "[normalizeLIMDD] normalized: ";
+                //Log::log << '\n';
+                //Log::log << "[normalizeLIMDD] normalized: ";
                 printCVec(after);
-                Log::log << '\n';
+                //Log::log << '\n';
                 export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
                 export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
                 throw std::runtime_error("[normalizeLIMDD] ERROR normalized edge has different vector than original edge! See files originalEdge.svg and normalizedEdge.svg\n");
             }
         }
 
-		void outputDescendantsStabilizerGroups(vEdge edge) {
-			if (edge.isTerminal()) return;
-			Log::log << "[print stabs] n = " << (int) edge.p->v << "; Stab(v) = " << groupToString(edge.p->limVector, edge.p->v) << "  edge = " << edge << "\n";
-			if (!edge.p->e[0].isTerminal()) {
-				outputDescendantsStabilizerGroups(edge.p->e[0]);
-			}
-			else if (!edge.p->e[1].isTerminal()) {
-				outputDescendantsStabilizerGroups(edge.p->e[1]);
-			}
-		}
+        void outputDescendantsStabilizerGroups(vEdge edge) {
+            if (edge.isTerminal()) return;
+            //Log::log << "[print stabs] n = " << (int) edge.p->v << "; Stab(v) = " << groupToString(edge.p->limVector, edge.p->v) << "  edge = " << edge << "\n";
+            if (!edge.p->e[0].isTerminal()) {
+                outputDescendantsStabilizerGroups(edge.p->e[0]);
+            } else if (!edge.p->e[1].isTerminal()) {
+                outputDescendantsStabilizerGroups(edge.p->e[1]);
+            }
+        }
 
         template<class Edge>
         void sanityCheckStabilizerGroup(Edge& edge, StabilizerGroup& stabilizerGroup) {
-			if (!performSanityChecks) return;
-        	CVec nodeVec = getVector(edge.p);
-        	vEdge edgeId = edge;
-        	edgeId.l = nullptr;
-        	CVec stabVec;
-        	for (unsigned int i=0; i<stabilizerGroup.size(); i++) {
-        		stabVec = getVector(edgeId, *stabilizerGroup[i]);
-        		if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
-                	CVec edgeVec = getVector(edge);
-        			Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element: " << LimEntry<>::to_string(stabilizerGroup[i], edge.p->v) << "\n";
-        			Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
-        			Log::log << "[sanity check stabilizer group] Node's stabilizer group is :" << groupToString(stabilizerGroup, edge.p->v) << "\n";
-        			Log::log << "[sanity check stabilizer group] node's vector: " << outputCVec(nodeVec) << "\n";
-        			Log::log << "[sanity check stabilizer group] stabilizer vec:" << outputCVec(stabVec) << "\n";
-        			Log::log << "[sanity check stabilizer group] edge vec:      " << outputCVec(edgeVec) << "\n";
-        			outputDescendantsStabilizerGroups(edge);
-        			export2Dot(edge, "errorStabilizer.dot", false, true, true, false, true, false);
-        			throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
-        		}
-        	}
+            if (!performSanityChecks) return;
+            CVec  nodeVec = getVector(edge.p);
+            vEdge edgeId  = edge;
+            edgeId.l      = nullptr;
+            CVec stabVec;
+            for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
+                stabVec = getVector(edgeId, *stabilizerGroup[i]);
+                if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
+                    CVec edgeVec = getVector(edge);
+                    Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element: " << LimEntry<>::to_string(stabilizerGroup[i], edge.p->v) << "\n";
+                    Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
+                    Log::log << "[sanity check stabilizer group] Node's stabilizer group is :" << groupToString(stabilizerGroup, edge.p->v) << "\n";
+                    Log::log << "[sanity check stabilizer group] node's vector: " << outputCVec(nodeVec) << "\n";
+                    Log::log << "[sanity check stabilizer group] stabilizer vec:" << outputCVec(stabVec) << "\n";
+                    Log::log << "[sanity check stabilizer group] edge vec:      " << outputCVec(edgeVec) << "\n";
+                    outputDescendantsStabilizerGroups(edge);
+                    export2Dot(edge, "errorStabilizer.dot", false, true, true, false, true, false);
+                    throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
+                }
+            }
         }
 
         // Checks whether a == iso * b
         template<class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
-			if (!performSanityChecks) return;
+            if (!performSanityChecks) return;
             if (!performSanityChecks) return;
             Edge edgeA{&a, Complex::one, nullptr};
             Edge edgeB{&b, Complex::one, nullptr};
@@ -511,7 +508,7 @@ struct DDPackageConfig {
             }
             unsigned int d = result.size() / 2;
             if ((left.size() != d && left.size() != 0) || (right.size() != d && right.size() != 0)) {
-                Log::log << "[sanity check makeDDNode] left = " << left.size() << "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
+                //Log::log << "[sanity check makeDDNode] left = " << left.size() << "  right = " << right.size() << "  result = " << result.size() << " d = " << d << '\n';
                 throw std::runtime_error("[sanity check makeDDNode] received vectors of unexpected sizes.\n");
             }
             if (left.size() == 0) {
@@ -554,7 +551,7 @@ struct DDPackageConfig {
             CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
             Edge<vNode> r                            = normalize(e, cached);
             CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
-            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
+            //            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             Edge<vNode> rOld = copyEdge(r);
 
             CVec amplitudeVecBeforeNormalize = getVector(r);
@@ -566,7 +563,7 @@ struct DDPackageConfig {
 
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
-                Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
+                //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
                 r.l->multiplyBy(r.p->e[0].l); // = LimEntry<>::multiply(r.l, r.p->e[0].l);
                 // Step 2: Set the low and high edge labels to 'Identity'
@@ -588,7 +585,7 @@ struct DDPackageConfig {
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
             if (zero[0]) {
                 // TODO double-check if this logic makes sense
-                Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
+                //Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Multiply the root label by the high edge label
                 r.l->multiplyBy(r.p->e[1].l); // = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO resolved limdd memory leak
                 // Step 2: Right-multiply the root edge by X
@@ -610,11 +607,10 @@ struct DDPackageConfig {
                 r.p->e[0].p = r.p->e[1].p;
                 return r;
             }
-
-            Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
             if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
                 std::swap(r.p->e[0], r.p->e[1]);
-                Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
+                //Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
                 r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved memory leak
@@ -624,7 +620,7 @@ struct DDPackageConfig {
             LimEntry<>*                  lowLim = r.p->e[0].l;
             [[maybe_unused]] LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
+            //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
             if (r.p->e[1].l == nullptr) {
                 r.p->e[1].l = new LimEntry<>();
             }
@@ -634,27 +630,27 @@ struct DDPackageConfig {
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
             r.p->e[1].l->setPhase(phase_t::phase_one);
             // Step 2: Make the left LIM Identity
-            Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
-            Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
             vNode       oldNode            = *(r.p); // make a copy of the old node
             Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w);
-            Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // TODO return to cache
-            LimEntry<>* higLimTemp2        = highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp);  // TODO memory leak; delete highLimTemp
+            Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w);                                                                    // TODO return to cache
+            LimEntry<>* higLimTemp2        = highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp); // TODO memory leak; delete highLimTemp
             r.p->e[1].l                    = limTable.lookup(*higLimTemp2);
             limTable.incRef(r.p->e[1].l);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             cn.returnToCache(highEdgeWeightTemp); // TODO RESOLVED return to cache. Uncommenting this line gives an error
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-            Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
-            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
+            //Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             CVec rpVec      = getVector(r.p);
             CVec oldNodeVec = getVector(&oldNode);
-            Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
-                     << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
+            //Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
+            //            << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
 
             LimWeight<> iso;
             bool        foundIsomorphism = false;
@@ -663,12 +659,12 @@ struct DDPackageConfig {
             if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
-            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
-            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
-            Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
+            //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+            //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
+            //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
             //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
             r.l->multiplyBy(lowLim);
-            Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
+            //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             //            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
@@ -676,17 +672,17 @@ struct DDPackageConfig {
             //            delete iso;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
+            //Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
             if (r.l->getPhase() != phase_t::phase_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByPhase(r.l->getPhase());
                 // Step 6.2: Make the phase of r.l '+1'
                 r.l->setPhase(phase_t::phase_one);
             }
-            Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
+            //Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
 
-            CVec amplitudeVecAfterNormalize = getVector(r);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
+            //            CVec amplitudeVecAfterNormalize = getVector(r);
+            //            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
 
             return r;
         }
@@ -709,97 +705,97 @@ struct DDPackageConfig {
             }
             // Case 1: right child is zero
             else if (zero[1]) {
-                Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
+                //Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
                 stabgenset = low.p->limVector; // copies the stabilizer group of the left child
-                printStabilizerGroup(stabgenset);
+                //printStabilizerGroup(stabgenset);
                 LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
                 idZ->setOperator(n, 'Z');
                 stabgenset.push_back(idZ);
-                Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                //Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
+                //printStabilizerGroup(stabgenset);
                 // the matrix set is already in column echelon form,
                 // so we do not need to perform that step here
             }
             // Case 2: left child is zero
             else if (zero[0]) {
-                Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
+                //Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
                 stabgenset = high.p->limVector; // copy the stabilizer of the right child
-                printStabilizerGroup(stabgenset);
+                //printStabilizerGroup(stabgenset);
                 LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
                 minusIdZ->setOperator(n, 'Z');
                 stabgenset.push_back(minusIdZ);
-                Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                //Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
+                //printStabilizerGroup(stabgenset);
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
-            	vEdge edgeDummy{&node, Complex::one, nullptr};
+                vEdge edgeDummy{&node, Complex::one, nullptr};
                 // Gather the stabilizer groups of the two children
-                Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
-    			// Step 1: Compute the intersection
-    			StabilizerGroup* stabLow  = &(low. p->limVector);
-    			StabilizerGroup* stabHigh = &(high.p->limVector);
-            	StabilizerGroup PHP = conjugateGroup(*stabHigh, high.l);
-            	Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << groupToString(*stabLow, n-1) << '\n';
-            	Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << groupToString(*stabHigh, n-1) << '\n';
-            	Log::log << "[constructStabilizerGeneratorSet] PHP: " << groupToString(PHP, node.e[1].p->v) << '\n';
-    			stabgenset = intersectGroupsPauli(*stabLow, PHP);
-    			Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
-				sanityCheckStabilizerGroup(edgeDummy, stabgenset);
-    			// Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
-    			LimEntry<>* stab = LimEntry<>::noLIM;
-				Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
-    			stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n-1);
-    			if (stab != LimEntry<>::noLIM) {
-    				stab->setOperator(n, 'Z');
-    				stabgenset.push_back(stab);
-					Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
-					sanityCheckStabilizerGroup(edgeDummy, stabgenset);
-    			}
-    			if (low.p == high.p) {
-    				Complex rho = cn.divCached(node.e[1].w, node.e[0].w);
-    				phase_t rhoPhase = rho.toPhase();
-    				if (rhoPhase != phase_t::no_phase) {
-    					phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
-						// check for X
-    					Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
-    					stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n-1);
-    					if (stab != LimEntry<>::noLIM) {
-    						LimEntry<> X;
-							X.setOperator(n, pauli_op::pauli_x);
-        					Log::log << "[constructStabilizerGeneratorSet] Just set the X in " << LimEntry<>::to_string(&X) << "\n";
-    						X.multiplyBy(high.l);
-    						X.multiplyBy(stab);
-    						X.multiplyPhaseBy(rhoPhase);
-    						Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
-							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
-    						stabgenset.push_back(new LimEntry<>(X));
-    						sanityCheckStabilizerGroup(edgeDummy, stabgenset);
-    					}
-							// Check for Y
-						Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
-						phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
-						stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n-1);
-						if (stab != LimEntry<>::noLIM) {
-							LimEntry<> X;
-							X.setOperator(n, pauli_op::pauli_y);
-							Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X, n) << "\n";
-							X.multiplyBy(high.l);
-							X.multiplyBy(stab);
-							X.multiplyPhaseBy(rhoPhase);
-							X.multiplyPhaseBy(phase_t::phase_minus_i);
-							Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
-							Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
-							stabgenset.push_back(new LimEntry<>(X));
-							sanityCheckStabilizerGroup(edgeDummy, stabgenset);
-						}
-    				}
+                //Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
+                // Step 1: Compute the intersection
+                StabilizerGroup* stabLow  = &(low.p->limVector);
+                StabilizerGroup* stabHigh = &(high.p->limVector);
+                StabilizerGroup  PHP      = conjugateGroup(*stabHigh, high.l);
+                //Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << groupToString(*stabLow, n-1) << '\n';
+                //Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << groupToString(*stabHigh, n-1) << '\n';
+                //Log::log << "[constructStabilizerGeneratorSet] PHP: " << groupToString(PHP, node.e[1].p->v) << '\n';
+                stabgenset = intersectGroupsPauli(*stabLow, PHP);
+                //Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
+                //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
+                LimEntry<>* stab = LimEntry<>::noLIM;
+                //Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
+                stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n - 1);
+                if (stab != LimEntry<>::noLIM) {
+                    stab->setOperator(n, 'Z');
+                    stabgenset.push_back(stab);
+                    //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
+                    //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                }
+                if (low.p == high.p) {
+                    Complex rho      = cn.divCached(node.e[1].w, node.e[0].w);
+                    phase_t rhoPhase = rho.toPhase();
+                    if (rhoPhase != phase_t::no_phase) {
+                        phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
+                        // check for X
+                        //Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
+                        stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n - 1);
+                        if (stab != LimEntry<>::noLIM) {
+                            LimEntry<> X;
+                            X.setOperator(n, pauli_op::pauli_x);
+                            //Log::log << "[constructStabilizerGeneratorSet] Just set the X in " << LimEntry<>::to_string(&X) << "\n";
+                            X.multiplyBy(high.l);
+                            X.multiplyBy(stab);
+                            X.multiplyPhaseBy(rhoPhase);
+                            //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+                            //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+                            stabgenset.push_back(new LimEntry<>(X));
+                            //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                        }
+                        // Check for Y
+                        //Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
+                        phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
+                        stab                    = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n - 1);
+                        if (stab != LimEntry<>::noLIM) {
+                            LimEntry<> X;
+                            X.setOperator(n, pauli_op::pauli_y);
+                            //Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X, n) << "\n";
+                            X.multiplyBy(high.l);
+                            X.multiplyBy(stab);
+                            X.multiplyPhaseBy(rhoPhase);
+                            X.multiplyPhaseBy(phase_t::phase_minus_i);
+                            //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+                            //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+                            stabgenset.push_back(new LimEntry<>(X));
+                            //                            sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                        }
+                    }
                 }
                 toColumnEchelonForm(stabgenset);
             }
             //            CVec amplitudeVec = getVector(&node);
             //            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
-            //            		 << "[constructStabilizerGeneratorSet] Stab = "; printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
+            //            		 << "[constructStabilizerGeneratorSet] Stab = "; //printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
 
             return stabgenset;
         }
@@ -1322,20 +1318,20 @@ struct DDPackageConfig {
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
-                    vece0 = getVector(edges[0], var - 1);
-                    vece1 = getVector(edges[1], var - 1);
-                    e     = normalizeLIMDDPauli(e, cached);
-                    vece  = getVector(e, var);
-                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                        Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
-                                 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
-                                 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
-                                 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
-                                 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
-                                 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
-                                 << "[makeDDNode] result   : " << e << '\n';
-                        throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
-                    }
+                    //                    vece0 = getVector(edges[0], var - 1);
+                    //                    vece1 = getVector(edges[1], var - 1);
+                    e = normalizeLIMDDPauli(e, cached);
+                    //                    vece  = getVector(e, var);
+                    //                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                    //Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
+                    //                        << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
+                    //                        << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
+                    //                        << "[makeDDNode] edges[0] : " << edges[0] << '\n'
+                    //                        << "[makeDDNode] edges[1] : " << edges[1] << '\n'
+                    //                        << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
+                    //                        << "[makeDDNode] result   : " << e << '\n';
+                    //                        throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
+                    //                    }
                     break;
                 case QMDD_group:
                     e = normalize(e, cached);
@@ -1351,12 +1347,12 @@ struct DDPackageConfig {
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
-                    vece           = getVector(e.p);
-                    Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                             << "[makeDDNode] Stab = ";
-                    printStabilizerGroup(e.p->limVector);
-                    Log::log << '\n';
-                    sanityCheckStabilizerGroup(e, e.p->limVector);
+                    //                    vece           = getVector(e.p);
+                    //Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
+                    //                    << "[makeDDNode] Stab = ";
+                    //printStabilizerGroup(e.p->limVector);
+                    //Log::log << '\n';
+                    //sanityCheckStabilizerGroup(e, e.p->limVector);
                     putStabilizersInTable(e);
                     break;
                 case QMDD_group: break;
@@ -1697,7 +1693,7 @@ struct DDPackageConfig {
         template<class Edge>
         Edge add(const Edge& x, const Edge& y) {
             // TODO limdd
-        	[[maybe_unused]] const auto before = cn.cacheCount();
+            [[maybe_unused]] const auto before = cn.cacheCount();
 
             auto result = add2(x, y);
 
@@ -1841,36 +1837,36 @@ struct DDPackageConfig {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    CVec vectorArg0     = getVector(e1, w, trueLimX);
-                    CVec vectorArg1     = getVector(e2, w, trueLimY);
-                    CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+                    //                    CVec vectorArg0     = getVector(e1, w, trueLimX);
+                    //                    CVec vectorArg1     = getVector(e2, w, trueLimY);
+                    //                    CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
 
                     //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
                     //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     //                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
 
-                    CVec vectorResult = getVector(edge[i], w);
-                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                        Log::log << "[add2] ERROR addition went wrong.\n";
-                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                        Log::log << "arg0:    ";
-                        printCVec(vectorArg0);
-                        Log::log << '\n';
-                        Log::log << "arg1     ";
-                        printCVec(vectorArg1);
-                        Log::log << '\n';
-                        Log::log << "expected ";
-                        printCVec(vectorExpected);
-                        Log::log << '\n';
-                        Log::log << "result   ";
-                        printCVec(vectorResult);
-                        Log::log << '\n';
-                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
-                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
-                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
-                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
-                    }
+                    //                    CVec vectorResult = getVector(edge[i], w);
+                    //                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+                    //                        Log::log << "[add2] ERROR addition went wrong.\n";
+                    //                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+                    //                        Log::log << "arg0:    ";
+                    //                        printCVec(vectorArg0);
+                    //                        Log::log << '\n';
+                    //                        Log::log << "arg1     ";
+                    //                        printCVec(vectorArg1);
+                    //                        Log::log << '\n';
+                    //                        Log::log << "expected ";
+                    //                        printCVec(vectorExpected);
+                    //                        Log::log << '\n';
+                    //                        Log::log << "result   ";
+                    //                        printCVec(vectorResult);
+                    //                        Log::log << '\n';
+                    //                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
+                    //                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
+                    //                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
+                    //                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                    //                    }
                 }
 
                 if (!x.isTerminal() && x.p->v == w && e1.w != Complex::zero) {
@@ -1891,31 +1887,31 @@ struct DDPackageConfig {
             //            export2Dot(e, "e3.dot", true, true, false, false, true);
 
             //            Log::log << "[add2] computing vector x.\n";
-            CVec vectorArg0 = getVector(x, w, limX);
+            //            CVec vectorArg0 = getVector(x, w, limX);
             //            Log::log << "[add2] computing vector y.\n";
-            CVec vectorArg1     = getVector(y, w, limY);
-            CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-            CVec vectorResult   = getVector(e, w);
-            if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                Log::log << "[add2] ERROR addition went wrong.\n";
-                Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                Log::log << "arg0:    ";
-                printCVec(vectorArg0);
-                Log::log << '\n';
-                Log::log << "arg1     ";
-                printCVec(vectorArg1);
-                Log::log << '\n';
-                Log::log << "expected ";
-                printCVec(vectorExpected);
-                Log::log << '\n';
-                Log::log << "result   ";
-                printCVec(vectorResult);
-                Log::log << '\n';
-                export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
-                export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
-                export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
-            }
+            //            CVec vectorArg1     = getVector(y, w, limY);
+            //            CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+            //            CVec vectorResult   = getVector(e, w);
+            //            if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+            //                Log::log << "[add2] ERROR addition went wrong.\n";
+            //                Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+            //                Log::log << "arg0:    ";
+            //                printCVec(vectorArg0);
+            //                Log::log << '\n';
+            //                Log::log << "arg1     ";
+            //                printCVec(vectorArg1);
+            //                Log::log << '\n';
+            //                Log::log << "expected ";
+            //                printCVec(vectorExpected);
+            //                Log::log << '\n';
+            //                Log::log << "result   ";
+            //                printCVec(vectorResult);
+            //                Log::log << '\n';
+            //                export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
+            //                export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
+            //                export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
+            //                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+            //            }
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
             //               std::cout << "Caching error detected in add" << std::endl;
@@ -2056,10 +2052,9 @@ struct DDPackageConfig {
                 if (!y.isTerminal() && yCopy.p->v > var) {
                     var = yCopy.p->v;
                 }
-
-                Log::log << "[multiply] Start multiplying Mat x Vec.\n";
+                //Log::log << "[multiply] Start multiplying Mat x Vec.\n";
                 e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
-                Log::log << "[multiply] Multiplication complete. Node: " << e << '\n';
+                //Log::log << "[multiply] Multiplication complete. Node: " << e << '\n';
 
                 dEdge::revertDmChangesToEdges(xCopy, yCopy);
 
@@ -2151,9 +2146,9 @@ struct DDPackageConfig {
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
 
-            CMat mat_x       = getMatrix(x);
-            CVec vec_y       = getVector(y, var, lim);
-            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+            //            CMat mat_x       = getMatrix(x);
+            //            CVec vec_y       = getVector(y, var, lim);
+            //            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 
             //            makePrintIdent(var);
             //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
@@ -2341,23 +2336,23 @@ struct DDPackageConfig {
             //            export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
 
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-                CVec vece0 = getVector(edge[0], var - 1);
-                CVec vece1 = getVector(edge[1], var - 1);
-                e          = makeDDNode(var, edge, true, nullptr);
-                CVec vece  = getVector(e, var);
-                if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
-                             << "[multiply2] edge[0]    = " << edge[0] << '\n'
-                             << "[multiply2] edge[1]    = " << edge[1] << '\n'
-                             << "[multiply2] e (result) = " << e << '\n'
-                             << "[multiply2] vece0         = ";
-                    printCVec(vece0);
-                    Log::log << "[multiply2] vece1         = ";
-                    printCVec(vece1);
-                    Log::log << "[multiply2] vece (result) = ";
-                    printCVec(vece);
-                    throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
-                }
+                //                CVec vece0 = getVector(edge[0], var - 1);
+                //                CVec vece1 = getVector(edge[1], var - 1);
+                e = makeDDNode(var, edge, true, nullptr);
+                //                CVec vece  = getVector(e, var);
+                //                if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                //                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
+                //                    << "[multiply2] edge[0]    = " << edge[0] << '\n'
+                //                    << "[multiply2] edge[1]    = " << edge[1] << '\n'
+                //                    << "[multiply2] e (result) = " << e << '\n'
+                //                    << "[multiply2] vece0         = ";
+                //                    printCVec(vece0);
+                //                    Log::log << "[multiply2] vece1         = ";
+                //                    printCVec(vece1);
+                //                    Log::log << "[multiply2] vece (result) = ";
+                //                    printCVec(vece);
+                //                    throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
+                //                }
             } else {
                 e = makeDDNode(var, edge, true, generateDensityMatrix);
             }
@@ -2391,20 +2386,20 @@ struct DDPackageConfig {
             }
 
             // Last step: sanity check to see whether the resulting vector is what was expected
-            CVec vecResult = getVector(e);
-            if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
-                Log::log << "[multiply2] ERROR.\n"
-                         << "[multiply2] state: " << y << "\n"
-                         << "[multiply2] amplitude vector: ";
-                printCVec(vec_y);
-                Log::log << "[multiply2] Matrix:\n";
-                printMatrix(xCopy);
-                Log::log << "\n[multiply2] Expected result: ";
-                printCVec(vecExpected);
-                Log::log << "\n[multiply2] Actual result:  ";
-                printCVec(vecResult);
-                throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
-            }
+            //            CVec vecResult = getVector(e);
+            //            if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
+            //                Log::log << "[multiply2] ERROR.\n"
+            //                << "[multiply2] state: " << y << "\n"
+            //                << "[multiply2] amplitude vector: ";
+            //                printCVec(vec_y);
+            //                Log::log << "[multiply2] Matrix:\n";
+            //                printMatrix(xCopy);
+            //                Log::log << "\n[multiply2] Expected result: ";
+            //                printCVec(vecExpected);
+            //                Log::log << "\n[multiply2] Actual result:  ";
+            //                printCVec(vecResult);
+            //                throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
+            //            }
 
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
 
@@ -3323,17 +3318,17 @@ struct DDPackageConfig {
 
         // Returns whether the diagram is a Tower.
         bool isTower(const vEdge& edge) {
-        	if (edge.isTerminal()) return true;
-        	if (edge.p->e[0].w.approximatelyZero()) {
-        		return isTower(edge.p->e[1]);
-        	}
-        	if (edge.p->e[1].w.approximatelyZero()) {
-        		return isTower(edge.p->e[0]);
-        	}
-        	if (edge.p->e[0].p == edge.p->e[1].p) {
-        		return isTower(edge.p->e[0]);
-        	}
-        	return false;
+            if (edge.isTerminal()) return true;
+            if (edge.p->e[0].w.approximatelyZero()) {
+                return isTower(edge.p->e[1]);
+            }
+            if (edge.p->e[1].w.approximatelyZero()) {
+                return isTower(edge.p->e[0]);
+            }
+            if (edge.p->e[0].p == edge.p->e[1].p) {
+                return isTower(edge.p->e[0]);
+            }
+            return false;
         }
 
         //        CVec getVector(const vEdge& e, const LimEntry<>& lim) {
@@ -4071,8 +4066,6 @@ struct DDPackageConfig {
                 checkConsistencyCounter(child, weight_map, node_map);
             }
         }
-
-
 
         ///
         /// Printing and Statistics
