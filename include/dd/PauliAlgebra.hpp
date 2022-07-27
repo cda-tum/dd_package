@@ -409,7 +409,9 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline std::vector<std::bitset<NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
         std::vector<LimBitset<NUM_QUBITS>*> G_Id = appendIdentityMatrixBitset(G);
-        GaussianEliminationModuloPhase(G_Id);
+
+        std::sort(G_Id.begin(), G_Id.end(), LimBitset<NUM_QUBITS>::geq);
+        GaussianEliminationModuloPhaseSortedFast(G_Id);
         std::vector<std::bitset<NUM_QUBITS>> kernel;
         for (unsigned i = 0; i < G_Id.size(); i++) {
             if (G_Id[i]->lim.isIdentityModuloPhase()) {
