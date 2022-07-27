@@ -567,8 +567,8 @@ struct DDPackageConfig {
                 // Step 1: Set the root edge label to 'Identity tensor R'
                 r.l->multiplyBy(r.p->e[0].l); // = LimEntry<>::multiply(r.l, r.p->e[0].l);
                 // Step 2: Set the low and high edge labels to 'Identity'
-                r.p->e[0].l = nullptr;
-                r.p->e[1].l = nullptr;
+                r.p->e[0].l = nullptr; // TODO memory leak
+                r.p->e[1].l = nullptr; // TODO posible memory leak
                 // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
@@ -587,11 +587,11 @@ struct DDPackageConfig {
                 // TODO double-check if this logic makes sense
                 Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Multiply the root label by the high edge label
-                r.l->multiplyBy(r.p->e[1].l); // = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO resolved limdd memory leak
+                r.l->multiplyBy(r.p->e[1].l);
                 // Step 2: Right-multiply the root edge by X
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved limdd memory leak
+                r.l->multiplyBy(X);
                 // Step 3: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
@@ -614,7 +614,7 @@ struct DDPackageConfig {
                 Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved memory leak
+                r.l->multiplyBy(X);
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero
@@ -663,14 +663,12 @@ struct DDPackageConfig {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
-            delete oldNode.e[1].l;
             Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
             Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
             r.l->multiplyBy(lowLim);
             Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
-            delete iso.lim;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
@@ -681,6 +679,10 @@ struct DDPackageConfig {
                 r.l->setPhase(phase_t::phase_one);
             }
             Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
+
+            delete oldNode.e[0].l;
+            delete oldNode.e[1].l;
+            delete iso.lim;
 
             CVec amplitudeVecAfterNormalize = getVector(r);
             sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
