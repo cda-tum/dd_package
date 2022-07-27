@@ -126,7 +126,7 @@ namespace dd {
 
     // precondition: G is sorted
     template<std::size_t NUM_QUBITS>
-    inline void GaussianEliminationFastSorted(std::vector<LimEntry<NUM_QUBITS>*>& G) {
+    inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
         unsigned int pivot;
 
@@ -136,6 +136,22 @@ namespace dd {
             for (unsigned int h=g+1; h<G.size(); h++) {
                 if (G[h]->paulis.test(pivot)) {
                     G[h] = LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
+                }
+            }
+        }
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+        if (G.size() <= 1) return;
+        unsigned int pivot;
+
+        for (unsigned int g=0; g+1<G.size(); g++) {
+            pivot = G[g]->lim.pivotPosition();
+            if (pivot >= 2*NUM_QUBITS) continue;
+            for (unsigned int h=g+1; h<G.size(); h++) {
+                if (G[h]->lim.paulis.test(pivot)) {
+                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]);
                 }
             }
         }
@@ -239,7 +255,7 @@ namespace dd {
     //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
     inline void toColumnEchelonForm(StabilizerGroup& G) {
         std::sort(G.begin(), G.end(), LimEntry<>::geq);
-        GaussianEliminationFastSorted(G);
+        GaussianEliminationSortedFast(G);
         //        Log::log << "[toColumnEchelonForm] After Gaussian Elimination, before pruning zero col's, group is:\n";Log::log.flush();
         //        printStabilizerGroup(G);
         pruneZeroColumns(G);
@@ -259,7 +275,8 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS>
     inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        GaussianEliminationModuloPhase(G);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+        GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
     }
