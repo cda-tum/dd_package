@@ -118,11 +118,11 @@ namespace dd {
 		no_phase        = 4
     };
 
-	enum LIMDD_group {
-		QMDD_group,
-		Z_group,
-		Pauli_group
-	};
+    enum LIMDD_group {
+    	QMDD_group,
+    	Z_group,
+    	Pauli_group
+    };
 
 } // namespace dd
 

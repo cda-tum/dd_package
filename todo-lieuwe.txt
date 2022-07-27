@@ -61,6 +61,8 @@ GramSchmidt
 
 -- TESTS
 
+test for isTower
+
 fuzz more circuits:
 nqubits = 2 ... 5
     ngates = 5, 10, 15, 20, 25

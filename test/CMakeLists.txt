@@ -47,8 +47,9 @@ endmacro()
 package_add_test(${PROJECT_NAME}_test
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_complex.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
-		#${CMAKE_CURRENT_SOURCE_DIR}/test_lim.cpp
+		#${CMAKE_CURRENT_SOURCE_DIR}/test_lim.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_package.cpp)
+		#${CMAKE_CURRENT_SOURCE_DIR}/generate-circuits/generated-circuits.cpp)
 
 add_custom_command(TARGET ${PROJECT_NAME}_test
                    POST_BUILD
