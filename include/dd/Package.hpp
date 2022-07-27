@@ -386,7 +386,7 @@ namespace dd {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            Edge<vNode> r                            = normalize(e, cached);
+            Edge<vNode> r = normalize(e, cached);
 
             if (r.l == nullptr) {
                 r.l = LimEntry<>::getIdentityOperator();
@@ -395,7 +395,7 @@ namespace dd {
 
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
-                Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
+                //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Set the root edge label to 'Identity tensor R'
                 r.l->multiplyBy(r.p->e[0].l); // = LimEntry<>::multiply(r.l, r.p->e[0].l);
                 // Step 2: Set the low and high edge labels to 'Identity'
@@ -417,7 +417,7 @@ namespace dd {
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
             if (zero[0]) {
                 // TODO double-check if this logic makes sense
-                Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
+                //Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
                 // Step 1: Multiply the root label by the high edge label
                 r.l->multiplyBy(r.p->e[1].l); // = LimEntry<>::multiply(r.l, r.p->e[1].l); // TODO resolved limdd memory leak
                 // Step 2: Right-multiply the root edge by X
@@ -439,11 +439,10 @@ namespace dd {
                 r.p->e[0].p = r.p->e[1].p;
                 return r;
             }
-
-            Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
             if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
                 std::swap(r.p->e[0], r.p->e[1]);
-                Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
+                //Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
                 LimEntry<> X;
                 X.setOperator(r.p->v, 'X');
                 r.l->multiplyBy(X); // = LimEntry<>::multiply(r.l, &X); // TODO resolved memory leak
@@ -453,7 +452,7 @@ namespace dd {
             LimEntry<>*                  lowLim = r.p->e[0].l;
             [[maybe_unused]] LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
+            //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
             if (r.p->e[1].l == nullptr) {
                 r.p->e[1].l = new LimEntry<>();
             }
@@ -463,10 +462,10 @@ namespace dd {
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
             r.p->e[1].l->setPhase(phase_t::phase_one);
             // Step 2: Make the left LIM Identity
-            Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
-            Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
             vNode      oldNode            = *(r.p); // make a copy of the old node
             Complex    highEdgeWeightTemp = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
             LimEntry<> higLimTemp;
@@ -476,7 +475,7 @@ namespace dd {
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             cn.returnToCache(highEdgeWeightTemp); // TODO RESOLVED return to cache. Uncommenting this line gives an error
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-            Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
 
             LimWeight<> iso;
@@ -486,11 +485,11 @@ namespace dd {
             if (!foundIsomorphism) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
-            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
-            Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
+            //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(iso.lim, r.p->v) << "\n";
+            //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, lowLim), r.p->v) << ".\n";
             //            r.l = LimEntry<>::multiply(r.l, lowLim); // TODO RESOLVED memory leak
             r.l->multiplyBy(lowLim);
-            Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
+            //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             //            r.l = LimEntry<>::multiply(r.l, iso->lim); // TODO RESOLVED memory leak
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
@@ -498,14 +497,14 @@ namespace dd {
             //            delete iso;
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
+            //Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
             if (r.l->getPhase() != phase_t::phase_one) {
                 // Step 6.1: multiply the weight 'r.w' by -1
                 r.w.multiplyByPhase(r.l->getPhase());
                 // Step 6.2: Make the phase of r.l '+1'
                 r.l->setPhase(phase_t::phase_one);
             }
-            Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
+            //Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
 
             return r;
         }
@@ -528,44 +527,44 @@ namespace dd {
             }
             // Case 1: right child is zero
             else if (zero[1]) {
-                Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
+                //Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
                 stabgenset = low.p->limVector; // copies the stabilizer group of the left child
-                printStabilizerGroup(stabgenset);
+                                               //                printStabilizerGroup(stabgenset);
                 LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
                 idZ->setOperator(n, 'Z');
                 stabgenset.push_back(idZ);
-                Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                //Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
+                //                printStabilizerGroup(stabgenset);
                 // the matrix set is already in column echelon form,
                 // so we do not need to perform that step here
             }
             // Case 2: left child is zero
             else if (zero[0]) {
-                Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
+                //Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
                 stabgenset = high.p->limVector; // copy the stabilizer of the right child
-                printStabilizerGroup(stabgenset);
+                                                //                printStabilizerGroup(stabgenset);
                 LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
                 minusIdZ->setOperator(n, 'Z');
                 stabgenset.push_back(minusIdZ);
-                Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
-                printStabilizerGroup(stabgenset);
+                //Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
+                //                printStabilizerGroup(stabgenset);
             }
             // Case 3: the node is a 'fork': both its children are nonzero
             else {
                 // Gather the stabilizer groups of the two children
-                Log::log << "[constructStabilizerGeneratorSet] Case fork; " << node << "\n";
+                //Log::log << "[constructStabilizerGeneratorSet] Case fork; " << node << "\n";
                 // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
                 // Step 1: Compute the intersection
                 StabilizerGroup* stabLow  = &(low.p->limVector);
                 StabilizerGroup* stabHigh = &(high.p->limVector);
                 StabilizerGroup  PHP      = conjugateGroup(*stabHigh, high.l);
-                Log::log << "[constructStabilizerGeneratorSet] conjugate group: ";
-                printStabilizerGroup(PHP, node.e[1].p->v);
-                Log::log << '\n';
+                //Log::log << "[constructStabilizerGeneratorSet] conjugate group: ";
+                //                printStabilizerGroup(PHP, node.e[1].p->v);
+                //Log::log << '\n';
                 stabgenset = intersectGroupsPauli(*stabLow, PHP);
-                Log::log << "[constructStabilizerGeneratorSet] intersection: ";
-                printStabilizerGroup(stabgenset, node.v);
-                Log::log << '\n';
+                //Log::log << "[constructStabilizerGeneratorSet] intersection: ";
+                //                printStabilizerGroup(stabgenset, node.v);
+                //Log::log << '\n';
                 LimEntry<>* stab = LimEntry<>::noLIM;
                 stab             = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one);
                 if (stab != LimEntry<>::noLIM) {
@@ -1102,7 +1101,7 @@ namespace dd {
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
-                    e     = normalizeLIMDDPauli(e, cached);
+                    e = normalizeLIMDDPauli(e, cached);
                     break;
                 case QMDD_group:
                     e = normalize(e, cached);
@@ -1755,10 +1754,9 @@ namespace dd {
                 if (!y.isTerminal() && yCopy.p->v > var) {
                     var = yCopy.p->v;
                 }
-
-                Log::log << "[multiply] Start multiplying Mat x Vec.\n";
+                //Log::log << "[multiply] Start multiplying Mat x Vec.\n";
                 e = multiply2(xCopy, yCopy, var, start, generateDensityMatrix);
-                Log::log << "[multiply] Multiplication complete. Node: " << e << '\n';
+                //Log::log << "[multiply] Multiplication complete. Node: " << e << '\n';
 
                 dEdge::revertDmChangesToEdges(xCopy, yCopy);
 
@@ -2008,7 +2006,7 @@ namespace dd {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
                                 auto old_e = edge[idx];
-                                edge[idx] = add2(edge[idx], m);
+                                edge[idx]  = add2(edge[idx], m);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
                             }

@@ -561,8 +561,8 @@ namespace dd {
         phase_t alpha             = multiplyPhases(acb->getPhase(), getPhaseInverse(lambda));
         // Retrieve the phase of acb in H
         phase_t tau = recoverPhase(H, acb);
-        Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
-        Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
+        //Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
+        //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
             return c;
         }
@@ -757,10 +757,10 @@ namespace dd {
         // Assert that neither u nor v is the Zero vector
         assert(!(uLow.isZeroTerminal() && uHigh.isZeroTerminal()));
         assert(!(vLow.isZeroTerminal() && vHigh.isZeroTerminal()));
-        Log::log << "[getIsomorphismPauli] Start. u = {" << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v) << ", " << uHigh.w << " * "
-                 << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << "}   v = {"
-                 << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << ", "
-                 << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
+        //Log::log << "[getIsomorphismPauli] Start. u = {" << uLow.w << " * " << LimEntry<>::to_string(uLow.l, uLow.p->v) << ", " << uHigh.w << " * "
+        //        << LimEntry<>::to_string(uHigh.l, uHigh.p->v) << "}   v = {"
+        //        << vLow.w << " * " << LimEntry<>::to_string(vLow.l, vLow.p->v) << ", "
+        //        << vHigh.w << " * " << LimEntry<>::to_string(vHigh.l, vHigh.p->v) << "}\n";
         //        Log::log << "[getIsomorphismPauli] u = " << u << "   v = " << v << '\n';
         //        Log::log << "[getIsomorphismPauli] uLow = " << uLow.p << "   uHigh = " << uHigh.p << '\n';
         if (!LimEntry<>::isIdentityOperator(uLow.l))
@@ -774,15 +774,15 @@ namespace dd {
 
         // Case 0: the nodes are equal
         if (u == v) {
-            Log::log << "[getIsomorphismPauli] case u == v.\n";
-            Log::log.flush();
+            //Log::log << "[getIsomorphismPauli] case u == v.\n";
+            //Log::log.flush();
             // In this case, we return the Identity operator, which is represented by a null pointer
             iso.lim->setToIdentityOperator();
             foundIsomorphism = true;
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
         else if (zeroU[1]) {
-            Log::log << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
+            //Log::log << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
             if (zeroV[1]) {
                 if (uLow.p == vLow.p) {
                     //            		iso = new LimWeight<>((LimEntry<>*)nullptr);
@@ -800,7 +800,7 @@ namespace dd {
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
         else if (zeroU[0]) {
-            Log::log << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
+            //Log::log << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
             if (zeroV[0]) {
                 // TODO limdd inspect weights
                 if (uHigh.p == vHigh.p) {
@@ -827,7 +827,7 @@ namespace dd {
                 //    P is the uHigh's edge label
                 //    lambda is uHigh's weight
                 //    R is an isomorphism between uPrime and v
-                Log::log << "[getIsomorphismPauli] case 3.1: children of nodes are opposite pair. Qubits: " << (int)(u->v) << "\n";
+                //Log::log << "[getIsomorphismPauli] case 3.1: children of nodes are opposite pair. Qubits: " << (int)(u->v) << "\n";
                 // TODO refactor this piece of code which swaps two edges
                 vNode uPrime;
                 uPrime.v         = u->v;
@@ -871,11 +871,11 @@ namespace dd {
             cn.returnToCache(rhoV);
             cn.returnToCache(rhoU);
             if (lambda == phase_t::no_phase) {
-                Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
+                //Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
                 return;
             }
-            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
+            //Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
 
             iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
             //            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
@@ -889,21 +889,21 @@ namespace dd {
                 //                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
                 return;
             }
-            Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
+            //Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
-            Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n";
-            Log::log.flush();
+            //Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n";
+            //Log::log.flush();
             lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
             temp   = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
             if (temp != LimEntry<>::noLIM) {
                 *iso.lim = *temp;
                 iso.lim->setOperator(u->v, pauli_op::pauli_z);
                 foundIsomorphism = true;
-                Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
-                Log::log.flush();
+                //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
+                //Log::log.flush();
             } else {
-                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
-                Log::log.flush();
+                //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                //Log::log.flush();
             }
         }
     }
@@ -954,29 +954,29 @@ namespace dd {
     // TODO limdd:
     //   1. make NUM_QUBITS a template parameter
     inline void highLabelPauli(const vNode* u, const vNode* v, LimEntry<>* vLabel, Complex& weight, LimEntry<>& highLabel) {
-        Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
+        //Log::log << "[highLabelPauli] weight * lim = " << weight << " * " << *vLabel << '\n';
         if (u == v) {
-            Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
+            //Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
             highLabel = *GramSchmidt(u->limVector, vLabel);
             weight.multiplyByPhase(highLabel.getPhase());
-            Log::log << "[highLabelPauli] case u = v; canonical lim is " << LimEntry<>::to_string(&highLabel, u->v) << " so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
+            //Log::log << "[highLabelPauli] case u = v; canonical lim is " << LimEntry<>::to_string(&highLabel, u->v) << " so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
             highLabel.setPhase(phase_t::phase_one);
             if (CTEntry::val(weight.r) < 0 || (CTEntry::approximatelyEquals(weight.r, &ComplexTable<>::zero) && CTEntry::val(weight.i) < 0)) {
                 weight.multiplyByMinusOne(true);
-                Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
+                //Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << weight << ".\n";
             }
         } else {
-            Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
+            //Log::log << "[highLabelPauli] stabgenset is: " << groupToString(u->limVector, u->v) << '\n';
             StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
             toColumnEchelonForm(GH);
             highLabel = *GramSchmidt(GH, vLabel);
             weight.multiplyByPhase(highLabel.getPhase());
-            Log::log << "[highLabelPauli] Found canonical label: " << LimEntry<>::to_string(&highLabel, u->v) << ", so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
+            //Log::log << "[highLabelPauli] Found canonical label: " << LimEntry<>::to_string(&highLabel, u->v) << ", so multiplying weight by " << phaseToString(highLabel.getPhase()) << ", result: weight = " << weight << '\n';
             highLabel.setPhase(phase_t::phase_one);
             if (weight.lexSmallerThanxMinusOne()) {
-                Log::log << "[highLabelPauli] before multiplication by -1 for canonicity, weight = " << weight << "\n";
+                //Log::log << "[highLabelPauli] before multiplication by -1 for canonicity, weight = " << weight << "\n";
                 weight.multiplyByMinusOne(true);
-                Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << weight << ".\n";
+                //Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << weight << ".\n";
             }
         }
     }
