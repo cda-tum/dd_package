@@ -625,7 +625,7 @@ struct DDPackageConfig {
             if (r.p->e[1].l == nullptr) {
                 r.p->e[1].l = new LimEntry<>();
             }
-            //            r.p->e[1].l->leftMultiplyBy(lowLim); // TODO doing this gives many errors
+            //r.p->e[1].l->leftMultiplyBy(lowLim); // TODO doing this gives many errors
             r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
             r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
@@ -672,12 +672,7 @@ struct DDPackageConfig {
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
-            if (r.l->getPhase() != phase_t::phase_one) {
-                // Step 6.1: multiply the weight 'r.w' by -1
-                r.w.multiplyByPhase(r.l->getPhase());
-                // Step 6.2: Make the phase of r.l '+1'
-                r.l->setPhase(phase_t::phase_one);
-            }
+            movePhaseIntoWeight(*r.l, r.w);
             Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
 
             delete oldNode.e[0].l;
