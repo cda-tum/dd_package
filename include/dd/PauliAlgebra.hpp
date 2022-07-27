@@ -118,6 +118,24 @@ namespace dd {
                 if (G[reduceColId]->paulis.test(h)) {
                     //                    Log::log << "[Gaussian Elimination] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; Log::log.flush();
                     G[reduceColId] = LimEntry<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+                    //G[reduceColId]->multiplyBy(G[reducingColId]); // TODO this would solve the memory leak; but it leads to failed tests
+                }
+            }
+        }
+    }
+
+    // precondition: G is sorted
+    template<std::size_t NUM_QUBITS>
+    inline void GaussianEliminationFastSorted(std::vector<LimEntry<NUM_QUBITS>*>& G) {
+        if (G.size() <= 1) return;
+        unsigned int pivot;
+
+        for (unsigned int g=0; g+1<G.size(); g++) {
+            pivot = G[g]->pivotPosition();
+            if (pivot >= 2 * NUM_QUBITS) continue; // In this case G[g] is an all-zero column (i.e., is the identity)
+            for (unsigned int h=g+1; h<G.size(); h++) {
+                if (G[h]->paulis.test(pivot)) {
+                    G[h] = LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
                 }
             }
         }
@@ -220,7 +238,8 @@ namespace dd {
     //   2. prunes the all-zero columns
     //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
     inline void toColumnEchelonForm(StabilizerGroup& G) {
-        GaussianElimination(G);
+        std::sort(G.begin(), G.end(), LimEntry<>::geq);
+        GaussianEliminationFastSorted(G);
         //        Log::log << "[toColumnEchelonForm] After Gaussian Elimination, before pruning zero col's, group is:\n";Log::log.flush();
         //        printStabilizerGroup(G);
         pruneZeroColumns(G);
