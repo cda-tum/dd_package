@@ -413,7 +413,7 @@ namespace dd {
                 StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
                 toColumnEchelonForm(GH);
                 bool abelian = isAbelian(GH);
-                std::cout << "[highLabel] Concatenated group (abelian: " << (int) << ") = " << groupToString(GH, u->v) << "\n";
+                std::cout << "[highLabel] Concatenated group (abelian: " << (int) abelian << ") = " << groupToString(GH, u->v) << "\n";
                 newHighLabel = *GramSchmidt(GH, vLabel);
                 std::cout << "[highlabel] After Gram-Schmidt, Label " << LimEntry<>::to_string(vLabel, u->v) << " becomes " << LimEntry<>::to_string(newHighLabel, u->v) << "\n";
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
