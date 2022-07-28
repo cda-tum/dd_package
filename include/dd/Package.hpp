@@ -412,16 +412,16 @@ namespace dd {
             } else {
                 StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
                 toColumnEchelonForm(GH);
-                std::cout << "[highLabel] Concatenated group = " << groupToString(GH, u->v) << "\n";
+//                std::cout << "[highLabel] Concatenated group = " << groupToString(GH, u->v) << "\n";
                 newHighLabel = *GramSchmidt(GH, vLabel);
-                std::cout << "[highlabel] After Gram-Schmidt, Label " << LimEntry<>::to_string(vLabel, u->v) << " becomes " << LimEntry<>::to_string(&newHighLabel, u->v) << "\n";
+//                std::cout << "[highlabel] After Gram-Schmidt, Label " << LimEntry<>::to_string(vLabel, u->v) << " becomes " << LimEntry<>::to_string(&newHighLabel, u->v) << "\n";
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
                 //Log::log << "[highLabelPauli] canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
                 newHighLabel.setPhase(phase_t::phase_one);
                 if (highWeight.lexSmallerThanxMinusOne()) {
-                    std::cout << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
+//                    std::cout << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
                     highWeight.multiplyByMinusOne(true);
-                    std::cout << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
+//                    std::cout << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
                 }
             }
         }
@@ -545,8 +545,8 @@ namespace dd {
         // TODO limdd: switch the node in case the low edge is zero
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
-            static unsigned int callCounter = 0;
-            callCounter++;
+//            static unsigned int callCounter = 0;
+//            callCounter++;
             // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
@@ -671,14 +671,13 @@ namespace dd {
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
-                std::cout << "callCounter = " << callCounter << "\n";
-                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
-                std::cout << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
-                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
-                          << std::endl;
+//                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+//                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
+//                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
+//                std::cout << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+//                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
+//                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
+//                          << std::endl;
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});

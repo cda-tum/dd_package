@@ -623,9 +623,9 @@ namespace dd {
         LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
         LimEntry<NUM_QUBITS>* c  = getCosetIntersectionElementModuloPhase(G, H, ab);
         if (c == LimEntry<NUM_QUBITS>::noLIM){
-            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
-            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
-            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
+//            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
+//            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
+//            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             return LimEntry<NUM_QUBITS>::noLIM;
         }
         c->setPhase(recoverPhase(G, c));
@@ -872,7 +872,7 @@ namespace dd {
                 }
             }
             if(!foundIsomorphism){
-                std::cout << "case 1" << std::endl;
+//                std::cout << "case 1" << std::endl;
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
@@ -894,7 +894,7 @@ namespace dd {
                 }
             }
             if(!foundIsomorphism){
-                std::cout << "case 2" << std::endl;
+//                std::cout << "case 2" << std::endl;
             }
         }
         // Case 3 ("Fork"): Both children are nonzero
@@ -986,7 +986,7 @@ namespace dd {
             if (lambda == phase_t::no_phase) {
                 //Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
-                std::cout << "case 3" << std::endl;
+//                std::cout << "case 3" << std::endl;
                 return;
             }
             //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
@@ -1019,16 +1019,16 @@ namespace dd {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {
                 //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
-                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
-                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
-                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
-                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
-                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
-                          << "ulow  = " << uLow << "\n"
-                          << "uhigh = " << uHigh << "\n"
-                          << "vlow  = " << vLow  << "\n"
-                          << "vhigh = " << vHigh << "\n";
-                std::cout << "case 4" << std::endl;
+//                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
+//                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
+//                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
+//                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
+//                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
+//                          << "ulow  = " << uLow << "\n"
+//                          << "uhigh = " << uHigh << "\n"
+//                          << "vlow  = " << vLow  << "\n"
+//                          << "vhigh = " << vHigh << "\n";
+//                std::cout << "case 4" << std::endl;
             }
         }
     }
