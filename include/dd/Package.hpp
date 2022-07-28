@@ -549,20 +549,20 @@ struct DDPackageConfig {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec a      amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
+            CVec amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
             if (performSanityChecks) {
                 amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
             }
             Edge<vNode> r                    = normalize(e, cached);
             if (performSanityChecks) {
                 amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
+                sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             }
-            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             Edge<vNode> rOld = copyEdge(r);
 
             CVec amplitudeVecBeforeNormalize;
             if (performSanityChecks) {
-                CVec amplitudeVecBeforeNormalize = getVector(r);
+                amplitudeVecBeforeNormalize = getVector(r);
             }
 
             if (r.l == nullptr) {
@@ -1854,8 +1854,11 @@ struct DDPackageConfig {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     dEdge::revertDmChangesToEdges(e1, e2);
                 } else {
-                    CVec vectorArg0     = getVector(e1, w, trueLimX);
-                    CVec vectorArg1     = getVector(e2, w, trueLimY);
+                    CVec vectorArg0, vectorArg1;
+                    if (performSanityChecks) {
+                        CVec vectorArg0     = getVector(e1, w, trueLimX);
+                        CVec vectorArg1     = getVector(e2, w, trueLimY);
+                    }
                     CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
 
                     //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
@@ -1863,26 +1866,28 @@ struct DDPackageConfig {
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
                     //                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
 
-                    CVec vectorResult = getVector(edge[i], w);
-                    if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                        Log::log << "[add2] ERROR addition went wrong.\n";
-                        Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                        Log::log << "arg0:    ";
-                        printCVec(vectorArg0);
-                        Log::log << '\n';
-                        Log::log << "arg1     ";
-                        printCVec(vectorArg1);
-                        Log::log << '\n';
-                        Log::log << "expected ";
-                        printCVec(vectorExpected);
-                        Log::log << '\n';
-                        Log::log << "result   ";
-                        printCVec(vectorResult);
-                        Log::log << '\n';
-                        export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
-                        export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
-                        export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
-                        throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                    if (performSanityChecks) {
+                        CVec vectorResult = getVector(edge[i], w);
+                        if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+                            Log::log << "[add2] ERROR addition went wrong.\n";
+                            Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+                            Log::log << "arg0:    ";
+                            printCVec(vectorArg0);
+                            Log::log << '\n';
+                            Log::log << "arg1     ";
+                            printCVec(vectorArg1);
+                            Log::log << '\n';
+                            Log::log << "expected ";
+                            printCVec(vectorExpected);
+                            Log::log << '\n';
+                            Log::log << "result   ";
+                            printCVec(vectorResult);
+                            Log::log << '\n';
+                            export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
+                            export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
+                            export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
+                            throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                        }
                     }
                 }
 
@@ -1904,30 +1909,32 @@ struct DDPackageConfig {
             //            export2Dot(e, "e3.dot", true, true, false, false, true);
 
             //            Log::log << "[add2] computing vector x.\n";
-            CVec vectorArg0 = getVector(x, w, limX);
-            //            Log::log << "[add2] computing vector y.\n";
-            CVec vectorArg1     = getVector(y, w, limY);
-            CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
-            CVec vectorResult   = getVector(e, w);
-            if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                Log::log << "[add2] ERROR addition went wrong.\n";
-                Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
-                Log::log << "arg0:    ";
-                printCVec(vectorArg0);
-                Log::log << '\n';
-                Log::log << "arg1     ";
-                printCVec(vectorArg1);
-                Log::log << '\n';
-                Log::log << "expected ";
-                printCVec(vectorExpected);
-                Log::log << '\n';
-                Log::log << "result   ";
-                printCVec(vectorResult);
-                Log::log << '\n';
-                export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
-                export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
-                export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
-                throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+            if (performSanityChecks) {
+                CVec vectorArg0 = getVector(x, w, limX);
+                //            Log::log << "[add2] computing vector y.\n";
+                CVec vectorArg1     = getVector(y, w, limY);
+                CVec vectorExpected = addVectors(vectorArg0, vectorArg1);
+                CVec vectorResult   = getVector(e, w);
+                if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
+                    Log::log << "[add2] ERROR addition went wrong.\n";
+                    Log::log << "[add2] Left operand: " << LimEntry<>::to_string(&limX, x.p->v) << " * " << x << ";  Right operand: " << LimEntry<>::to_string(&limY, y.p->v) << " * " << y << '\n';
+                    Log::log << "arg0:    ";
+                    printCVec(vectorArg0);
+                    Log::log << '\n';
+                    Log::log << "arg1     ";
+                    printCVec(vectorArg1);
+                    Log::log << '\n';
+                    Log::log << "expected ";
+                    printCVec(vectorExpected);
+                    Log::log << '\n';
+                    Log::log << "result   ";
+                    printCVec(vectorResult);
+                    Log::log << '\n';
+                    export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
+                    export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
+                    export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
+                    throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
+                }
             }
 
             //           if (r.p != nullptr && e.p != r.p){ // activate for debugging caching only
@@ -2164,9 +2171,13 @@ struct DDPackageConfig {
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
 
-            CMat mat_x       = getMatrix(x);
-            CVec vec_y       = getVector(y, var, lim);
-            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+            CMat mat_x;
+            CVec vec_y, vecExpected;
+            if (performSanityChecks) {
+                CMat mat_x       = getMatrix(x);
+                CVec vec_y       = getVector(y, var, lim);
+                CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+            }
 
             //            makePrintIdent(var);
             //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
@@ -2354,22 +2365,27 @@ struct DDPackageConfig {
             //            export2Dot(edge[1], "edge1.dot", true, true, false, false, true);
 
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-                CVec vece0 = getVector(edge[0], var - 1);
-                CVec vece1 = getVector(edge[1], var - 1);
+                CVec vece0, vece1, vece;
+                if (performSanityChecks) {
+                    CVec vece0 = getVector(edge[0], var - 1);
+                    CVec vece1 = getVector(edge[1], var - 1);
+                }
                 e          = makeDDNode(var, edge, true, nullptr);
-                CVec vece  = getVector(e, var);
-                if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
-                             << "[multiply2] edge[0]    = " << edge[0] << '\n'
-                             << "[multiply2] edge[1]    = " << edge[1] << '\n'
-                             << "[multiply2] e (result) = " << e << '\n'
-                             << "[multiply2] vece0         = ";
-                    printCVec(vece0);
-                    Log::log << "[multiply2] vece1         = ";
-                    printCVec(vece1);
-                    Log::log << "[multiply2] vece (result) = ";
-                    printCVec(vece);
-                    throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
+                if (performSanityChecks) {
+                    CVec vece  = getVector(e, var);
+                    if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                        Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
+                                 << "[multiply2] edge[0]    = " << edge[0] << '\n'
+                                 << "[multiply2] edge[1]    = " << edge[1] << '\n'
+                                 << "[multiply2] e (result) = " << e << '\n'
+                                 << "[multiply2] vece0         = ";
+                        printCVec(vece0);
+                        Log::log << "[multiply2] vece1         = ";
+                        printCVec(vece1);
+                        Log::log << "[multiply2] vece (result) = ";
+                        printCVec(vece);
+                        throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
+                    }
                 }
             } else {
                 e = makeDDNode(var, edge, true, generateDensityMatrix);
@@ -2404,19 +2420,22 @@ struct DDPackageConfig {
             }
 
             // Last step: sanity check to see whether the resulting vector is what was expected
-            CVec vecResult = getVector(e);
-            if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
-                Log::log << "[multiply2] ERROR.\n"
-                         << "[multiply2] state: " << y << "\n"
-                         << "[multiply2] amplitude vector: ";
-                printCVec(vec_y);
-                Log::log << "[multiply2] Matrix:\n";
-                printMatrix(xCopy);
-                Log::log << "\n[multiply2] Expected result: ";
-                printCVec(vecExpected);
-                Log::log << "\n[multiply2] Actual result:  ";
-                printCVec(vecResult);
-                throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
+            CVec vecResult;
+            if (performSanityChecks) {
+                vecResult = getVector(e);
+                if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
+                    Log::log << "[multiply2] ERROR.\n"
+                             << "[multiply2] state: " << y << "\n"
+                             << "[multiply2] amplitude vector: ";
+                    printCVec(vec_y);
+                    Log::log << "[multiply2] Matrix:\n";
+                    printMatrix(xCopy);
+                    Log::log << "\n[multiply2] Expected result: ";
+                    printCVec(vecExpected);
+                    Log::log << "\n[multiply2] Actual result:  ";
+                    printCVec(vecResult);
+                    throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
+                }
             }
 
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
