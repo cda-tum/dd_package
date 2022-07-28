@@ -412,14 +412,17 @@ namespace dd {
             } else {
                 StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
                 toColumnEchelonForm(GH);
+                bool abelian = isAbelian(GH);
+                std::cout << "[highLabel] Concatenated group (abelian: " << (int) << ") = " << groupToString(GH, u->v) << "\n";
                 newHighLabel = *GramSchmidt(GH, vLabel);
+                std::cout << "[highlabel] After Gram-Schmidt, Label " << LimEntry<>::to_string(vLabel, u->v) << " becomes " << LimEntry<>::to_string(newHighLabel, u->v) << "\n";
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
                 //Log::log << "[highLabelPauli] canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
                 newHighLabel.setPhase(phase_t::phase_one);
                 if (highWeight.lexSmallerThanxMinusOne()) {
-                    //Log::log << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
+                    std::cout << "[highLabelPauli] before multiplication by -1, highWeight = " << highWeight << "\n";
                     highWeight.multiplyByMinusOne(true);
-                    //Log::log << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
+                    std::cout << "[highLabelPauli] Multiplied high edge weight by -1; New weight is " << highWeight << ".\n";
                 }
             }
         }
