@@ -435,8 +435,8 @@ namespace dd {
                 //Log::log << "[normalizeLIMDD] normalized: ";
                 printCVec(after);
                 //Log::log << '\n';
-                export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
-                export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
+                //export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
+                //export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
                 throw std::runtime_error("[normalizeLIMDD] ERROR normalized edge has different vector than original edge! See files originalEdge.svg and normalizedEdge.svg\n");
             }
         }
@@ -469,7 +469,7 @@ namespace dd {
                     Log::log << "[sanity check stabilizer group] stabilizer vec:" << outputCVec(stabVec) << "\n";
                     Log::log << "[sanity check stabilizer group] edge vec:      " << outputCVec(edgeVec) << "\n";
                     outputDescendantsStabilizerGroups(edge);
-                    export2Dot(edge, "errorStabilizer.dot", false, true, true, false, true, false);
+                    //export2Dot(edge, "errorStabilizer.dot", false, true, true, false, true, false);
                     throw std::runtime_error("[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element. See also errorStabilizer.svg\n");
                 }
             }
@@ -495,8 +495,8 @@ namespace dd {
                 printCVec(bvec);
                 Log::log << "\n[sanity check isomorphism] iso * node b = ";
                 printCVec(isobvec);
-                export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
-                export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
+                //export2Dot(edgeA, "errorIsoA.dot", false, true, true, false, true, false);
+                //export2Dot(edgeB, "errorIsoB.dot", false, true, true, false, true, false);
                 throw std::runtime_error("[sanity check isomorphism] ERROR Purported isomorphism is not actually an isomorphism.\n");
             }
         }
@@ -1904,9 +1904,9 @@ namespace dd {
                             Log::log << "result   ";
                             printCVec(vectorResult);
                             Log::log << '\n';
-                            export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
-                            export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
-                            export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
+                            //export2Dot(e1, "add-error-x.dot", false, true, true, false, true);
+                            //export2Dot(e2, "add-error-y.dot", false, true, true, false, true);
+                            //export2Dot(edge[i], "add-error-result.dot", false, true, true, false, true);
                             throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
                         }
                     }
@@ -1951,9 +1951,9 @@ namespace dd {
                     Log::log << "result   ";
                     printCVec(vectorResult);
                     Log::log << '\n';
-                    export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
-                    export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
-                    export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
+                    //export2Dot(x, "add-error-x.dot", false, true, true, false, true, false);
+                    //export2Dot(y, "add-error-y.dot", false, true, true, false, true, false);
+                    //export2Dot(e, "add-error-result.dot", false, true, true, false, true, false);
                     throw std::runtime_error("[add2] ERROR Add did not return expected result. See images 'add-error-x.dot',  'add-error-y.dot',  'add-error-result.dot'");
                 }
             }
@@ -3535,6 +3535,14 @@ namespace dd {
             CVec phi1 = getVector(e1);
             CVec phi2 = getVector(e2);
             return vectorsApproximatelyEqual(phi1, phi2);
+        }
+
+        void printMatrix(const dEdge& e) {
+            return;
+        }
+
+        CMat getMatrix(const dEdge& e) {
+            return {};
         }
 
         void printVector(const vEdge& e) {
