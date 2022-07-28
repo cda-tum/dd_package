@@ -370,10 +370,10 @@ namespace dd {
     // Given a group G and a 0/1 indicator vector,
     //   returns the product of the indicated elements of G
     //   e.g., with G={ZIZ, IZZ, IXY} and indicator = '110', we return ZZI
-    template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_QUBITS>& indicator) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_BITS>& indicator) {
         LimEntry<NUM_QUBITS>* g = LimEntry<NUM_QUBITS>::getIdentityOperator();
-        assert(G.size() <= NUM_QUBITS);
+        assert(G.size() <= NUM_BITS);
         for (unsigned int i = 0; i < G.size(); i++) {
             if (indicator.test(i)) {
                 g->multiplyBy(G[i]);
@@ -405,20 +405,20 @@ namespace dd {
     }
 
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
-    // TODO free / deallocate G_Id and its elements
+    // we assume the width of G is at most 2*NUM_QUBITS
     template<std::size_t NUM_QUBITS>
-    inline std::vector<std::bitset<NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<NUM_QUBITS>*> G_Id = appendIdentityMatrixBitset(G);
+    inline std::vector<std::bitset<2*NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+        std::vector<LimBitset<2*NUM_QUBITS>*> G_Id = appendIdentityMatrixBitsetBig(G);
 
-        std::sort(G_Id.begin(), G_Id.end(), LimBitset<NUM_QUBITS>::geq);
+        std::sort(G_Id.begin(), G_Id.end(), LimBitset<2*NUM_QUBITS>::geq);
         GaussianEliminationModuloPhaseSortedFast(G_Id);
-        std::vector<std::bitset<NUM_QUBITS>> kernel;
+        std::vector<std::bitset<2*NUM_QUBITS>> kernel;
         for (unsigned i = 0; i < G_Id.size(); i++) {
             if (G_Id[i]->lim.isIdentityModuloPhase()) {
                 kernel.push_back(G_Id[i]->bits);
             }
         }
-        // TODO free / deallocate G_Id and its elements
+        // deallocate G_Id and its elements
         for (unsigned int i = 0; i < G_Id.size(); i++) {
             delete G_Id[i];
         }
@@ -454,7 +454,7 @@ namespace dd {
         //        printStabilizerGroup(H);
         StabilizerGroup                          intersection;
         StabilizerGroup                          concat = groupConcatenate(G, H);
-        std::vector<std::bitset<dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
+        std::vector<std::bitset<2*dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
         //        Log::log << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
         LimEntry<>* g;
         for (unsigned int i = 0; i < kernel.size(); i++) {
@@ -522,11 +522,11 @@ namespace dd {
         // How do I do this?
         // it's just modulo F2
         std::vector<LimEntry<NUM_QUBITS>*>  GH    = groupConcatenate(G, H);         // TODO memory leak
-        std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH); // TODO memory leak
+        std::vector<LimBitset<2*NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
-        LimBitset<NUM_QUBITS>   a_bitset(a);
+        LimBitset<2*NUM_QUBITS>   a_bitset(a);
         // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
         a_bitset = GramSchmidt(GH_Id, &a_bitset);
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference

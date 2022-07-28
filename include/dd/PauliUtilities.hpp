@@ -14,7 +14,7 @@ namespace dd {
 
     template<std::size_t N, std::size_t M>
     inline void bitsetCopySegment(std::bitset<N>& x, const std::bitset<M> y, unsigned int begin_x, unsigned int begin_y, unsigned int end_y) {
-        assert(end_y <= N && end_y <= M);
+        assert(end_y <= M);
         for (unsigned int i = begin_y; i < end_y; i++) {
             x.set(i + begin_x - begin_y, y.test(i));
         }
@@ -138,6 +138,19 @@ namespace dd {
         LimBitset<NUM_QUBITS>*              col;
         for (unsigned int i = 0; i < G.size(); i++) {
             col      = new LimBitset<NUM_QUBITS>();
+            col->lim = *G[i];
+            col->bits.set(i, 1);
+            GI.push_back(col);
+        }
+        return GI;
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline std::vector<LimBitset<2*NUM_QUBITS>*> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+        std::vector<LimBitset<2*NUM_QUBITS>*> GI;
+        LimBitset<2*NUM_QUBITS>*              col;
+        for (unsigned int i = 0; i < G.size(); i++) {
+            col      = new LimBitset<2*NUM_QUBITS>();
             col->lim = *G[i];
             col->bits.set(i, 1);
             GI.push_back(col);

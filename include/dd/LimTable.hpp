@@ -440,11 +440,19 @@ namespace dd {
         	setPhase(phase_t::phase_one);
         }
 
-        void operator=(const LimEntry<>* other) {
+        void operator=(const LimEntry<NUM_QUBITS>* other) {
         	if (other == nullptr) setToIdentityOperator();
         	else {
         		*this = *other;
         	}
+        }
+
+        template<std::size_t M>
+        void operator=(const LimEntry<M> other) {
+            unsigned int min = std::min(NUM_QUBITS, M);
+            for (unsigned int i=0; i<min; i++) {
+                paulis.set(i, other.paulis.test(i));
+            }
         }
 
         bool commutesWith(const LimEntry<NUM_QUBITS>& b) const {
@@ -572,6 +580,11 @@ namespace dd {
         LimBitset<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* _lim)
         : lim(*_lim) {
             //
+        }
+
+        template<std::size_t M>
+        LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
+            lim = *a;
         }
 
         bool isAllZeroLim() const {
