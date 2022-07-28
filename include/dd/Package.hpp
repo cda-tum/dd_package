@@ -543,7 +543,7 @@ namespace dd {
         // TODO limdd: switch the node in case the low edge is zero
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
-            static callCounter = 0;
+            static unsigned int callCounter = 0;
             callCounter++;
             // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
