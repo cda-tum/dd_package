@@ -3299,6 +3299,11 @@ namespace dd {
             return vec;
         }
 
+        CVec getVector([[maybe_unused]] const dEdge& e, [[maybe_unused]] Qubit q = 0, [[maybe_unused]] LimEntry<> lim = {}) {
+            CVec vec;
+            return vec;
+        }
+
         CVec getVector(const vEdge& e, LimEntry<> lim) {
             // TODO limdd
             std::size_t dim = 0;
