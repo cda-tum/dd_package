@@ -3549,6 +3549,19 @@ struct DDPackageConfig {
             std::cout << std::flush;
         }
 
+        void printMatrix(const dEdge& e) {
+            return;
+        }
+
+        CMat getMatrix(const dEdge& e) {
+            return {};
+        }
+
+        CVec getVector([[maybe_unused]] const dEdge& e, [[maybe_unused]] Qubit q = 0, [[maybe_unused]] LimEntry<> lim = {}) {
+            CVec vec;
+            return vec;
+        }
+
         CMat getMatrix(const mEdge& e) {
             if (e.p->v < 0) {
                 auto mat = CMat(1, CVec(1, {CTEntry::val(e.w.r), CTEntry::val(e.w.i)}));
