@@ -480,7 +480,6 @@ struct DDPackageConfig {
         template<class Edge>
         void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
 			if (!performSanityChecks) return;
-            if (!performSanityChecks) return;
             Edge edgeA{&a, Complex::one, nullptr};
             Edge edgeB{&b, Complex::one, nullptr};
             CVec avec    = getVector(edgeA);
@@ -550,13 +549,21 @@ struct DDPackageConfig {
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec        amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
-            Edge<vNode> r                            = normalize(e, cached);
-            CVec        amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
+            CVec a      amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
+            if (performSanityChecks) {
+                amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
+            }
+            Edge<vNode> r                    = normalize(e, cached);
+            if (performSanityChecks) {
+                amplitudeVecAfternormalizeQ  = getVector(r, e.p->v);
+            }
             sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
             Edge<vNode> rOld = copyEdge(r);
 
-            CVec amplitudeVecBeforeNormalize = getVector(r);
+            CVec amplitudeVecBeforeNormalize;
+            if (performSanityChecks) {
+                CVec amplitudeVecBeforeNormalize = getVector(r);
+            }
 
             if (r.l == nullptr) {
                 r.l = LimEntry<>::getIdentityOperator();
@@ -652,10 +659,12 @@ struct DDPackageConfig {
             Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
-            CVec rpVec      = getVector(r.p);
-            CVec oldNodeVec = getVector(&oldNode);
-            Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
-                     << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
+            if (performSanityChecks) {
+                CVec rpVec      = getVector(r.p);
+                CVec oldNodeVec = getVector(&oldNode);
+                Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
+                         << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
+            }
 
             LimWeight<> iso;
             bool        foundIsomorphism = false;
@@ -681,8 +690,10 @@ struct DDPackageConfig {
             delete oldNode.e[1].l;
             delete iso.lim;
 
-            CVec amplitudeVecAfterNormalize = getVector(r);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
+            if (performSanityChecks) {
+                CVec amplitudeVecAfterNormalize = getVector(r);
+                sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
+            }
 
             return r;
         }
@@ -1318,19 +1329,23 @@ struct DDPackageConfig {
                     e = normalizeLIMDDZ(e, cached);
                     break;
                 case Pauli_group:
-                    vece0 = getVector(edges[0], var - 1);
-                    vece1 = getVector(edges[1], var - 1);
+                    if (performSanityChecks) {
+                        vece0 = getVector(edges[0], var - 1);
+                        vece1 = getVector(edges[1], var - 1);
+                    }
                     e     = normalizeLIMDDPauli(e, cached);
-                    vece  = getVector(e, var);
-                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                        Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
-                                 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
-                                 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
-                                 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
-                                 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
-                                 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
-                                 << "[makeDDNode] result   : " << e << '\n';
-                        throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
+                    if (performSanityChecks){
+                        vece  = getVector(e, var);
+                        if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                            Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
+                                     << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
+                                     << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
+                                     << "[makeDDNode] edges[0] : " << edges[0] << '\n'
+                                     << "[makeDDNode] edges[1] : " << edges[1] << '\n'
+                                     << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
+                                     << "[makeDDNode] result   : " << e << '\n';
+                            throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
+                        }
                     }
                     break;
                 case QMDD_group:
@@ -1347,12 +1362,14 @@ struct DDPackageConfig {
                     break;
                 case Pauli_group:
                     e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p));
-                    vece           = getVector(e.p);
-                    Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                             << "[makeDDNode] Stab = ";
-                    printStabilizerGroup(e.p->limVector);
-                    Log::log << '\n';
-                    sanityCheckStabilizerGroup(e, e.p->limVector);
+                    if (performSanityChecks) {
+                        vece           = getVector(e.p);
+                        Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
+                                 << "[makeDDNode] Stab = ";
+                        printStabilizerGroup(e.p->limVector);
+                        Log::log << '\n';
+                        sanityCheckStabilizerGroup(e, e.p->limVector);
+                    }
                     putStabilizersInTable(e);
                     break;
                 case QMDD_group: break;
