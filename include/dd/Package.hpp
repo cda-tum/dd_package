@@ -2194,7 +2194,7 @@ namespace dd {
             CMat mat_x;
             CVec vec_y, vecExpected;
             if (performSanityChecks) {
-                CMat mat_x       = getMatrix(x);
+                //                CMat mat_x       = getMatrix(x);
                 CVec vec_y       = getVector(y, var, lim);
                 CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
             }
