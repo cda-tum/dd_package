@@ -408,7 +408,6 @@ namespace dd {
                     highWeight.multiplyByMinusOne(true);
                     //Log::log << "[highLabelPauli] the high edge weight is flipped. New weight is " << highWeight << ".\n";
                 }
-
             } else {
                 StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
                 toColumnEchelonForm(GH);
@@ -436,7 +435,7 @@ namespace dd {
                 //Log::log << '\n';
                 //Log::log << "[normalizeLIMDD] normalized: ";
                 printCVec(after);
-                //Log::log << '\n';
+                Log::log << '\n';
                 //export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
                 //export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
                 throw std::runtime_error("[normalizeLIMDD] ERROR normalized edge has different vector than original edge! See files originalEdge.svg and normalizedEdge.svg\n");
