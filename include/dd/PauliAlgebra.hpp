@@ -622,8 +622,12 @@ namespace dd {
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
         LimEntry<NUM_QUBITS>* c  = getCosetIntersectionElementModuloPhase(G, H, ab);
-        if (c == LimEntry<NUM_QUBITS>::noLIM)
+        if (c == LimEntry<NUM_QUBITS>::noLIM){
+            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
+            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
+            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             return LimEntry<NUM_QUBITS>::noLIM;
+        }
         c->setPhase(recoverPhase(G, c));
         LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a, c);
         acb                       = LimEntry<NUM_QUBITS>::multiply(acb, b);
