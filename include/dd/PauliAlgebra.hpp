@@ -867,6 +867,9 @@ namespace dd {
                     foundIsomorphism = true;
                 }
             }
+            if(!foundIsomorphism){
+                std::cout << "case 1" << std::endl;
+            }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
         else if (zeroU[0]) {
@@ -885,6 +888,9 @@ namespace dd {
                     iso.lim->setOperator(u->v, 'X');
                     foundIsomorphism = true;
                 }
+            }
+            if(!foundIsomorphism){
+                std::cout << "case 2" << std::endl;
             }
         }
         // Case 3 ("Fork"): Both children are nonzero
@@ -976,6 +982,7 @@ namespace dd {
             if (lambda == phase_t::no_phase) {
                 //Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
+                std::cout << "case 3" << std::endl;
                 return;
             }
             //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
@@ -1008,6 +1015,7 @@ namespace dd {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {
                 //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                std::cout << "case 4" << std::endl;
             }
         }
     }
