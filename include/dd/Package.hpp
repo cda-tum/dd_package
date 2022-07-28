@@ -643,9 +643,11 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
-//            if (r.p->v == 12) {
-//                Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-//            }
+            if (callCounter == 73014) {
+                Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+                Log::log << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v-1) << "\n"
+                         <<  "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v-1) << "\n";
+            }
             vNode      oldNode            = *(r.p);                    // make a copy of the old node
             Complex    lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
             Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
@@ -658,9 +660,11 @@ namespace dd {
             cn.returnToCache(highEdgeWeightTemp);
             cn.returnToCache(lowEdgeWeightTemp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-//            if (r.p->v == 12) {
-//                Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
-//            }
+            if (callCounter == 73014) {
+                Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+                Log::log << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v-1) << "\n"
+                         <<  "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v-1) << "\n";
+            }
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             //            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             if (performSanityChecks) {
