@@ -543,6 +543,8 @@ namespace dd {
         // TODO limdd: switch the node in case the low edge is zero
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
+            static callCounter = 0;
+            callCounter++;
             // Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
@@ -641,7 +643,9 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
-            //Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+//            if (r.p->v == 12) {
+//                Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+//            }
             vNode      oldNode            = *(r.p);                    // make a copy of the old node
             Complex    lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
             Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
@@ -654,7 +658,9 @@ namespace dd {
             cn.returnToCache(highEdgeWeightTemp);
             cn.returnToCache(lowEdgeWeightTemp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-            //Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+//            if (r.p->v == 12) {
+//                Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+//            }
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
             //            Log::log << "[normalizeLIMDD] Step 4: find an isomorphism.\n";
             if (performSanityChecks) {
@@ -669,6 +675,7 @@ namespace dd {
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
+                std::cout << "callCounter = " << callCounter << "\n";
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
