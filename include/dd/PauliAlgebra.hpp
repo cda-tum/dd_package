@@ -1015,6 +1015,11 @@ namespace dd {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {
                 //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                std::cout << "Stab(u) = " << groupToString(u->limVector, u->v) << "\n"
+                          << "Stab(v) = " << groupToString(v->limVector, v->v) << "\n"
+                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
+                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
+                          << "u->v    = " << u->v << "   v->v = " << v->v << "\n";
                 std::cout << "case 4" << std::endl;
             }
         }
