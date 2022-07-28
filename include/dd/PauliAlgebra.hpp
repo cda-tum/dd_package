@@ -395,9 +395,12 @@ namespace dd {
                 kernel.push_back(G_Id[i]->bits);
             }
         }
-        // TODO free / deallocate G_Id and its elements
         //        Log::log << "[getKernelZ] found kernel:\n";
         //        printKernel(kernel);
+        // free / deallocate G_Id and its elements
+        for (unsigned int i = 0; i < G_Id.size(); i++) {
+            delete G_Id[i];
+        }
         return kernel;
     }
 
@@ -416,6 +419,9 @@ namespace dd {
             }
         }
         // TODO free / deallocate G_Id and its elements
+        for (unsigned int i = 0; i < G_Id.size(); i++) {
+            delete G_Id[i];
+        }
         return kernel;
     }
 
@@ -972,10 +978,12 @@ namespace dd {
                 foundIsomorphism = false;
                 return;
             }
-            //Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
-            //Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
-            iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
-            //            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
+            //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
+            //
+            //
+            //            Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
+            //iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
+            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
 
             //            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
             //            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
