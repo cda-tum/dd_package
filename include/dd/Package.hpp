@@ -670,12 +670,13 @@ namespace dd {
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
                 std::cout << "callCounter = " << callCounter << "\n";
-                Log::log << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-                Log::log << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v-1) << "\n"
-                         <<  "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v-1) << "\n";
-                Log::log << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
-                Log::log << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v-1) << "\n"
-                         <<  "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v-1) << "\n";
+                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
+                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
+                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
+                std::cout << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
+                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
+                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
+                          << std::endl;
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
