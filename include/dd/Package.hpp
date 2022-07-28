@@ -378,8 +378,8 @@ struct DDPackageConfig {
                 	if (himag2 > lomag2) {
                 		Log::log << "[highLabelPauli] high is larger than low.\n";
                 		// Swap low, high
-                		Complex hiTemp = cn.getCached(lowWeight);  // TODO return to cache
-                		Complex loTemp = cn.getCached(highWeight); // TODO return to cache
+                		Complex hiTemp = cn.getCached(lowWeight);
+                		Complex loTemp = cn.getCached(highWeight);
                 		vEdge lo{u, hiTemp, nullptr};
                 		vEdge hi{u, loTemp, nullptr};
                 		Log::log << "[highLabelPauli] before normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
@@ -399,6 +399,8 @@ struct DDPackageConfig {
                 		lowWeight.i->value  = CTEntry::val(tempEdge.p->e[1].w.i);
 
                 		Log::log << "[highLabelPauli] (case high > low) new low = " << lowWeight << "; new high = " << highWeight << "\n";
+                		cn.returnToCache(loTemp);
+                		cn.returnToCache(hiTemp);
 //                		lowWeight = tempEdge.p->e[0].w;
 //                		lowWeight  = tempEdge.p->e[1].w;
                 	}
@@ -639,7 +641,7 @@ struct DDPackageConfig {
             Complex     lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
             Complex     highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
             LimEntry<>  highLimTemp;
-            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);  // TODO memory leak; delete highLimTemp
+            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
             r.p->e[1].l                    = limTable.lookup(highLimTemp);
             limTable.incRef(r.p->e[1].l);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);

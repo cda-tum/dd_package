@@ -986,8 +986,8 @@ namespace dd {
 
 
             Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
-            iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
-            //            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
+            //iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
+            ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
 
             //            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
             //            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
