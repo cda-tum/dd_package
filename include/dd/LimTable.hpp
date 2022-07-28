@@ -2,6 +2,7 @@
 #define DDPACKAGE_LIMTABLE_HPP
 
 #include "Definitions.hpp"
+#include "PhaseUtilities.hpp"
 
 #include <array>
 #include <bitset>
@@ -341,28 +342,37 @@ namespace dd {
         //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char op1, op2;
+            phase_t newPhase = getPhase();
             for (unsigned int i=0; i<NUM_QUBITS; i++) {
                 // Step 1: handle the phase, if the operators do not commute
                 op1 =       getQubit(i) ;
                 op2 = other.getQubit(i);
                 if      (op1 == 'X' && op2 == 'Y')  // XY =  iZ
-                    multiplyPhaseBy(phase_t::phase_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+//                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'X' && op2 == 'Z')  // XZ = -iY
-                    multiplyPhaseBy(phase_t::phase_minus_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+//                    multiplyPhaseBy(phase_t::phase_minus_i);
                 else if (op1 == 'Y' && op2 == 'X')  // YX = -iZ
-                    multiplyPhaseBy(phase_t::phase_minus_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+//                    multiplyPhaseBy(phase_t::phase_minus_i);
                 else if (op1 == 'Y' && op2 == 'Z')  // YZ =  iX
-                    multiplyPhaseBy(phase_t::phase_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+//                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'Z' && op2 == 'X')  // ZX =  iY
-                    multiplyPhaseBy(phase_t::phase_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+//                    multiplyPhaseBy(phase_t::phase_i);
                 else if (op1 == 'Z' && op2 == 'Y')  // ZY = -iX
-                    multiplyPhaseBy(phase_t::phase_minus_i);
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+//                    multiplyPhaseBy(phase_t::phase_minus_i);
 
                 // Step 2: XOR the bits
-                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
-                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
+//                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
+//                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
             }
-            multiplyPhaseBy(LimEntry<NUM_QUBITS>::getPhase(&other));
+            paulis ^= other.paulis;
+            setPhase(newPhase);
+            multiplyPhaseBy(other.getPhase());
         }
 
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
@@ -391,8 +401,9 @@ namespace dd {
         // TODO make more efficient by starting with "c = copy of a"
         static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
-            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            c->multiplyBy(a);
+            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
+//            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
+//            c->multiplyBy(a);
             c->multiplyBy(b);
             return c;
         }
