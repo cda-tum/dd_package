@@ -2939,6 +2939,23 @@ namespace dd {
 
     public:
         template<class Edge>
+        size_t limCount(const Edge& e) const {
+            std::unordered_set<std::size_t> uniqueLims  = {};
+            std::unordered_set<std::size_t> uniqueNodes = {};
+            limCount(e, uniqueLims, uniqueNodes);
+            return uniqueLims.size();
+        }
+
+        template<class Edge>
+        size_t numberCount(const Edge& e) const {
+            std::unordered_set<std::size_t> uniqueNumbers = {};
+            std::unordered_set<std::size_t> uniqueNodes   = {};
+            numberCount(e, uniqueNumbers, uniqueNodes);
+            return uniqueNumbers.size();
+        }
+
+    private:
+        template<class Edge>
         void limCount(const Edge& e, std::unordered_set<std::size_t>& v, std::unordered_set<std::size_t>& nodes) const {
             auto eCopy = e;
 
@@ -2946,7 +2963,7 @@ namespace dd {
                 dEdge::alignDensityEdge(eCopy);
             }
 
-            if (nodes.find((std::size_t) eCopy.p) != nodes.end()) {
+            if (nodes.find((std::size_t)eCopy.p) != nodes.end()) {
                 return;
             }
             nodes.insert((std::size_t)eCopy.p);
@@ -2970,12 +2987,11 @@ namespace dd {
             if constexpr (std::is_same_v<Edge, dEdge>) {
                 dEdge::alignDensityEdge(eCopy);
             }
-            
-            if (nodes.find((std::size_t) eCopy.p) != nodes.end()) {
+
+            if (nodes.find((std::size_t)eCopy.p) != nodes.end()) {
                 return;
             }
             nodes.insert((std::size_t)eCopy.p);
-
 
             v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.r));
             v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.i));

@@ -142,23 +142,12 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         std::cout << "[simulate circuit] LIMDD add statistics: ";
         limdd->vectorAdd.printStatistics();
     }
-    std::unordered_set<std::size_t> uniqueLims = {};
-    std::unordered_set<std::size_t> uniqueNumbers = {};
-    std::unordered_set<std::size_t> uniqueNodes = {};
-    qmdd->limCount(qmddState, uniqueLims, uniqueNodes);
-    std::cout << "[simulate circuit] Number of Unique lims: " <<  uniqueLims.size() << std::endl;
-    uniqueNodes = {};
-    qmdd->numberCount(qmddState, uniqueNumbers, uniqueNodes);
-    std::cout << "[simulate circuit] Number of Unique numbers: " <<  uniqueNumbers.size() << std::endl;
 
-    uniqueLims = {};
-    uniqueNodes = {};
-    uniqueNumbers = {};
-    limdd->limCount(limddState, uniqueLims, uniqueNodes);
-    std::cout << "[simulate circuit] Number of Unique lims: " <<  uniqueLims.size() << std::endl;
-    uniqueNodes = {};
-    limdd->numberCount(limddState, uniqueNumbers, uniqueNodes);
-    std::cout << "[simulate circuit] Number of Unique numbers: " <<  uniqueNumbers.size()  << std::endl;
+    std::cout << "[simulate circuit] Number of Unique lims: " <<  qmdd->limCount(qmddState) << std::endl;
+    std::cout << "[simulate circuit] Number of Unique numbers: " <<  qmdd->numberCount(qmddState) << std::endl;
+
+    std::cout << "[simulate circuit] Number of Unique lims: " <<  limdd->limCount(limddState) << std::endl;
+    std::cout << "[simulate circuit] Number of Unique numbers: " <<  limdd->numberCount(limddState) << std::endl;
 }
 
 TEST(LimTest, simpleCircuit1) {
