@@ -2963,15 +2963,15 @@ namespace dd {
                 dEdge::alignDensityEdge(eCopy);
             }
 
-            if (nodes.find((std::size_t)eCopy.p) != nodes.end()) {
-                return;
-            }
-            nodes.insert((std::size_t)eCopy.p);
-
             v.insert((std::size_t)eCopy.l);
             for (const auto& lim: e.p->limVector) {
                 v.insert((std::size_t)lim);
             }
+
+            if (nodes.find((std::size_t)eCopy.p) != nodes.end()) {
+                return;
+            }
+            nodes.insert((std::size_t)eCopy.p);
 
             if (!eCopy.isTerminal()) {
                 for (const auto& edge: eCopy.p->e) {
@@ -2988,13 +2988,13 @@ namespace dd {
                 dEdge::alignDensityEdge(eCopy);
             }
 
+            v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.r));
+            v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.i));
+
             if (nodes.find((std::size_t)eCopy.p) != nodes.end()) {
                 return;
             }
             nodes.insert((std::size_t)eCopy.p);
-
-            v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.r));
-            v.insert((std::size_t)CTEntry::getAlignedPointer(e.w.i));
 
             if (!eCopy.isTerminal()) {
                 for (const auto& edge: eCopy.p->e) {
