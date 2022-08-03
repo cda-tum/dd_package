@@ -9,7 +9,7 @@ because dynamically allocating memory is slower than doing computations with obj
 
 - In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
   - To this end, refactor the `nodeTable.lookup()` function so it takes an extra bool parameter by reference, which it sets to `true` iff the node that is returned was newly created, and to false when the node existed in the Table.
-- Hard-code certain gates, to allow linear-time processing, using the algorithms presented in the new arxiv version of the LIMDD paper
+- ### Hard-code certain gates, to allow linear-time processing, using the algorithms presented in the new arxiv version of the LIMDD paper
   - Implement `getMatrixDescription(mNode)` which, given a Matrix LIMDD, figures out which gates is being implemented
   - **Pauli gates** When applying a Pauli gate, simply apply the Pauli gate to the root label
   - **Downward CNOT** propagate "through" edge labels by using Clifford algebra equivalences. When encountering the control qubit, apply an $X$ gate to the node's high edge, and backtrack
@@ -22,19 +22,20 @@ because dynamically allocating memory is slower than doing computations with obj
   - **Toffoli gates** can be implemented more efficiently using a similar scheme.
     In case the control qubits have higher indices than the target qubit, then this can be implemented with no floating point inaccuracies. (this is not on arxiv)
   (X,Y,Z,H,S,S^{-1} CNOT, CZ, CY, T^k, Toffoli, multi-controlled Pauli)
-  - Gates {Pauli, downward Controlled-Pauli, S}, (i) do not increase change the structure of the DD (in particular, does not change the number of nodes), and (ii) do not change the set of complex numbers in the table.
+  - Gates {Pauli, downward Controlled-Pauli, S}, (i) do not change the structure of the DD (in particular, does not change the number of nodes), and (ii) do not change the set of complex numbers in the table.
     In fact, no edge weights need to be touched except to be multiplied by {+1,-1,i,-i}.
     Therefore, no floating point inaccuracies are necessary. If floating point inaccuracies occur, then we know we've implemented something wrong
       - for the same reason, we should be able to apply these gates to DDs of 100+ qubits with **no change** to the structure of the DD; **no change** to the Complex numbers table
 - Refactor the `LimEntry` class as below. The purpose is to be able to do the intermediate computations algebra on objects which do not needlessly allocate an unsigned int field.
-  Currently, the `LimEntry` object has a `refCount` field, which is copied and allocates in these intermediate computations, taking time and a little bit of memory.
+  Currently, the `LimEntry` object has a `refCount` field, which is copied and allocated in these intermediate computations, taking time and a little bit of memory.
 ```c++
-template<std::size_t Num_qubits>
+template<std::size_t NUM_QUBITS>
 class LimEntry {
-    PauliString paulis;
-    unsigned int refCount;
+    PauliString   paulis;
+    LimEntry*     next;
+    unsigned int  refCount;
 };
-template<std::size_t Num_qubits>
+template<std::size_t NUM_QUBITS>
 class PauliString {
     std::bitset<2*Num_qubits+2> paulis;
 };
@@ -49,13 +50,13 @@ class PauliString {
 ## Memory leaks
 
 In PauliAlgebra.hpp, the following functions have memory leaks.
-These memory leaks can be repaired by using local objects wherever possible,
+These memory leaks can be repaired by using and returning local objects wherever possible,
 instead of dynamically allocated ones (which are not subsequently freed).
 Concretely, there are many algorithms that manipulate "Stabilizer groups", which are currently of type
 `std::vector<LimEntry<>*>` but would not leak when we refactor them to type `std::vector<LimEntry>`.
-Incidentally, this will make the runtimes much better
+Incidentally, this will make the runtimes much better.
 
-- In functions in `PauliAlgebra.hpp`  that currently return a `LimEntry<>` object by reference, return a `PauliString` object by value (or pass a `PauliString` object by reference as a parameter? I don't know if that's faster)
+- In functions in `PauliAlgebra.hpp`  that currently return a pointer to a `LimEntry<>` object, return a `PauliString` object by value (or pass a `PauliString` object by reference as a parameter? I don't know if that's faster)
 - Replace all `std::vector<LimEntry<>*>` by `std::vector<PauliString>`
 - Return `LimEntry<>` objects by value instead of by reference
 - Replace the `LimBitset<Num_qubits>` by a smarter `LimBitset<Num_qubits, Num_bits>`, to be used in `PauliAlgebra.hpp::getKernel()`. This recognizes that the use case only uses a `LimBitset` with a large bitset, but with a small number of Pauli operators.
@@ -65,14 +66,28 @@ The following functions in `PauliAlgebra.hpp` currently possibly have memory lea
 
 - `highLabelPauli()`
 - `constructStabilizerGeneratorSetPauli()`
-- `getCosetIntersectionElementPauli()`
-- `getCosetIntersectionModuloPhase()`
+- `getIsomorphismPauli`
+  - after refactoring class `LimWeight`, propagate these changes to variable `iso`
+- `intersectGroupsModuloPhase()`
+   - refactor `intersection, concat` to type `vector<PauliString>` instead of `vector<LimEntry<>*>`
+- `getCosetIntersectionElementPauli()`, `getCosetIntersectionModuloPhase()`
+  - return a `PauliString` object instead of a pointer to a `LimEntry`
+  - refactor parameters `G`,`H` to type `vector<PauliString>` instead of `vector<LimEntry*>`
+  - remove the function `getCosetIntersectionElementPauli` that takes only 3 parameters
 - `groupConcatenate()`
-- `appendIdentityMatrixBitset()`
+  - return `vector<PauliString>` instead of `vector<LimEntry*>`
+- `appendIdentityMatrixBitset()`, `appendIdentityMatrixBitsetBig()`
+  - return type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<NUM_QUBITS>*>`
 - `getKernelModuloPhase()`
+  - refactor `G_Id` to be of type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<2*NUM_QUBITS>*>`
 - `getProductofElements()`
-- `GaussianElimination()`
-- `GramSchmidt()`
+  - return a `PauliString` object instead of a pointer to a `LimEntry`
+- `GaussianEliminationSortedFast()`, `GaussianEliminationModuloPhaseSortedFast()`
+  - use `vector<PauliString>` instead of `vector<LimEntry*>`
+- `GramSchmidt(vector<LimEntry*>, LimEntry*)`
+  - return a `PauliString` object instead of a pointer to a `LimEntry`
+- `getRootLabel()` 
+  - return a `PauliString` object instead of a pointer to a `LimEntry`
 - in `LimWeight` class, make the LimEntry<> object a data field instead of a pointer
 
 # Success criteria
