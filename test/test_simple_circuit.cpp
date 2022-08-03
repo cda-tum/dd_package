@@ -3133,6 +3133,75 @@ TEST(LimTest, simpleClifford129) {
     simulateCircuitLIMDDGateByGate(c);
 }
 
+//TEST(LimTest, simpleClifford130) {
+//    dd::QuantumCircuit c(63);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Hmat, 4);
+//    c.addGate(dd::Hmat, 5);
+//    c.addGate(dd::Hmat, 6);
+//    c.addGate(dd::Hmat, 7);
+//    c.addGate(dd::Hmat, 8);
+//    c.addGate(dd::Hmat, 9);
+//    c.addGate(dd::Hmat, 10);
+//    c.addGate(dd::Hmat, 11);
+//    c.addGate(dd::Hmat, 12);
+//    c.addGate(dd::Hmat, 13);
+//    c.addGate(dd::Hmat, 14);
+//    c.addGate(dd::Hmat, 15);
+//    c.addGate(dd::Hmat, 16);
+//    c.addGate(dd::Hmat, 17);
+//    c.addGate(dd::Hmat, 18);
+//    c.addGate(dd::Hmat, 19);
+//    c.addGate(dd::Hmat, 20);
+//    c.addGate(dd::Hmat, 21);
+//    c.addGate(dd::Hmat, 22);
+//    c.addGate(dd::Hmat, 23);
+//    c.addGate(dd::Hmat, 24);
+//    c.addGate(dd::Hmat, 25);
+//    c.addGate(dd::Hmat, 26);
+//    c.addGate(dd::Hmat, 27);
+//    c.addGate(dd::Hmat, 28);
+//    c.addGate(dd::Hmat, 29);
+//    c.addGate(dd::Hmat, 30);
+//    c.addGate(dd::Hmat, 31);
+//    c.addGate(dd::Hmat, 32);
+//    c.addGate(dd::Hmat, 33);
+//    c.addGate(dd::Hmat, 34);
+//    c.addGate(dd::Hmat, 35);
+//    c.addGate(dd::Hmat, 36);
+//    c.addGate(dd::Hmat, 37);
+//    c.addGate(dd::Hmat, 38);
+//    c.addGate(dd::Hmat, 39);
+//    c.addGate(dd::Hmat, 40);
+//    c.addGate(dd::Hmat, 41);
+//    c.addGate(dd::Hmat, 42);
+//    c.addGate(dd::Hmat, 43);
+//    c.addGate(dd::Hmat, 44);
+//    c.addGate(dd::Hmat, 45);
+//    c.addGate(dd::Hmat, 46);
+//    c.addGate(dd::Hmat, 47);
+//    c.addGate(dd::Hmat, 48);
+//    c.addGate(dd::Hmat, 49);
+//    c.addGate(dd::Hmat, 50);
+//    c.addGate(dd::Hmat, 51);
+//    c.addGate(dd::Hmat, 52);
+//    c.addGate(dd::Hmat, 53);
+//    c.addGate(dd::Hmat, 54);
+//    c.addGate(dd::Hmat, 55);
+//    c.addGate(dd::Hmat, 56);
+//    c.addGate(dd::Hmat, 57);
+//    c.addGate(dd::Hmat, 58);
+//    c.addGate(dd::Hmat, 59);
+//    c.addGate(dd::Hmat, 60);
+//    c.addGate(dd::Hmat, 61);
+//    c.addGate(dd::Hmat, 62);
+//
+//    simulateCircuitLIMDDGateByGate(c);
+//}
+
 
 TEST(LimTest, basis_trotter_n4) {
     dd::QuantumCircuit c(4);
