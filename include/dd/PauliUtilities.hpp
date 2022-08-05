@@ -12,6 +12,7 @@ namespace dd {
     //}
 
     typedef std::vector<LimEntry<>*> StabilizerGroup;
+    typedef std::vector<LimEntry<> > StabilizerGroupValue;
 
     template<std::size_t N, std::size_t M>
     inline void bitsetCopySegment(std::bitset<N>& x, const std::bitset<M> y, unsigned int begin_x, unsigned int begin_y, unsigned int end_y) {
@@ -19,6 +20,14 @@ namespace dd {
         for (unsigned int i = begin_y; i < end_y; i++) {
             x.set(i + begin_x - begin_y, y.test(i));
         }
+    }
+
+    StabilizerGroup toStabilizerGroup(const StabilizerGroupValue& G) {
+        StabilizerGroup H;
+        for (unsigned int i=0; i<G.size(); i++) {
+            H.push_back(new LimEntry<>(G[i]));
+        }
+        return H;
     }
 
     // Returns whether the two groups have the same vector of generators
@@ -131,6 +140,21 @@ namespace dd {
         unsigned int i = 0;
         while (i < G.size()) {
             if (G[i]->isAllZeroVector()) {
+                // Remove this all-zero vector from the matrix
+                // Step 1: replace it with the last vector in the matrix
+                G[i] = G[G.size() - 1];
+                G.pop_back();
+            } else {
+                i++;
+            }
+        }
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline void pruneZeroColumns(std::vector<LimEntry<NUM_QUBITS>>& G) {
+        unsigned int i = 0;
+        while (i < G.size()) {
+            if (G[i].isAllZeroVector()) {
                 // Remove this all-zero vector from the matrix
                 // Step 1: replace it with the last vector in the matrix
                 G[i] = G[G.size() - 1];

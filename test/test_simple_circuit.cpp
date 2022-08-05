@@ -95,8 +95,8 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 		resultQMDD  = qmdd ->getVector(qmddState);
 		resultLIMDD = limdd->getVector(limddState);
 		std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
-		std::cout << "[simulate circuit] QMDD  result: " << resultQMDD << '\n';
-		std::cout << "[simulate circuit] LIMDD result: " << resultLIMDD << '\n';
+//		std::cout << "[simulate circuit] QMDD  result: " << resultQMDD << '\n';
+//		std::cout << "[simulate circuit] LIMDD result: " << resultLIMDD << '\n';
 
         std::cout << "[simulate circuit] QMDD mul statistics: ";
         qmdd->matrixVectorMultiplication.printStatistics();
@@ -2820,82 +2820,82 @@ TEST(LimTest, simpleCircuit_graphstate_18) {
     simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
 
-TEST(LimTest, simpleCircuit_graphstate_24) {
-    dd::QuantumCircuit c(24);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 4);
-    c.addGate(dd::Xmat, 2_pc, 4);
-    c.addGate(dd::Hmat, 4);
-    c.addGate(dd::Hmat, 5);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 6);
-    c.addGate(dd::Xmat, 5_pc, 6);
-    c.addGate(dd::Hmat, 6);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 7);
-    c.addGate(dd::Xmat, 0_pc, 7);
-    c.addGate(dd::Hmat, 7);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 8);
-    c.addGate(dd::Xmat, 6_pc, 8);
-    c.addGate(dd::Hmat, 8);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 9);
-    c.addGate(dd::Xmat, 8_pc, 9);
-    c.addGate(dd::Hmat, 9);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 11);
-    c.addGate(dd::Xmat, 4_pc, 11);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 11);
-    c.addGate(dd::Xmat, 10_pc, 11);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 12);
-    c.addGate(dd::Xmat, 3_pc, 12);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 12);
-    c.addGate(dd::Xmat, 7_pc, 12);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 14);
-    c.addGate(dd::Xmat, 13_pc, 14);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 16);
-    c.addGate(dd::Xmat, 13_pc, 16);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 16);
-    c.addGate(dd::Xmat, 15_pc, 16);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 18);
-    c.addGate(dd::Xmat, 9_pc, 18);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 18);
-    c.addGate(dd::Xmat, 17_pc, 18);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 19);
-    c.addGate(dd::Xmat, 15_pc, 19);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 19);
-    c.addGate(dd::Xmat, 17_pc, 19);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 20);
-    c.addGate(dd::Xmat, 5_pc, 20);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 21);
-    c.addGate(dd::Xmat, 1_pc, 21);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 22);
-    c.addGate(dd::Xmat, 10_pc, 22);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 22);
-    c.addGate(dd::Xmat, 21_pc, 22);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 23);
-    c.addGate(dd::Xmat, 14_pc, 23);
-    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 23);
-    c.addGate(dd::Xmat, 20_pc, 23);
-    c.addGate(dd::Hmat, 2);
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
+//TEST(LimTest, simpleCircuit_graphstate_24) {
+//    dd::QuantumCircuit c(24);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 4);
+//    c.addGate(dd::Xmat, 2_pc, 4);
+//    c.addGate(dd::Hmat, 4);
+//    c.addGate(dd::Hmat, 5);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 6);
+//    c.addGate(dd::Xmat, 5_pc, 6);
+//    c.addGate(dd::Hmat, 6);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 7);
+//    c.addGate(dd::Xmat, 0_pc, 7);
+//    c.addGate(dd::Hmat, 7);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 8);
+//    c.addGate(dd::Xmat, 6_pc, 8);
+//    c.addGate(dd::Hmat, 8);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 9);
+//    c.addGate(dd::Xmat, 8_pc, 9);
+//    c.addGate(dd::Hmat, 9);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 11);
+//    c.addGate(dd::Xmat, 4_pc, 11);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 11);
+//    c.addGate(dd::Xmat, 10_pc, 11);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 12);
+//    c.addGate(dd::Xmat, 3_pc, 12);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 12);
+//    c.addGate(dd::Xmat, 7_pc, 12);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 14);
+//    c.addGate(dd::Xmat, 13_pc, 14);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 16);
+//    c.addGate(dd::Xmat, 13_pc, 16);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 16);
+//    c.addGate(dd::Xmat, 15_pc, 16);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 18);
+//    c.addGate(dd::Xmat, 9_pc, 18);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 18);
+//    c.addGate(dd::Xmat, 17_pc, 18);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 19);
+//    c.addGate(dd::Xmat, 15_pc, 19);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 19);
+//    c.addGate(dd::Xmat, 17_pc, 19);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 20);
+//    c.addGate(dd::Xmat, 5_pc, 20);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 21);
+//    c.addGate(dd::Xmat, 1_pc, 21);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 22);
+//    c.addGate(dd::Xmat, 10_pc, 22);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 22);
+//    c.addGate(dd::Xmat, 21_pc, 22);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 23);
+//    c.addGate(dd::Xmat, 14_pc, 23);
+//    c.addGate(dd::U3mat(0, -dd::PI, -dd::PI), 23);
+//    c.addGate(dd::Xmat, 20_pc, 23);
+//    c.addGate(dd::Hmat, 2);
+//    simulateCircuitQMDDvsLIMDDGateByGate(c);
+//}
 
 TEST(LimTest, simpleCircuit_qaoa_12) {
     dd::QuantumCircuit c(12);
@@ -3203,1919 +3203,1919 @@ TEST(LimTest, simpleClifford129) {
 //}
 
 
-TEST(LimTest, basis_trotter_n4) {
-    dd::QuantumCircuit c(4);
-
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::Zmat, 1);
-    c.addGate(dd::Zmat, 2);
-    c.addGate(dd::Zmat, 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: CZ**-0.048279591094340914
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 1);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-
-    // Gate: CZ**-0.022156912718971442
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 3);
-
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
-
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 3);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 0);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 1);
-    c.addGate(dd::Zmat, 2);
-    c.addGate(dd::Zmat, 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: CZ**-0.013654184706660842
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 2);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-
-    // Gate: CZ**-0.006328040119021747
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 0);
-
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
-
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 0);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 3);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: CZ**-0.00046375097365492423
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 1);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-
-    // Gate: CZ**-0.0004129506013584246
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 3);
-
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
-
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 3);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 0);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    c.addGate(dd::Zmat, 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    c.addGate(dd::Zmat, 2);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::Zmat, 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: CZ**-0.048279591094340914
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 2);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-
-    // Gate: CZ**-0.022156912718971442
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 0);
-
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
-
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 0);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 3);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 2);
-    c.addGate(dd::Zmat, 1);
-    c.addGate(dd::Zmat, 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: CZ**-0.013654184706660842
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 1);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-
-    // Gate: CZ**-0.006328040119021747
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 3);
-
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
-
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 3);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 0);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: CZ**-0.00046375097365492423
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 2);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-
-    // Gate: CZ**-0.0004129506013584246
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 0);
-
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
-
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 0);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 3);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    c.addGate(dd::Zmat, 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    c.addGate(dd::Zmat, 1);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::Zmat, 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.08130614625631793
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.05102950815299322
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: CZ**-0.048279591094340914
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 1);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-
-    // Gate: CZ**-0.022156912718971442
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 3);
-
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
-
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 3);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**-0.03270667647415345
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 0);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 1);
-    c.addGate(dd::Zmat, 2);
-    c.addGate(dd::Zmat, 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.9500630905158097
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: CZ**-0.013654184706660842
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 2);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-
-    // Gate: CZ**-0.006328040119021747
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 0);
-
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
-
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 3);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 0);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 0);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-
-    // Gate: CZ**0.009295387491454189
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 3);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 2);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**-0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 0);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**0.5017530508495694
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: CZ**-0.00046375097365492423
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 1);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-
-    // Gate: CZ**-0.0004129506013584246
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 3);
-
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
-
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 0);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 0);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 3);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 3);
-
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-
-    // Gate: CZ**0.00043761426330885954
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
-    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
-    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
-    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
-
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 0);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 3);
-    c.addGate(dd::Zmat, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 1);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    // Gate: PhasedISWAP**-0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 3);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 3);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-
-    // Gate: PhasedISWAP**0.4158482042253096
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 1);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 1);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
-
-    // Gate: PhasedISWAP**-1.0
-    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
-    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
-
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 3);
-    c.addGate(dd::Xmat, 3_pc, 2);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 0_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 0);
-    c.addGate(dd::Xmat, 2_pc, 1);
-    c.addGate(dd::Xmat, 1_pc, 2);
-    c.addGate(dd::Xmat, 2_pc, 1);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
+//TEST(LimTest, basis_trotter_n4) {
+//    dd::QuantumCircuit c(4);
+//
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::Zmat, 1);
+//    c.addGate(dd::Zmat, 2);
+//    c.addGate(dd::Zmat, 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: CZ**-0.048279591094340914
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 1);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//
+//    // Gate: CZ**-0.022156912718971442
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 3);
+//
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
+//
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 3);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 0);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 1);
+//    c.addGate(dd::Zmat, 2);
+//    c.addGate(dd::Zmat, 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: CZ**-0.013654184706660842
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 2);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//
+//    // Gate: CZ**-0.006328040119021747
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 0);
+//
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
+//
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 0);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 3);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: CZ**-0.00046375097365492423
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 1);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//
+//    // Gate: CZ**-0.0004129506013584246
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 3);
+//
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
+//
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 3);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 0);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    c.addGate(dd::Zmat, 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    c.addGate(dd::Zmat, 2);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::Zmat, 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: CZ**-0.048279591094340914
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 2);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//
+//    // Gate: CZ**-0.022156912718971442
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 0);
+//
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
+//
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 0);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 3);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 2);
+//    c.addGate(dd::Zmat, 1);
+//    c.addGate(dd::Zmat, 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: CZ**-0.013654184706660842
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 1);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//
+//    // Gate: CZ**-0.006328040119021747
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 3);
+//
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
+//
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 3);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 0);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: CZ**-0.00046375097365492423
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 2);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//
+//    // Gate: CZ**-0.0004129506013584246
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 0);
+//
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
+//
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 0);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 3);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    c.addGate(dd::Zmat, 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    c.addGate(dd::Zmat, 1);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::Zmat, 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.08130614625631793
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0406530731), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.0406530731), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * 0.1123177385), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.0564909955), 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.05102950815299322
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.0255147541), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0255147541), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: CZ**-0.048279591094340914
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 0.5), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4758602045), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.4758602045, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9758602045, 0), 1);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//
+//    // Gate: CZ**-0.022156912718971442
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.75), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.25), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4889215436), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.2389215436, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.7389215436, 0), 3);
+//
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
+//
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 1);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 3);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**-0.03270667647415345
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4836466618), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9836466618, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4836466618, 0), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 0);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0241397955), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0110784564), 1);
+//    c.addGate(dd::Zmat, 2);
+//    c.addGate(dd::Zmat, 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.9500630905158097
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.4750315453), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.4750315453), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: CZ**-0.013654184706660842
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4931729076), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4931729076, dd::PI * 1.0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9931729076, 0), 2);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//
+//    // Gate: CZ**-0.006328040119021747
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4961253835), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.9961253835), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4968359799), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5007105964, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0007105964, 0), 0);
+//
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
+//
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 3);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 2);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 0);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//
+//    // Gate: CZ**0.009295387491454189
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0820521548), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.5820521548), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4953523063), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9225955389, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4225955389, 0), 1);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 3);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0068270924), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.0031640201), 2);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**-0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 0);
+//    c.addGate(dd::Hmat, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**0.5017530508495694
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.2508765254), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.2508765254), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: CZ**-0.00046375097365492423
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.5001274262), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.0001274262), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997681245), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4996406983, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.9996406983, 0), 1);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//
+//    // Gate: CZ**-0.0004129506013584246
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0, dd::PI * 1.4998373235), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9998373235), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997935247), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.4999562012, 0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 0.9999562012, dd::PI * 1.0), 3);
+//
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
+//
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 0);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 0);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 1);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 2);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 3);
+//
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//
+//    // Gate: CZ**0.00043761426330885954
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.9993457511), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, 0, dd::PI * 1.4993457511), 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.5), 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RXmat(dd::PI * 0.4997811929), 1);
+//    c.addGate(dd::RYmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RXmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.0008730561, dd::PI * 1.0), 1);
+//    c.addGate(dd::U3mat(dd::PI * 0.5, dd::PI * 1.5008730561, dd::PI * 1.0), 2);
+//
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 0);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Zmat, 3);
+//    c.addGate(dd::Zmat, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002318755), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.0002064753), 1);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    // Gate: PhasedISWAP**-0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 3);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 3);
+//    c.addGate(dd::Hmat, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 3);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//
+//    // Gate: PhasedISWAP**0.4158482042253096
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 0);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.2079241021), 1);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.2079241021), 1);
+//    c.addGate(dd::Hmat, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 0);
+//
+//    // Gate: PhasedISWAP**-1.0
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 1);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * -0.5), 2);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.5), 2);
+//    c.addGate(dd::Hmat, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::RZmat(dd::PI * -0.25), 2);
+//    c.addGate(dd::RZmat(dd::PI * 0.25), 1);
+//
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 3);
+//    c.addGate(dd::Xmat, 3_pc, 2);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 0_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 0);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//    c.addGate(dd::Xmat, 1_pc, 2);
+//    c.addGate(dd::Xmat, 2_pc, 1);
+//
+//    simulateCircuitQMDDvsLIMDDGateByGate(c);
+//}

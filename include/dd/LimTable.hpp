@@ -547,6 +547,11 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        // TODO refactor so that leq-by-reference calls this function
+        static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return leq(&b, &a);
+        }
+
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             return leq(b, a);
         }

@@ -140,6 +140,24 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
+    inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>>& G) {
+        if (G.size() <= 1) return;
+        unsigned int pivot;
+
+        for (unsigned int g = 0; g + 1 < G.size(); g++) {
+            pivot = G[g].pivotPosition();
+            if (pivot >= 2 * NUM_QUBITS) continue; // In this case G[g] is an all-zero column (i.e., is the identity)
+            for (unsigned int h = g + 1; h < G.size(); h++) {
+                if (G[h].paulis.test(pivot)) {
+//                    G[h].multiplyBy(G[g]);
+                    G[h] = *LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
+                }
+            }
+        }
+    }
+
+
+    template<std::size_t NUM_QUBITS>
     inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         if (G.size() <= 1) return;
         unsigned int pivot;
@@ -260,6 +278,13 @@ namespace dd {
         std::sort(G.begin(), G.end(), LimEntry<>::geq);
         //        Log::log << "[toColumnEchelonForm] After CEF, group is:\n"; Log::log.flush();
         //        printStabilizerGroup(G);
+    }
+
+    inline void toColumnEchelonForm(StabilizerGroupValue& G) {
+        std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
+        GaussianEliminationSortedFast(G);
+        pruneZeroColumns(G);
+        std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
     }
 
     template<std::size_t NUM_QUBITS>
