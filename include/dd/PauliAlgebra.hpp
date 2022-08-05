@@ -371,12 +371,12 @@ namespace dd {
     //   returns the product of the indicated elements of G
     //   e.g., with G={ZIZ, IZZ, IXY} and indicator = '110', we return ZZI
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
-    inline LimEntry<NUM_QUBITS>* getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_BITS>& indicator) {
-        LimEntry<NUM_QUBITS>* g = LimEntry<NUM_QUBITS>::getIdentityOperator();
+    inline LimEntry<NUM_QUBITS> getProductOfElements(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::bitset<NUM_BITS>& indicator) {
+        LimEntry<NUM_QUBITS> g = LimEntry<NUM_QUBITS>();
         assert(G.size() <= NUM_BITS);
         for (unsigned int i = 0; i < G.size(); i++) {
             if (indicator.test(i)) {
-                g->multiplyBy(G[i]);
+                g.multiplyBy(G[i]);
             }
         }
         return g;
@@ -431,10 +431,10 @@ namespace dd {
         StabilizerGroup                          intersection;
         StabilizerGroup                          GH     = groupConcatenate(G, H);
         std::vector<std::bitset<dd::NUM_QUBITS>> kernel = getKernelZ(GH);
-        LimEntry<>*                              g;
+        LimEntry<>                               g;
         for (unsigned int i = 0; i < kernel.size(); i++) {
             g = getProductOfElements(G, kernel[i]);
-            intersection.push_back(g);
+            intersection.push_back(new LimEntry<NUM_QUBITS>(g));
         }
         //        Log::log << "[intersectGroupsZ] found intersection:\n";
         //        printStabilizerGroup(intersection);
@@ -456,10 +456,10 @@ namespace dd {
         StabilizerGroup                          concat = groupConcatenate(G, H);
         std::vector<std::bitset<2*dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
         //        Log::log << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
-        LimEntry<>* g;
+        LimEntry<> g;
         for (unsigned int i = 0; i < kernel.size(); i++) {
             g = getProductOfElements(G, kernel[i]);
-            intersection.push_back(g);
+            intersection.push_back(new LimEntry<>(g));
         }
         //        Log::log << "[intersectGroups mod phase] Found intersection: \n";
         //        printStabilizerGroup(intersection);
@@ -519,8 +519,6 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
-        // How do I do this?
-        // it's just modulo F2
         std::vector<LimEntry<NUM_QUBITS>*>  GH    = groupConcatenate(G, H);         // TODO memory leak
         std::vector<LimBitset<2*NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
         toColumnEchelonFormModuloPhase(GH_Id);
@@ -532,85 +530,85 @@ namespace dd {
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
         bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
         bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
-        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
+        LimEntry<NUM_QUBITS> a_G = getProductOfElements(G, decomposition_G);
         //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
-        LimEntry<NUM_QUBITS>* a_H     = getProductOfElements(H, decomposition_H);
+        LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
         LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H); // TODO memory leak
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             return LimEntry<NUM_QUBITS>::noLIM;
         }
-        return a_G;
+        return new LimEntry<NUM_QUBITS>(a_G);
     }
 
     // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
     // Searches for an element in the set '<G> intersect (<H>+a)'
     // Note that '<G>' is a group, and '<H>+a' is a coset
     // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
-    template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
-        //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
-        std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
-        assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
-        std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
-        toColumnEchelonFormModuloPhase(GH_Id);
-        //        Log::log << "[coset intersection P] Found GH +Id to column echelon mod phase:\n";
-        //        printStabilizerGroup(GH_Id);
-        std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
-                                               //        Log::log << "[coset intersection P] Doing Gram-Schmidt with GH, a.\n"; Log::log.flush();
-        LimBitset<NUM_QUBITS> a_bitset(a);
-        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
-        a_bitset = GramSchmidt(GH_Id, &a_bitset);
-        //        Log::log << "[coset intersection P] after Gram-Schmidt, a_bitset = " << a_bitset << "\n";
-        //        Log::log << "[coset intersection P] a.bits[0] = " << a_bitset.bits.test(0) << ", a.bits[1] = " << a_bitset.bits.test(1) << "\n";
-        //        Log::log << "[coset intersection P] computing product of elements (GH, decomposition).\n"; Log::log.flush();
-        //        LimEntry<NUM_QUBITS>* c = getProductOfElements(GH, decomposition);
-        //        Log::log << "[coset intersection P] Computed product of elements.\n"; Log::log.flush();
-        std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
-                                                                  //        Log::log << "[coset intersection P] copying bit segment 1...\n"; Log::log.flush();
-        bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
-        bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
-        //        bitsetCopySegment<NUM_QUBITS, 2*NUM_QUBITS+2>(decomposition_G, c->paulis, 0, 2*nqubits, 2*nqubits+G.size());
-        //        Log::log << "[coset intersection P] copying bit segment 2...\n"; Log::log.flush();
-        //        bitsetCopySegment(decomposition_H, c->paulis, 0, 2*nqubits + G.size(), 2*nqubits+G.size() + H.size());
-        //        Log::log << "[coset intersection P] copy successful! Getting product of elements.\n"; Log::log.flush();
-        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
-        //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
-        LimEntry<NUM_QUBITS>* a_H        = getProductOfElements(H, decomposition_H);
-        LimEntry<NUM_QUBITS>* a_prime    = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
-        phase_t               phase_diff = (phase_t)((a->getPhase() + a_prime->getPhase()) & 0x3);
-        //        Log::log << "[coset intersection P] a_G = " << *a_G << "\n";
-        //        Log::log << "[coset intersection P] a_H = " << *a_H << "\n";
-        //        Log::log << "[coset intersection P] decomposition G = " << decomposition_G << "\n";
-        //        Log::log << "[coset intersection P] decomposition H = " << decomposition_H << "\n";
-        //        Log::log << "[coset intersection P] aprime = " << *a_prime << "\n"; Log::log.flush();
-        // todo replace this check with the more 'elegant' checking whether the vector returned by GramSchmidt, above, is identity modulo phase
-        //   that has the advantage that the check can be done earlier
-        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
-            return LimEntry<NUM_QUBITS>::noLIM;
-        }
-        if (phase_diff == phase_t::phase_one) {
-            return a_G;
-        } else if (phase_diff == phase_t::phase_i || phase_diff == phase_t::phase_minus_i) {
-            return LimEntry<NUM_QUBITS>::noLIM;
-        }
-        // phase_diff must be -1  (i.e., must be phase_t::phase_minus_one)
-        //        Log::log << "[coset intersection P] Phase difference is -1. Computing intersection...\n"; Log::log.flush();
-        const std::vector<LimEntry<NUM_QUBITS>*> intersection = intersectGroupsModuloPhase(G, H);
-        LimEntry<NUM_QUBITS>*                    k_G;
-        LimEntry<NUM_QUBITS>*                    k_H;
-        for (unsigned int i = 0; i < intersection.size(); i++) {
-            GramSchmidt(G, intersection[i], decomposition_G);
-            GramSchmidt(H, intersection[i], decomposition_H);
-            k_G = getProductOfElements(G, decomposition_G);
-            k_H = getProductOfElements(H, decomposition_H);
-            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phase_t::phase_minus_one) {
-                a_G->multiplyBy(k_G);
-                return a_G;
-            }
-        }
-        //        Log::log << "[coset intersection P] no element in coset; returning noLIM.\n"; Log::log.flush();
-        return LimEntry<NUM_QUBITS>::noLIM;
-    }
+//    template<std::size_t NUM_QUBITS>
+//    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+//        //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
+//        std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
+//        assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
+//        std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
+//        toColumnEchelonFormModuloPhase(GH_Id);
+//        //        Log::log << "[coset intersection P] Found GH +Id to column echelon mod phase:\n";
+//        //        printStabilizerGroup(GH_Id);
+//        std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
+//                                               //        Log::log << "[coset intersection P] Doing Gram-Schmidt with GH, a.\n"; Log::log.flush();
+//        LimBitset<NUM_QUBITS> a_bitset(a);
+//        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
+//        a_bitset = GramSchmidt(GH_Id, &a_bitset);
+//        //        Log::log << "[coset intersection P] after Gram-Schmidt, a_bitset = " << a_bitset << "\n";
+//        //        Log::log << "[coset intersection P] a.bits[0] = " << a_bitset.bits.test(0) << ", a.bits[1] = " << a_bitset.bits.test(1) << "\n";
+//        //        Log::log << "[coset intersection P] computing product of elements (GH, decomposition).\n"; Log::log.flush();
+//        //        LimEntry<NUM_QUBITS>* c = getProductOfElements(GH, decomposition);
+//        //        Log::log << "[coset intersection P] Computed product of elements.\n"; Log::log.flush();
+//        std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
+//                                                                  //        Log::log << "[coset intersection P] copying bit segment 1...\n"; Log::log.flush();
+//        bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
+//        bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
+//        //        bitsetCopySegment<NUM_QUBITS, 2*NUM_QUBITS+2>(decomposition_G, c->paulis, 0, 2*nqubits, 2*nqubits+G.size());
+//        //        Log::log << "[coset intersection P] copying bit segment 2...\n"; Log::log.flush();
+//        //        bitsetCopySegment(decomposition_H, c->paulis, 0, 2*nqubits + G.size(), 2*nqubits+G.size() + H.size());
+//        //        Log::log << "[coset intersection P] copy successful! Getting product of elements.\n"; Log::log.flush();
+//        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
+//        //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
+//        LimEntry<NUM_QUBITS>* a_H        = getProductOfElements(H, decomposition_H);
+//        LimEntry<NUM_QUBITS>* a_prime    = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
+//        phase_t               phase_diff = (phase_t)((a->getPhase() + a_prime->getPhase()) & 0x3);
+//        //        Log::log << "[coset intersection P] a_G = " << *a_G << "\n";
+//        //        Log::log << "[coset intersection P] a_H = " << *a_H << "\n";
+//        //        Log::log << "[coset intersection P] decomposition G = " << decomposition_G << "\n";
+//        //        Log::log << "[coset intersection P] decomposition H = " << decomposition_H << "\n";
+//        //        Log::log << "[coset intersection P] aprime = " << *a_prime << "\n"; Log::log.flush();
+//        // todo replace this check with the more 'elegant' checking whether the vector returned by GramSchmidt, above, is identity modulo phase
+//        //   that has the advantage that the check can be done earlier
+//        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
+//            return LimEntry<NUM_QUBITS>::noLIM;
+//        }
+//        if (phase_diff == phase_t::phase_one) {
+//            return a_G;
+//        } else if (phase_diff == phase_t::phase_i || phase_diff == phase_t::phase_minus_i) {
+//            return LimEntry<NUM_QUBITS>::noLIM;
+//        }
+//        // phase_diff must be -1  (i.e., must be phase_t::phase_minus_one)
+//        //        Log::log << "[coset intersection P] Phase difference is -1. Computing intersection...\n"; Log::log.flush();
+//        const std::vector<LimEntry<NUM_QUBITS>*> intersection = intersectGroupsModuloPhase(G, H);
+//        LimEntry<NUM_QUBITS>*                    k_G;
+//        LimEntry<NUM_QUBITS>*                    k_H;
+//        for (unsigned int i = 0; i < intersection.size(); i++) {
+//            GramSchmidt(G, intersection[i], decomposition_G);
+//            GramSchmidt(H, intersection[i], decomposition_H);
+//            k_G = getProductOfElements(G, decomposition_G);
+//            k_H = getProductOfElements(H, decomposition_H);
+//            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phase_t::phase_minus_one) {
+//                a_G->multiplyBy(k_G);
+//                return a_G;
+//            }
+//        }
+//        //        Log::log << "[coset intersection P] no element in coset; returning noLIM.\n"; Log::log.flush();
+//        return LimEntry<NUM_QUBITS>::noLIM;
+//    }
 
     // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
     // Finds an element in the set G intersect lambda a H b,
@@ -654,7 +652,7 @@ namespace dd {
     }
 
     // We assume that only vNodes are passed
-    // todo deallocate minus, m
+    // NOT FUNCTIONAL --  Z GROUP IS NOT SUPPORTED
     inline StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
         //empty
         Edge<vNode> low, high;
@@ -704,12 +702,12 @@ namespace dd {
 
             // Step 2: if some element v is in the set <G> intersect (<H> * -I),
             //   then add Z tensor v to the stabgenset
-            LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
-            LimEntry<>* m     = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
-            if (m != LimEntry<>::noLIM) {
-                m->setOperator(n, 'Z');
-                stabgenset.push_back(m);
-            }
+//            LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
+//            LimEntry<>* m     = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
+//            if (m != LimEntry<>::noLIM) {
+//                m->setOperator(n, 'Z');
+//                stabgenset.push_back(m);
+//            }
             toColumnEchelonForm(stabgenset);
             // todo deallocate minus, m
         }
@@ -726,7 +724,7 @@ namespace dd {
         assert(u != nullptr);
         assert(v != nullptr);
         //        Log::log << "[getIsomorphismZ] Start.\n";
-        LimEntry<>* iso;
+//        LimEntry<>* iso;
         //         TODO add assertion that the nodes are on the same number of qubits u->v == v->v
         //        assert (u->v == v->v);
         Edge<vNode> uLow  = u->e[0];
@@ -789,25 +787,25 @@ namespace dd {
                 //                Log::log << "[getIsomorphismZ] multiplying Phase by -1 because high amplitudes had opposite signs\n"; Log::log.flush();
                 isoHigh->multiplyPhaseBy(phase_t::phase_minus_one); // multiply by -1
             }
-            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
-            //            Log::log << "[getIsomorphismZ] completed coset intersection element.\n"; Log::log.flush();
-            if (iso != LimEntry<>::noLIM) {
-                //                Log::log << "[getIsomorphismZ] The coset was non-empty; returning element.\n"; Log::log.flush();
-                return iso;
-            }
-            // Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
+//            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            //            Log::log << "[getIsomorphismZ] completed coset intersection element.\n"; Log::log.flush();
+//            if (iso != LimEntry<>::noLIM) {
+//                //                Log::log << "[getIsomorphismZ] The coset was non-empty; returning element.\n"; Log::log.flush();
+//                return iso;
+//            }
+//             Step 5: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             //            Log::log << "[getIsomorphismZ] multiplying phase by -1.\n"; Log::log.flush();
             isoHigh->multiplyPhaseBy(phase_t::phase_minus_one);
-            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
-            //            Log::log << "[getIsomorphismZ] found coset intersection element.\n"; Log::log.flush();
-            if (iso != LimEntry<>::noLIM) {
-                //                Log::log << "[getIsomorphismZ] Coset was not empty; returning result.\n"; Log::log.flush();
-                iso->setOperator(u->v, pauli_op::pauli_z); // TODO should we do this? write a test
-                return iso;
-            } else {
+//            iso = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, isoHigh);
+//            //            Log::log << "[getIsomorphismZ] found coset intersection element.\n"; Log::log.flush();
+//            if (iso != LimEntry<>::noLIM) {
+//                //                Log::log << "[getIsomorphismZ] Coset was not empty; returning result.\n"; Log::log.flush();
+//                iso->setOperator(u->v, pauli_op::pauli_z); // TODO should we do this? write a test
+//                return iso;
+//            } else {
                 //                Log::log << "[getIsomorphismZ] Coset was empty; returning -1.\n"; Log::log.flush();
                 return LimEntry<>::noLIM;
-            }
+//            }
         }
     }
 

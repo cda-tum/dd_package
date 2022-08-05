@@ -426,7 +426,7 @@ namespace dd {
         }
 
         template<class Edge>
-        void sanityCheckNormalize(CVec before, CVec after, const Edge& originalEdge, const Edge& normalizedEdge) {
+        void sanityCheckNormalize(CVec before, CVec after, [[maybe_unused]] const Edge& originalEdge, [[maybe_unused]] const Edge& normalizedEdge) {
             if (!performSanityChecks) return;
             if (!vectorsApproximatelyEqual(before, after)) {
                 //Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
