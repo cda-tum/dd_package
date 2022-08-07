@@ -368,7 +368,7 @@ namespace dd {
             //Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
             //LimEntry<>* newHighLabel;
             if (u == v) {
-                newHighLabel = *GramSchmidt(u->limVector, vLabel);
+                newHighLabel = GramSchmidt(u->limVector, vLabel);
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
                 //Log::log << "[highLabelPauli] case u = v; canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
                 newHighLabel.setPhase(phase_t::phase_one);
@@ -412,7 +412,7 @@ namespace dd {
                 StabilizerGroup GH = groupConcatenate(u->limVector, v->limVector);
                 toColumnEchelonForm(GH);
                 //                std::cout << "[highLabel] Concatenated group = " << groupToString(GH, u->v) << "\n";
-                newHighLabel = *GramSchmidt(GH, vLabel);
+                newHighLabel = GramSchmidt(GH, vLabel);
                 //                std::cout << "[highlabel] After Gram-Schmidt, Label " << LimEntry<>::to_string(vLabel, u->v) << " becomes " << LimEntry<>::to_string(&newHighLabel, u->v) << "\n";
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
                 //Log::log << "[highLabelPauli] canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';

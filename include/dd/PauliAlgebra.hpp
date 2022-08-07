@@ -313,10 +313,10 @@ namespace dd {
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+    inline LimEntry<NUM_QUBITS> GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
-        if (G.size() == 0) return new LimEntry<NUM_QUBITS>(y);
+        if (G.size() == 0) return y;
         std::size_t height = 2 * NUM_QUBITS;
         for (unsigned int h = 0; h < height; h++) {
             if (y.paulis[h]) {
@@ -331,7 +331,7 @@ namespace dd {
                 }
             }
         }
-        return new LimEntry<NUM_QUBITS>(y);
+        return y;
     }
 
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
@@ -1073,9 +1073,9 @@ namespace dd {
         //        Log::log << "[highLabelZWeight] Concatenated; |GH| = " << GH.size() << Log::endl;
         toColumnEchelonForm(GH);
         //        Log::log << "[highLabelZWeight] to CEF'ed; now |GH| = " << GH.size() << Log::endl;
-        LimEntry<>* newHighLabel = GramSchmidt(GH, vLabel);
+        LimEntry<> newHighLabel = GramSchmidt(GH, vLabel);
         // Set the new phase to +1
-        newHighLabel->setPhase(phase_t::phase_one);
+        newHighLabel.setPhase(phase_t::phase_one);
         s = false;
         if (weight.lexLargerThanxMinusOne()) {
             //            Log::log << "[highLabelZWeight] Multiplying weight by -1, since weight = " << weight << ".\n";
@@ -1083,7 +1083,7 @@ namespace dd {
             s = true;
         }
         //        Log::log << "[highLabelZWeight] end.\n"; Log::log.flush();
-        return newHighLabel;
+        return new LimEntry<>(newHighLabel);
     }
 
     // Returns the lexicographically smallest LIM R such that R * |v> == lim * |v>
@@ -1091,7 +1091,7 @@ namespace dd {
     // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
     //    make sure the left and right-handed multiplications go well
     inline LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
-        return GramSchmidt(v->limVector, lim);
+        return new LimEntry<>(GramSchmidt(v->limVector, lim));
     }
 
     // ********** These functions catch PauliAlgebra functions when they are called on Matrix objects
