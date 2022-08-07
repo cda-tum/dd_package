@@ -224,5 +224,20 @@ namespace dd {
         }
     }
 
+    template<std::size_t NUM_QUBITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>>& G) {
+        unsigned int i = 0;
+        while (i < G.size()) {
+            if (G[i].lim.isIdentityModuloPhase()) {
+                // Remove this all-zero vector from the matrix
+                // Step 1: replace it with the last vector in the matrix
+                G[i] = G[G.size() - 1];
+                G.pop_back();
+            } else {
+                i++;
+            }
+        }
+    }
+
 } // namespace dd
 #endif

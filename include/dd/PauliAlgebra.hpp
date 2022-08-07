@@ -183,7 +183,7 @@ namespace dd {
             if (pivot >= 2 * NUM_QUBITS) continue;
             for (unsigned int h = g + 1; h < G.size(); h++) {
                 if (G[h].lim.paulis.test(pivot)) {
-                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]);
+                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]); // TODO use multiplyBy (this avoids a copy constructor)
                 }
             }
         }
@@ -316,19 +316,19 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
-    inline void toColumnEchelonForm(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        //        Log::log << "[toColumnEchelonForm] start, |G| = " << G.size() << "\n";
-        GaussianElimination(G);
-        pruneZeroColumns(G);
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
-    }
-
-    template<std::size_t NUM_QUBITS>
     inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
         GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>>& G) {
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geqValue);
+        GaussianEliminationModuloPhaseSortedFast(G);
+        pruneZeroColumnsModuloPhase(G);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geqValue);
     }
 
     // TODO
@@ -379,6 +379,31 @@ namespace dd {
                     if (G[v]->lim.pivotPosition() == h) {
                         //                        Log::log << "[Gram Schmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << *G[v] << "\n";
                         y.multiplyBy(*G[v]);
+                        //                        Log::log << "[Gram Schmidt] after multiplication, y = " << y << "\n";
+                    }
+                }
+            }
+        }
+        return y;
+    }
+
+    // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
+    // todo this version uses right multiplication; refactor to left multiplication
+    template<std::size_t NUM_QUBITS>
+    inline LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>>& G, const LimBitset<NUM_QUBITS>* x) {
+        //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
+        LimBitset<NUM_QUBITS> y(x);
+        if (G.size() == 0) return y;
+        std::size_t height = 2 * NUM_QUBITS;
+        //        Log::log << "[Gram Schmidt] start y = " << y << "\n";
+        for (unsigned int h = 0; h < height; h++) {
+            if (y.lim.paulis[h]) {
+                //                Log::log << "[GramSchmidt] h=" << h << ".\n";
+                // Look for a vector whose first '1' entry is at position h
+                for (unsigned int v = 0; v < G.size(); v++) {
+                    if (G[v].lim.pivotPosition() == h) {
+                        //                        Log::log << "[Gram Schmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << *G[v] << "\n";
+                        y.multiplyBy(G[v]);
                         //                        Log::log << "[Gram Schmidt] after multiplication, y = " << y << "\n";
                     }
                 }
@@ -568,13 +593,12 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
-        std::vector<LimEntry<NUM_QUBITS>*>  GH    = groupConcatenate(G, H);         // TODO memory leak
-        std::vector<LimBitset<2*NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
+        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);         // TODO memory leak
+        std::vector<LimBitset<2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
         LimBitset<2*NUM_QUBITS>   a_bitset(a);
-        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
         a_bitset = GramSchmidt(GH_Id, &a_bitset);
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
         bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
