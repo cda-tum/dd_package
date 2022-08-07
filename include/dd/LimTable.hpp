@@ -416,6 +416,11 @@ namespace dd {
             return c;
         }
 
+        // TODO refactor so that multiply(*a, *b) calls this one
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return *multiply(&a, &b);
+        }
+
         void setOperator(Qubit v, pauli_op op) {
             if ((int) v >= (int) NUM_QUBITS) return;
             switch(op) {

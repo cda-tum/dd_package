@@ -641,8 +641,10 @@ namespace dd {
     // or returns LimEntry::noLIM, if this set is empty
     // TODO refactor to allocate less dynamic memory
     template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, [[maybe_unused]] Qubit nQubits = 5) {
-        if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
+    inline LimEntry<NUM_QUBITS> getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, bool& foundElement, [[maybe_unused]] Qubit nQubits = 5) {
+        if (lambda == phase_t::no_phase) {
+            foundElement = false;
+        }
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
         bool foundCIEMP;
@@ -651,7 +653,7 @@ namespace dd {
 //            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
 //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
 //            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
-            return LimEntry<NUM_QUBITS>::noLIM;
+            foundElement = false;
         }
         c.setPhase(recoverPhase(G, &c));
         LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a, &c);
@@ -662,7 +664,8 @@ namespace dd {
         //Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
-            return new LimEntry<NUM_QUBITS>(c);
+            foundElement = true;
+            return c;
         }
         // TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
         //    Check if this conjecture is true.
@@ -671,11 +674,13 @@ namespace dd {
             std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
             for (unsigned int i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i]->commutesWith(b)) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
-                    return LimEntry<NUM_QUBITS>::multiply(&c, new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
+                    foundElement = true;
+                    return LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, GintersectH[i])); // TODO refactor to call mulitply(); but first refactor multiply() so it returns an object
                 }
             }
         }
-        return LimEntry<NUM_QUBITS>::noLIM;
+        foundElement = false;
+        return c; // dummy element
     }
 
     // We assume that only vNodes are passed
@@ -960,6 +965,7 @@ namespace dd {
             //Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n";
             // Set the weight of the isomorphism
             iso.weight = cn.getCached(); // TODO return to cache, and, actually, ideally only retrieve from cache if / when an iso is found
+            bool foundElement;
 
             Complex rhoU = cn.getCached(); // Eventually returned to cache
             Complex rhoV = cn.getCached(); // Eventually returned to cache
@@ -972,8 +978,8 @@ namespace dd {
                 phase_t lambda = rhoUrhoV.toPhase();
                 cn.returnToCache(rhoUrhoV);
                 if (lambda != phase_t::no_phase) {
-                    iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v - 1);
-                    if (iso.lim != LimEntry<>::noLIM) {
+                    iso.lim = new LimEntry<>(getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1));
+                    if (foundElement) {
                         iso.lim = LimEntry<>::multiply(v->e[1].l, iso.lim);
                         iso.lim->setOperator(u->v, pauli_op::pauli_x);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
@@ -983,8 +989,8 @@ namespace dd {
                     }
 
                     lambda  = multiplyPhases(lambda, phase_t::phase_minus_one);
-                    iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v - 1);
-                    if (iso.lim != LimEntry<>::noLIM) {
+                    iso.lim = new LimEntry<>(getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1));
+                    if (foundElement) {
                         iso.lim = LimEntry<>::multiply(v->e[1].l, iso.lim);
                         iso.lim->setOperator(u->v, pauli_op::pauli_y);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
@@ -1023,8 +1029,8 @@ namespace dd {
 
             //            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
             //            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
-            LimEntry<>* temp = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
-            if (temp != LimEntry<>::noLIM) {
+            LimEntry<> temp = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v);
+            if (foundElement) {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";
                 iso.lim          = new LimEntry<>(temp); //         = temp;
                 foundIsomorphism = true;
@@ -1035,8 +1041,8 @@ namespace dd {
             // Step 3: If G intersect (H-isomorphism) contains an element P, then Z tensor P is an isomorphism
             //Log::log << "[getIsomorphismPauli] multiplying phase by -1.\n";
             lambda = multiplyPhases(lambda, phase_t::phase_minus_one);
-            temp   = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, u->v);
-            if (temp != LimEntry<>::noLIM) {
+            temp   = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v);
+            if (foundElement) {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";
                 iso.lim = new LimEntry<>(temp); //         = temp;
                 iso.lim->setOperator(u->v, pauli_op::pauli_z);

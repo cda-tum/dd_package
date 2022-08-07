@@ -760,12 +760,13 @@ namespace dd {
                 //Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
                 //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
                 // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
-                LimEntry<>* stab = LimEntry<>::noLIM;
+                LimEntry<> stab;
                 //Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
-                stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, n - 1);
-                if (stab != LimEntry<>::noLIM) {
-                    stab->setOperator(n, 'Z');
-                    stabgenset.push_back(stab);
+                bool foundElement;
+                stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, foundElement, n - 1);
+                if (foundElement) {
+                    stab.setOperator(n, 'Z');
+                    stabgenset.push_back(new LimEntry<>(stab));
                     //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
                     //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
                 }
@@ -776,8 +777,8 @@ namespace dd {
                         phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
                         // check for X
                         //Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
-                        stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, n - 1);
-                        if (stab != LimEntry<>::noLIM) {
+                        stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, foundElement, n - 1);
+                        if (foundElement) {
                             LimEntry<> X;
                             X.setOperator(n, pauli_op::pauli_x);
                             //Log::log << "[constructStabilizerGeneratorSet] Just set the X in " << LimEntry<>::to_string(&X) << "\n";
@@ -792,8 +793,8 @@ namespace dd {
                         // Check for Y
                         //Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
                         phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
-                        stab                    = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, n - 1);
-                        if (stab != LimEntry<>::noLIM) {
+                        stab                    = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, foundElement, n - 1);
+                        if (foundElement) {
                             LimEntry<> X;
                             X.setOperator(n, pauli_op::pauli_y);
                             //Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X, n) << "\n";
