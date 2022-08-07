@@ -694,7 +694,6 @@ namespace dd {
 
             delete oldNode.e[0].l;
             delete oldNode.e[1].l;
-            delete iso.lim;
 
             if (performSanityChecks) {
                 CVec amplitudeVecAfterNormalize = getVector(r);

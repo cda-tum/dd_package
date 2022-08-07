@@ -874,14 +874,13 @@ namespace dd {
         auto zeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
         auto zeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
 
-        iso.lim = new LimEntry<>(); // TODO memory leak
+        iso.lim.setToIdentityOperator();
 
         // Case 0: the nodes are equal
         if (u == v) {
             //Log::log << "[getIsomorphismPauli] case u == v.\n";
             Log::log.flush();
             // In this case, we return the Identity operator, which is represented by a null pointer
-            iso.lim->setToIdentityOperator();
             foundIsomorphism = true;
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
@@ -890,14 +889,14 @@ namespace dd {
             if (zeroV[1]) {
                 if (uLow.p == vLow.p) {
                     //            		iso = new LimWeight<>((LimEntry<>*)nullptr);
-                    iso.lim->setToIdentityOperator();
+                    iso.lim.setToIdentityOperator();
                     foundIsomorphism = true;
                 }
             } else if (zeroV[0]) {
                 if (uLow.p == vHigh.p) {
                     // TODO limdd inspect weight on high edge
-                    *iso.lim = vHigh.l;
-                    iso.lim->setOperator(u->v, 'X');
+                    iso.lim = vHigh.l;
+                    iso.lim.setOperator(u->v, 'X');
                     foundIsomorphism = true;
                 }
             }
@@ -911,15 +910,15 @@ namespace dd {
             if (zeroV[0]) {
                 // TODO limdd inspect weights
                 if (uHigh.p == vHigh.p) {
-                    *iso.lim = uHigh.l;
-                    iso.lim->multiplyBy(vHigh.l);
+                    iso.lim = uHigh.l;
+                    iso.lim.multiplyBy(vHigh.l);
                     foundIsomorphism = true;
                 }
             } else if (zeroV[1]) {
                 // TODO limdd inspect weights
                 if (uHigh.p == vLow.p) {
-                    *iso.lim = uHigh.l;
-                    iso.lim->setOperator(u->v, 'X');
+                    iso.lim = uHigh.l;
+                    iso.lim.setOperator(u->v, 'X');
                     foundIsomorphism = true;
                 }
             }
@@ -952,7 +951,7 @@ namespace dd {
                 if (!foundIsomorphism) return;
                 LimEntry<> X = *(u->e[1].l);
                 X.setOperator(u->v, pauli_op::pauli_x);
-                iso.lim->multiplyBy(X);
+                iso.lim.multiplyBy(X);
                 foundIsomorphism = true;
                 return;
             }
@@ -978,10 +977,10 @@ namespace dd {
                 phase_t lambda = rhoUrhoV.toPhase();
                 cn.returnToCache(rhoUrhoV);
                 if (lambda != phase_t::no_phase) {
-                    iso.lim = new LimEntry<>(getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1));
+                    iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1);
                     if (foundElement) {
-                        iso.lim = LimEntry<>::multiply(v->e[1].l, iso.lim);
-                        iso.lim->setOperator(u->v, pauli_op::pauli_x);
+                        iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
+                        iso.lim.setOperator(u->v, pauli_op::pauli_x);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
                         foundIsomorphism = true;
                         //Log::log << "[getIsomorphismPauli] Case X: Coset was not empty; returning isomorphism " << LimEntry<>::to_string(iso.lim, u->v) << ".\n";
@@ -989,10 +988,10 @@ namespace dd {
                     }
 
                     lambda  = multiplyPhases(lambda, phase_t::phase_minus_one);
-                    iso.lim = new LimEntry<>(getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1));
+                    iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1);
                     if (foundElement) {
-                        iso.lim = LimEntry<>::multiply(v->e[1].l, iso.lim);
-                        iso.lim->setOperator(u->v, pauli_op::pauli_y);
+                        iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
+                        iso.lim.setOperator(u->v, pauli_op::pauli_y);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
                         iso.weight.multiplyByMinusi();
                         foundIsomorphism = true;
@@ -1032,7 +1031,7 @@ namespace dd {
             LimEntry<> temp = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v);
             if (foundElement) {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";
-                iso.lim          = new LimEntry<>(temp); //         = temp;
+                iso.lim          = temp;
                 foundIsomorphism = true;
                 //                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
                 return;
@@ -1044,8 +1043,8 @@ namespace dd {
             temp   = getCosetIntersectionElementPauli(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v);
             if (foundElement) {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";
-                iso.lim = new LimEntry<>(temp); //         = temp;
-                iso.lim->setOperator(u->v, pauli_op::pauli_z);
+                iso.lim          = temp;
+                iso.lim.setOperator(u->v, pauli_op::pauli_z);
                 foundIsomorphism = true;
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {

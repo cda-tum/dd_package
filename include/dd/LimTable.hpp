@@ -638,7 +638,7 @@ namespace dd {
     template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     struct LimWeight {
     public:
-    	LimEntry<NUM_QUBITS>* lim;
+    	LimEntry<NUM_QUBITS> lim;
     	Complex weight;
 
         static LimWeight<NUM_QUBITS>* noLIM; // value is -1
