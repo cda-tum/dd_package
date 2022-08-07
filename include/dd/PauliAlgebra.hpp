@@ -543,7 +543,7 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
         std::vector<LimEntry<NUM_QUBITS>*>  GH    = groupConcatenate(G, H);         // TODO memory leak
         std::vector<LimBitset<2*NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
         toColumnEchelonFormModuloPhase(GH_Id);
@@ -560,9 +560,10 @@ namespace dd {
         LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
         LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H); // TODO memory leak
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
-            return LimEntry<NUM_QUBITS>::noLIM;
+            foundElement = false;
         }
-        return new LimEntry<NUM_QUBITS>(a_G);
+        foundElement = true;
+        return a_G;
     }
 
     // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
@@ -644,15 +645,16 @@ namespace dd {
         if (lambda == phase_t::no_phase) return LimEntry<NUM_QUBITS>::noLIM;
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
-        LimEntry<NUM_QUBITS>* c  = getCosetIntersectionElementModuloPhase(G, H, ab);
-        if (c == LimEntry<NUM_QUBITS>::noLIM){
+        bool foundCIEMP;
+        LimEntry<NUM_QUBITS> c  = getCosetIntersectionElementModuloPhase(G, H, ab, foundCIEMP);
+        if (!foundCIEMP){
 //            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
 //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
 //            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             return LimEntry<NUM_QUBITS>::noLIM;
         }
-        c->setPhase(recoverPhase(G, c));
-        LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a, c);
+        c.setPhase(recoverPhase(G, &c));
+        LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a, &c);
         acb                       = LimEntry<NUM_QUBITS>::multiply(acb, b);
         phase_t alpha             = multiplyPhases(acb->getPhase(), getPhaseInverse(lambda));
         // Retrieve the phase of acb in H
@@ -660,7 +662,7 @@ namespace dd {
         //Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
-            return c;
+            return new LimEntry<NUM_QUBITS>(c);
         }
         // TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
         //    Check if this conjecture is true.
@@ -669,7 +671,7 @@ namespace dd {
             std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
             for (unsigned int i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i]->commutesWith(b)) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
-                    return LimEntry<NUM_QUBITS>::multiply(c, new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
+                    return LimEntry<NUM_QUBITS>::multiply(&c, new LimEntry<NUM_QUBITS>(recoverElement(G, GintersectH[i])));
                 }
             }
         }
