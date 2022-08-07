@@ -174,10 +174,38 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
+    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS>>& G) {
+        if (G.size() <= 1) return;
+        unsigned int pivot;
+
+        for (unsigned int g = 0; g + 1 < G.size(); g++) {
+            pivot = G[g].lim.pivotPosition();
+            if (pivot >= 2 * NUM_QUBITS) continue;
+            for (unsigned int h = g + 1; h < G.size(); h++) {
+                if (G[h].lim.paulis.test(pivot)) {
+                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]);
+                }
+            }
+        }
+    }
+
+    template<std::size_t NUM_QUBITS>
     inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
         for (unsigned int i = 0; i < G.size(); i++) {
             for (unsigned int j = i + 1; j < G.size(); j++) {
-                if (!G[i]->lim.commutesWith(&(G[j]->lim))) {
+                if (!G[i]->lim.commutesWith(G[j]->lim)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>>& G) {
+        for (unsigned int i = 0; i < G.size(); i++) {
+            for (unsigned int j = i + 1; j < G.size(); j++) {
+                if (!G[i].lim.commutesWith(G[j].lim)) {
                     return false;
                 }
             }
@@ -432,20 +460,16 @@ namespace dd {
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
     // we assume the width of G is at most 2*NUM_QUBITS
     template<std::size_t NUM_QUBITS>
-    inline std::vector<std::bitset<2*NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<2*NUM_QUBITS>*> G_Id = appendIdentityMatrixBitsetBig(G);
+    inline std::vector<std::bitset<2*NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>>& G) {
+        std::vector<LimBitset<2*NUM_QUBITS>> G_Id = appendIdentityMatrixBitsetBig(G);
 
-        std::sort(G_Id.begin(), G_Id.end(), LimBitset<2*NUM_QUBITS>::geq);
+        std::sort(G_Id.begin(), G_Id.end(), LimBitset<2*NUM_QUBITS>::geqValue);
         GaussianEliminationModuloPhaseSortedFast(G_Id);
         std::vector<std::bitset<2*NUM_QUBITS>> kernel;
         for (unsigned i = 0; i < G_Id.size(); i++) {
-            if (G_Id[i]->lim.isIdentityModuloPhase()) {
-                kernel.push_back(G_Id[i]->bits);
+            if (G_Id[i].lim.isIdentityModuloPhase()) {
+                kernel.push_back(G_Id[i].bits);
             }
-        }
-        // deallocate G_Id and its elements
-        for (unsigned int i = 0; i < G_Id.size(); i++) {
-            delete G_Id[i];
         }
         return kernel;
     }
@@ -478,7 +502,7 @@ namespace dd {
         //        Log::log << "[intersectGroups mod phase] Group H:\n";
         //        printStabilizerGroup(H);
         StabilizerGroup                          intersection;
-        StabilizerGroup                          concat = groupConcatenate(G, H);
+        StabilizerGroupValue                     concat = groupConcatenateValue(G, H);
         std::vector<std::bitset<2*dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
         //        Log::log << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
         LimEntry<> g;

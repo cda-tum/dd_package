@@ -30,6 +30,14 @@ namespace dd {
         return H;
     }
 
+    StabilizerGroupValue toStabilizerGroupValue(const StabilizerGroup& G) {
+        StabilizerGroupValue H;
+        for (unsigned int i=0; i<G.size(); i++) {
+            H.push_back(LimEntry<>(G[i]));
+        }
+        return H;
+    }
+
     // Returns whether the two groups have the same vector of generators
     // Note that, mathematically speaking, two generator sets G and H can still generate the same groups,
     // even if they have different orders
@@ -107,6 +115,14 @@ namespace dd {
         return concat;
     }
 
+    inline StabilizerGroupValue groupConcatenateValue(const StabilizerGroup& G, const StabilizerGroup& H) {
+        StabilizerGroupValue concat = toStabilizerGroupValue(G);
+        for (unsigned int i = 0; i < H.size(); i++) {
+            concat.push_back(LimEntry<>(H[i]));
+        }
+        return concat;
+    }
+
     template<std::size_t NUM_QUBITS>
     inline std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
         std::vector<LimBitset<NUM_QUBITS>*> GI;
@@ -128,6 +144,19 @@ namespace dd {
             col      = new LimBitset<2*NUM_QUBITS>();
             col->lim = *G[i];
             col->bits.set(i, 1);
+            GI.push_back(col);
+        }
+        return GI;
+    }
+
+    template<std::size_t NUM_QUBITS>
+    inline std::vector<LimBitset<2*NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
+        std::vector<LimBitset<2*NUM_QUBITS>> GI;
+        LimBitset<2*NUM_QUBITS>             col;
+        for (unsigned int i = 0; i < G.size(); i++) {
+            col      = LimBitset<2*NUM_QUBITS>();
+            col.lim = G[i];
+            col.bits.set(i, 1);
             GI.push_back(col);
         }
         return GI;

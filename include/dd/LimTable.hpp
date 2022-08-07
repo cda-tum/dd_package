@@ -552,7 +552,7 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
-        // TODO refactor so that leq-by-reference calls this function
+        // TODO refactor so that comparison in done in this function  and  so that leq-by-reference calls this function instead of the other way around
         static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             return leq(&b, &a);
         }
@@ -603,6 +603,7 @@ namespace dd {
             //
         }
 
+        // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
         template<std::size_t M>
         LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
             lim = *a;
@@ -624,12 +625,22 @@ namespace dd {
             return c;
         }
 
+        static LimBitset<NUM_QUBITS> multiply(const LimBitset<NUM_QUBITS> a, const LimBitset<NUM_QUBITS> b) {
+            LimBitset<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
         static bool leq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::leq(&(a->lim), &(b->lim));
         }
 
         static bool geq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::geq(&(a->lim), &(b->lim));
+        }
+
+        static bool geqValue(const LimBitset<NUM_QUBITS>& a, const LimBitset<NUM_QUBITS>& b) {
+            return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
         }
     };
 
