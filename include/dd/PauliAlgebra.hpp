@@ -213,54 +213,54 @@ namespace dd {
         return true;
     }
 
-    // does not initialize 'decomposition' to an identity matrix
+    // NOT FUNCTIONAL; used only by getKernelZ
     // TODO don't reallocate so much memory
     // TODO there is a faster version if the group is sorted
-    //    (calls to GaussianElimination from getKernel do not sort their group before calling)
+    //    (calls to GaussianElimination from getKernelZ do not sort their group before calling)
     template<std::size_t NUM_QUBITS>
     inline void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        if (G.size() <= 1) return;
-        //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
-        unsigned int pauli_height = 2 * NUM_QUBITS; // length of the columns as far as they contain Pauli operators
-        unsigned int reducingColId;
-        if (!isAbelian(G)) {
-            // Add -I
-            G.push_back(new LimBitset<NUM_QUBITS>(LimEntry<NUM_QUBITS>::getMinusIdentityOperator()));
-        }
-        for (unsigned int h = 0; h < pauli_height; h++) {
-            // Step 1: Find a column whose first '1' is at position h
-            reducingColId = -1;
-            for (unsigned int i = 0; i < G.size(); i++) {
-                if (G[i]->lim.pivotPosition() == h) {
-                    reducingColId = i;
-                    break;
-                }
-            }
-            if (reducingColId == (unsigned int)-1) continue;
-            // Step 2: Reduce all other columns via G[reducingColId]
-            for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
-                if (reduceColId == reducingColId) continue;
-                if (G[reduceColId]->lim.paulis.test(h)) {
-                    //                    Log::log << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; Log::log.flush();
-                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
-                }
-            }
-        }
-        // the pauli's are done; handle the phase
-        reducingColId = -1;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phase_t::phase_minus_one) {
-                reducingColId = i;
-                break;
-            }
-        }
-        if (reducingColId == (unsigned int)-1) return;
-        for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
-            if (reduceColId == reducingColId) continue;
-            if (G[reduceColId]->lim.getPhase() == phase_t::phase_minus_one || G[reduceColId]->lim.getPhase() == phase_t::phase_minus_i) {
-                G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
-            }
-        }
+//        if (G.size() <= 1) return;
+//        //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
+//        unsigned int pauli_height = 2 * NUM_QUBITS; // length of the columns as far as they contain Pauli operators
+//        unsigned int reducingColId;
+//        if (!isAbelian(G)) {
+//            // Add -I
+//            G.push_back(new LimBitset<NUM_QUBITS>(LimEntry<NUM_QUBITS>::getMinusIdentityOperator()));
+//        }
+//        for (unsigned int h = 0; h < pauli_height; h++) {
+//            // Step 1: Find a column whose first '1' is at position h
+//            reducingColId = -1;
+//            for (unsigned int i = 0; i < G.size(); i++) {
+//                if (G[i]->lim.pivotPosition() == h) {
+//                    reducingColId = i;
+//                    break;
+//                }
+//            }
+//            if (reducingColId == (unsigned int)-1) continue;
+//            // Step 2: Reduce all other columns via G[reducingColId]
+//            for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
+//                if (reduceColId == reducingColId) continue;
+//                if (G[reduceColId]->lim.paulis.test(h)) {
+//                    //                    Log::log << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; Log::log.flush();
+//                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+//                }
+//            }
+//        }
+//        // the pauli's are done; handle the phase
+//        reducingColId = -1;
+//        for (unsigned int i = 0; i < G.size(); i++) {
+//            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phase_t::phase_minus_one) {
+//                reducingColId = i;
+//                break;
+//            }
+//        }
+//        if (reducingColId == (unsigned int)-1) return;
+//        for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
+//            if (reduceColId == reducingColId) continue;
+//            if (G[reduceColId]->lim.getPhase() == phase_t::phase_minus_one || G[reduceColId]->lim.getPhase() == phase_t::phase_minus_i) {
+//                G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+//            }
+//        }
     }
 
     // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
@@ -353,7 +353,6 @@ namespace dd {
                 for (unsigned int v = 0; v < G.size(); v++) {
                     if (G[v]->pivotPosition() == h) {
                         //                        Log::log << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
-                        //                        y = LimEntry<NUM_QUBITS>::multiply(*y, *G[v]);
                         y.multiplyBy(*G[v]);
                     }
                 }
@@ -361,6 +360,30 @@ namespace dd {
         }
         return y;
     }
+
+    // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
+    // Returns the reduced vector
+    template<std::size_t NUM_QUBITS>
+    inline LimEntry<NUM_QUBITS> GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* x) {
+        //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
+        LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
+        if (G.size() == 0) return y;
+        std::size_t height = 2 * NUM_QUBITS;
+        for (unsigned int h = 0; h < height; h++) {
+            if (y.paulis[h]) {
+                //                Log::log << "[GramSchmidt] h=" << h << ".\n";
+                // Look for a vector whose first '1' entry is at position h
+                for (unsigned int v = 0; v < G.size(); v++) {
+                    if (G[v].pivotPosition() == h) {
+                        //                        Log::log << "[GramSchmidt] found '1' in G[" << v << "][" << h << "]; multiplying by " << LimEntry<>::to_string(G[v]) << "\n";
+                        y.multiplyBy(G[v]);
+                    }
+                }
+            }
+        }
+        return y;
+    }
+
 
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
@@ -460,26 +483,27 @@ namespace dd {
         return g;
     }
 
-    // TODO free / deallocate G_Id and its elements
+//    // TODO free / deallocate G_Id and its elements
     template<std::size_t NUM_QUBITS>
     inline std::vector<std::bitset<NUM_QUBITS>> getKernelZ(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<NUM_QUBITS>*> G_Id = appendIdentityMatrixBitset(G);
-        GaussianElimination(G_Id);
-        //        Log::log << "[getKernelZ] after Gaussian elimination, G_Id:\n";
-        //        printStabilizerGroup(G_Id);
         std::vector<std::bitset<NUM_QUBITS>> kernel;
-        for (unsigned int i = 0; i < G_Id.size(); i++) {
-            if (G_Id[i]->lim.isIdentityOperator()) {
-                kernel.push_back(G_Id[i]->bits);
-            }
-        }
-        //        Log::log << "[getKernelZ] found kernel:\n";
-        //        printKernel(kernel);
-        // free / deallocate G_Id and its elements
-        for (unsigned int i = 0; i < G_Id.size(); i++) {
-            delete G_Id[i];
-        }
         return kernel;
+//        std::vector<LimBitset<NUM_QUBITS>*> G_Id = appendIdentityMatrixBitset(G);
+//        GaussianElimination(G_Id);
+//        //        Log::log << "[getKernelZ] after Gaussian elimination, G_Id:\n";
+//        //        printStabilizerGroup(G_Id);
+//        for (unsigned int i = 0; i < G_Id.size(); i++) {
+//            if (G_Id[i]->lim.isIdentityOperator()) {
+//                kernel.push_back(G_Id[i]->bits);
+//            }
+//        }
+//        //        Log::log << "[getKernelZ] found kernel:\n";
+//        //        printKernel(kernel);
+//        // free / deallocate G_Id and its elements
+//        for (unsigned int i = 0; i < G_Id.size(); i++) {
+//            delete G_Id[i];
+//        }
+//        return kernel;
     }
 
     // Returns the kernel of the group G modulo phase, as a vector<bitset>
@@ -501,19 +525,19 @@ namespace dd {
 
     // Given two groups G, H, computes the intersection, <G> intersect <H>
     // TODO refactor with NUM_QUBITS template parameter
-    inline StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
-        StabilizerGroup                          intersection;
-        StabilizerGroup                          GH     = groupConcatenate(G, H);
-        std::vector<std::bitset<dd::NUM_QUBITS>> kernel = getKernelZ(GH);
-        LimEntry<>                               g;
-        for (unsigned int i = 0; i < kernel.size(); i++) {
-            g = getProductOfElements(G, kernel[i]);
-            intersection.push_back(new LimEntry<NUM_QUBITS>(g));
-        }
-        //        Log::log << "[intersectGroupsZ] found intersection:\n";
-        //        printStabilizerGroup(intersection);
-        return intersection;
-    }
+//    inline StabilizerGroup intersectGroupsZ(const StabilizerGroup& G, const StabilizerGroup& H) {
+//        StabilizerGroup                          intersection;
+//        StabilizerGroup                          GH     = groupConcatenate(G, H);
+//        std::vector<std::bitset<dd::NUM_QUBITS>> kernel = getKernelZ(GH);
+//        LimEntry<>                               g;
+//        for (unsigned int i = 0; i < kernel.size(); i++) {
+//            g = getProductOfElements(G, kernel[i]);
+//            intersection.push_back(new LimEntry<NUM_QUBITS>(g));
+//        }
+//        //        Log::log << "[intersectGroupsZ] found intersection:\n";
+//        //        printStabilizerGroup(intersection);
+//        return intersection;
+//    }
 
     // Returns a generating set J for the intersection of G and H, so <J>= <G> intersect <H>
     //    J is not necessarily in Column Echelon Form
@@ -537,6 +561,13 @@ namespace dd {
         }
         //        Log::log << "[intersectGroups mod phase] Found intersection: \n";
         //        printStabilizerGroup(intersection);
+
+        return intersection;
+    }
+
+    // TODO
+    inline StabilizerGroupValue intersectGroupsPauli(const StabilizerGroup, const StabilizerGroupValue) {
+        StabilizerGroupValue intersection;
 
         return intersection;
     }
@@ -593,8 +624,8 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
-        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);         // TODO memory leak
-        std::vector<LimBitset<2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH); // TODO memory leak
+        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
+        std::vector<LimBitset<2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
@@ -618,8 +649,8 @@ namespace dd {
     // Searches for an element in the set '<G> intersect (<H>+a)'
     // Note that '<G>' is a group, and '<H>+a' is a coset
     // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
-//    template<std::size_t NUM_QUBITS>
-//    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
+    template<std::size_t NUM_QUBITS>
+    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
 //        //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
 //        std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
 //        assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
@@ -681,8 +712,8 @@ namespace dd {
 //            }
 //        }
 //        //        Log::log << "[coset intersection P] no element in coset; returning noLIM.\n"; Log::log.flush();
-//        return LimEntry<NUM_QUBITS>::noLIM;
-//    }
+        return LimEntry<NUM_QUBITS>::noLIM;
+    }
 
     // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
     // Finds an element in the set G intersect lambda a H b,
@@ -733,64 +764,185 @@ namespace dd {
 
     // We assume that only vNodes are passed
     // NOT FUNCTIONAL --  Z GROUP IS NOT SUPPORTED
-    inline StabilizerGroup constructStabilizerGeneratorSetZ(const vNode node) {
-        //empty
-        Edge<vNode> low, high;
-        low            = node.e[0];
-        high           = node.e[1];
-        unsigned int n = node.v;
-
+    inline StabilizerGroup constructStabilizerGeneratorSetZ([[maybe_unused]] const vNode node) {
         StabilizerGroup stabgenset;
+        return stabgenset;
+        //empty
+//        Edge<vNode> low, high;
+//        low            = node.e[0];
+//        high           = node.e[1];
+//        unsigned int n = node.v;
+
         // Case 0: Check if this node is the terminal node (aka the Leaf)
-        if (n == (unsigned int)-1) {
+//        if (n == (unsigned int)-1) {
+//            // Return the trivial group.
+//            // This group is generated by the empty set; therefore, we just return the empty stabgenset
+//            return stabgenset;
+//        }
+//        // Case 1: right child is zero
+//        else if (high.isZeroTerminal()) {
+//            //            Log::log << "[stab genZ] |0> knife case  n = " << n << ". Low stabilizer group is:\n";
+//            stabgenset = low.p->limVector; // copies the stabilizer group of the left child
+//                                           //            printStabilizerGroup(stabgenset);
+//            LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
+//            idZ->setOperator(n, 'Z');
+//            stabgenset.push_back(idZ);
+//            //            Log::log << "[stab genZ] Added Z. Now stab gen set is:\n";
+//            //            printStabilizerGroup(stabgenset);
+//            // the matrix set is already in column echelon form,
+//            // so we do not need to perform that step here
+//        }
+//        // Case 2: left child is zero
+//        else if (low.isZeroTerminal()) {
+//            //            Log::log << "[stab genZ] |1> knife case. n = " << n << ". High stabilizer group is:\n";
+//            stabgenset = high.p->limVector;
+//            //            printStabilizerGroup(stabgenset);
+//            LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
+//            minusIdZ->setOperator(n, 'Z');
+//            stabgenset.push_back(minusIdZ);
+//            //            Log::log << "[stab genZ] Added -Z. now stab gen set is:\n";
+//            //            printStabilizerGroup(stabgenset);
+//        }
+//        // Case 3: the node is a 'fork': both its children are nonzero
+//        else {
+//            // Gather the stabilizer groups of the two children
+//            //            Log::log << "[constructStabilizerGeneratorSet] Case fork n = " << n << ".\n";
+//            StabilizerGroup* stabLow  = &(low.p->limVector);
+//            StabilizerGroup* stabHigh = &(high.p->limVector);
+//            // Step 1: Compute the intersection
+//            stabgenset = intersectGroupsZ(*stabLow, *stabHigh);
+//
+//            // Step 2: if some element v is in the set <G> intersect (<H> * -I),
+//            //   then add Z tensor v to the stabgenset
+////            LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
+////            LimEntry<>* m     = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
+////            if (m != LimEntry<>::noLIM) {
+////                m->setOperator(n, 'Z');
+////                stabgenset.push_back(m);
+////            }
+//            toColumnEchelonForm(stabgenset);
+//            // todo deallocate minus, m
+//        }
+//
+//        return stabgenset;
+    }
+
+
+
+    // Construct the stabilizer generator set of 'node' in the Pauli group
+    // Puts these generators in column echelon form
+    // TODO refactor to return StabilizerGroupValue
+    inline StabilizerGroup constructStabilizerGeneratorSetPauli(vNode& node, ComplexNumbers& cn) {
+        Edge<vNode> low, high;
+        low               = node.e[0];
+        high              = node.e[1];
+        unsigned int n    = node.v;
+        auto         zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
+
+        StabilizerGroup stabgenset; // TODO refactor to StabilizerGroupValue
+        // Case 0: Check if this node is the terminal node (aka the Leaf)
+        if (n == (unsigned int)-1) { // TODO replace with a direct check whether 'node' is a terminal node
             // Return the trivial group.
             // This group is generated by the empty set; therefore, we just return the empty stabgenset
             return stabgenset;
         }
         // Case 1: right child is zero
-        else if (high.isZeroTerminal()) {
-            //            Log::log << "[stab genZ] |0> knife case  n = " << n << ". Low stabilizer group is:\n";
+        else if (zero[1]) {
+            //Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
+            // TODO use toStabilizerGroupValue(low.p->limVector);
             stabgenset = low.p->limVector; // copies the stabilizer group of the left child
-                                           //            printStabilizerGroup(stabgenset);
+            //printStabilizerGroup(stabgenset);
             LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
             idZ->setOperator(n, 'Z');
             stabgenset.push_back(idZ);
-            //            Log::log << "[stab genZ] Added Z. Now stab gen set is:\n";
-            //            printStabilizerGroup(stabgenset);
+            //Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
+            //printStabilizerGroup(stabgenset);
             // the matrix set is already in column echelon form,
             // so we do not need to perform that step here
         }
         // Case 2: left child is zero
-        else if (low.isZeroTerminal()) {
-            //            Log::log << "[stab genZ] |1> knife case. n = " << n << ". High stabilizer group is:\n";
-            stabgenset = high.p->limVector;
-            //            printStabilizerGroup(stabgenset);
+        else if (zero[0]) {
+            //Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
+            // TODO use toStabilizerGroupValue(high.p->limVector);
+            stabgenset = high.p->limVector; // copy the stabilizer of the right child
+            //printStabilizerGroup(stabgenset);
             LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
             minusIdZ->setOperator(n, 'Z');
             stabgenset.push_back(minusIdZ);
-            //            Log::log << "[stab genZ] Added -Z. now stab gen set is:\n";
-            //            printStabilizerGroup(stabgenset);
+            //Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
+            //printStabilizerGroup(stabgenset);
         }
         // Case 3: the node is a 'fork': both its children are nonzero
         else {
+            //                vEdge edgeDummy{&node, Complex::one, nullptr};
             // Gather the stabilizer groups of the two children
-            //            Log::log << "[constructStabilizerGeneratorSet] Case fork n = " << n << ".\n";
+            //Log::log << "[constructStabilizerGeneratorSet] Case fork; "  << node << "\n";
+            // Step 1: Compute the intersection
             StabilizerGroup* stabLow  = &(low.p->limVector);
             StabilizerGroup* stabHigh = &(high.p->limVector);
-            // Step 1: Compute the intersection
-            stabgenset = intersectGroupsZ(*stabLow, *stabHigh);
-
-            // Step 2: if some element v is in the set <G> intersect (<H> * -I),
-            //   then add Z tensor v to the stabgenset
-//            LimEntry<>* minus = LimEntry<>::getMinusIdentityOperator();
-//            LimEntry<>* m     = getCosetIntersectionElementPauli(*stabLow, *stabHigh, minus);
-//            if (m != LimEntry<>::noLIM) {
-//                m->setOperator(n, 'Z');
-//                stabgenset.push_back(m);
-//            }
+            StabilizerGroup  PHP      = conjugateGroup(*stabHigh, high.l); // TODO refactor to StabilizerGroupValue conjugateGroup(StabilizerGroup, LimEntry*)
+            //Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << groupToString(*stabLow, n-1) << '\n';
+            //Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << groupToString(*stabHigh, n-1) << '\n';
+            //Log::log << "[constructStabilizerGeneratorSet] PHP: " << groupToString(PHP, node.e[1].p->v) << '\n';
+            stabgenset = intersectGroupsPauli(*stabLow, PHP);  // TODO refactor to StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)
+            //Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
+            //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+            // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
+            LimEntry<> stab;
+            //Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
+            bool foundElement;
+            stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, foundElement, n - 1);
+            if (foundElement) {
+                stab.setOperator(n, 'Z');
+                stabgenset.push_back(new LimEntry<>(stab)); // TODO refactor to use stab by value
+                //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
+                //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+            }
+            if (low.p == high.p) {
+                Complex rho      = cn.divCached(node.e[1].w, node.e[0].w);
+                phase_t rhoPhase = rho.toPhase();
+                if (rhoPhase != phase_t::no_phase) {
+                    phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
+                    // check for X
+                    //Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
+                    stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, rhoSquared, foundElement, n - 1);
+                    if (foundElement) {
+                        LimEntry<> X;
+                        X.setOperator(n, pauli_op::pauli_x);
+                        //Log::log << "[constructStabilizerGeneratorSet] Just set the X in " << LimEntry<>::to_string(&X) << "\n";
+                        X.multiplyBy(high.l);
+                        X.multiplyBy(stab);
+                        X.multiplyPhaseBy(rhoPhase);
+                        //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+                        //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+                        stabgenset.push_back(new LimEntry<>(X)); // TODO push_back(X) by value
+                        //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                    }
+                    // Check for Y
+                    //Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
+                    phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
+                    stab                    = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, foundElement, n - 1);
+                    if (foundElement) {
+                        LimEntry<> X;
+                        X.setOperator(n, pauli_op::pauli_y);
+                        //Log::log << "[constructStabilizerGeneratorSet] Just set the Y in " << LimEntry<>::to_string(&X, n) << "\n";
+                        X.multiplyBy(high.l);
+                        X.multiplyBy(stab);
+                        X.multiplyPhaseBy(rhoPhase);
+                        X.multiplyPhaseBy(phase_t::phase_minus_i);
+                        //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
+                        //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
+                        stabgenset.push_back(new LimEntry<>(X)); // TODO use push_back(X)
+                        //                            sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                    }
+                }
+            }
+            // TODO call toColumnEchelonForm(StabilizerGroupValue)
             toColumnEchelonForm(stabgenset);
-            // todo deallocate minus, m
         }
+        //            CVec amplitudeVec = getVector(&node);
+        //            Log::log << "[constructStabilizerGeneratorSet] Finished. for state " << outputCVec(amplitudeVec) << '\n'
+        //            		 << "[constructStabilizerGeneratorSet] Stab = "; //printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
 
         return stabgenset;
     }
@@ -999,7 +1151,7 @@ namespace dd {
                 if (!foundIsomorphism) return;
                 LimEntry<> X = *(u->e[1].l);
                 X.setOperator(u->v, pauli_op::pauli_x);
-                iso.lim.multiplyBy(X);
+                iso.lim.multiplyBy(X); // TODO can we simply set the operator to X, instead of multiplying?
                 foundIsomorphism = true;
                 return;
             }
