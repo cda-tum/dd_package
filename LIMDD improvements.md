@@ -90,7 +90,7 @@ The following functions in `PauliAlgebra.hpp` currently possibly have memory lea
 - (done) `intersectGroupsModuloPhase(StabilizerGroup&, StabilizerGroupValue&)`
   - (done) return a `StabilizerGroupValue` object
   - (done) propagate this refactor into `intersectGroupsPauli(SG, SGV)`
-  - check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
+  - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
 - (done) `StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)`
   - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
   - (done) implement this function
@@ -106,19 +106,20 @@ The following functions in `PauliAlgebra.hpp` currently possibly have memory lea
   + (done) refactor `G_Id` to be of type `vector<LimBitset<2*NUM_QUBITS>>`
   - (low priority) refactor `G_Id` to be of type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<2*NUM_QUBITS>*>`
 - (done) `getProductofElements()`
-  - return a `PauliString` object instead of a pointer to a `LimEntry`
   - (done) return a `LimEntry` object instead of a pointer to a `LimEntry`
+  - (low priority) return a `PauliString` object instead of a pointer to a `LimEntry`
 - (done) Gaussian Elimination
   - (done) `GaussianEliminationSortedFast(LimEntry)`
   - (done) `GaussianEliminationModuloPhaseSortedFast(LimBitset)`
   - use `vector<PauliString>` instead of `vector<LimEntry*>`
 - (done) `GramSchmidt(vector<LimEntry*>, LimEntry*)`
   - return a `PauliString` object instead of a pointer to a `LimEntry`
-- `getRootLabel()` 
-  - return a `PauliString` object instead of a pointer to a `LimEntry`
+- (done) `getRootLabel()`
+  - (done) return a `LimEntry` object instead of a pointer to a `LimEntry` object
+  - (low priority) return a `PauliString` object instead of a `LimEntry` object
 - (done) in `LimWeight` class, make the LimEntry<> object a data field instead of a pointer
 
-- carefully proofread the function `getIsomorphismPauli` and `constructStabilizerGeneratorSetPauli`, to recursively verify that
+- (done) carefully proofread the function `getIsomorphismPauli` and `constructStabilizerGeneratorSetPauli`, to recursively verify that
   all calls are to good functions
 
 # Success criteria

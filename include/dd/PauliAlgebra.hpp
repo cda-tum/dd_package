@@ -84,7 +84,7 @@ namespace dd {
         auto c = x;
         c.setPhase(getPhaseInverse(c.getPhase()));
         c.multiplyBy(y);
-        const auto d = *getRootLabel(w.p, &c);
+        const auto d = getRootLabel(w.p, &c);
         //            if (d==c){
         //                std::cout << "RootLabelEqual" << std::endl;
         //            } else {
@@ -1292,8 +1292,8 @@ namespace dd {
     // This is useful when a canonical edge is needed for a cache entry
     // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
     //    make sure the left and right-handed multiplications go well
-    inline LimEntry<>* getRootLabel(const vNode* v, const LimEntry<>* lim) {
-        return new LimEntry<>(GramSchmidt(v->limVector, lim));
+    inline LimEntry<> getRootLabel(const vNode* v, const LimEntry<>* lim) {
+        return GramSchmidt(v->limVector, lim);
     }
 
     // ********** These functions catch PauliAlgebra functions when they are called on Matrix objects
