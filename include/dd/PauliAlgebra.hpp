@@ -572,7 +572,6 @@ namespace dd {
     // Returns a generating set J for the intersection of G and H, so <J>= <G> intersect <H>
     //    J is not necessarily in Column Echelon Form
     //    J may contain elements that are equal up to phase
-    // todo verify: does this method work for Pauli groups? it certainly works for Z groups
     // TODO refactor with template parameter NUM_QUBITS
     inline StabilizerGroup intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroup& H) {
         //        Log::log << "[intersectGroups mod phase] start  |G|=" << G.size() << "  |H| = " << H.size() << Log::endl;
@@ -594,6 +593,20 @@ namespace dd {
 
         return intersection;
     }
+
+    inline StabilizerGroupValue intersectGroupsModuloPhaseValue(const StabilizerGroup& G, const StabilizerGroup& H) {
+        StabilizerGroupValue                       intersection;
+        StabilizerGroupValue                       concat = groupConcatenateValue(G, H);
+        std::vector<std::bitset<2*dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
+        LimEntry<> g;
+        for (unsigned int i = 0; i < kernel.size(); i++) {
+            g = getProductOfElements(G, kernel[i]);
+            intersection.push_back(g);
+        }
+
+        return intersection;
+    }
+
 
     // TODO (low priority) prevent the use of the oppositePhaseGenerators vector
     //   instead, use some bookkeeping variables to add the appropriately constructed objects to the intersection vector
@@ -729,9 +742,9 @@ namespace dd {
             foundElement = false;
         }
         // find an element in G intersect abH modulo phase
-        LimEntry<NUM_QUBITS>* ab = LimEntry<NUM_QUBITS>::multiply(a, b);
+        LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
         bool foundCIEMP;
-        LimEntry<NUM_QUBITS> c  = getCosetIntersectionElementModuloPhase(G, H, ab, foundCIEMP);
+        LimEntry<NUM_QUBITS> c  = getCosetIntersectionElementModuloPhase(G, H, &ab, foundCIEMP);
         if (!foundCIEMP){
 //            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
 //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
@@ -739,11 +752,11 @@ namespace dd {
             foundElement = false;
         }
         c.setPhase(recoverPhase(G, &c));
-        LimEntry<NUM_QUBITS>* acb = LimEntry<NUM_QUBITS>::multiply(a, &c);
-        acb                       = LimEntry<NUM_QUBITS>::multiply(acb, b);
-        phase_t alpha             = multiplyPhases(acb->getPhase(), getPhaseInverse(lambda));
+        LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiplyValue(*a, c);
+        acb                      = LimEntry<NUM_QUBITS>::multiplyValue(acb, *b); // TODO refactor to multiplyBy
+        phase_t alpha            = multiplyPhases(acb.getPhase(), getPhaseInverse(lambda));
         // Retrieve the phase of acb in H
-        phase_t tau = recoverPhase(H, acb);
+        phase_t tau = recoverPhase(H, &acb);
         //Log::log << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " abc = " << LimEntry<>::to_string(acb, nQubits) << " lambda = " << phaseToString(lambda) << " alpha = " << phaseToString(alpha) << " tau = " << phaseToString(tau) << '\n';
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
@@ -754,11 +767,11 @@ namespace dd {
         //    Check if this conjecture is true.
         else if (alpha == multiplyPhases(tau, phase_t::phase_minus_one)) {
             // See if some element of J has xy = -1
-            std::vector<LimEntry<NUM_QUBITS>*> GintersectH = intersectGroupsModuloPhase(G, H);
+            std::vector<LimEntry<NUM_QUBITS>> GintersectH = intersectGroupsModuloPhaseValue(G, H);
             for (unsigned int i = 0; i < GintersectH.size(); i++) {
-                if ((!GintersectH[i]->commutesWith(b)) ^ (recoverPhase(G, GintersectH[i]) != recoverPhase(H, GintersectH[i]))) {
+                if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     foundElement = true;
-                    return LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, GintersectH[i])); // TODO refactor to call mulitply(); but first refactor multiply() so it returns an object
+                    return LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])); // TODO refactor to call mulitply(); but first refactor multiply() so it returns an object
                 }
             }
         }
