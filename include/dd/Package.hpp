@@ -1193,20 +1193,6 @@ namespace dd {
             return l;
         }
 
-        void putStabilizersInTable(vEdge& edge) {
-            [[maybe_unused]] LimEntry<>* limptr;
-            for (unsigned int i = 0; i < edge.p->limVector.size(); i++) {
-                limptr               = edge.p->limVector[i];
-                edge.p->limVector[i] = limTable.lookup(*(edge.p->limVector[i]));
-
-                // If the input LimEntry pointer isn't already in the table, it
-                // was dynamically allocated, in which case we delete it here.
-                if (limptr != edge.p->limVector[i]) {
-                    delete limptr;
-                }
-            }
-        }
-
         void putStabilizersInTable(vEdge& edge, const StabilizerGroupValue& stabilizers) {
             LimEntry<>* limptr;
             edge.p->limVector.clear();
@@ -1262,30 +1248,32 @@ namespace dd {
             }
             assert(e.p->v == var || e.isTerminal());
 
-            // TODO skip constructing the stabilizer generator set if it has already been found,
-            //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
-            StabilizerGroupValue stabilizers;
-            switch (group) {
-                case Z_group:
-                    e.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
-                    break;
-                case Pauli_group:
-                    stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn);
-                    putStabilizersInTable(e, stabilizers);
-                    if (performSanityChecks) {
-                        vece = getVector(e.p);
-                        Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
-                                 << "[makeDDNode] Stab = ";
-                        printStabilizerGroup(e.p->limVector);
-                        Log::log << '\n';
-                        sanityCheckStabilizerGroup(e, e.p->limVector);
-                    }
-                    break;
-                case QMDD_group: break;
+            bool foundNodeInTable;
+            auto l = uniqueTable.lookupAndBookkeep(e, foundNodeInTable, false);
+            // If the node was not found in the table, then we must now compute its stabilizer group
+            if (!foundNodeInTable) {
+                StabilizerGroupValue stabilizers;
+                switch (group) {
+                    case Z_group:
+                        l.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
+                        break;
+                    case Pauli_group:
+                        stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn);
+                        putStabilizersInTable(l, stabilizers);
+                        if (performSanityChecks) {
+                            vece = getVector(l.p);
+                            Log::log << "[makeDDNode] just built Stab(" << l.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
+                                     << "[makeDDNode] Stab = ";
+                            printStabilizerGroup(l.p->limVector);
+                            Log::log << '\n';
+                            sanityCheckStabilizerGroup(l, l.p->limVector);
+                        }
+                        break;
+                    case QMDD_group: break;
+                }
             }
 
             // look it up in the unique tables
-            auto l = uniqueTable.lookup(e, false);
             assert(l.p->v == var || l.isTerminal());
             return l;
         }

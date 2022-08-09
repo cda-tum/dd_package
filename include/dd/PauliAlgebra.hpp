@@ -229,56 +229,6 @@ namespace dd {
         return true;
     }
 
-    // NOT FUNCTIONAL; used only by getKernelZ
-    // TODO don't reallocate so much memory
-    // TODO there is a faster version if the group is sorted
-    //    (calls to GaussianElimination from getKernelZ do not sort their group before calling)
-    template<std::size_t NUM_QUBITS>
-    inline void GaussianElimination(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-//        if (G.size() <= 1) return;
-//        //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
-//        unsigned int pauli_height = 2 * NUM_QUBITS; // length of the columns as far as they contain Pauli operators
-//        unsigned int reducingColId;
-//        if (!isAbelian(G)) {
-//            // Add -I
-//            G.push_back(new LimBitset<NUM_QUBITS>(LimEntry<NUM_QUBITS>::getMinusIdentityOperator()));
-//        }
-//        for (unsigned int h = 0; h < pauli_height; h++) {
-//            // Step 1: Find a column whose first '1' is at position h
-//            reducingColId = -1;
-//            for (unsigned int i = 0; i < G.size(); i++) {
-//                if (G[i]->lim.pivotPosition() == h) {
-//                    reducingColId = i;
-//                    break;
-//                }
-//            }
-//            if (reducingColId == (unsigned int)-1) continue;
-//            // Step 2: Reduce all other columns via G[reducingColId]
-//            for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
-//                if (reduceColId == reducingColId) continue;
-//                if (G[reduceColId]->lim.paulis.test(h)) {
-//                    //                    Log::log << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; Log::log.flush();
-//                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
-//                }
-//            }
-//        }
-//        // the pauli's are done; handle the phase
-//        reducingColId = -1;
-//        for (unsigned int i = 0; i < G.size(); i++) {
-//            if (G[i]->lim.isIdentityModuloPhase() && G[i]->lim.getPhase() == phase_t::phase_minus_one) {
-//                reducingColId = i;
-//                break;
-//            }
-//        }
-//        if (reducingColId == (unsigned int)-1) return;
-//        for (unsigned int reduceColId = 0; reduceColId < G.size(); reduceColId++) {
-//            if (reduceColId == reducingColId) continue;
-//            if (G[reduceColId]->lim.getPhase() == phase_t::phase_minus_one || G[reduceColId]->lim.getPhase() == phase_t::phase_minus_i) {
-//                G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
-//            }
-//        }
-    }
-
     // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
     // todo it is possible to write a faster procedure, if we are allowed to assume that G is sorted
     template<std::size_t NUM_QUBITS>
@@ -345,13 +295,6 @@ namespace dd {
         GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geqValue);
-    }
-
-    // TODO
-    template<std::size_t NUM_QUBITS>
-    inline bool isInColumnEchelonForm(const StabilizerGroup& G) {
-        // TODO
-        return false;
     }
 
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure

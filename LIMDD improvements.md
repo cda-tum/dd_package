@@ -7,7 +7,7 @@ because dynamically allocating memory is slower than doing computations with obj
 
 ## Better Runtimes
 
-- In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
+- (done) In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
   - To this end, refactor the `nodeTable.lookup()` function so it takes an extra bool parameter by reference, which it sets to `true` iff the node that is returned was newly created, and to false when the node existed in the Table.
 - ### Hard-code certain gates, to allow linear-time processing, using the algorithms presented in the new arxiv version of the LIMDD paper
   - Implement `getMatrixDescription(mNode)` which, given a Matrix LIMDD, figures out which gates is being implemented
