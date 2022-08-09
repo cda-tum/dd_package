@@ -123,6 +123,14 @@ namespace dd {
         return concat;
     }
 
+    inline StabilizerGroupValue groupConcatenate(const StabilizerGroup& G, const StabilizerGroupValue& H) {
+        StabilizerGroupValue concat = toStabilizerGroupValue(G);
+        for (unsigned int i = 0; i < H.size(); i++) {
+            concat.push_back(H[i]);
+        }
+        return concat;
+    }
+
     template<std::size_t NUM_QUBITS>
     inline std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
         std::vector<LimBitset<NUM_QUBITS>*> GI;

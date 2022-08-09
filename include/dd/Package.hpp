@@ -1207,6 +1207,16 @@ namespace dd {
             }
         }
 
+        void putStabilizersInTable(vEdge& edge, const StabilizerGroupValue& stabilizers) {
+            LimEntry<>* limptr;
+            edge.p->limVector.clear();
+            edge.p->limVector.reserve(stabilizers.size());
+            for (unsigned int i=0; i<stabilizers.size(); i++) {
+                limptr = limTable.lookup(stabilizers[i]);
+                edge.p->limVector.push_back(limptr);
+            }
+        }
+
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
             auto& uniqueTable = getUniqueTable<vNode>();
@@ -1254,12 +1264,14 @@ namespace dd {
 
             // TODO skip constructing the stabilizer generator set if it has already been found,
             //   i.e., only compute the group once, when the node is allocated; and not when the node lookup was succesful
+            StabilizerGroupValue stabilizers;
             switch (group) {
                 case Z_group:
                     e.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
                     break;
                 case Pauli_group:
-                    e.p->limVector = constructStabilizerGeneratorSetPauli(*(e.p), cn);
+                    stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn);
+                    putStabilizersInTable(e, stabilizers);
                     if (performSanityChecks) {
                         vece = getVector(e.p);
                         Log::log << "[makeDDNode] just built Stab(" << e.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
@@ -1268,7 +1280,6 @@ namespace dd {
                         Log::log << '\n';
                         sanityCheckStabilizerGroup(e, e.p->limVector);
                     }
-                    putStabilizersInTable(e);
                     break;
                 case QMDD_group: break;
             }

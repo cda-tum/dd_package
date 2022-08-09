@@ -43,6 +43,22 @@ namespace dd {
         return B.getPhase();
     }
 
+    // precondition: group is in column echelon form
+    template<std::size_t NUM_QUBITS>
+    inline phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* a) {
+        LimEntry<NUM_QUBITS> A(a);
+        LimEntry<NUM_QUBITS> B;
+        unsigned int         pivot;
+        for (unsigned int g = 0; g < G.size(); g++) {
+            pivot = G[g].pivotPosition();
+            if (A.paulis.test(pivot)) {
+                A.multiplyBy(G[g]);
+                B.multiplyBy(G[g]);
+            }
+        }
+        return B.getPhase();
+    }
+
     // TODO implement
     // TODO write a test
     // precondition: group is in column echelon form
@@ -539,6 +555,20 @@ namespace dd {
 //        return intersection;
 //    }
 
+    inline StabilizerGroupValue intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroupValue& H) {
+        StabilizerGroupValue                       intersection;
+        StabilizerGroupValue                       concat = groupConcatenate(G, H);
+        std::vector<std::bitset<2*dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
+        //        Log::log << "[intersectGroups mod phase] |kernel| = " << kernel.size() << "\n";
+        LimEntry<> g;
+        for (unsigned int i = 0; i < kernel.size(); i++) {
+            g = getProductOfElements(G, kernel[i]);
+            intersection.push_back(g);
+        }
+
+        return intersection;
+    }
+
     // Returns a generating set J for the intersection of G and H, so <J>= <G> intersect <H>
     //    J is not necessarily in Column Echelon Form
     //    J may contain elements that are equal up to phase
@@ -565,10 +595,42 @@ namespace dd {
         return intersection;
     }
 
-    // TODO
-    inline StabilizerGroupValue intersectGroupsPauli(const StabilizerGroup, const StabilizerGroupValue) {
-        StabilizerGroupValue intersection;
-
+    // TODO (low priority) prevent the use of the oppositePhaseGenerators vector
+    //   instead, use some bookkeeping variables to add the appropriately constructed objects to the intersection vector
+    //   the purpose is to have less dynamically allocated memory. In this case the use of the vector oppositePhaseGenerators's DAM is prevented
+    inline StabilizerGroupValue intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroupValue& H) {
+        StabilizerGroupValue intersection = intersectGroupsModuloPhase(G, H);
+        StabilizerGroupValue oppositePhaseGenerators;
+        toColumnEchelonForm(intersection);
+        //Log::log << "[intersect groups Pauli] intersection mod phase = " << groupToString(intersection, n) << '\n';
+        // Remove all elements from intersection where the G-phase is not equal to the H-phase
+        unsigned int s = intersection.size();
+        phase_t      phaseG, phaseH;
+        unsigned int g = 0;
+        for (unsigned int i = 0; i < s; i++) {
+            phaseG = recoverPhase(G, &intersection[g]);
+            phaseH = recoverPhase(H, &intersection[g]);
+            if (phaseG == phaseH) {
+                intersection[g].setPhase(phaseG);
+                //Log::log << "[intersect groups Pauli] Adding " << LimEntry<>::to_string(intersection[g], 3) << " to intersection.\n";
+                g++;
+            } else {
+                // add it to the list of opposite phases
+                //Log::log << "[intersect groups Pauli] Element " << LimEntry<>::to_string(intersection[g], 3) << " has phase(G)=" << phaseToString(phaseG) << " and phaseH=" << phaseToString(phaseH) << ".\n";
+                oppositePhaseGenerators.push_back(intersection[g]);
+                // remove this from the intersection
+                intersection[g] = intersection[intersection.size() - 1];
+                intersection.pop_back();
+            }
+        }
+        LimEntry<> a;
+        for (unsigned int i = 1; i < oppositePhaseGenerators.size(); i++) {
+            a      = LimEntry<>::multiplyValue(oppositePhaseGenerators[0], oppositePhaseGenerators[i]);
+            phaseG = recoverPhase(G, &a);
+            a.setPhase(phaseG);
+            intersection.push_back(a);
+        }
+        //Log::log << "[intersect groups Pauli] intersection = " << groupToString(intersection, n) << '\n';
         return intersection;
     }
 
@@ -622,6 +684,18 @@ namespace dd {
         return H;
     }
 
+    inline StabilizerGroupValue conjugateGroupValue(const StabilizerGroup& G, const LimEntry<>* a) {
+        StabilizerGroupValue H;
+        for (unsigned int i = 0; i < G.size(); i++) {
+            H.push_back(*G[i]);
+            if (!H[i].commutesWith(a)) {
+                // TODO implement and use a new function in LimEntry which directly multiplies the phase by -1
+                H[i].setPhase(multiplyPhases(H[i].getPhase(), phase_t::phase_minus_one));
+            }
+        }
+        return H;
+    }
+
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
         std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
@@ -643,76 +717,6 @@ namespace dd {
         }
         foundElement = true;
         return a_G;
-    }
-
-    // Given sets G, H which generate Pauli groups <G> and <H>, respectively, and a Pauli string a,
-    // Searches for an element in the set '<G> intersect (<H>+a)'
-    // Note that '<G>' is a group, and '<H>+a' is a coset
-    // If the intersection of these two sets is empty, 'LimEntry<..>::noLIM' is returned
-    template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS>* getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a) {
-//        //        Log::log << "[coset intersection P] a = " << *a << "\n"; Log::log.flush();
-//        std::vector<LimEntry<NUM_QUBITS>*> GH = groupConcatenate(G, H);
-//        assert(GH.size() <= NUM_QUBITS); // todo fix me; Concatenating two StabilizerGroups of size NUM_QUBITS can result in a StabilizerGroups > NUM_QUBITS. This causes an error in line appendIdentityMatrixBitset
-//        std::vector<LimBitset<NUM_QUBITS>*> GH_Id = appendIdentityMatrixBitset(GH);
-//        toColumnEchelonFormModuloPhase(GH_Id);
-//        //        Log::log << "[coset intersection P] Found GH +Id to column echelon mod phase:\n";
-//        //        printStabilizerGroup(GH_Id);
-//        std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
-//                                               //        Log::log << "[coset intersection P] Doing Gram-Schmidt with GH, a.\n"; Log::log.flush();
-//        LimBitset<NUM_QUBITS> a_bitset(a);
-//        // todo refactor this to the GramSchmidt(Group, LimEntry, std::bitset) version instead of the GramSchmidt(Group, LimBitset) version
-//        a_bitset = GramSchmidt(GH_Id, &a_bitset);
-//        //        Log::log << "[coset intersection P] after Gram-Schmidt, a_bitset = " << a_bitset << "\n";
-//        //        Log::log << "[coset intersection P] a.bits[0] = " << a_bitset.bits.test(0) << ", a.bits[1] = " << a_bitset.bits.test(1) << "\n";
-//        //        Log::log << "[coset intersection P] computing product of elements (GH, decomposition).\n"; Log::log.flush();
-//        //        LimEntry<NUM_QUBITS>* c = getProductOfElements(GH, decomposition);
-//        //        Log::log << "[coset intersection P] Computed product of elements.\n"; Log::log.flush();
-//        std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
-//                                                                  //        Log::log << "[coset intersection P] copying bit segment 1...\n"; Log::log.flush();
-//        bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
-//        bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
-//        //        bitsetCopySegment<NUM_QUBITS, 2*NUM_QUBITS+2>(decomposition_G, c->paulis, 0, 2*nqubits, 2*nqubits+G.size());
-//        //        Log::log << "[coset intersection P] copying bit segment 2...\n"; Log::log.flush();
-//        //        bitsetCopySegment(decomposition_H, c->paulis, 0, 2*nqubits + G.size(), 2*nqubits+G.size() + H.size());
-//        //        Log::log << "[coset intersection P] copy successful! Getting product of elements.\n"; Log::log.flush();
-//        LimEntry<NUM_QUBITS>* a_G = getProductOfElements(G, decomposition_G);
-//        //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
-//        LimEntry<NUM_QUBITS>* a_H        = getProductOfElements(H, decomposition_H);
-//        LimEntry<NUM_QUBITS>* a_prime    = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
-//        phase_t               phase_diff = (phase_t)((a->getPhase() + a_prime->getPhase()) & 0x3);
-//        //        Log::log << "[coset intersection P] a_G = " << *a_G << "\n";
-//        //        Log::log << "[coset intersection P] a_H = " << *a_H << "\n";
-//        //        Log::log << "[coset intersection P] decomposition G = " << decomposition_G << "\n";
-//        //        Log::log << "[coset intersection P] decomposition H = " << decomposition_H << "\n";
-//        //        Log::log << "[coset intersection P] aprime = " << *a_prime << "\n"; Log::log.flush();
-//        // todo replace this check with the more 'elegant' checking whether the vector returned by GramSchmidt, above, is identity modulo phase
-//        //   that has the advantage that the check can be done earlier
-//        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
-//            return LimEntry<NUM_QUBITS>::noLIM;
-//        }
-//        if (phase_diff == phase_t::phase_one) {
-//            return a_G;
-//        } else if (phase_diff == phase_t::phase_i || phase_diff == phase_t::phase_minus_i) {
-//            return LimEntry<NUM_QUBITS>::noLIM;
-//        }
-//        // phase_diff must be -1  (i.e., must be phase_t::phase_minus_one)
-//        //        Log::log << "[coset intersection P] Phase difference is -1. Computing intersection...\n"; Log::log.flush();
-//        const std::vector<LimEntry<NUM_QUBITS>*> intersection = intersectGroupsModuloPhase(G, H);
-//        LimEntry<NUM_QUBITS>*                    k_G;
-//        LimEntry<NUM_QUBITS>*                    k_H;
-//        for (unsigned int i = 0; i < intersection.size(); i++) {
-//            GramSchmidt(G, intersection[i], decomposition_G);
-//            GramSchmidt(H, intersection[i], decomposition_H);
-//            k_G = getProductOfElements(G, decomposition_G);
-//            k_H = getProductOfElements(H, decomposition_H);
-//            if (((k_G->getPhase() + k_H->getPhase()) & 0x3) == phase_t::phase_minus_one) {
-//                a_G->multiplyBy(k_G);
-//                return a_G;
-//            }
-//        }
-//        //        Log::log << "[coset intersection P] no element in coset; returning noLIM.\n"; Log::log.flush();
-        return LimEntry<NUM_QUBITS>::noLIM;
     }
 
     // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
@@ -832,14 +836,14 @@ namespace dd {
     // Construct the stabilizer generator set of 'node' in the Pauli group
     // Puts these generators in column echelon form
     // TODO refactor to return StabilizerGroupValue
-    inline StabilizerGroup constructStabilizerGeneratorSetPauli(vNode& node, ComplexNumbers& cn) {
+    inline StabilizerGroupValue constructStabilizerGeneratorSetPauli(vNode& node, ComplexNumbers& cn) {
         Edge<vNode> low, high;
         low               = node.e[0];
         high              = node.e[1];
         unsigned int n    = node.v;
         auto         zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
 
-        StabilizerGroup stabgenset; // TODO refactor to StabilizerGroupValue
+        StabilizerGroupValue stabgenset;
         // Case 0: Check if this node is the terminal node (aka the Leaf)
         if (n == (unsigned int)-1) { // TODO replace with a direct check whether 'node' is a terminal node
             // Return the trivial group.
@@ -849,12 +853,12 @@ namespace dd {
         // Case 1: right child is zero
         else if (zero[1]) {
             //Log::log << "[stab genPauli] |0> knife case  n = " << n + 1 << ". Low stabilizer group is:\n";
-            // TODO use toStabilizerGroupValue(low.p->limVector);
-            stabgenset = low.p->limVector; // copies the stabilizer group of the left child
+            // DONE TODO use toStabilizerGroupValue(low.p->limVector);
+            stabgenset = toStabilizerGroupValue(low.p->limVector); // copies the stabilizer group of the left child
             //printStabilizerGroup(stabgenset);
-            LimEntry<>* idZ = LimEntry<>::getIdentityOperator();
+            LimEntry<>* idZ = LimEntry<>::getIdentityOperator(); // TODO refactor to LimEntry
             idZ->setOperator(n, 'Z');
-            stabgenset.push_back(idZ);
+            stabgenset.push_back(*idZ);
             //Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
             //printStabilizerGroup(stabgenset);
             // the matrix set is already in column echelon form,
@@ -864,11 +868,11 @@ namespace dd {
         else if (zero[0]) {
             //Log::log << "[stab genPauli] |1> knife case. n = " << n + 1 << ". High stabilizer group is:\n";
             // TODO use toStabilizerGroupValue(high.p->limVector);
-            stabgenset = high.p->limVector; // copy the stabilizer of the right child
+            stabgenset = toStabilizerGroupValue(high.p->limVector); // copy the stabilizer of the right child
             //printStabilizerGroup(stabgenset);
-            LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator();
+            LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator(); // TODO refactor to LimEntry object
             minusIdZ->setOperator(n, 'Z');
-            stabgenset.push_back(minusIdZ);
+            stabgenset.push_back(*minusIdZ);
             //Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
             //printStabilizerGroup(stabgenset);
         }
@@ -880,11 +884,11 @@ namespace dd {
             // Step 1: Compute the intersection
             StabilizerGroup* stabLow  = &(low.p->limVector);
             StabilizerGroup* stabHigh = &(high.p->limVector);
-            StabilizerGroup  PHP      = conjugateGroup(*stabHigh, high.l); // TODO refactor to StabilizerGroupValue conjugateGroup(StabilizerGroup, LimEntry*)
+            StabilizerGroupValue PHP  = conjugateGroupValue(*stabHigh, high.l); // DONE TODO refactor to StabilizerGroupValue conjugateGroup(StabilizerGroup, LimEntry*)
             //Log::log << "[constructStabilizerGeneratorSet] G = Stab(low)  = " << groupToString(*stabLow, n-1) << '\n';
             //Log::log << "[constructStabilizerGeneratorSet] H = Stab(high) = " << groupToString(*stabHigh, n-1) << '\n';
             //Log::log << "[constructStabilizerGeneratorSet] PHP: " << groupToString(PHP, node.e[1].p->v) << '\n';
-            stabgenset = intersectGroupsPauli(*stabLow, PHP);  // TODO refactor to StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)
+            stabgenset = intersectGroupsPauli(*stabLow, PHP);  // DONE TODO refactor to StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)
             //Log::log << "[constructStabilizerGeneratorSet] intersection: " << groupToString(stabgenset, n) << '\n';
             //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
             // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
@@ -894,7 +898,7 @@ namespace dd {
             stab = getCosetIntersectionElementPauli(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, foundElement, n - 1);
             if (foundElement) {
                 stab.setOperator(n, 'Z');
-                stabgenset.push_back(new LimEntry<>(stab)); // TODO refactor to use stab by value
+                stabgenset.push_back(stab); // TODO DONE refactor to use stab by value
                 //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
                 //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
             }
@@ -915,7 +919,7 @@ namespace dd {
                         X.multiplyPhaseBy(rhoPhase);
                         //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
                         //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
-                        stabgenset.push_back(new LimEntry<>(X)); // TODO push_back(X) by value
+                        stabgenset.push_back(X); // TODO DONE push_back(X) by value
                         //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
                     }
                     // Check for Y
@@ -932,12 +936,11 @@ namespace dd {
                         X.multiplyPhaseBy(phase_t::phase_minus_i);
                         //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&X, n) << '\n';
                         //Log::log << "[constructStabilizerGeneratorSet] with high.l = " << LimEntry<>::to_string(high.l, n) << " coset element = " << LimEntry<>::to_string(stab, n) << ".\n";
-                        stabgenset.push_back(new LimEntry<>(X)); // TODO use push_back(X)
-                        //                            sanityCheckStabilizerGroup(edgeDummy, stabgenset);
+                        stabgenset.push_back(X); // TODO DONE use push_back(X)
                     }
                 }
             }
-            // TODO call toColumnEchelonForm(StabilizerGroupValue)
+            // TODO DONE call toColumnEchelonForm(StabilizerGroupValue)
             toColumnEchelonForm(stabgenset);
         }
         //            CVec amplitudeVec = getVector(&node);
