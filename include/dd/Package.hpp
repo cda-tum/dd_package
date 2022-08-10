@@ -2359,7 +2359,20 @@ namespace dd {
     public:
         vEdge applyGate(const QuantumGate& gate, const vEdge state) {
             //            printMatrix(makeGateDD(gate.mat, qubits(), gate.controls, gate.target));
+            char pauligate = gate.checkPauliGate();
+            if ((int) pauligate != 0) {
+                return applyPauliGate(pauligate, gate.target, state);
+            }
             return multiply(makeGateDD(gate.mat, qubits(), gate.controls, gate.target), state);
+        }
+
+        vEdge applyPauliGate(char gate, Qubit target, const vEdge state) {
+            // only change the LIMs on the root edge
+            LimEntry<> temp;
+            temp.setOperator(target, gate);
+            vEdge res = state;
+            res.l = LimEntry<>::multiply(&temp, res.l);
+            return res;
         }
 
         vEdge simulateCircuit(const QuantumCircuit& circuit) {
