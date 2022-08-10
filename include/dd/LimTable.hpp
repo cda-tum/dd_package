@@ -416,6 +416,11 @@ namespace dd {
             return c;
         }
 
+        // TODO refactor so that multiply(*a, *b) calls this one
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return *multiply(&a, &b);
+        }
+
         void setOperator(Qubit v, pauli_op op) {
             if ((int) v >= (int) NUM_QUBITS) return;
             switch(op) {
@@ -547,6 +552,11 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        // TODO refactor so that comparison in done in this function  and  so that leq-by-reference calls this function instead of the other way around
+        static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return leq(&b, &a);
+        }
+
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             return leq(b, a);
         }
@@ -593,6 +603,7 @@ namespace dd {
             //
         }
 
+        // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
         template<std::size_t M>
         LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
             lim = *a;
@@ -614,12 +625,22 @@ namespace dd {
             return c;
         }
 
+        static LimBitset<NUM_QUBITS> multiply(const LimBitset<NUM_QUBITS> a, const LimBitset<NUM_QUBITS> b) {
+            LimBitset<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
         static bool leq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::leq(&(a->lim), &(b->lim));
         }
 
         static bool geq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::geq(&(a->lim), &(b->lim));
+        }
+
+        static bool geqValue(const LimBitset<NUM_QUBITS>& a, const LimBitset<NUM_QUBITS>& b) {
+            return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
         }
     };
 
@@ -628,7 +649,7 @@ namespace dd {
     template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     struct LimWeight {
     public:
-    	LimEntry<NUM_QUBITS>* lim;
+    	LimEntry<NUM_QUBITS> lim;
     	Complex weight;
 
         static LimWeight<NUM_QUBITS>* noLIM; // value is -1
@@ -913,7 +934,7 @@ namespace dd {
             gcCalls++;
             // nothing to be done if garbage collection is not forced, and the limit has not been reached,
             // or the current count is minimal (the complex table always contains at least 0.5)
-            if ((!force && count < gcLimit) || count <= 1)
+            if ((!force && count < gcLimit) || count <= 1 || true) //Todo implement garbage collect
                 return 0;
 
             gcRuns++;
