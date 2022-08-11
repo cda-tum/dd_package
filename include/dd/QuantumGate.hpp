@@ -45,6 +45,14 @@ public:
 		return controls.size() != 0;
 	}
 
+	char checkPauliGate() const {
+		// we're not checking for identity
+		if (mat == dd::Xmat && !isControlledGate()) return 'X';
+		if (mat == dd::Zmat && !isControlledGate()) return 'Z';
+		if (mat == dd::Ymat && !isControlledGate()) return 'Y';
+		return 0;
+	}
+
 	bool isCliffordGate() const {
 		if (mat == dd::Hmat && !isControlledGate()) return true;
 		if (mat == dd::Smat && !isControlledGate()) return true;

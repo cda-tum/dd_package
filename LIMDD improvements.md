@@ -7,7 +7,7 @@ because dynamically allocating memory is slower than doing computations with obj
 
 ## Better Runtimes
 
-- In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
+- (done) In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
   - To this end, refactor the `nodeTable.lookup()` function so it takes an extra bool parameter by reference, which it sets to `true` iff the node that is returned was newly created, and to false when the node existed in the Table.
 - ### Hard-code certain gates, to allow linear-time processing, using the algorithms presented in the new arxiv version of the LIMDD paper
   - Implement `getMatrixDescription(mNode)` which, given a Matrix LIMDD, figures out which gates is being implemented
@@ -46,6 +46,12 @@ class PauliString {
   - Knife: a state $|f> = |0>|g>$
   - Fork:  a state $|f> = |0>|g> + |1>|h>$
   - Spoon: a state $|f> = |0>|v> + |1>P|v>$
+- (low priority) in `constructStabilizerGeneratorSetPauli()`, in the knife cases, we can avoid some lookups into the LimTable by simply
+  copying the limVector of the node's child, instead of first constructing a `StabilizerGroupValue` object, whose elements are then looked up from the LimTable
+  by `makeDDNode()` by calling `putStabilizersInTable()`
+- (low priority) in `getIsomorphismPauli()` in Case 3.1, can we simply set 'X' in the isomorphism, instead of multiplying by an isomorphism?
+- (low priority) in `intersectGroupsPauli()`, prevent the use of `vector oppositePhaseGenerators` by writing more space-efficient code:
+   add the LimEntry objects immediately, instead of storing them for later use.
 
 ## Memory leaks
 
@@ -64,31 +70,57 @@ Incidentally, this will make the runtimes much better.
 
 The following functions in `PauliAlgebra.hpp` currently possibly have memory leaks:
 
-- `highLabelPauli()`
-- `constructStabilizerGeneratorSetPauli()`
-- `getIsomorphismPauli`
-  - after refactoring class `LimWeight`, propagate these changes to variable `iso`
-- `intersectGroupsModuloPhase()`
-   - refactor `intersection, concat` to type `vector<PauliString>` instead of `vector<LimEntry<>*>`
-- `getCosetIntersectionElementPauli()`, `getCosetIntersectionModuloPhase()`
-  - return a `PauliString` object instead of a pointer to a `LimEntry`
-  - refactor parameters `G`,`H` to type `vector<PauliString>` instead of `vector<LimEntry*>`
-  - remove the function `getCosetIntersectionElementPauli` that takes only 3 parameters
-- `groupConcatenate()`
+- (done) `highLabelPauli()`
+  - (done) make an inventory of what should be done here
+  - (done) refactor the `GH` concatentation into `StabilizerGroupValue`
+  - (done) call `GramSchmidt(StabilizerGroupValue)`
+- (done) `constructStabilizerGeneratorSetPauli()`
+  - (done) move to `PauliAlgebra.hpp`
+  - (done) return a `StabilizerGroupValue` object, instead of a `StabilizerGroup` object
+  - (done) refactor `putStabilizersInTable(vNode&, StabilizerGroupValue)`
+  - (low priority) pass the `StabilizerGroupValue` object from `makeDDNode` by reference to `constructStabs()`
+  - (done) propagate changes to `makeDDNode()`
+  - (done) put the sanity checks of stabilizers in `Package.hpp`
+  - (done) make an inventory of which functions should have reference-inputs, which should have value-inputs
+  - (done) implement and use `StabilizerGroupValue intersectGroupsPauli(const StabilizerGroup&, const StabilizerGroupValue&)`
+  - (done) implement and use `StabilizerGroupValue conjugateGroup(const StabilizerGroup&, LimEntry*)`
+- (done) `getIsomorphismPauli`
+  - (done) after refactoring class `LimWeight`, propagate these changes to variable `iso`
+  - (done) make an inventory of which functions should have reference-inputs, which should have value-inputs
+- (done) `intersectGroupsModuloPhase(StabilizerGroup&, StabilizerGroupValue&)`
+  - (done) return a `StabilizerGroupValue` object
+  - (done) propagate this refactor into `intersectGroupsPauli(SG, SGV)`
+  - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
+- (done) `StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)`
+  - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
+  - (done) implement this function
+- (done) `getCosetIntersectionElementPauli()`, `getCosetIntersectionModuloPhase()`
+  - (done) return a `LimEntry` object instead of a pointer to a `LimEntry`
+  - (low priority) return a `PauliString` object instead of a `LimEntry` object
+- (done) remove the function `getCosetIntersectionElementPauli` that takes only 3 parameters
+- (done) `groupConcatenate()`
   - return `vector<PauliString>` instead of `vector<LimEntry*>`
-- `appendIdentityMatrixBitset()`, `appendIdentityMatrixBitsetBig()`
-  - return type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<NUM_QUBITS>*>`
-- `getKernelModuloPhase()`
-  - refactor `G_Id` to be of type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<2*NUM_QUBITS>*>`
-- `getProductofElements()`
-  - return a `PauliString` object instead of a pointer to a `LimEntry`
-- `GaussianEliminationSortedFast()`, `GaussianEliminationModuloPhaseSortedFast()`
+- (done) `appendIdentityMatrixBitset()`, `appendIdentityMatrixBitsetBig()`
+  - (done) return type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<2*NUM_QUBITS>*>`
+- (done) `getKernelModuloPhase()`
+  + (done) refactor `G_Id` to be of type `vector<LimBitset<2*NUM_QUBITS>>`
+  - (low priority) refactor `G_Id` to be of type `vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>` instead of `vector<LimBitset<2*NUM_QUBITS>*>`
+- (done) `getProductofElements()`
+  - (done) return a `LimEntry` object instead of a pointer to a `LimEntry`
+  - (low priority) return a `PauliString` object instead of a pointer to a `LimEntry`
+- (done) Gaussian Elimination
+  - (done) `GaussianEliminationSortedFast(LimEntry)`
+  - (done) `GaussianEliminationModuloPhaseSortedFast(LimBitset)`
   - use `vector<PauliString>` instead of `vector<LimEntry*>`
-- `GramSchmidt(vector<LimEntry*>, LimEntry*)`
+- (done) `GramSchmidt(vector<LimEntry*>, LimEntry*)`
   - return a `PauliString` object instead of a pointer to a `LimEntry`
-- `getRootLabel()` 
-  - return a `PauliString` object instead of a pointer to a `LimEntry`
-- in `LimWeight` class, make the LimEntry<> object a data field instead of a pointer
+- (done) `getRootLabel()`
+  - (done) return a `LimEntry` object instead of a pointer to a `LimEntry` object
+  - (low priority) return a `PauliString` object instead of a `LimEntry` object
+- (done) in `LimWeight` class, make the LimEntry<> object a data field instead of a pointer
+
+- (done) carefully proofread the function `getIsomorphismPauli` and `constructStabilizerGeneratorSetPauli`, to recursively verify that
+  all calls are to good functions
 
 # Success criteria
 
