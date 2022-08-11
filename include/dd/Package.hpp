@@ -1071,13 +1071,13 @@ namespace dd {
                 // Collecting garbage in the complex numbers table requires collecting the node tables as well
                 force = true;
             }
-            auto vCollect = vUniqueTable.garbageCollect(force);
-            auto mCollect = mUniqueTable.garbageCollect(force);
-            auto dCollect = dUniqueTable.garbageCollect(force);
+            auto vCollect   = vUniqueTable.garbageCollect(force);
+            auto mCollect   = mUniqueTable.garbageCollect(force);
+            auto dCollect   = dUniqueTable.garbageCollect(force);
+            auto limCollect = limTable.garbageCollect(force);
 
             // invalidate all compute tables involving vectors if any vector node has been collected
-            if (vCollect > 0) {
-                limTable.clear();
+            if (vCollect > 0 || limCollect > 0) {
                 vectorAdd.clear();
                 vectorInnerProduct.clear();
                 vectorKronecker.clear();
@@ -1197,7 +1197,7 @@ namespace dd {
             LimEntry<>* limptr;
             edge.p->limVector.clear();
             edge.p->limVector.reserve(stabilizers.size());
-            for (unsigned int i=0; i<stabilizers.size(); i++) {
+            for (unsigned int i = 0; i < stabilizers.size(); i++) {
                 limptr = limTable.lookup(stabilizers[i]);
                 edge.p->limVector.push_back(limptr);
             }
@@ -2371,7 +2371,7 @@ namespace dd {
         vEdge applyGate(const QuantumGate& gate, const vEdge state) {
             //            printMatrix(makeGateDD(gate.mat, qubits(), gate.controls, gate.target));
             char pauligate = gate.checkPauliGate();
-            if ((int) pauligate != 0) {
+            if ((int)pauligate != 0) {
                 return applyPauliGate(pauligate, gate.target, state);
             }
             return multiply(makeGateDD(gate.mat, qubits(), gate.controls, gate.target), state);
@@ -2382,7 +2382,7 @@ namespace dd {
             LimEntry<> temp;
             temp.setOperator(target, gate);
             vEdge res = state;
-            res.l = LimEntry<>::multiply(&temp, res.l);
+            res.l     = LimEntry<>::multiply(&temp, res.l);
             return res;
         }
 
