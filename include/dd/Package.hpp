@@ -116,7 +116,7 @@ namespace dd {
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
-        //                static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
+        //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
         explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = false, bool outputToLog = false):
             cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
@@ -1574,41 +1574,53 @@ namespace dd {
 
     public:
         std::pair<dd::fp, dd::fp> determineMeasurementProbabilities(const vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization) {
-            // TODO limdd
             std::map<vNode*, fp> probsMone;
-            std::set<vNode*>     visited;
-            std::queue<vNode*>   q;
+            //            std::set<vNode*>                         visited;
+            std::set<std::pair<vNode*, LimEntry<>*>>  visited;
+            std::queue<std::pair<vEdge, LimEntry<>*>> q;
+            LimEntry<>                                lim = {};
 
             probsMone[root_edge.p] = ComplexNumbers::mag2(root_edge.w);
-            visited.insert(root_edge.p);
-            q.push(root_edge.p);
+            visited.insert({root_edge.p, &lim});
+            q.push({root_edge, &lim});
 
-            while (q.front()->v != index) {
-                vNode* ptr = q.front();
+            while (q.front().first.p->v != index) {
+                auto       ptr = q.front().first;
+                LimEntry<> lim = *q.front().second;
                 q.pop();
-                fp prob = probsMone[ptr];
 
-                if (!ptr->e.at(0).w.approximatelyZero()) {
-                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(0).w);
+                fp prob = probsMone[ptr.p];
 
-                    if (visited.find(ptr->e.at(0).p) != visited.end()) {
-                        probsMone[ptr->e.at(0).p] = probsMone[ptr->e.at(0).p] + tmp1;
+                lim.multiplyBy(ptr.l);
+                const auto op = lim.getPauliForQubit(ptr.p->v);
+                lim.setOperator(ptr.p->v, 'I');
+                auto limPersistent = limTable.lookup(lim);
+
+                // recursive case
+                auto const e0 = follow2(ptr, 0, op);
+                auto const e1 = follow2(ptr, 1, op);
+
+                if (!e0.w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(e0.w);
+
+                    if (visited.find({e0.p, limPersistent}) != visited.end()) {
+                        probsMone[e0.p] = probsMone[e0.p] + tmp1;
                     } else {
-                        probsMone[ptr->e.at(0).p] = tmp1;
-                        visited.insert(ptr->e.at(0).p);
-                        q.push(ptr->e.at(0).p);
+                        probsMone[e0.p] = tmp1;
+                        visited.insert({e0.p, limPersistent});
+                        q.push({e0, limPersistent});
                     }
                 }
 
-                if (!ptr->e.at(1).w.approximatelyZero()) {
-                    const fp tmp1 = prob * ComplexNumbers::mag2(ptr->e.at(1).w);
+                if (!e1.w.approximatelyZero()) {
+                    const fp tmp1 = prob * ComplexNumbers::mag2(e1.w);
 
-                    if (visited.find(ptr->e.at(1).p) != visited.end()) {
-                        probsMone[ptr->e.at(1).p] = probsMone[ptr->e.at(1).p] + tmp1;
+                    if (visited.find({e1.p, limPersistent}) != visited.end()) {
+                        probsMone[e1.p] = probsMone[e1.p] + tmp1;
                     } else {
-                        probsMone[ptr->e.at(1).p] = tmp1;
-                        visited.insert(ptr->e.at(1).p);
-                        q.push(ptr->e.at(1).p);
+                        probsMone[e1.p] = tmp1;
+                        visited.insert({e1.p, limPersistent});
+                        q.push({e1, limPersistent});
                     }
                 }
             }
@@ -1617,15 +1629,24 @@ namespace dd {
 
             if (assumeProbabilityNormalization) {
                 while (!q.empty()) {
-                    vNode* ptr = q.front();
+                    auto ptr = q.front().first;
+                    auto lim = *q.front().second;
                     q.pop();
 
-                    if (!ptr->e.at(0).w.approximatelyZero()) {
-                        pzero += probsMone[ptr] * ComplexNumbers::mag2(ptr->e.at(0).w);
+                    lim.multiplyBy(ptr.l);
+                    const auto op = lim.getPauliForQubit(ptr.p->v);
+                    lim.setOperator(ptr.p->v, 'I');
+
+                    // recursive case
+                    auto const e0 = follow2(ptr, 0, op);
+                    auto const e1 = follow2(ptr, 1, op);
+
+                    if (!e0.w.approximatelyZero()) {
+                        pzero += probsMone[ptr.p] * ComplexNumbers::mag2(e0.w);
                     }
 
-                    if (!ptr->e.at(1).w.approximatelyZero()) {
-                        pone += probsMone[ptr] * ComplexNumbers::mag2(ptr->e.at(1).w);
+                    if (!e1.w.approximatelyZero()) {
+                        pone += probsMone[ptr.p] * ComplexNumbers::mag2(e1.w);
                     }
                 }
             } else {
@@ -1633,7 +1654,7 @@ namespace dd {
                 assignProbabilities(root_edge, probs);
 
                 while (!q.empty()) {
-                    vNode* ptr = q.front();
+                    auto* ptr = q.front().first.p;
                     q.pop();
 
                     if (!ptr->e.at(0).w.approximatelyZero()) {
