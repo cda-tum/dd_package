@@ -2,16 +2,17 @@
 #define DDPACKAGE_LIMTABLE_HPP
 
 #include "Definitions.hpp"
+#include "PhaseUtilities.hpp"
 
 #include <array>
 #include <bitset>
+#include <cassert>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cassert>
 
 // todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
@@ -340,29 +341,38 @@ namespace dd {
         //   so use that to speed up this operation. When you implement this optimization,
         //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
-            char op1, op2;
-            for (unsigned int i=0; i<NUM_QUBITS; i++) {
+            char    op1, op2;
+            phase_t newPhase = getPhase();
+            for (unsigned int i = 0; i < NUM_QUBITS; i++) {
                 // Step 1: handle the phase, if the operators do not commute
-                op1 =       getQubit(i) ;
+                op1 = getQubit(i);
                 op2 = other.getQubit(i);
-                if      (op1 == 'X' && op2 == 'Y')  // XY =  iZ
-                    multiplyPhaseBy(phase_t::phase_i);
-                else if (op1 == 'X' && op2 == 'Z')  // XZ = -iY
-                    multiplyPhaseBy(phase_t::phase_minus_i);
-                else if (op1 == 'Y' && op2 == 'X')  // YX = -iZ
-                    multiplyPhaseBy(phase_t::phase_minus_i);
-                else if (op1 == 'Y' && op2 == 'Z')  // YZ =  iX
-                    multiplyPhaseBy(phase_t::phase_i);
-                else if (op1 == 'Z' && op2 == 'X')  // ZX =  iY
-                    multiplyPhaseBy(phase_t::phase_i);
-                else if (op1 == 'Z' && op2 == 'Y')  // ZY = -iX
-                    multiplyPhaseBy(phase_t::phase_minus_i);
+                if (op1 == 'X' && op2 == 'Y') // XY =  iZ
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'X' && op2 == 'Z') // XZ = -iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
+                else if (op1 == 'Y' && op2 == 'X') // YX = -iZ
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
+                else if (op1 == 'Y' && op2 == 'Z') // YZ =  iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'Z' && op2 == 'X') // ZX =  iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'Z' && op2 == 'Y') // ZY = -iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
 
                 // Step 2: XOR the bits
-                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
-                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
+                //                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
+                //                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
             }
-            multiplyPhaseBy(LimEntry<NUM_QUBITS>::getPhase(&other));
+            paulis ^= other.paulis;
+            setPhase(newPhase);
+            multiplyPhaseBy(other.getPhase());
         }
 
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
@@ -391,8 +401,9 @@ namespace dd {
         // TODO make more efficient by starting with "c = copy of a"
         static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
-            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            c->multiplyBy(a);
+            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
+            //            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
+            //            c->multiplyBy(a);
             c->multiplyBy(b);
             return c;
         }
@@ -405,20 +416,25 @@ namespace dd {
             return c;
         }
 
+        // TODO refactor so that multiply(*a, *b) calls this one
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return *multiply(&a, &b);
+        }
+
         void setOperator(Qubit v, pauli_op op) {
-            if ((int) v >= (int) NUM_QUBITS) return;
-            switch(op) {
+            if ((int)v >= (int)NUM_QUBITS) return;
+            switch (op) {
                 case pauli_op::pauli_id:
-                    paulis.set(2*v,   0);
-                    paulis.set(2*v+1, 0);
+                    paulis.set(2 * v, 0);
+                    paulis.set(2 * v + 1, 0);
                     break;
                 case pauli_op::pauli_x:
-                    paulis.set(2*v,   0);
-                    paulis.set(2*v+1, 1);
+                    paulis.set(2 * v, 0);
+                    paulis.set(2 * v + 1, 1);
                     break;
                 case pauli_op::pauli_y:
-                    paulis.set(2*v,   1);
-                    paulis.set(2*v+1, 1);
+                    paulis.set(2 * v, 1);
+                    paulis.set(2 * v + 1, 1);
                     break;
                 case pauli_op::pauli_z:
                     paulis.set(2*v,   1);
@@ -430,35 +446,44 @@ namespace dd {
         }
 
         void setOperator(Qubit v, char op) {
-        	setOperator(v, (pauli_op) op);
+            setOperator(v, (pauli_op)op);
         }
 
         void setToIdentityOperator() {
-        	for (Qubit qubit=0; qubit < (Qubit) NUM_QUBITS; qubit++) {
-        		setOperator(qubit, pauli_op::pauli_id);
-        	}
-        	setPhase(phase_t::phase_one);
+            for (Qubit qubit = 0; qubit < (Qubit)NUM_QUBITS; qubit++) {
+                setOperator(qubit, pauli_op::pauli_id);
+            }
+            setPhase(phase_t::phase_one);
         }
 
-        void operator=(const LimEntry<>* other) {
-        	if (other == nullptr) setToIdentityOperator();
-        	else {
-        		*this = *other;
-        	}
+        void operator=(const LimEntry<NUM_QUBITS>* other) {
+            if (other == nullptr)
+                setToIdentityOperator();
+            else {
+                *this = *other;
+            }
+        }
+
+        template<std::size_t M>
+        void operator=(const LimEntry<M> other) {
+            unsigned int min = std::min(NUM_QUBITS, M);
+            for (unsigned int i = 0; i < min; i++) {
+                paulis.set(i, other.paulis.test(i));
+            }
         }
 
         bool commutesWith(const LimEntry<NUM_QUBITS>& b) const {
-        	unsigned int anticommute_count = 0;
-        	char op1, op2;
-        	for (Qubit q=0; q<(Qubit) NUM_QUBITS; q++) {
-        		op1 = getQubit(q);
-        		op2 = b.getQubit(q);
-        		if (op1 != op2 && op1 != pauli_id && op2 != pauli_id) {
-        			anticommute_count++;
-        		}
-        	}
-        	// the Pauli Lims commute iff they have an even number of anticommuting gates
-        	return (anticommute_count % 2) == 0;
+            unsigned int anticommute_count = 0;
+            char         op1, op2;
+            for (Qubit q = 0; q < (Qubit)NUM_QUBITS; q++) {
+                op1 = getQubit(q);
+                op2 = b.getQubit(q);
+                if (op1 != op2 && op1 != pauli_id && op2 != pauli_id) {
+                    anticommute_count++;
+                }
+            }
+            // the Pauli Lims commute iff they have an even number of anticommuting gates
+            return (anticommute_count % 2) == 0;
         }
 
         bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
@@ -528,6 +553,11 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        // TODO refactor so that comparison in done in this function  and  so that leq-by-reference calls this function instead of the other way around
+        static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return leq(&b, &a);
+        }
+
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             return leq(b, a);
         }
@@ -535,7 +565,7 @@ namespace dd {
         // Returns whether a < b in the lexicographic order
         static bool leneq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
-            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
+            for (unsigned int i = 0; i < NUM_BITSETBITS; i++) {
                 if (!a->paulis.test(i) and b->paulis.test(i)) {
                     return true;
                 }
@@ -557,21 +587,27 @@ namespace dd {
     template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     class LimBitset {
     public:
-        LimEntry<NUM_QUBITS> lim;
+        LimEntry<NUM_QUBITS>    lim;
         std::bitset<NUM_QUBITS> bits;
 
         LimBitset<NUM_QUBITS>() {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimBitset<NUM_QUBITS>* a)
-                : lim(a->lim), bits(a->bits) {
+        LimBitset<NUM_QUBITS>(const LimBitset<NUM_QUBITS>* a):
+            lim(a->lim), bits(a->bits) {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* _lim)
-        : lim(*_lim) {
+        LimBitset<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* _lim):
+            lim(*_lim) {
             //
+        }
+
+        // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
+        template<std::size_t M>
+        LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
+            lim = *a;
         }
 
         bool isAllZeroLim() const {
@@ -590,12 +626,22 @@ namespace dd {
             return c;
         }
 
+        static LimBitset<NUM_QUBITS> multiply(const LimBitset<NUM_QUBITS> a, const LimBitset<NUM_QUBITS> b) {
+            LimBitset<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
         static bool leq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::leq(&(a->lim), &(b->lim));
         }
 
         static bool geq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
             return LimEntry<NUM_QUBITS>::geq(&(a->lim), &(b->lim));
+        }
+
+        static bool geqValue(const LimBitset<NUM_QUBITS>& a, const LimBitset<NUM_QUBITS>& b) {
+            return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
         }
     };
 
@@ -604,19 +650,18 @@ namespace dd {
     template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
     struct LimWeight {
     public:
-    	LimEntry<NUM_QUBITS>* lim;
-    	Complex weight;
+        LimEntry<NUM_QUBITS> lim;
+        Complex              weight;
 
         static LimWeight<NUM_QUBITS>* noLIM; // value is -1
 
         // Initializes the identity operator, with weight +1
-    	LimWeight<NUM_QUBITS>()
-    			: lim(nullptr), weight(Complex::one) {
-    		//
-    	}
+        LimWeight<NUM_QUBITS>():
+            lim(nullptr), weight(Complex::one) {
+            //
+        }
 
-    	LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a)
-    			: lim(a->lim), weight(a->weight) {
+        LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a): lim(a->lim), weight(a->weight) {
     		//
     	}
 

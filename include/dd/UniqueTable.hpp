@@ -137,6 +137,57 @@ namespace dd {
             return e;
         }
 
+        // lookup a node in the unique table for the appropriate variable; insert it, if it has not been found
+        // NOTE: reference counting is to be adjusted by function invoking the table lookup and only normalized nodes shall be stored.
+        Edge<Node> lookupAndBookkeep(const Edge<Node>& e, bool& foundInTable, bool keepNode = false) {
+            // there are unique terminal nodes
+            if (e.isTerminal()) {
+                foundInTable = true;
+                return e;
+            }
+
+            lookups++;
+            const auto key = hash(e.p);
+            const auto v   = e.p->v;
+
+            // successors of a node shall either have successive variable numbers or be terminals
+            for ([[maybe_unused]] const auto& edge: e.p->e)
+                assert(edge.p->v == v - 1 || edge.isTerminal());
+
+            Node* p = tables[v][key];
+            while (p != nullptr) {
+                if (nodesAreEqual(e.p, p)) {
+                    foundInTable = true;
+                    // Match found
+                    if (e.p != p && !keepNode) {
+                        // put node pointed to by e.p on available chain
+                        returnNode(e.p);
+                    }
+                    hits++;
+
+                    // variables should stay the same
+                    assert(p->v == e.p->v);
+
+                    // successors of a node shall either have successive variable numbers or be terminals
+                    for ([[maybe_unused]] const auto& edge: e.p->e)
+                        assert(edge.p->v == v - 1 || edge.isTerminal());
+
+                    return {p, e.w, e.l};
+                }
+                collisions++;
+                p = p->next;
+            }
+
+            // node was not found -> add it to front of unique table bucket
+            e.p->next      = tables[v][key];
+            tables[v][key] = e.p;
+            nodeCount++;
+            peakNodeCount = std::max(peakNodeCount, nodeCount);
+
+            foundInTable = false;
+            return e;
+        }
+
         [[nodiscard]] Node* getNode() {
             // a node is available on the stack
             if (available != nullptr) {

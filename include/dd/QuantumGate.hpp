@@ -35,24 +35,31 @@ public:
 		//
 	}
 
-	QuantumGate(std::array<ComplexValue, NEDGE> _mat, QubitCount _n, Control _control1, Control _control2, Control _control3, Qubit _target)
-		: mat(_mat), n(_n), target(_target), controls(std::set<Control, CompareControl>{_control1, _control2, _control3})
-	{
-		//
-	}
+    QuantumGate(std::array<ComplexValue, NEDGE> _mat, QubitCount _n, Control _control1, Control _control2, Control _control3, Qubit _target):
+        mat(_mat), n(_n), target(_target), controls(std::set<Control, CompareControl>{_control1, _control2, _control3}) {
+        //
+    }
 
-	bool isControlledGate() const {
-		return controls.size() != 0;
-	}
+    bool isControlledGate() const {
+        return controls.size() != 0;
+    }
 
-	bool isCliffordGate() const {
-		if (mat == dd::Hmat && !isControlledGate()) return true;
-		if (mat == dd::Smat && !isControlledGate()) return true;
-		if (mat == dd::Xmat && controls.size() <= 1) return true;
-		if (mat == dd::Ymat && controls.size() <= 1) return true;
-		if (mat == dd::Zmat && controls.size() <= 1) return true;
-		return false;
-	}
+    char checkPauliGate() const {
+        // we're not checking for identity
+        if (mat == dd::Xmat && !isControlledGate()) return 'X';
+        if (mat == dd::Zmat && !isControlledGate()) return 'Z';
+        if (mat == dd::Ymat && !isControlledGate()) return 'Y';
+        return 0;
+    }
+
+    bool isCliffordGate() const {
+        if (mat == dd::Hmat && !isControlledGate()) return true;
+        if (mat == dd::Smat && !isControlledGate()) return true;
+        if (mat == dd::Xmat && controls.size() <= 1) return true;
+        if (mat == dd::Ymat && controls.size() <= 1) return true;
+        if (mat == dd::Zmat && controls.size() <= 1) return true;
+        return false;
+    }
 };
 
 
