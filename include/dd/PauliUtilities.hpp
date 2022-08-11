@@ -22,17 +22,17 @@ namespace dd {
         }
     }
 
-    StabilizerGroup toStabilizerGroup(const StabilizerGroupValue& G) {
+    inline StabilizerGroup toStabilizerGroup(const StabilizerGroupValue& G) {
         StabilizerGroup H;
-        for (unsigned int i=0; i<G.size(); i++) {
+        for (unsigned int i = 0; i < G.size(); i++) {
             H.push_back(new LimEntry<>(G[i]));
         }
         return H;
     }
 
-    StabilizerGroupValue toStabilizerGroupValue(const StabilizerGroup& G) {
+    inline StabilizerGroupValue toStabilizerGroupValue(const StabilizerGroup& G) {
         StabilizerGroupValue H;
-        for (unsigned int i=0; i<G.size(); i++) {
+        for (unsigned int i = 0; i < G.size(); i++) {
             H.push_back(LimEntry<>(G[i]));
         }
         return H;
