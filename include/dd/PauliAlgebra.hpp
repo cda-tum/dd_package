@@ -667,11 +667,13 @@ namespace dd {
         LimEntry<NUM_QUBITS> a_G = getProductOfElements(G, decomposition_G);
         //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
-        LimEntry<NUM_QUBITS>* a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H); // TODO memory leak
-        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
+        LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiplyValue(a_G, a_H);
+        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(*a, a_prime)) {
             foundElement = false;
         }
-        foundElement = true;
+        else {
+            foundElement = true;
+        }
         return a_G;
     }
 
@@ -683,6 +685,7 @@ namespace dd {
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementPauli(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, bool& foundElement, [[maybe_unused]] Qubit nQubits = 5) {
         if (lambda == phase_t::no_phase) {
             foundElement = false;
+            return LimEntry<NUM_QUBITS>();
         }
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
@@ -693,6 +696,7 @@ namespace dd {
 //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
 //            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             foundElement = false;
+            return LimEntry<NUM_QUBITS>();
         }
         c.setPhase(recoverPhase(G, &c));
         LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiplyValue(*a, c);

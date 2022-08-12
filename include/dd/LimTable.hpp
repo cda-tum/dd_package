@@ -279,6 +279,11 @@ namespace dd {
             return true;
         }
 
+        // TODO refactor so that the other version of this function, calls this function
+        static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            return EqualModuloPhase(&a, &b);
+        }
+
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero
         // TODO limdd: there is probably a faster way to check whether a bitvector is all-zero,
         //   using bit tricks supported by the std::array data structure. --Lieuwe
@@ -406,7 +411,7 @@ namespace dd {
             return c;
         }
 
-        // TOOD I think this function is not called anywhere
+        // TODO I think this function is not called anywhere
         static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
             c->multiplyBy(a);
@@ -416,7 +421,9 @@ namespace dd {
 
         // TODO refactor so that multiply(*a, *b) calls this one
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            return *multiply(&a, &b);
+            LimEntry<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
         }
 
         void setOperator(Qubit v, pauli_op op) {
