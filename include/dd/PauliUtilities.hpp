@@ -144,6 +144,7 @@ namespace dd {
         return GI;
     }
 
+    // TODO if this method is unused, delete it
     template<std::size_t NUM_QUBITS>
     inline std::vector<LimBitset<2*NUM_QUBITS>*> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
         std::vector<LimBitset<2*NUM_QUBITS>*> GI;
@@ -158,11 +159,11 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
-    inline std::vector<LimBitset<2*NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
-        std::vector<LimBitset<2*NUM_QUBITS>> GI;
-        LimBitset<2*NUM_QUBITS>             col;
+    inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
+        LimBitset<NUM_QUBITS, 2*NUM_QUBITS>             col;
         for (unsigned int i = 0; i < G.size(); i++) {
-            col      = LimBitset<2*NUM_QUBITS>();
+            col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>();
             col.lim = G[i];
             col.bits.set(i, 1);
             GI.push_back(col);
@@ -217,8 +218,8 @@ namespace dd {
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         unsigned int i = 0;
         while (i < G.size()) {
             if (G[i]->lim.isIdentityModuloPhase()) {
@@ -232,8 +233,8 @@ namespace dd {
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
         unsigned int i = 0;
         while (i < G.size()) {
             if (G[i].lim.isIdentityModuloPhase()) {

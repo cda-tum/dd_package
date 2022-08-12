@@ -581,29 +581,30 @@ namespace dd {
     // A wrapper containing a LimEntry and a std::bitset
     // used in Gaussian Elimination, when the matrix of checkvectors is split up into two parts:
     //   a LIM-part and a '0/1 matrix' part, which is used for finding linear combinations
-    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS>
+    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS, std::size_t NUM_BITS = NUM_QUBITS>
     class LimBitset {
     public:
-        LimEntry<NUM_QUBITS>    lim;
-        std::bitset<NUM_QUBITS> bits;
+        LimEntry<NUM_QUBITS>  lim;
+        std::bitset<NUM_BITS> bits;
 
-        LimBitset<NUM_QUBITS>() {
+        LimBitset<NUM_QUBITS, NUM_BITS>() {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimBitset<NUM_QUBITS>* a):
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimBitset<NUM_QUBITS, NUM_BITS>* a):
             lim(a->lim), bits(a->bits) {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* _lim):
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<NUM_QUBITS>* _lim):
             lim(*_lim) {
             //
         }
 
+        // TODO is this used anywhere?
         // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
         template<std::size_t M>
-        LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<M>* a) {
             lim = *a;
         }
 
@@ -611,33 +612,34 @@ namespace dd {
             return lim.isAllZeroVector();
         }
 
-        void multiplyBy(const LimBitset<NUM_QUBITS>& other) {
+        void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other) {
             lim.multiplyBy(other.lim);
             bits ^= other.bits;
         }
 
-        static LimBitset<NUM_QUBITS>* multiply(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
+        // TODO verify that this method is not used anywhere, and then delete it; if it is used, refactor those usages to multiplying by value
+        static LimBitset<NUM_QUBITS, NUM_BITS>* multiply(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
             LimBitset<NUM_QUBITS>* c = new LimBitset<NUM_QUBITS>();
             c->multiplyBy(a);
             c->multiplyBy(b);
             return c;
         }
 
-        static LimBitset<NUM_QUBITS> multiply(const LimBitset<NUM_QUBITS> a, const LimBitset<NUM_QUBITS> b) {
-            LimBitset<NUM_QUBITS> c(a);
+        static LimBitset<NUM_QUBITS, NUM_BITS> multiply(const LimBitset<NUM_QUBITS, NUM_BITS> a, const LimBitset<NUM_QUBITS, NUM_BITS> b) {
+            LimBitset<NUM_QUBITS, NUM_BITS> c(a);
             c.multiplyBy(b);
             return c;
         }
 
-        static bool leq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
+        static bool leq(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
             return LimEntry<NUM_QUBITS>::leq(&(a->lim), &(b->lim));
         }
 
-        static bool geq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
+        static bool geq(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
             return LimEntry<NUM_QUBITS>::geq(&(a->lim), &(b->lim));
         }
 
-        static bool geqValue(const LimBitset<NUM_QUBITS>& a, const LimBitset<NUM_QUBITS>& b) {
+        static bool geqValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
             return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
         }
     };

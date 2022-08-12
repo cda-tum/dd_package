@@ -173,8 +173,8 @@ namespace dd {
     }
 
 
-    template<std::size_t NUM_QUBITS>
-    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         if (G.size() <= 1) return;
         unsigned int pivot;
 
@@ -183,14 +183,14 @@ namespace dd {
             if (pivot >= 2 * NUM_QUBITS) continue;
             for (unsigned int h = g + 1; h < G.size(); h++) {
                 if (G[h]->lim.paulis.test(pivot)) {
-                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]);
+                    G[h] = LimBitset<NUM_QUBITS, NUM_BITS>::multiply(G[h], G[g]);
                 }
             }
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS>>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
         if (G.size() <= 1) return;
         unsigned int pivot;
 
@@ -199,14 +199,14 @@ namespace dd {
             if (pivot >= 2 * NUM_QUBITS) continue;
             for (unsigned int h = g + 1; h < G.size(); h++) {
                 if (G[h].lim.paulis.test(pivot)) {
-                    G[h] = LimBitset<NUM_QUBITS>::multiply(G[h], G[g]); // TODO use multiplyBy (this avoids a copy constructor)
+                    G[h] = LimBitset<NUM_QUBITS, NUM_BITS>::multiply(G[h], G[g]); // TODO use multiplyBy (this avoids a copy constructor)
                 }
             }
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         for (unsigned int i = 0; i < G.size(); i++) {
             for (unsigned int j = i + 1; j < G.size(); j++) {
                 if (!G[i]->lim.commutesWith(G[j]->lim)) {
@@ -217,8 +217,8 @@ namespace dd {
         return true;
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS>>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline bool isAbelian(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
         for (unsigned int i = 0; i < G.size(); i++) {
             for (unsigned int j = i + 1; j < G.size(); j++) {
                 if (!G[i].lim.commutesWith(G[j].lim)) {
@@ -231,8 +231,8 @@ namespace dd {
 
     // Performs Gaussian Elimination on the group G, ignoring the phase of the LIMs involved
     // todo it is possible to write a faster procedure, if we are allowed to assume that G is sorted
-    template<std::size_t NUM_QUBITS>
-    inline void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void GaussianEliminationModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         if (G.size() <= 1) return;
         //        Log::log << "[Gaussian Elimination Bitset] start. |G| = " << G.size() << ".\n"; Log::log.flush();
         unsigned int pauli_height = 2 * NUM_QUBITS; // length of the columns as far as they contain Pauli operators
@@ -252,7 +252,7 @@ namespace dd {
                 if (reduceColId == reducingColId) continue;
                 if (G[reduceColId]->lim.paulis.test(row)) {
                     //                    Log::log << "[Gaussian Elimination Bitset] Multiplying col " << reduceColId << " with col " << reducingColId << ".\n"; Log::log.flush();
-                    G[reduceColId] = LimBitset<NUM_QUBITS>::multiply(G[reduceColId], G[reducingColId]);
+                    G[reduceColId] = LimBitset<NUM_QUBITS, NUM_BITS>::multiply(G[reduceColId], G[reducingColId]);
                 }
             }
         }
@@ -281,20 +281,20 @@ namespace dd {
         std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geq);
         GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geq);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geq);
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS>>& G) {
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geqValue);
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geqValue);
         GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS>::geqValue);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geqValue);
     }
 
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
@@ -346,10 +346,9 @@ namespace dd {
 
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
-    template<std::size_t NUM_QUBITS>
-    inline LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>*>& G, const LimBitset<NUM_QUBITS>* x) {
-        //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
-        LimBitset<NUM_QUBITS> y(x);
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G, const LimBitset<NUM_QUBITS, NUM_BITS>* x) {
+        LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         if (G.size() == 0) return y;
         std::size_t height = 2 * NUM_QUBITS;
         //        Log::log << "[Gram Schmidt] start y = " << y << "\n";
@@ -371,10 +370,10 @@ namespace dd {
 
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
-    template<std::size_t NUM_QUBITS>
-    inline LimBitset<NUM_QUBITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS>>& G, const LimBitset<NUM_QUBITS>* x) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>* x) {
         //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
-        LimBitset<NUM_QUBITS> y(x);
+        LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         if (G.size() == 0) return y;
         std::size_t height = 2 * NUM_QUBITS;
         //        Log::log << "[Gram Schmidt] start y = " << y << "\n";
@@ -399,8 +398,9 @@ namespace dd {
     //   reduces the vector x via G, and returns this reduced vector
     //   The decomposition that is found, is recorded in the bitset 'indicator'
     // todo this algorithm can be sped up if the group G is sorted
-    template<std::size_t NUM_QUBITS>
-    inline void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_QUBITS>& indicator) {
+    // TODO where is this algorithm used? refactor to object std::vector<LimEntry>
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_BITS>& indicator) {
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
         //        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         LimEntry<NUM_QUBITS> y(x);
@@ -469,9 +469,9 @@ namespace dd {
     // we assume the width of G is at most 2*NUM_QUBITS
     template<std::size_t NUM_QUBITS>
     inline std::vector<std::bitset<2*NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>>& G) {
-        std::vector<LimBitset<2*NUM_QUBITS>> G_Id = appendIdentityMatrixBitsetBig(G);
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> G_Id = appendIdentityMatrixBitsetBig(G);
 
-        std::sort(G_Id.begin(), G_Id.end(), LimBitset<2*NUM_QUBITS>::geqValue);
+        std::sort(G_Id.begin(), G_Id.end(), LimBitset<NUM_QUBITS, 2*NUM_QUBITS>::geqValue);
         GaussianEliminationModuloPhaseSortedFast(G_Id);
         std::vector<std::bitset<2*NUM_QUBITS>> kernel;
         for (unsigned i = 0; i < G_Id.size(); i++) {
@@ -655,11 +655,11 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
         std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
-        std::vector<LimBitset<2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
-        LimBitset<2*NUM_QUBITS>   a_bitset(a);
+        LimBitset<NUM_QUBITS, 2*NUM_QUBITS>   a_bitset(a);
         a_bitset = GramSchmidt(GH_Id, &a_bitset);
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
         bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());

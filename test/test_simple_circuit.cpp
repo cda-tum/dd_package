@@ -4,7 +4,7 @@
 #include "dd/GateMatrixDefinitions.hpp"
 #include "dd/LimTable.hpp"
 #include "dd/Package.hpp"
-#include "dd/Simulation.hpp"
+#include "dd/QuantumCircuitSimulation.hpp"
 #include "dd/QuantumGate.hpp"
 
 #include "gmock/gmock.h"
