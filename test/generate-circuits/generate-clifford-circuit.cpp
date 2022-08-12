@@ -55,7 +55,7 @@ int main(int nargs, char** args) {
 			cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_pc, " << target << ");\n";
 		}
 	}
-	cout << "\n    simulateCircuitQMDDvsLIMDDGateByGate(circuit);\n"
+	cout << "\n    simulateCircuitLIMDDGateByGate(circuit);\n"
  	 	 << "}\n\n";
 }
 
