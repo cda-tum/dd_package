@@ -41,6 +41,7 @@ class PauliString {
 };
 ```
 - use `std::vector::emplace_back(constructor parameters)` to add stuff to a vector; this calls one fewer copy constructor than `std::vector::push_back(object)` (if I understand correctly)
+- Optimize `GramSchmidt()` from $O(n^3)$ to O(n^2)$ by assuming that the group `G` is in column echelon form
 - (low priority, requires much research) don't save the stabilizer group of knife and spoons. Only save the stabilizer group of forks.
   Recompute the stabilizer group of a knife and a fork when necessary
   - Knife: a state $|f> = |0>|g>$
@@ -66,6 +67,12 @@ Incidentally, this will make the runtimes much better.
 - Replace all `std::vector<LimEntry<>*>` by `std::vector<PauliString>`
 - Return `LimEntry<>` objects by value instead of by reference
 - Replace the `LimBitset<Num_qubits>` by a smarter `LimBitset<Num_qubits, Num_bits>`, to be used in `PauliAlgebra.hpp::getKernel()`. This recognizes that the use case only uses a `LimBitset` with a large bitset, but with a small number of Pauli operators.
+  - in `getCosetIntersectionElementModuloPhase()`
+  - in `GaussianEliminationModuloPhaseSortedFast()`
+  - in `isAbelian()`
+  - in `toColumnEchelonFormModuloPhase()`
+  - in `GramSchmidt()`
+  - in `getKernelModuloPhase()`
 - I don't think a separate "cache" for `LimEntry` (or `PauliString`) objects is necessary.
 
 The following functions in `PauliAlgebra.hpp` currently possibly have memory leaks:
