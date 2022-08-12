@@ -21,6 +21,13 @@ namespace dd {
         Log::log << outputCVec(vec);
     }
 
+    std::ostream& operator<<(std::ostream& out, const dd::CVec& vec) {
+        for (unsigned int i = 0; i < vec.size(); i++) {
+            out << vec[i] << ' ';
+        }
+        return out;
+    }
+
     inline bool isZeroVector(const CVec& vec) {
         for (unsigned int i = 0; i < vec.size(); i++) {
             if (!Complex::approximatelyEqual(vec[i], 0)) {
