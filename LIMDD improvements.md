@@ -5,6 +5,19 @@ Chiefly we want two things: no more memory leaks; faster performance.
 Incidentally, the way to fix the memory leaks will likely also make the code faster,
 because dynamically allocating memory is slower than doing computations with objects on the stack.
 
+
+## Fix the Bugs
+
+- in `test/generate-circuits/cliffordCircuitsMedium.cpp`, there are two bugs which only surface once in a while:
+  - in test 16, after gate ??, the group contains only 24 instead of 25 stabilizers
+  - in test 20, during gate 82, there is a segmentation fault
+- in `test/generate-circuits/cliffordCircuitsLarge.cpp`:
+  - in test 5, after gate 42
+  - in test 7, after gate 23, `free(): invalid pointer`
+  - in test 21, during gate 101, there is a `free(): invalid pointer` error 
+  - in test 25, after gate 152
+
+
 ## Better Runtimes
 
 - (done) In `makeDDNode`, only call `constructStabilizerGeneratorSet` when a node is newly created, and *not* when a new is succesfully looked up from the UniqueTable.
@@ -63,16 +76,16 @@ Concretely, there are many algorithms that manipulate "Stabilizer groups", which
 `std::vector<LimEntry<>*>` but would not leak when we refactor them to type `std::vector<LimEntry>`.
 Incidentally, this will make the runtimes much better.
 
-- In functions in `PauliAlgebra.hpp`  that currently return a pointer to a `LimEntry<>` object, return a `PauliString` object by value (or pass a `PauliString` object by reference as a parameter? I don't know if that's faster)
-- Replace all `std::vector<LimEntry<>*>` by `std::vector<PauliString>`
-- Return `LimEntry<>` objects by value instead of by reference
-- Replace the `LimBitset<Num_qubits>` by a smarter `LimBitset<Num_qubits, Num_bits>`, to be used in `PauliAlgebra.hpp::getKernel()`. This recognizes that the use case only uses a `LimBitset` with a large bitset, but with a small number of Pauli operators.
-  - in `getCosetIntersectionElementModuloPhase()`
-  - in `GaussianEliminationModuloPhaseSortedFast()`
-  - in `isAbelian()`
-  - in `toColumnEchelonFormModuloPhase()`
-  - in `GramSchmidt()`
-  - in `getKernelModuloPhase()`
+- (done) In functions in `PauliAlgebra.hpp`  that currently return a pointer to a `LimEntry<>` object, return a `PauliString` object by value (or pass a `PauliString` object by reference as a parameter? I don't know if that's faster)
+- (low priority) Replace all `std::vector<LimEntry<>*>` by `std::vector<PauliString>`
+- (low priority) Return `LimEntry<>` objects by value instead of by reference
+- (done) Replace the `LimBitset<Num_qubits>` by a smarter `LimBitset<Num_qubits, Num_bits>`, to be used in `PauliAlgebra.hpp::getKernel()`. This recognizes that the use case only uses a `LimBitset` with a large bitset, but with a small number of Pauli operators.
+  - (done) in `getCosetIntersectionElementModuloPhase()`
+  - (done) in `GaussianEliminationModuloPhaseSortedFast()`
+  - (done) in `isAbelian()`
+  - (done) in `toColumnEchelonFormModuloPhase()`
+  - (done) in `GramSchmidt()`
+  - (done) in `getKernelModuloPhase()`
 - I don't think a separate "cache" for `LimEntry` (or `PauliString`) objects is necessary.
 
 The following functions in `PauliAlgebra.hpp` currently possibly have memory leaks:

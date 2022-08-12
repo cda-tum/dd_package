@@ -61,8 +61,8 @@ void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 }
 
 void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
-    //    simulateCircuitLIMDDGateByGate(circuit);
-    //    return;
+        simulateCircuitLIMDDGateByGate(circuit);
+        return;
     auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
     auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, false);
 
