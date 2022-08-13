@@ -111,6 +111,7 @@ The following functions in `PauliAlgebra.hpp` currently possibly have memory lea
   - (done) return a `StabilizerGroupValue` object
   - (done) propagate this refactor into `intersectGroupsPauli(SG, SGV)`
   - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
+  - 
 - (done) `StabilizerGroupValue intersectGroupsPauli(StabilizerGroup, StabilizerGroupValue)`
   - (done) check out `getIsomorphism` and `constructStabilizers` to decide what should be done here
   - (done) implement this function
@@ -138,6 +139,9 @@ The following functions in `PauliAlgebra.hpp` currently possibly have memory lea
   - (done) return a `LimEntry` object instead of a pointer to a `LimEntry` object
   - (low priority) return a `PauliString` object instead of a `LimEntry` object
 - (done) in `LimWeight` class, make the LimEntry<> object a data field instead of a pointer
+- refactor `struct LimWeight` so that the `LimEntry<>` object is an object, not a pointer 
+- fix the memory leaks in `normalizeLIMDDPauli()`, resulting from bad management of `oldNode`.
+  - make the LIMs of `oldNode` pointers to objects on the stack
 
 - (done) carefully proofread the function `getIsomorphismPauli` and `constructStabilizerGeneratorSetPauli`, to recursively verify that
   all calls are to good functions

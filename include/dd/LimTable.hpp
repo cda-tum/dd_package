@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-// todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
 
     template<std::size_t NUM_QUBITS = dd::NUM_QUBITS>
@@ -121,7 +120,6 @@ namespace dd {
         }
 
         [[nodiscard]] char getQubit(dd::Qubit qubit) const {
-            // todo return a pauli_t
             if (qubit == -1) {
                 // Reached terminal
                 return 'I';
@@ -240,12 +238,10 @@ namespace dd {
             return os.str();
         }
 
-        // TODO: static versions as well to cover nullptr case?
         bool operator==(const LimEntry<NUM_QUBITS>& other) const {
             return paulis == other.paulis;
         }
         bool operator!=(const LimEntry<NUM_QUBITS>& other) const {
-            //todo shouldn't it be enough to define the == operator?
             return paulis != other.paulis;
         }
 
@@ -270,28 +266,22 @@ namespace dd {
             if (b == nullptr) {
                 return isIdentityOperator(a);
             }
+            return EqualModuloPhase(*a, *b);
+        }
+
+        static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             // check whether the first 2*NUM_QUBITS bits are equal
             for (unsigned int i = 0; i < 2 * NUM_QUBITS; i++) {
-                if (a->paulis.test(i) != b->paulis.test(i)) {
+                if (a.paulis.test(i) != b.paulis.test(i)) {
                     return false;
                 }
             }
             return true;
         }
 
-        // TODO refactor so that the other version of this function, calls this function
-        static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            return EqualModuloPhase(&a, &b);
-        }
-
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero
-        // TODO limdd: there is probably a faster way to check whether a bitvector is all-zero,
-        //   using bit tricks supported by the std::array data structure. --Lieuwe
         bool isAllZeroVector() const {
-            for (unsigned int i = 0; i < NUM_BITSETBITS; i++) {
-                if (paulis.test(i)) return false;
-            }
-            return true;
+            return !paulis.any();
         }
 
         bool isIdentityOperator() const {
@@ -340,9 +330,6 @@ namespace dd {
         }
 
         // Right-Multiply this Pauli operator with the 'other' Pauli operator, obtaining this * other
-        // todo the 'bitset' data structure supports XOR natively,
-        //   so use that to speed up this operation. When you implement this optimization,
-        //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char    op1, op2;
             phase_t newPhase = getPhase();
@@ -401,25 +388,13 @@ namespace dd {
         }
 
         // Returns the LIM a * b
-        // TODO make more efficient by starting with "c = copy of a"
         static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             assert(a != noLIM && b != noLIM);
             LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
-            //            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            //            c->multiplyBy(a);
             c->multiplyBy(b);
             return c;
         }
 
-        // TODO I think this function is not called anywhere
-        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            c->multiplyBy(a);
-            c->multiplyBy(b);
-            return c;
-        }
-
-        // TODO refactor so that multiply(*a, *b) calls this one
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             LimEntry<NUM_QUBITS> c(a);
             c.multiplyBy(b);
@@ -445,8 +420,6 @@ namespace dd {
                     paulis.set(2 * v, 1);
                     paulis.set(2 * v + 1, 0);
                     break;
-                    //                default:
-                    // TODO limdd throw an exception?
             }
         }
 
@@ -557,9 +530,16 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
-        // TODO refactor so that comparison in done in this function  and  so that leq-by-reference calls this function instead of the other way around
         static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            return leq(&b, &a);
+            for (unsigned int i = 0; i < NUM_BITSETBITS; i++) {
+                if (!a.paulis.test(i) and b.paulis.test(i)) {
+                    return false;
+                }
+                if (a.paulis.test(i) and !b.paulis.test(i)) {
+                    return true;
+                }
+            }
+            return true; // in this case, vectors are equal
         }
 
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
@@ -608,13 +588,6 @@ namespace dd {
             //
         }
 
-        // TODO is this used anywhere?
-        // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
-        template<std::size_t M>
-        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<M>* a) {
-            lim = *a;
-        }
-
         bool isAllZeroLim() const {
             return lim.isAllZeroVector();
         }
@@ -622,14 +595,6 @@ namespace dd {
         void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other) {
             lim.multiplyBy(other.lim);
             bits ^= other.bits;
-        }
-
-        // TODO verify that this method is not used anywhere, and then delete it; if it is used, refactor those usages to multiplying by value
-        static LimBitset<NUM_QUBITS, NUM_BITS>* multiply(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
-            LimBitset<NUM_QUBITS>* c = new LimBitset<NUM_QUBITS>();
-            c->multiplyBy(a);
-            c->multiplyBy(b);
-            return c;
         }
 
         static LimBitset<NUM_QUBITS, NUM_BITS> multiply(const LimBitset<NUM_QUBITS, NUM_BITS> a, const LimBitset<NUM_QUBITS, NUM_BITS> b) {
@@ -688,17 +653,6 @@ namespace dd {
             } else {
                 lim->setToIdentityOperator();
             }
-        }
-
-        void multiplyBy(const LimWeight<NUM_QUBITS>& other) {
-            lim->multiplyBy(other->lim);
-            // TODO
-            // Question @Thomas, Stefan: how to multiply the weight? as follows:
-            //   weight = weight * other.weight
-        }
-
-        void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
-            lim->multiplyBy(other);
         }
 
         static std::string to_string(const LimWeight<NUM_QUBITS>* a) {
