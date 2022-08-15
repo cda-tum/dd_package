@@ -370,8 +370,7 @@ namespace dd {
     // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
     // todo this version uses right multiplication; refactor to left multiplication
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
-    inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>* x) {
-        //        LimBitset<NUM_QUBITS>* y = new LimBitset<NUM_QUBITS>(x);
+    inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>& x) {
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         if (G.size() == 0) return y;
         std::size_t height = 2 * NUM_QUBITS;
@@ -653,14 +652,17 @@ namespace dd {
     }
 
     template<std::size_t NUM_QUBITS>
-    inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, bool& foundElement) {
-        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
-        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
+    inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>& a, bool& foundElement) {
+        static unsigned int callCount = 0;
+        callCount++;
+//        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
+//        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = concatenateAndappendIdentityMatrix(G, H);
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
         LimBitset<NUM_QUBITS, 2*NUM_QUBITS>   a_bitset(a);
-        a_bitset = GramSchmidt(GH_Id, &a_bitset);
+        a_bitset = GramSchmidt(GH_Id, a_bitset);
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
         bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
         bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
@@ -668,7 +670,7 @@ namespace dd {
         //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
         LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiplyValue(a_G, a_H);
-        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(*a, a_prime)) {
+        if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             foundElement = false;
         }
         else {
@@ -690,7 +692,7 @@ namespace dd {
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
         bool foundCIEMP;
-        LimEntry<NUM_QUBITS> c  = getCosetIntersectionElementModuloPhase(G, H, &ab, foundCIEMP);
+        LimEntry<NUM_QUBITS> c  = getCosetIntersectionElementModuloPhase(G, H, ab, foundCIEMP);
         if (!foundCIEMP){
 //            std::cout << "[get coset intersection] Even modulo phase there is no element.\n";
 //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';

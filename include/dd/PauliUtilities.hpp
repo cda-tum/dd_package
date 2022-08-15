@@ -161,11 +161,31 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
         std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
+        GI.reserve(G.size());
         LimBitset<NUM_QUBITS, 2*NUM_QUBITS>             col;
         for (unsigned int i = 0; i < G.size(); i++) {
             col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>();
             col.lim = G[i];
             col.bits.set(i, 1);
+            GI.push_back(col);
+        }
+        return GI;
+    }
+
+    // Concatenates G and H, and then sets the 'bits' objects to the Identity matrix
+    template<std::size_t NUM_QUBITS>
+    inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> concatenateAndappendIdentityMatrix(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H) {
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
+        GI.reserve(G.size() + H.size());
+        LimBitset<NUM_QUBITS, 2*NUM_QUBITS>              col;
+        for (unsigned int i = 0; i < G.size(); i++) {
+            col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(G[i]);
+            col.bits.set(i, 1);
+            GI.push_back(col);
+        }
+        for (unsigned int i=0; i<H.size(); i++) {
+            col = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(H[i]);
+            col.bits.set(G.size() + i, 1);
             GI.push_back(col);
         }
         return GI;

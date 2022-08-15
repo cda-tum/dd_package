@@ -589,6 +589,11 @@ namespace dd {
             //
         }
 
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<NUM_QUBITS>& _lim):
+            lim(_lim) {
+            //
+        }
+
         LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<NUM_QUBITS>* _lim):
             lim(*_lim) {
             //
