@@ -627,11 +627,10 @@ namespace dd {
 
             // Case 3 ("Fork"):  both edges of e are non-zero
             LimEntry<>*                  lowLim = r.p->e[0].l;
-            [[maybe_unused]] LimEntry<>* higLim = r.p->e[1].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
             //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs.\n";
-            //r.p->e[1].l->leftMultiplyBy(lowLim); // TODO doing this gives many errors
-            r.p->e[1].l = LimEntry<>::multiply(lowLim, higLim); // TODO memory leak
+            LimEntry<> highLimTemp2 = LimEntry<>::multiplyValue(r.p->e[0].l, r.p->e[1].l);
+            r.p->e[1].l = &highLimTemp2;
             r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
             r.p->e[1].l->setPhase(phase_t::phase_one);
@@ -686,9 +685,6 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
             movePhaseIntoWeight(*r.l, r.w);
             //Log::log << "[normalizeLIMDD] Final root edge: " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
-
-            delete oldNode.e[0].l;
-            delete oldNode.e[1].l;
 
             if (performSanityChecks) {
                 CVec amplitudeVecAfterNormalize = getVector(r);
@@ -1223,6 +1219,7 @@ namespace dd {
                         vece1 = getVector(edges[1], var - 1);
                     }
                     e = normalizeLIMDDPauli(e, cached);
+
                     if (performSanityChecks) {
                         vece = getVector(e, var);
                         if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
@@ -1268,6 +1265,10 @@ namespace dd {
                 }
             }
 
+            // TODO delete the LIMs on the original low and high edges, as below
+            //   currently this gives a segmentation fault
+            // delete edges[0].l; // TODO
+            // delete edges[1].l; // TODO
             // look it up in the unique tables
             assert(l.p->v == var || l.isTerminal());
             return l;

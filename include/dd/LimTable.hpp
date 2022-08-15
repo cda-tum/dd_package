@@ -401,6 +401,12 @@ namespace dd {
             return c;
         }
 
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+            LimEntry<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
         void setOperator(Qubit v, pauli_op op) {
             if ((int)v >= (int)NUM_QUBITS) return;
             switch (op) {
