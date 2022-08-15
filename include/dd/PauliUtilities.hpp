@@ -174,7 +174,7 @@ namespace dd {
 
     // Concatenates G and H, and then sets the 'bits' objects to the Identity matrix
     template<std::size_t NUM_QUBITS>
-    inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> concatenateAndappendIdentityMatrix(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H) {
+    inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> concatenateAndAppendIdentityMatrix(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H) {
         std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
         GI.reserve(G.size() + H.size());
         LimBitset<NUM_QUBITS, 2*NUM_QUBITS>              col;

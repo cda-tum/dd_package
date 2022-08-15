@@ -321,6 +321,23 @@ namespace dd {
 
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
     // Returns the reduced vector
+    // Precondition: the group G is in column echelon form
+    template<std::size_t NUM_QUBITS>
+    inline LimEntry<NUM_QUBITS> GramSchmidtFastSorted(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
+        LimEntry<NUM_QUBITS> y(x);
+        unsigned int pivot;
+        for (unsigned int g=0; g<G.size(); g++) {
+            pivot = G[g]->pivotPosition();
+            if (pivot == (unsigned int)-1) continue;
+            if (y.paulis.test(pivot)) {
+                y.multiplyBy(*G[g]);
+            }
+        }
+        return y;
+    }
+
+    // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
+    // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* x) {
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
@@ -342,9 +359,22 @@ namespace dd {
         return y;
     }
 
+    template<std::size_t NUM_QUBITS>
+    inline LimEntry<NUM_QUBITS> GramSchmidtFastSorted(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* x) {
+        LimEntry<NUM_QUBITS> y(x);
+        unsigned int pivot;
+        for (unsigned int g=0; g<G.size(); g++) {
+            pivot = G[g].pivotPosition();
+            if (pivot == (unsigned int)-1) continue;
+            if (y.paulis.test(pivot)) {
+                y.multiplyBy(G[g]);
+            }
+        }
+        return y;
+    }
 
-    // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
-    // todo this version uses right multiplication; refactor to left multiplication
+
+
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G, const LimBitset<NUM_QUBITS, NUM_BITS>* x) {
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
@@ -367,8 +397,6 @@ namespace dd {
         return y;
     }
 
-    // todo this algorithm can be sped up if we are allowed to assume that the group G is sorted
-    // todo this version uses right multiplication; refactor to left multiplication
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>& x) {
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
@@ -391,12 +419,24 @@ namespace dd {
         return y;
     }
 
+    // Precondition: G is in column echelon form
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidtFastSorted(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>& x) {
+        LimBitset<NUM_QUBITS, NUM_BITS> y(x);
+        unsigned int pivot;
+        for (unsigned int g=0; g<G.size(); g++) {
+            pivot = G[g].lim.pivotPosition();
+            if (y.lim.paulis.test(pivot)) {
+                y.multiplyBy(G[g]);
+            }
+        }
+        return y;
+    }
+
     // Performs the GramSchmidt algorithm,, i.e.,
     //   given a group G and a vector x,
     //   reduces the vector x via G, and returns this reduced vector
     //   The decomposition that is found, is recorded in the bitset 'indicator'
-    // todo this algorithm can be sped up if the group G is sorted
-    // TODO where is this algorithm used? refactor to object std::vector<LimEntry>
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_BITS>& indicator) {
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
@@ -424,6 +464,7 @@ namespace dd {
         }
         //        return y;
     }
+
 
     // Given a group G and a 0/1 indicator vector,
     //   returns the product of the indicated elements of G
@@ -657,12 +698,12 @@ namespace dd {
         callCount++;
 //        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
 //        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
-        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = concatenateAndappendIdentityMatrix(G, H);
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = concatenateAndAppendIdentityMatrix(G, H);
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'
         LimBitset<NUM_QUBITS, 2*NUM_QUBITS>   a_bitset(a);
-        a_bitset = GramSchmidt(GH_Id, a_bitset);
+        a_bitset = GramSchmidtFastSorted(GH_Id, a_bitset);
         std::bitset<NUM_QUBITS> decomposition_G, decomposition_H; // these bitsets are initialized to 00...0, according to the C++ reference
         bitsetCopySegment(decomposition_G, a_bitset.bits, 0, 0, G.size());
         bitsetCopySegment(decomposition_H, a_bitset.bits, 0, G.size(), G.size() + H.size());
@@ -1257,7 +1298,7 @@ namespace dd {
     // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
     //    make sure the left and right-handed multiplications go well
     inline LimEntry<> getRootLabel(const vNode* v, const LimEntry<>* lim) {
-        return GramSchmidt(v->limVector, lim);
+        return GramSchmidtFastSorted(v->limVector, lim);
     }
 
     // ********** These functions catch PauliAlgebra functions when they are called on Matrix objects
