@@ -620,9 +620,7 @@ namespace dd {
             if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
                 std::swap(r.p->e[0], r.p->e[1]);
                 //Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
-                LimEntry<> X;
-                X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X);
+                r.l->multiplyByX(r.p->v);
             }
 
             // Case 3 ("Fork"):  both edges of e are non-zero

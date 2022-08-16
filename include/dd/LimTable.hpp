@@ -407,6 +407,17 @@ namespace dd {
             return c;
         }
 
+        void multiplyByX(Qubit qubit) {
+            if (paulis.test(2*qubit)) {
+                multiplyPhaseByMinusOne();
+            }
+            paulis.flip(2*qubit+1);
+        }
+
+        void multiplyPhaseByMinusOne() {
+            paulis.flip(2*NUM_QUBITS+1);
+        }
+
         void setOperator(Qubit v, pauli_op op) {
             if ((int)v >= (int)NUM_QUBITS) return;
             switch (op) {
