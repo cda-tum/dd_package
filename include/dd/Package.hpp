@@ -542,6 +542,10 @@ namespace dd {
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
+            if (e.l == nullptr) {
+                std::cout << "[normalizeLIMDDPauli] e.l == nullptr location 1\n";
+                throw std::exception();
+            }
             //            static unsigned int callCounter = 0;
             //            callCounter++;
             // Step 1: Make sure the weight on the LIMs is +1
@@ -567,10 +571,12 @@ namespace dd {
             }
 
             if (r.l == nullptr) {
-                r.l = LimEntry<>::getIdentityOperator();
+                std::cout << "[normalizeLIMDDPauli] r.l == nullptr, location 2.\n";
+                throw std::exception();
             }
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
+            // TODO add case when both children are zero (0)
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
                 //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
@@ -1209,6 +1215,7 @@ namespace dd {
 
             // set specific node properties for matrices
             CVec vece0, vece1, vece;
+            LimEntry<> tempRootLabel; //todo use cached lims in the future
             // normalize it
             switch (group) {
                 case Z_group:
@@ -1219,7 +1226,13 @@ namespace dd {
                         vece0 = getVector(edges[0], var - 1);
                         vece1 = getVector(edges[1], var - 1);
                     }
+                    e.l = &tempRootLabel;
+                    if (e.l == nullptr) {
+                        std::cout << "[makeDDNode] e.l is nullptr.\n";
+                        throw std::exception();
+                    }
                     e = normalizeLIMDDPauli(e, cached);
+                    e.l = limTable.lookup(*e.l);
 
                     if (performSanityChecks) {
                         vece = getVector(e, var);

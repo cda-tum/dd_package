@@ -485,9 +485,9 @@ namespace dd {
 
         // Returns -I
         // i.e., -1 times the Identity operator
-        static LimEntry<NUM_QUBITS>* getMinusIdentityOperator() {
-            LimEntry<NUM_QUBITS>* Id = getIdentityOperator();
-            Id->setPhase(phase_t::phase_minus_one);
+        static LimEntry<NUM_QUBITS> getMinusIdentityOperator() {
+            LimEntry<NUM_QUBITS> Id;
+            Id.setPhase(phase_t::phase_minus_one);
             return Id;
         }
 
