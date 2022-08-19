@@ -389,6 +389,7 @@ namespace dd {
 
         // Returns the LIM a * b
         static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+            //todo this function can cause memory leaks!
             assert(a != noLIM && b != noLIM);
             LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
             c->multiplyBy(b);
@@ -489,16 +490,15 @@ namespace dd {
         // Returns I, the Identity operator
         // (Some subroutines start with an identity operator, and then apply mutations to it;
         //  however, if you need the identity operator as such, then use a null pointer)
-        static LimEntry<NUM_QUBITS>* getIdentityOperator() {
-            LimEntry<NUM_QUBITS>* Id = new LimEntry<NUM_QUBITS>();
-            return Id;
+        static LimEntry<NUM_QUBITS> getIdentityOperator() {
+            return LimEntry<NUM_QUBITS>();
         }
 
         // Returns -I
         // i.e., -1 times the Identity operator
-        static LimEntry<NUM_QUBITS>* getMinusIdentityOperator() {
-            LimEntry<NUM_QUBITS>* Id = getIdentityOperator();
-            Id->setPhase(phase_t::phase_minus_one);
+        static LimEntry<NUM_QUBITS> getMinusIdentityOperator() {
+            LimEntry<NUM_QUBITS> Id;
+            Id.setPhase(phase_t::phase_minus_one);
             return Id;
         }
 

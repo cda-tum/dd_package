@@ -859,9 +859,9 @@ namespace dd {
             // DONE TODO use toStabilizerGroupValue(low.p->limVector);
             stabgenset = toStabilizerGroupValue(low.p->limVector); // copies the stabilizer group of the left child
             //printStabilizerGroup(stabgenset);
-            LimEntry<>* idZ = LimEntry<>::getIdentityOperator(); // TODO refactor to LimEntry
-            idZ->setOperator(n, 'Z');
-            stabgenset.push_back(*idZ);
+            LimEntry<> idZ;
+            idZ.setOperator(n, 'Z');
+            stabgenset.push_back(idZ);
             //Log::log << "[stab genPauli] Added Z. Now stab gen set is:\n";
             //printStabilizerGroup(stabgenset);
             // the matrix set is already in column echelon form,
@@ -873,9 +873,9 @@ namespace dd {
             // TODO use toStabilizerGroupValue(high.p->limVector);
             stabgenset = toStabilizerGroupValue(high.p->limVector); // copy the stabilizer of the right child
             //printStabilizerGroup(stabgenset);
-            LimEntry<>* minusIdZ = LimEntry<>::getMinusIdentityOperator(); // TODO refactor to LimEntry object
-            minusIdZ->setOperator(n, 'Z');
-            stabgenset.push_back(*minusIdZ);
+            LimEntry<> minusIdZ = LimEntry<>::getMinusIdentityOperator(); // TODO refactor to LimEntry object
+            minusIdZ.setOperator(n, 'Z');
+            stabgenset.push_back(minusIdZ);
             //Log::log << "[stab genPauli] Added -Z. now stab gen set is:\n";
             //printStabilizerGroup(stabgenset);
         }
@@ -1186,7 +1186,8 @@ namespace dd {
                 if (lambda != phase_t::no_phase) {
                     iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1);
                     if (foundElement) {
-                        iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
+                        iso.lim.leftMultiplyBy(v->e[1].l);
+                        //iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
                         iso.lim.setOperator(u->v, pauli_op::pauli_x);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
                         foundIsomorphism = true;
@@ -1197,7 +1198,8 @@ namespace dd {
                     lambda  = multiplyPhases(lambda, phase_t::phase_minus_one);
                     iso.lim = getCosetIntersectionElementPauli(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, foundElement, u->v - 1);
                     if (foundElement) {
-                        iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
+                        iso.lim.leftMultiplyBy(v->e[1].l);
+                        //iso.lim = LimEntry<>::multiplyValue(v->e[1].l, &iso.lim);
                         iso.lim.setOperator(u->v, pauli_op::pauli_y);
                         cn.div(iso.weight, v->e[1].w, u->e[0].w);
                         iso.weight.multiplyByMinusi();
