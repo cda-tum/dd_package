@@ -49,6 +49,7 @@ package_add_test(${PROJECT_NAME}_test
 		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/generate-circuits/cliffordCircuitsMedium.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/generate-circuits/cliffordCircuitsLarge.cpp)
+		#${CMAKE_CURRENT_SOURCE_DIR}/testCircuitsHuge.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/bugLargeCircuit5.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_lim.cpp)
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_package.cpp)

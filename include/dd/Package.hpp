@@ -2092,6 +2092,52 @@ namespace dd {
             }
         }
 
+        bool topQubitIsIdentity(const Edge<mNode>& mat) {
+            if (mat.p->e[0].w == Complex::one &&
+                mat.p->e[1].w == Complex::zero &&
+                mat.p->e[2].w == Complex::zero &&
+                mat.p->e[3].w == Complex::one) return true;
+            return false;
+        }
+
+        void setIdentityFlags(Edge<mNode>& mat) {
+            setIdentityFlagsTraverseDD(mat);
+            unsetVisitationFlags(mat);
+        }
+
+        void setIdentityFlagsTraverseDD(Edge<mNode>& mat) {
+            if (mat.isTerminal()) {
+                mat.p->setIdentity(false);
+                return;
+            }
+            if (mat.p->flags & 1)
+                return;
+            for (int i=0; i<4; i++) {
+                setIdentityFlagsTraverseDD(mat.p->e[i]);
+            }
+            if (mat.p->e[0].p->isIdentity() && mat.p->e[3].p->isIdentity() && mat.p->e[0].p == mat.p->e[1].p &&
+                mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero &&
+                mat.p->e[3].w == Complex::one) {
+                mat.p->setIdentity(true);
+            }
+            else
+                mat.p->setIdentity(false);
+            mat.p->flags |= 1;
+        }
+
+        void unsetVisitationFlags(Edge<mNode>& mat) {
+            if (mat.isTerminal()) {
+                return;
+            }
+            if (!(mat.p->flags & 1)) {
+                return;
+            }
+            unsetVisitationFlags(mat.p->e[0]);
+            unsetVisitationFlags(mat.p->e[1]);
+            mat.p->flags = (mat.p->flags & (~1));
+        }
+
+        // Returns x * lim * y
         long callCounter = 0;
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<> lim = {}) {
@@ -2102,8 +2148,16 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
+            auto yCopy = y;
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
+            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
+                std::cout << "[multiply] Found Identity at qubit " << (int)(x.p->v) << ".\n";
+                yCopy.l = limTable.lookup(trueLim);
+                yCopy.w = y.w;
+                return yCopy;
+            }
+
 
             CMat mat_x;
             CVec vec_y, vecExpected;
@@ -2129,7 +2183,6 @@ namespace dd {
 
             auto xCopy = x;
             xCopy.w    = Complex::one;
-            auto yCopy = y;
             yCopy.w    = Complex::one;
 
             const auto trueLimTable = limTable.lookup(trueLim);
@@ -2197,10 +2250,10 @@ namespace dd {
 
             constexpr std::size_t ROWS = RADIX;
             constexpr std::size_t COLS = N == NEDGE ? RADIX : 1U;
-
-            CVec                        vectorArg0, vectorArg1, vectorResult, vectorExpected;
             std::array<ResultEdge, N>   edge{};
             [[maybe_unused]] const auto op = trueLim.getPauliForQubit(y.p->v);
+
+            CVec                        vectorArg0, vectorArg1, vectorResult, vectorExpected;
             trueLim.setOperator(y.p->v, 'I');
 
             for (auto i = 0U; i < ROWS; i++) {
@@ -2384,7 +2437,9 @@ namespace dd {
             if ((int)pauligate != 0) {
                 return applyPauliGate(pauligate, gate.target, state);
             }
-            return multiply(makeGateDD(gate.mat, qubits(), gate.controls, gate.target), state);
+            Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
+            setIdentityFlags(gateDD);
+            return multiply(gateDD, state);
         }
 
         vEdge applyPauliGate(char gate, Qubit target, const vEdge state) {

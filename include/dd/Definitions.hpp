@@ -15,7 +15,7 @@
 
 namespace dd {
     // Set number of qubits for limdd state vector
-    static const std::size_t NUM_QUBITS = 64;
+    static const std::size_t NUM_QUBITS = 126;
 
     // integer type used for indexing qubits
     // needs to be a signed type to encode -1 as the index for the terminal
