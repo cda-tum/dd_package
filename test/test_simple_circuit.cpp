@@ -15,6 +15,36 @@
 #include <sstream>
 
 using namespace dd::literals;
+
+TEST(LimTest, cachingTests) {
+    auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false, false);
+
+    auto firstLim = limdd->lf.limCache.getCachedLim();
+    auto secondLim = limdd->lf.limCache.getCachedLim();
+    EXPECT_NE(firstLim, secondLim);
+
+    auto thirdLim = limdd->lf.limCache.getCachedLim();
+    auto tempLim = limdd->lf.limCache.getTemporaryLim();
+    EXPECT_EQ(thirdLim, tempLim);
+    EXPECT_EQ(3, limdd->lf.limCache.getCount());
+
+    limdd->lf.limCache.returnToCache(firstLim);
+    EXPECT_EQ(firstLim, limdd->lf.limCache.getTemporaryLim());
+    EXPECT_EQ(2, limdd->lf.limCache.getCount());
+
+    limdd->lf.limCache.returnToCache(secondLim);
+    EXPECT_EQ(secondLim, limdd->lf.limCache.getTemporaryLim());
+    EXPECT_EQ(1, limdd->lf.limCache.getCount());
+
+    limdd->lf.limCache.returnToCache(thirdLim);
+    EXPECT_EQ(thirdLim, limdd->lf.limCache.getTemporaryLim());
+    EXPECT_EQ(0, limdd->lf.limCache.getCount());
+
+    std::cout << "Testing lf" << std::endl;
+}
+
+
+
 // Randomly generated circuit on 10 qubis, containing 30 Clifford gates.
 TEST(LimTest, generatedCircuit_1) {
     dd::QuantumCircuit circuit(10);

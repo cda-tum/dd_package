@@ -30,6 +30,8 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_sources(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/Complex.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexCache.hpp>
+        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/LimCache.hpp>
+        $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/LimFunctionality.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexNumbers.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexTable.hpp>
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/dd/ComplexValue.hpp>
