@@ -118,8 +118,8 @@ namespace dd {
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
-        static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
-        //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
+//        static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
+                static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
         explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = false, bool outputToLog = false):
             cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
@@ -592,7 +592,12 @@ namespace dd {
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
                 // Step 4: multiply the root edge weight by the low edge weight
-                r.w = cn.mulCached(r.w, r.p->e[0].w);
+                if (r.w.exactlyZero() || r.p->e[0].w.exactlyZero()) {
+                    r.w = Complex::zero;
+                } else {
+                    r.w = cn.mulCached(r.w, r.p->e[0].w);
+                }
+
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
                 r.p->e[1].w = Complex::zero;
@@ -1998,7 +2003,8 @@ namespace dd {
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
-            [[maybe_unused]] const auto before = cn.cacheCount();
+            [[maybe_unused]] const auto before         = cn.cacheCount();
+            [[maybe_unused]] const auto limCountBefore = lf.cacheCount();
 
             Qubit        var = -1;
             RightOperand e;
@@ -2036,8 +2042,10 @@ namespace dd {
                 e.w = cn.lookup(e.w);
             }
 
-            [[maybe_unused]] const auto after = cn.cacheCount();
-            //            assert(before == after);  // TODO limdd: turn this assertion back on. It was only turned off for debug purposes
+//            [[maybe_unused]] const auto after         = cn.cacheCount();
+//            [[maybe_unused]] const auto limCountAfter = lf.cacheCount();
+//            assert(before == after);
+//            assert(limCountBefore == limCountAfter);
 
             return e;
         }
@@ -2125,10 +2133,14 @@ namespace dd {
             }
 
             if (var == start - 1) {
-                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim.getPhase());
-                ComplexNumbers::mul(newWeight, x.w, newWeight);
-                return ResultEdge::terminal(newWeight);
+                if(y.w.exactlyZero() || x.w.exactlyZero()){
+                    return ResultEdge::zero;
+                } else {
+                    auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                    newWeight.multiplyByPhase(trueLim.getPhase());
+                    ComplexNumbers::mul(newWeight, x.w, newWeight);
+                    return ResultEdge::terminal(newWeight);
+                }
             }
 
             auto xCopy = x;
@@ -2340,7 +2352,7 @@ namespace dd {
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
-                if (e.w.exactlyOne()) {
+                if (e.w.approximatelyOne()) {
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);

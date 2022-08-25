@@ -28,6 +28,10 @@ namespace dd {
             limTable.clear();
             limCache.clear();
         }
+
+        [[nodiscard]] std::size_t cacheCount() const {
+            return limCache.getCount();
+        }
     };
 
 } // namespace dd
