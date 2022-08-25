@@ -118,8 +118,8 @@ namespace dd {
         static constexpr std::size_t maxPossibleQubits = static_cast<std::make_unsigned_t<Qubit>>(std::numeric_limits<Qubit>::max()) + 1U;
         static constexpr std::size_t defaultQubits     = 128;
         // Choose which group is used for LIMDD's isomorphism merging subroutines
-//        static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
-                static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
+        static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
+        //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
         explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool _performSanityChecks = false, bool outputToLog = false):
             cn(ComplexNumbers()), nqubits(nq), group(_group), performSanityChecks(_performSanityChecks) {
@@ -594,6 +594,8 @@ namespace dd {
                 // Step 4: multiply the root edge weight by the low edge weight
                 if (r.w.exactlyZero() || r.p->e[0].w.exactlyZero()) {
                     r.w = Complex::zero;
+                } else if (cached) {
+                    ComplexNumbers::mul(r.w, r.w, r.p->e[0].w);
                 } else {
                     r.w = cn.mulCached(r.w, r.p->e[0].w);
                 }
@@ -620,7 +622,14 @@ namespace dd {
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
                 // Step ??: Set the weight right
-                r.w = cn.mulCached(r.w, r.p->e[1].w);
+                if (r.w.exactlyZero() || r.p->e[1].w.exactlyZero()) {
+                    r.w = Complex::zero;
+                } else if (cached) {
+                    ComplexNumbers::mul(r.w, r.w, r.p->e[1].w);
+                } else {
+                    r.w = cn.mulCached(r.w, r.p->e[1].w);
+                }
+//                r.w = cn.mulCached(r.w, r.p->e[1].w);
                 //                r.w = cn.lookup(rootWeight);
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
@@ -677,6 +686,7 @@ namespace dd {
             LimWeight<> iso;
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
+            iso.weight = cn.getCached();
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
                 //                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
@@ -695,6 +705,9 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
+            cn.returnToCache(iso.weight);
+            //oldNode.e[1].w contains the cached weight from line 656: "r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));"
+            cn.returnToCache(oldNode.e[1].w);
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             //Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
@@ -730,6 +743,10 @@ namespace dd {
             auto f = vEdge::one;
             for (std::size_t p = start; p < n + start; p++) {
                 f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
+                if(!f.w.exactlyOne()){
+                    cn.returnToCache(f.w);
+                    f.w = Complex::one;
+                }
             }
             return f;
         }
@@ -1711,6 +1728,8 @@ namespace dd {
                 Complex ywp = cn.getCached(y.w);
                 ywp.multiplyByPhase(trueLimY.getPhase());
                 r.w = cn.addCached(xwp, ywp);
+                cn.returnToCache(xwp);
+                cn.returnToCache(ywp);
                 if (r.w.approximatelyZero()) {
                     cn.returnToCache(r.w);
                     return Edge<Node>::zero;
@@ -2042,10 +2061,10 @@ namespace dd {
                 e.w = cn.lookup(e.w);
             }
 
-//            [[maybe_unused]] const auto after         = cn.cacheCount();
-//            [[maybe_unused]] const auto limCountAfter = lf.cacheCount();
-//            assert(before == after);
-//            assert(limCountBefore == limCountAfter);
+            [[maybe_unused]] const auto after         = cn.cacheCount();
+            [[maybe_unused]] const auto limCountAfter = lf.cacheCount();
+            assert(before == after);
+            assert(limCountBefore == limCountAfter);
 
             return e;
         }
@@ -2133,7 +2152,7 @@ namespace dd {
             }
 
             if (var == start - 1) {
-                if(y.w.exactlyZero() || x.w.exactlyZero()){
+                if (y.w.exactlyZero() || x.w.exactlyZero()) {
                     return ResultEdge::zero;
                 } else {
                     auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
@@ -2352,7 +2371,7 @@ namespace dd {
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
-                if (e.w.approximatelyOne()) {
+                if (e.w.exactlyZero()) {
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);
