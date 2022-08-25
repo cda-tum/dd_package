@@ -38,7 +38,7 @@ namespace dd {
     }
 
     inline bool isZeroVector(const CVec& vec, unsigned int start, unsigned int end) {
-        if (vec.size() >= start || vec.size() >= end) {
+        if (vec.size() <= start || vec.size() < end) {
             throw std::runtime_error("[isZeroVector] ERROR received start and end which are out of bounds.");
         }
         for (unsigned int i = start; i < end; i++) {

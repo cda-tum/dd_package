@@ -2139,9 +2139,9 @@ namespace dd {
             CMat mat_x;
             CVec vec_y, vecExpected;
             if (performSanityChecks) {
-                //                CMat mat_x       = getMatrix(x);
-                CVec vec_y       = getVector(y, var, lim);
-                CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+                mat_x       = getMatrix(x);
+                vec_y       = getVector(y, var, lim);
+                vecExpected = multiplyMatrixVector(mat_x, vec_y);
             }
 
             //            makePrintIdent(var);
@@ -2336,8 +2336,8 @@ namespace dd {
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 CVec vece0, vece1, vece;
                 if (performSanityChecks) {
-                    CVec vece0 = getVector(edge[0], var - 1);
-                    CVec vece1 = getVector(edge[1], var - 1);
+                    vece0 = getVector(edge[0], var - 1);
+                    vece1 = getVector(edge[1], var - 1);
                 }
                 e = makeDDNode(var, edge, true, nullptr);
                 if (performSanityChecks) {
