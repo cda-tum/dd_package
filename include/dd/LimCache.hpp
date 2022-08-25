@@ -39,7 +39,6 @@ namespace dd {
         [[nodiscard]] LimEntry<>* getCachedLim() {
             // an entry is available on the stack
             if (available != nullptr) {
-                assert(available->next != nullptr);
                 auto entry = available;
                 available  = entry->next;
                 count++;

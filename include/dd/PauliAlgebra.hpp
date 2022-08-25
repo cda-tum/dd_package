@@ -138,22 +138,22 @@ namespace dd {
         }
     }
 
-    // precondition: G is sorted
-    template<std::size_t NUM_QUBITS>
-    inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        if (G.size() <= 1) return;
-        unsigned int pivot;
-
-        for (unsigned int g = 0; g + 1 < G.size(); g++) {
-            pivot = G[g]->pivotPosition();
-            if (pivot >= 2 * NUM_QUBITS) continue; // In this case G[g] is an all-zero column (i.e., is the identity)
-            for (unsigned int h = g + 1; h < G.size(); h++) {
-                if (G[h]->paulis.test(pivot)) {
-                    G[h] = LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
-                }
-            }
-        }
-    }
+//    // precondition: G is sorted
+//    template<std::size_t NUM_QUBITS>
+//    inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>*>& G) {
+//        if (G.size() <= 1) return;
+//        unsigned int pivot;
+//
+//        for (unsigned int g = 0; g + 1 < G.size(); g++) {
+//            pivot = G[g]->pivotPosition();
+//            if (pivot >= 2 * NUM_QUBITS) continue; // In this case G[g] is an all-zero column (i.e., is the identity)
+//            for (unsigned int h = g + 1; h < G.size(); h++) {
+//                if (G[h]->paulis.test(pivot)) {
+//                    G[h] = LimEntry<NUM_QUBITS>::multiply(G[h], G[g]);
+//                }
+//            }
+//        }
+//    }
 
     template<std::size_t NUM_QUBITS>
     inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>>& G) {
@@ -257,21 +257,21 @@ namespace dd {
         }
     }
 
-    // Puts the stabilizer group in column echelon form; specifically:
-    //   1. performs Gaussian elimination on G
-    //   2. prunes the all-zero columns
-    //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
-    inline void toColumnEchelonForm(StabilizerGroup& G) {
-        std::sort(G.begin(), G.end(), LimEntry<>::geq);
-        GaussianEliminationSortedFast(G);
-        //        Log::log << "[toColumnEchelonForm] After Gaussian Elimination, before pruning zero col's, group is:\n";Log::log.flush();
-        //        printStabilizerGroup(G);
-        pruneZeroColumns(G);
-        // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
-        std::sort(G.begin(), G.end(), LimEntry<>::geq);
-        //        Log::log << "[toColumnEchelonForm] After CEF, group is:\n"; Log::log.flush();
-        //        printStabilizerGroup(G);
-    }
+//    // Puts the stabilizer group in column echelon form; specifically:
+//    //   1. performs Gaussian elimination on G
+//    //   2. prunes the all-zero columns
+//    //   3. sorts the columns lexicographically, i.e., so that 'pivots' appear in the matrix
+//    inline void toColumnEchelonForm(StabilizerGroup& G) {
+//        std::sort(G.begin(), G.end(), LimEntry<>::geq);
+//        GaussianEliminationSortedFast(G);
+//        //        Log::log << "[toColumnEchelonForm] After Gaussian Elimination, before pruning zero col's, group is:\n";Log::log.flush();
+//        //        printStabilizerGroup(G);
+//        pruneZeroColumns(G);
+//        // To obtain a lower triangular form, we now sort the vectors descending lexicographically, descending
+//        std::sort(G.begin(), G.end(), LimEntry<>::geq);
+//        //        Log::log << "[toColumnEchelonForm] After CEF, group is:\n"; Log::log.flush();
+//        //        printStabilizerGroup(G);
+//    }
 
     inline void toColumnEchelonForm(StabilizerGroupValue& G) {
         std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
@@ -628,16 +628,16 @@ namespace dd {
     //        return intersection;
     //    }
 
-    inline StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
-        StabilizerGroup H;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            H.push_back(new LimEntry<>(G[i]));
-            if (!H[i]->commutesWith(a)) {
-                H[i]->setPhase(multiplyPhases(H[i]->getPhase(), phase_t::phase_minus_one));
-            }
-        }
-        return H;
-    }
+//    inline StabilizerGroup conjugateGroup(const StabilizerGroup& G, const LimEntry<>* a) {
+//        StabilizerGroup H;
+//        for (unsigned int i = 0; i < G.size(); i++) {
+//            H.push_back(new LimEntry<>(G[i]));
+//            if (!H[i]->commutesWith(a)) {
+//                H[i]->setPhase(multiplyPhases(H[i]->getPhase(), phase_t::phase_minus_one));
+//            }
+//        }
+//        return H;
+//    }
 
     inline StabilizerGroupValue conjugateGroupValue(const StabilizerGroup& G, const LimEntry<>* a) {
         StabilizerGroupValue H;
@@ -657,7 +657,8 @@ namespace dd {
         callCount++;
         //        std::vector<LimEntry<NUM_QUBITS>>    GH    = groupConcatenateValue(G, H);
         //        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = appendIdentityMatrixBitsetBig(GH);
-        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id = concatenateAndappendIdentityMatrix(G, H);
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GH_Id;
+        concatenateAndappendIdentityMatrix(G, H, GH_Id);
         toColumnEchelonFormModuloPhase(GH_Id);
 
         std::bitset<NUM_QUBITS> decomposition; // decomposition of 'a'

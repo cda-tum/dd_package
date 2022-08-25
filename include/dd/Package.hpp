@@ -668,7 +668,6 @@ namespace dd {
             LimEntry<> highLimTemp;
             highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
             r.p->e[1].l = lf.limTable.lookup(highLimTemp);
-            lf.limTable.incRef(r.p->e[1].l);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             cn.returnToCache(highEdgeWeightTemp);
@@ -3563,12 +3562,12 @@ namespace dd {
             return true;
         }
 
-        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
-            e1.l      = LimEntry<>::multiply(e1.l, iso);
-            CVec phi1 = getVector(e1);
-            CVec phi2 = getVector(e2);
-            return vectorsApproximatelyEqual(phi1, phi2);
-        }
+//        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
+//            e1.l      = LimEntry<>::multiply(e1.l, iso);
+//            CVec phi1 = getVector(e1);
+//            CVec phi2 = getVector(e2);
+//            return vectorsApproximatelyEqual(phi1, phi2);
+//        }
 
         void printMatrix(const dEdge& e) {
             return;
