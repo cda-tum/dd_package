@@ -26,7 +26,7 @@ namespace dd {
 
         constexpr static std::size_t NUM_BITSETBITS = 2 * NUM_QUBITS + 2;
         std::bitset<NUM_BITSETBITS>  paulis{};
-        LimEntry*                    next{};
+        LimEntry<NUM_QUBITS>*        next{};
         RefCount                     refCount{};
 
         // explicit definition of constructors

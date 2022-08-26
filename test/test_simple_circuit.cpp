@@ -928,10 +928,48 @@ TEST(LimTest, generatedCircuit_15) {
     simulateCircuitLIMDDGateByGate(circuit);
 }
 
+
+TEST(LimTest, singleHadamard) {
+    dd::QubitCount numQubits = 24;
+    dd::QubitCount target    = 23;
+    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false, false);
+
+    dd::vEdge state = dd->makeZeroState(numQubits);
+    auto h_gate  = dd->makeGateDD(dd::Hmat, numQubits, target);
+
+    std::cout << "Executing circuit with n = " << numQubits << " qubits. Hadamard applied to gate " << target << std::endl;
+    std::cout << "Exporting state 0 to svg." << std::endl;
+    export2Dot(state, "state0.dot", true, true, true, false, true, false);
+
+    std::cout << "Applying gate 1." << std::endl;
+    state = dd->multiply(h_gate, state);
+}
+
+TEST(LimTest, twoHadamardGates) {
+    dd::QubitCount numQubits = 24;
+    dd::QubitCount target    = 23;
+    dd::QubitCount target2    = 15;
+    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false, false);
+
+    dd::vEdge state = dd->makeZeroState(numQubits);
+    auto h_gate  = dd->makeGateDD(dd::Hmat, numQubits, target);
+
+    std::cout << "Executing circuit with n = " << (int) numQubits << " qubits. Hadamard applied to gate " << (int) target << std::endl;
+
+    std::cout << "Applying gate 1." << std::endl;
+    state = dd->multiply(h_gate, state);
+
+    auto h_gate2  = dd->makeGateDD(dd::Hmat, numQubits, target2);
+    std::cout << "Applying gate 2." << std::endl;
+    state = dd->multiply(h_gate2, state);
+}
+
 // Randomly generated circuit on 25 qubis, containing 75 Clifford gates.
 TEST(LimTest, generatedCircuit_16) {
     dd::QuantumCircuit circuit(25);
 
+    circuit.addGate(dd::Hmat, 23);
+    circuit.addGate(dd::Hmat, 14);
     circuit.addGate(dd::Zmat, 18);
     circuit.addGate(dd::Xmat, 18_pc, 19);
     circuit.addGate(dd::Xmat, 11);
@@ -941,13 +979,11 @@ TEST(LimTest, generatedCircuit_16) {
     circuit.addGate(dd::Ymat, 22_pc, 6);
     circuit.addGate(dd::Xmat, 5_pc, 18);
     circuit.addGate(dd::Ymat, 22_pc, 19);
-    circuit.addGate(dd::Hmat, 14);
     circuit.addGate(dd::Xmat, 0_pc, 8);
     circuit.addGate(dd::Ymat, 22_pc, 1);
     circuit.addGate(dd::Zmat, 0);
     circuit.addGate(dd::Ymat, 20_pc, 22);
     circuit.addGate(dd::Ymat, 21_pc, 18);
-    circuit.addGate(dd::Hmat, 23);
     circuit.addGate(dd::Ymat, 24_pc, 5);
     circuit.addGate(dd::Smat, 7);
     circuit.addGate(dd::Zmat, 4);
