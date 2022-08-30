@@ -548,6 +548,20 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        static bool greaterValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            assert(a.paulis.size() == b.paulis.size());
+            assert(a.paulis.size() <= NUM_BITSETBITS);
+            for (std::size_t i = 0; i < NUM_BITSETBITS; i++) {
+                if (!a.paulis.test(i) && b.paulis.test(i)) {
+                    return false;
+                }
+                if (a.paulis.test(i) && !b.paulis.test(i)) {
+                    return true;
+                }
+            }
+            return false; // in this case, vectors are equal
+        }
+
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             return leq(b, a);
         }
@@ -624,6 +638,9 @@ namespace dd {
 
         static bool geqValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
             return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
+        }
+        static bool greaterValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
+            return LimEntry<NUM_QUBITS>::greaterValue(a.lim, b.lim);
         }
     };
 

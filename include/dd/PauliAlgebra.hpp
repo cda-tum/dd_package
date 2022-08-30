@@ -15,6 +15,7 @@
 
 #include <array>
 #include <iostream>
+#include <algorithm>
 
 // note: my package won't compile unless I put my functions in a class
 // for now, I've called this class Pauli
@@ -274,26 +275,18 @@ namespace dd {
 //    }
 
     inline void toColumnEchelonForm(StabilizerGroupValue& G) {
-        std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
+        std::sort(G.begin(), G.end(), LimEntry<>::greaterValue);
         GaussianEliminationSortedFast(G);
         pruneZeroColumns(G);
-        std::sort(G.begin(), G.end(), LimEntry<>::geqValue);
-    }
-
-    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
-    inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geq);
-        GaussianEliminationModuloPhaseSortedFast(G);
-        pruneZeroColumnsModuloPhase(G);
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geq);
+        std::sort(G.begin(), G.end(), LimEntry<>::greaterValue);
     }
 
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void toColumnEchelonFormModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geqValue);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::greaterValue);
         GaussianEliminationModuloPhaseSortedFast(G);
         pruneZeroColumnsModuloPhase(G);
-        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::geqValue);
+        std::sort(G.begin(), G.end(), LimBitset<NUM_QUBITS, NUM_BITS>::greaterValue);
     }
 
     // Reduces a vector 'x' via a group 'G' via the Gram-Schmidt procedure
@@ -469,7 +462,7 @@ namespace dd {
     inline std::vector<std::bitset<2*NUM_QUBITS>> getKernelModuloPhase(const std::vector<LimEntry<NUM_QUBITS>>& G) {
         std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> G_Id = appendIdentityMatrixBitsetBig(G);
 
-        std::sort(G_Id.begin(), G_Id.end(), LimBitset<NUM_QUBITS, 2*NUM_QUBITS>::geqValue);
+        std::sort(G_Id.begin(), G_Id.end(), LimBitset<NUM_QUBITS, 2*NUM_QUBITS>::greaterValue);
         GaussianEliminationModuloPhaseSortedFast(G_Id);
         std::vector<std::bitset<2*NUM_QUBITS>> kernel;
         for (unsigned i = 0; i < G_Id.size(); i++) {
