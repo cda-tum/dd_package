@@ -16,7 +16,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           style: file
-          tidy-check: ''
+          tidy-checks: ''
           version: 14
           files-changed-only: false
           thread-comments: true
