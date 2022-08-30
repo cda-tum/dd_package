@@ -2,24 +2,45 @@ name: cpp-linter
 
 on:
   pull_request:
-    types: [opened, reopened]  # let PR-synchronize events be handled by push events
+    branches:
+      - main
   push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   cpp-linter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - uses: cpp-linter/cpp-linter-action@v1
+        with:
+          submodules: recursive
+      - name: Generate compilation database
+        run: CXX=clang++-14 cmake -S . -B build -DBUILD_DD_PACKAGE_TESTS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: "3.9"
+      - name: Install linter python package
+        run: python3 -m pip install git+https://github.com/cpp-linter/cpp-linter-action@v1
+      - name: Run linter
         id: linter
+        run: |
+          cpp-linter \
+          --version=14 \
+          --style=file \
+          --tidy-checks='' \
+          --lines-changed-only=false \
+          --files-changed-only=false \
+          --thread-comments=true \
+          --ignore=build \
+          --database=${{ github.event.repository.name }}/build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          style: file
-          tidy-checks: ''
-          version: 14
-          files-changed-only: false
-          thread-comments: true
-      - name: Fail fast?!
+      - name: Fail if linter found errors
         if: steps.linter.outputs.checks-failed > 0
-        run: echo "Some files failed the linting checks!"
+        run: echo "Linter found errors" && exit 1
