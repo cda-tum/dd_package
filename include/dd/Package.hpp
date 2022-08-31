@@ -1224,6 +1224,7 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
+            std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
             auto& uniqueTable = getUniqueTable<vNode>();
 
             Edge<vNode> e{uniqueTable.getNode(), Complex::one, lim};
@@ -2181,8 +2182,14 @@ namespace dd {
             trueLim.multiplyBy(y.l);
             if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
                 std::cout << "[multiply] Found Identity at qubit " << (int)(x.p->v) << ".\n";
-                yCopy.l = limTable.lookup(trueLim);
-                yCopy.w = y.w;
+                if (y.w.exactlyZero()) {
+                    return ResultEdge::zero;
+                }
+
+                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                newWeight.multiplyByPhase(trueLim.getPhase());
+                yCopy.l = lf.limTable.lookup(trueLim);
+                yCopy.w = newWeight;
                 return yCopy;
             }
 

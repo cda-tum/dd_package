@@ -177,17 +177,17 @@ namespace dd {
     std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> concatenateAndAppendIdentityMatrix(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H) {
         std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
         GI.reserve(G.size() + H.size());
-        LimBitset<NUM_QUBITS, 2*NUM_QUBITS>              col;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(G[i]);
+        for (std::size_t i = 0; i < G.size(); i++) {
+            auto col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(G[i]);
             col.bits.set(i, 1);
             GI.push_back(col);
         }
-        for (unsigned int i=0; i<H.size(); i++) {
-            col = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(H[i]);
+        for (std::size_t i=0; i<H.size(); i++) {
+            auto col = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(H[i]);
             col.bits.set(G.size() + i, 1);
             GI.push_back(col);
         }
+        return GI;
     }
 
     // TODO this procedure should reduce the refcount of the LimEntry objects it removes from G
