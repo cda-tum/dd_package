@@ -12,6 +12,7 @@
 
 void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, false);
+//    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group, false, false);
 
     auto limddState= limdd->makeZeroState(circuit.n);
 
@@ -20,7 +21,7 @@ void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     for (unsigned int gate=0; gate<circuit.gates.size(); gate++) {
         //        std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to QMDD.\n";
         //        qmddState   = qmdd ->applyGate(circuit.gates[gate], qmddState);
-        std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD.\n";
+        std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD." << std::endl;
         limddState  = limdd->applyGate(circuit.gates[gate], limddState);
 
         //        resultQMDD  = qmdd ->getVector(qmddState);

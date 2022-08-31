@@ -19,6 +19,8 @@
 #include "Edge.hpp"
 #include "Export.hpp"
 #include "GateMatrixDefinitions.hpp"
+#include "LimCache.hpp"
+#include "LimFunctionality.hpp"
 #include "LimTable.hpp"
 #include "Log.hpp"
 #include "Node.hpp"
@@ -106,7 +108,8 @@ namespace dd {
         /// Complex number handling
         ///
     public:
-        ComplexNumbers cn{};
+        ComplexNumbers   cn{};
+        LimFunctionality lf{};
 
         ///
         /// Construction, destruction, information and reset
@@ -558,7 +561,7 @@ namespace dd {
                 amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
             }
             Edge<vNode> r = normalize(e, cached);
-            r.l = e.l;
+            r.l           = e.l;
             if (performSanityChecks) {
                 amplitudeVecAfternormalizeQ = getVector(r, e.p->v);
                 sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
@@ -589,7 +592,14 @@ namespace dd {
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
                 // Step 4: multiply the root edge weight by the low edge weight
-                r.w = cn.mulCached(r.w, r.p->e[0].w);
+                if (r.w.exactlyZero() || r.p->e[0].w.exactlyZero()) {
+                    r.w = Complex::zero;
+                } else if (cached) {
+                    ComplexNumbers::mul(r.w, r.w, r.p->e[0].w);
+                } else {
+                    r.w = cn.mulCached(r.w, r.p->e[0].w);
+                }
+
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
                 r.p->e[1].w = Complex::zero;
@@ -612,7 +622,14 @@ namespace dd {
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
                 r.p->e[1].l = nullptr; // Set high edge to Identity
                 // Step ??: Set the weight right
-                r.w = cn.mulCached(r.w, r.p->e[1].w);
+                if (r.w.exactlyZero() || r.p->e[1].w.exactlyZero()) {
+                    r.w = Complex::zero;
+                } else if (cached) {
+                    ComplexNumbers::mul(r.w, r.w, r.p->e[1].w);
+                } else {
+                    r.w = cn.mulCached(r.w, r.p->e[1].w);
+                }
+//                r.w = cn.mulCached(r.w, r.p->e[1].w);
                 //                r.w = cn.lookup(rootWeight);
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
@@ -648,8 +665,7 @@ namespace dd {
             Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
             LimEntry<> highLimTemp;
             highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
-            r.p->e[1].l = limTable.lookup(highLimTemp);
-            limTable.incRef(r.p->e[1].l);
+            r.p->e[1].l = lf.limTable.lookup(highLimTemp);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             cn.returnToCache(highEdgeWeightTemp);
@@ -667,6 +683,7 @@ namespace dd {
             LimWeight<> iso;
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
+            iso.weight = cn.getCached();
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
             if (!foundIsomorphism) {
                 //                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
@@ -685,6 +702,9 @@ namespace dd {
             //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             r.l->multiplyBy(iso.lim);
             cn.mul(r.w, r.w, iso.weight);
+            cn.returnToCache(iso.weight);
+            //oldNode.e[1].w contains the cached weight from line 656: "r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));"
+            cn.returnToCache(oldNode.e[1].w);
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
             //Log::log << "[normalizeLIMDD] Step 7: Set the LIM phase to 1; currently " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << '\n';
@@ -720,6 +740,10 @@ namespace dd {
             auto f = vEdge::one;
             for (std::size_t p = start; p < n + start; p++) {
                 f = makeDDNode(static_cast<Qubit>(p), std::array{f, vEdge::zero});
+                if(!f.w.exactlyOne()){
+                    cn.returnToCache(f.w);
+                    f.w = Complex::one;
+                }
             }
             return f;
         }
@@ -1033,9 +1057,9 @@ namespace dd {
             }
         }
 
-        [[nodiscard]] inline LimTable<>& getLimTable() {
-            return limTable;
-        }
+        //        [[nodiscard]] inline LimTable<>& getLimTable() {
+        //            return limTable;
+        //        }
 
         template<class Node>
         void incRef(const Edge<Node>& e) {
@@ -1049,7 +1073,6 @@ namespace dd {
         UniqueTable<vNode, UT_VEC_NBUCKET, UT_VEC_INITIAL_ALLOCATION_SIZE> vUniqueTable{nqubits};
         UniqueTable<mNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> mUniqueTable{nqubits};
         UniqueTable<dNode, UT_DM_NBUCKET, UT_DM_INITIAL_ALLOCATION_SIZE>   dUniqueTable{nqubits};
-        LimTable<>                                                         limTable{};
 
         bool garbageCollect(bool force = false) {
             // TODO Limdd: add GC for limTable, modify GC for edges and nodes so that the lims are removed
@@ -1070,7 +1093,7 @@ namespace dd {
             auto vCollect   = vUniqueTable.garbageCollect(force);
             auto mCollect   = mUniqueTable.garbageCollect(force);
             auto dCollect   = dUniqueTable.garbageCollect(force);
-            auto limCollect = limTable.garbageCollect(force);
+            auto limCollect = lf.limTable.garbageCollect(force);
 
             // invalidate all compute tables involving vectors if any vector node has been collected
             if (vCollect > 0 || limCollect > 0) {
@@ -1115,7 +1138,7 @@ namespace dd {
             vUniqueTable.clear();
             mUniqueTable.clear();
             dUniqueTable.clear();
-            limTable.clear();
+            lf.limTable.clear();
         }
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
@@ -1194,7 +1217,7 @@ namespace dd {
             edge.p->limVector.clear();
             edge.p->limVector.reserve(stabilizers.size());
             for (unsigned int i = 0; i < stabilizers.size(); i++) {
-                limptr = limTable.lookup(stabilizers[i]);
+                limptr = lf.limTable.lookup(stabilizers[i]);
                 edge.p->limVector.push_back(limptr);
             }
         }
@@ -1212,7 +1235,7 @@ namespace dd {
                 assert(edge.p != nullptr || edge.p->v == var - 1 || edge.isTerminal());
 
             // set specific node properties for matrices
-            CVec vece0, vece1, vece;
+            CVec       vece0, vece1, vece;
             LimEntry<> tempRootLabel; //todo use cached lims in the future
             // normalize it
             switch (group) {
@@ -1229,8 +1252,8 @@ namespace dd {
                         std::cout << "[makeDDNode] e.l is nullptr.\n";
                         throw std::exception();
                     }
-                    e = normalizeLIMDDPauli(e, cached);
-                    e.l = limTable.lookup(*e.l);
+                    e   = normalizeLIMDDPauli(e, cached);
+                    e.l = lf.limTable.lookup(*e.l);
 
                     if (performSanityChecks) {
                         vece = getVector(e, var);
@@ -1303,10 +1326,10 @@ namespace dd {
 
         Edge<vNode> copyEdge(const vEdge edge) {
             auto&       uniqueTable = getUniqueTable<vNode>();
-            Edge<vNode> e{uniqueTable.getNode(), Complex::one, limTable.lookup(LimEntry<>(edge.l))};
+            Edge<vNode> e{uniqueTable.getNode(), Complex::one, lf.limTable.lookup(LimEntry<>(edge.l))};
             e.p->e      = edge.p->e;
-            e.p->e[0].l = limTable.lookup(LimEntry<>(edge.p->e[0].l));
-            e.p->e[1].l = limTable.lookup(LimEntry<>(edge.p->e[1].l));
+            e.p->e[0].l = lf.limTable.lookup(LimEntry<>(edge.p->e[0].l));
+            e.p->e[1].l = lf.limTable.lookup(LimEntry<>(edge.p->e[1].l));
             e.p->v      = edge.p->v;
             if (e.p->v != -1) {
                 Edge<vNode> l = uniqueTable.lookup(e, false);
@@ -1498,7 +1521,7 @@ namespace dd {
                 lim.multiplyBy(ptr.l);
                 const auto op = lim.getPauliForQubit(ptr.p->v);
                 lim.setOperator(ptr.p->v, 'I');
-                auto limPersistent = limTable.lookup(lim);
+                auto limPersistent = lf.limTable.lookup(lim);
 
                 // recursive case
                 auto const e0 = follow2(ptr, 0, op);
@@ -1683,7 +1706,7 @@ namespace dd {
                 r.w    = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
                 r.w.multiplyByPhase(trueLimY.getPhase());
                 trueLimY.setPhase(phase_t::phase_one);
-                r.l = limTable.lookup(trueLimY);
+                r.l = lf.limTable.lookup(trueLimY);
                 return r;
             }
             if (y.w.exactlyZero()) {
@@ -1691,7 +1714,7 @@ namespace dd {
                 r.w    = cn.getCached(CTEntry::val(x.w.r), CTEntry::val(x.w.i));
                 r.w.multiplyByPhase(trueLimX.getPhase());
                 trueLimX.setPhase(phase_t::phase_one);
-                r.l = limTable.lookup(trueLimX);
+                r.l = lf.limTable.lookup(trueLimX);
                 return r;
             }
 
@@ -1702,12 +1725,14 @@ namespace dd {
                 Complex ywp = cn.getCached(y.w);
                 ywp.multiplyByPhase(trueLimY.getPhase());
                 r.w = cn.addCached(xwp, ywp);
+                cn.returnToCache(xwp);
+                cn.returnToCache(ywp);
                 if (r.w.approximatelyZero()) {
                     cn.returnToCache(r.w);
                     return Edge<Node>::zero;
                 }
                 trueLimY.setPhase(phase_t::phase_one);
-                r.l = limTable.lookup(trueLimY);
+                r.l = lf.limTable.lookup(trueLimY);
                 //                Log::log << "[add2] Case x.p == y.p; x.w = " << LimEntry<>::to_string(&trueLimX, x.p->v) << "*" << x.w << " y.w = " << LimEntry<>::to_string(&trueLimY, y.p->v) << "*" << y.w << "  x.w+y.w = " << r.w << '\n';
                 return r;
             }
@@ -1715,7 +1740,7 @@ namespace dd {
             auto& computeTable = getAddComputeTable<Node>();
 
             const auto trueLimC      = createCanonicalLabel(trueLimX, trueLimY, y);
-            const auto trueLimCTable = limTable.lookup(trueLimC);
+            const auto trueLimCTable = lf.limTable.lookup(trueLimC);
 
             auto r = computeTable.lookup({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, false);
             //            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
@@ -1731,7 +1756,7 @@ namespace dd {
                         lim.multiplyBy(r.l);
                         movePhaseIntoWeight(lim, weight);
                     }
-                    return {r.p, weight, limTable.lookup(lim)};
+                    return {r.p, weight, lf.limTable.lookup(lim)};
                 }
             }
 
@@ -1880,7 +1905,7 @@ namespace dd {
             auto weight = cn.getCached(e.w);
             movePhaseIntoWeight(trueLimXCopy, weight);
             //
-            computeTable.insert({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, {e.p, weight, limTable.lookup(trueLimXCopy)});
+            computeTable.insert({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, {e.p, weight, lf.limTable.lookup(trueLimXCopy)});
             cn.returnToCache(weight);
             return e;
         }
@@ -1994,7 +2019,8 @@ namespace dd {
 
         template<class LeftOperand, class RightOperand>
         RightOperand multiply(const LeftOperand& x, const RightOperand& y, dd::Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false) {
-            [[maybe_unused]] const auto before = cn.cacheCount();
+            [[maybe_unused]] const auto before         = cn.cacheCount();
+            [[maybe_unused]] const auto limCountBefore = lf.cacheCount();
 
             Qubit        var = -1;
             RightOperand e;
@@ -2028,12 +2054,14 @@ namespace dd {
 
             if (!e.w.exactlyZero() && !e.w.exactlyOne()) {
                 cn.returnToCache(e.w);
-                e.l = limTable.lookup(LimEntry<>(e.l));
+                e.l = lf.limTable.lookup(LimEntry<>(e.l));
                 e.w = cn.lookup(e.w);
             }
 
-            [[maybe_unused]] const auto after = cn.cacheCount();
-            //            assert(before == after);  // TODO limdd: turn this assertion back on. It was only turned off for debug purposes
+            [[maybe_unused]] const auto after         = cn.cacheCount();
+            [[maybe_unused]] const auto limCountAfter = lf.cacheCount();
+            assert(before == after);
+            assert(limCountBefore == limCountAfter);
 
             return e;
         }
@@ -2162,9 +2190,9 @@ namespace dd {
             CMat mat_x;
             CVec vec_y, vecExpected;
             if (performSanityChecks) {
-                //                CMat mat_x       = getMatrix(x);
-                CVec vec_y       = getVector(y, var, lim);
-                CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+                mat_x       = getMatrix(x);
+                vec_y       = getVector(y, var, lim);
+                vecExpected = multiplyMatrixVector(mat_x, vec_y);
             }
 
             //            makePrintIdent(var);
@@ -2175,17 +2203,21 @@ namespace dd {
             }
 
             if (var == start - 1) {
-                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim.getPhase());
-                ComplexNumbers::mul(newWeight, x.w, newWeight);
-                return ResultEdge::terminal(newWeight);
+                if (y.w.exactlyZero() || x.w.exactlyZero()) {
+                    return ResultEdge::zero;
+                } else {
+                    auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                    newWeight.multiplyByPhase(trueLim.getPhase());
+                    ComplexNumbers::mul(newWeight, x.w, newWeight);
+                    return ResultEdge::terminal(newWeight);
+                }
             }
 
             auto xCopy = x;
             xCopy.w    = Complex::one;
             yCopy.w    = Complex::one;
 
-            const auto trueLimTable = limTable.lookup(trueLim);
+            const auto trueLimTable = lf.limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
             auto  r            = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
@@ -2354,8 +2386,8 @@ namespace dd {
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 CVec vece0, vece1, vece;
                 if (performSanityChecks) {
-                    CVec vece0 = getVector(edge[0], var - 1);
-                    CVec vece1 = getVector(edge[1], var - 1);
+                    vece0 = getVector(edge[0], var - 1);
+                    vece1 = getVector(edge[1], var - 1);
                 }
                 e = makeDDNode(var, edge, true, nullptr);
                 if (performSanityChecks) {
@@ -2389,7 +2421,7 @@ namespace dd {
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
-                if (e.w.exactlyOne()) {
+                if (e.w.exactlyZero()) {
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);
@@ -2448,7 +2480,7 @@ namespace dd {
             pauliGate.setOperator(target, gate);
             vEdge      res    = state;
             LimEntry<> newLim = LimEntry<>::multiplyValue(pauliGate, LimEntry<>(state.l));
-            res.l             = limTable.lookup(newLim);
+            res.l             = lf.limTable.lookup(newLim);
             return res;
         }
 
@@ -3583,12 +3615,12 @@ namespace dd {
             return true;
         }
 
-        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
-            e1.l      = LimEntry<>::multiply(e1.l, iso);
-            CVec phi1 = getVector(e1);
-            CVec phi2 = getVector(e2);
-            return vectorsApproximatelyEqual(phi1, phi2);
-        }
+//        bool isValidIsomorphism(Edge<vNode> e1, Edge<vNode> e2, const LimEntry<>* iso) {
+//            e1.l      = LimEntry<>::multiply(e1.l, iso);
+//            CVec phi1 = getVector(e1);
+//            CVec phi2 = getVector(e2);
+//            return vectorsApproximatelyEqual(phi1, phi2);
+//        }
 
         void printMatrix(const dEdge& e) {
             return;
@@ -4263,7 +4295,7 @@ namespace dd {
             std::cout << "[ComplexTable] ";
             cn.complexTable.printStatistics();
             std::cout << "[LimTable] ";
-            limTable.printStatistics();
+            lf.limTable.printStatistics();
         }
     };
 

@@ -1,26 +1,24 @@
 /*
- * This file is part of the MQT DD Package which is released under the MIT license.
- * See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
- */
+* This file is part of the MQT DD Package which is released under the MIT license.
+* See file README.md or go to https://www.cda.cit.tum.de/research/quantum_dd/ for more information.
+*/
 
-#ifndef DD_PACKAGE_COMPLEXCACHE_HPP
-#define DD_PACKAGE_COMPLEXCACHE_HPP
+#ifndef DDPACKAGE_LIMCACHE_HPP
+#define DDPACKAGE_LIMCACHE_HPP
 
-#include "Complex.hpp"
-#include "ComplexTable.hpp"
+#include "LimTable.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <vector>
 
 namespace dd {
-
     template<std::size_t INITIAL_ALLOCATION_SIZE = 2048, std::size_t GROWTH_FACTOR = 2>
-    class ComplexCache {
-        using Entry = ComplexTable<>::Entry;
+    class LimCache {
+        using Entry = LimTable<>::Entry;
 
     public:
-        ComplexCache():
+        LimCache():
             chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE) {
             // allocate first chunk of cache entries
             chunks.emplace_back(allocationSize);
@@ -30,7 +28,7 @@ namespace dd {
             chunkEndIt = chunks[0].end();
         }
 
-        ~ComplexCache() = default;
+        ~LimCache() = default;
 
         // access functions
         [[nodiscard]] std::size_t getCount() const { return count; }
@@ -38,15 +36,12 @@ namespace dd {
         [[nodiscard]] std::size_t getAllocations() const { return allocations; }
         [[nodiscard]] std::size_t getGrowthFactor() const { return GROWTH_FACTOR; }
 
-        [[nodiscard]] Complex getCachedComplex() {
+        [[nodiscard]] LimEntry<>* getCachedLim() {
             // an entry is available on the stack
             if (available != nullptr) {
-                assert(available->next != nullptr);
-                auto entry = Complex{available, available->next};
-                available  = entry.i->next;
-                count += 2;
-//                std::cout << "Providing real " << (long) entry.r << " = " << ((void*) entry.r) << " (" << (((long) entry.r) % 101) << ") ++" << std::endl;
-//                std::cout << "Providing imag " << (long) entry.i << " = " << ((void*) entry.i) << " (" << (((long) entry.i) % 101) << ") ++" << std::endl;
+                auto entry = available;
+                available  = entry->next;
+                count++;
                 return entry;
             }
 
@@ -60,22 +55,16 @@ namespace dd {
                 chunkEndIt = chunks[chunkID].end();
             }
 
-            Complex c{};
-            c.r = &(*chunkIt);
             ++chunkIt;
-            c.i = &(*chunkIt);
-            ++chunkIt;
-            count += 2;
-//            std::cout << "Providing real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ") ++" << std::endl;
-//            std::cout << "Providing imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ") ++" << std::endl;
-            return c;
+
+            count += 1;
+            return &(*chunkIt);
         }
 
-        [[nodiscard]] Complex getTemporaryComplex() {
+        [[nodiscard]] LimEntry<>* getTemporaryLim() {
             // an entry is available on the stack
             if (available != nullptr) {
-                assert(available->next != nullptr);
-                return {available, available->next};
+                return available;
             }
 
             // new chunk has to be allocated
@@ -87,22 +76,14 @@ namespace dd {
                 chunkIt    = chunks[chunkID].begin();
                 chunkEndIt = chunks[chunkID].end();
             }
-            return {&(*chunkIt), &(*(chunkIt + 1))};
+            return &(*chunkIt);
         }
 
-        void returnToCache(Complex& c) {
-//            std::cout << "Returning real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ")    --" << std::endl;
-//            std::cout << "Returning imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ")    --" << std::endl;
-            assert(count >= 2);
-            assert((reinterpret_cast<long>(&c) & 1ULL) == 0); // Mate, you flipped the sign of a cached complex number, by using the flipPointerSign from the complexTable!
-            assert(c != Complex::zero);
-            assert(c != Complex::one);
-            assert(c.r->refCount == 0);
-            assert(c.i->refCount == 0);
-            c.i->next = available;
-            c.r->next = c.i;
-            available = c.r;
-            count -= 2;
+        void returnToCache(LimEntry<>* c) {
+            assert(count >= 1);
+            c->next    = available;
+            available = c;
+            count -= 1;
         }
 
         void clear() {
@@ -138,4 +119,4 @@ namespace dd {
     };
 } // namespace dd
 
-#endif //DD_PACKAGE_COMPLEXCACHE_HPP
+#endif //DDPACKAGE_LIMCACHE_HPP

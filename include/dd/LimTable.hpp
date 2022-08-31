@@ -26,7 +26,7 @@ namespace dd {
 
         constexpr static std::size_t NUM_BITSETBITS = 2 * NUM_QUBITS + 2;
         std::bitset<NUM_BITSETBITS>  paulis{};
-        LimEntry*                    next{};
+        LimEntry<NUM_QUBITS>*        next{};
         RefCount                     refCount{};
 
         // explicit definition of constructors
@@ -387,14 +387,14 @@ namespace dd {
             multiplyBy(other);
         }
 
-        // Returns the LIM a * b
-        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
-            //todo this function can cause memory leaks!
-            assert(a != noLIM && b != noLIM);
-            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
-            c->multiplyBy(b);
-            return c;
-        }
+//        // Returns the LIM a * b
+//        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+//            //todo this function can cause memory leaks!
+//            assert(a != noLIM && b != noLIM);
+//            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
+//            c->multiplyBy(b);
+//            return c;
+//        }
 
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             LimEntry<NUM_QUBITS> c(a);
@@ -559,6 +559,20 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        static bool greaterValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            assert(a.paulis.size() == b.paulis.size());
+            assert(a.paulis.size() <= NUM_BITSETBITS);
+            for (std::size_t i = 0; i < NUM_BITSETBITS; i++) {
+                if (!a.paulis.test(i) && b.paulis.test(i)) {
+                    return false;
+                }
+                if (a.paulis.test(i) && !b.paulis.test(i)) {
+                    return true;
+                }
+            }
+            return false; // in this case, vectors are equal
+        }
+
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             return leq(b, a);
         }
@@ -636,6 +650,9 @@ namespace dd {
         static bool geqValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
             return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
         }
+        static bool greaterValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
+            return LimEntry<NUM_QUBITS>::greaterValue(a.lim, b.lim);
+        }
     };
 
     // LimWeight contains a LIM and a Complex number
@@ -654,28 +671,28 @@ namespace dd {
             //
         }
 
-        LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a):
-            lim(a->lim), weight(a->weight) {
-            //
-        }
+//        LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a):
+//            lim(a->lim), weight(a->weight) {
+//            //
+//        }
+//
+//        LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a):
+//            lim(new LimEntry<NUM_QUBITS>(a)), weight(Complex::one) {
+//            //
+//        }
+//
+//        LimWeight<NUM_QUBITS>(const std::string pauliString):
+//            lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
+//            //
+//        }
 
-        LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a):
-            lim(new LimEntry<NUM_QUBITS>(a)), weight(Complex::one) {
-            //
-        }
-
-        LimWeight<NUM_QUBITS>(const std::string pauliString):
-            lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
-            //
-        }
-
-        void setToIdentityOperator() {
-            if (lim == nullptr) {
-                lim = new LimEntry<>();
-            } else {
-                lim->setToIdentityOperator();
-            }
-        }
+//        void setToIdentityOperator() {
+//            if (lim == nullptr) {
+//                lim = new LimEntry<>();
+//            } else {
+//                lim->setToIdentityOperator();
+//            }
+//        }
 
         static std::string to_string(const LimWeight<NUM_QUBITS>* a) {
             if (a == LimWeight<NUM_QUBITS>::noLIM) {
