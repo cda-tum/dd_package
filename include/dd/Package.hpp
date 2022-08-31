@@ -1224,7 +1224,7 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
-            std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
+            //std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
             auto& uniqueTable = getUniqueTable<vNode>();
 
             Edge<vNode> e{uniqueTable.getNode(), Complex::one, lim};
