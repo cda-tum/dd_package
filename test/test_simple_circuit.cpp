@@ -43,6 +43,54 @@ TEST(LimTest, cachingTests) {
     std::cout << "Testing lf" << std::endl;
 }
 
+
+// Randomly generated circuit on 10 qubis, containing 30 Clifford gates.
+TEST(LimTest, bb84Circuit) {
+    std::mt19937_64 mt;
+
+    auto dd = std::make_unique<dd::Package<>>(8);
+    dd::vEdge state = dd->makeZeroState(8);
+
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 2), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 3), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 4), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 5), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->measureOneCollapsing(state, 6, true, mt);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 5), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 2), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->measureOneCollapsing(state, 0, true, mt);
+    dd->measureOneCollapsing(state, 3, true, mt);
+    dd->measureOneCollapsing(state, 1, true, mt);
+    dd->measureOneCollapsing(state, 2, true, mt);
+    dd->measureOneCollapsing(state, 4, true, mt);
+    dd->measureOneCollapsing(state, 5, true, mt);
+    dd->measureOneCollapsing(state, 7, true, mt);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 0), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 2), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 3), state);
+    state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 4), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 5), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 6), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 2), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 3), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->measureOneCollapsing(state, 0, true, mt);
+    dd->measureOneCollapsing(state, 5, true, mt);
+    dd->measureOneCollapsing(state, 6, true, mt);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 2), state);
+    state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
+}
+
 // Randomly generated circuit on 10 qubis, containing 30 Clifford gates.
 TEST(LimTest, generatedCircuit_1) {
     dd::QuantumCircuit circuit(10);
@@ -694,7 +742,7 @@ TEST(LimTest, generatedCircuit_12) {
     circuit.addGate(dd::Zmat, 7);
     circuit.addGate(dd::Xmat, 8_pc, 12);
 
-    simulateCircuitLIMDDGateByGate(circuit);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
 }
 
 // Randomly generated circuit on 22 qubis, containing 66 Clifford gates.
