@@ -930,7 +930,7 @@ namespace dd {
             gcCalls++;
             // nothing to be done if garbage collection is not forced, and the limit has not been reached,
             // or the current count is minimal (the complex table always contains at least 0.5)
-            if ((!force && count < gcLimit) || count <= 1) //Todo implement garbage collect
+            if (!force && count < gcLimit)
                 return 0;
 
             gcRuns++;

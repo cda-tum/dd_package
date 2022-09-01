@@ -15,6 +15,7 @@ void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 //    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group, false, false);
 
     auto limddState= limdd->makeZeroState(circuit.n);
+    limdd->incRef(limddState);
 
     bool circuitIsCliffordSoFar = true;  // Flag is set to false as soon as a non-Clifford gate is applied
 
@@ -22,7 +23,11 @@ void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         //        std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to QMDD.\n";
         //        qmddState   = qmdd ->applyGate(circuit.gates[gate], qmddState);
         std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD." << std::endl;
-        limddState  = limdd->applyGate(circuit.gates[gate], limddState);
+        auto tmp  = limdd->applyGate(circuit.gates[gate], limddState);
+        limdd->decRef(limddState);
+        limddState = tmp;
+        limdd->incRef(limddState);
+        limdd->garbageCollect();
 
         //        resultQMDD  = qmdd ->getVector(qmddState);
         //        resultLIMDD = limdd->getVector(limddState);

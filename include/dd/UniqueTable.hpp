@@ -195,6 +195,7 @@ namespace dd {
                 available = p->next;
                 // returned nodes could have a ref count != 0
                 p->ref = 0;
+                p->limVector = {};
                 return p;
             }
 
