@@ -21,6 +21,13 @@ namespace dd {
         Log::log << outputCVec(vec);
     }
 
+    std::ostream& operator<<(std::ostream& out, const dd::CVec& vec) {
+        for (unsigned int i = 0; i < vec.size(); i++) {
+            out << vec[i] << ' ';
+        }
+        return out;
+    }
+
     inline bool isZeroVector(const CVec& vec) {
         for (unsigned int i = 0; i < vec.size(); i++) {
             if (!Complex::approximatelyEqual(vec[i], 0)) {
@@ -31,7 +38,7 @@ namespace dd {
     }
 
     inline bool isZeroVector(const CVec& vec, unsigned int start, unsigned int end) {
-        if (vec.size() >= start || vec.size() >= end) {
+        if (vec.size() <= start || vec.size() < end) {
             throw std::runtime_error("[isZeroVector] ERROR received start and end which are out of bounds.");
         }
         for (unsigned int i = start; i < end; i++) {

@@ -12,7 +12,7 @@ namespace dd {
     //}
 
     typedef std::vector<LimEntry<>*> StabilizerGroup;
-    typedef std::vector<LimEntry<>>  StabilizerGroupValue;
+    typedef std::vector<LimEntry<> > StabilizerGroupValue;
 
     template<std::size_t N, std::size_t M>
     inline void bitsetCopySegment(std::bitset<N>& x, const std::bitset<M> y, unsigned int begin_x, unsigned int begin_y, unsigned int end_y) {
@@ -22,13 +22,13 @@ namespace dd {
         }
     }
 
-    inline StabilizerGroup toStabilizerGroup(const StabilizerGroupValue& G) {
-        StabilizerGroup H;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            H.push_back(new LimEntry<>(G[i]));
-        }
-        return H;
-    }
+//    inline StabilizerGroup toStabilizerGroup(const StabilizerGroupValue& G) {
+//        StabilizerGroup H;
+//        for (unsigned int i = 0; i < G.size(); i++) {
+//            H.push_back(new LimEntry<>(G[i]));
+//        }
+//        return H;
+//    }
 
     inline StabilizerGroupValue toStabilizerGroupValue(const StabilizerGroup& G) {
         StabilizerGroupValue H;
@@ -131,40 +131,60 @@ namespace dd {
         return concat;
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<NUM_QUBITS>*> GI;
-        LimBitset<NUM_QUBITS>*              col;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            col      = new LimBitset<NUM_QUBITS>();
-            col->lim = *G[i];
-            col->bits.set(i, 1);
-            GI.push_back(col);
-        }
-        return GI;
-    }
+//    template<std::size_t NUM_QUBITS>
+//    inline std::vector<LimBitset<NUM_QUBITS>*> appendIdentityMatrixBitset(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+//        std::vector<LimBitset<NUM_QUBITS>*> GI;
+//        LimBitset<NUM_QUBITS>*              col;
+//        for (unsigned int i = 0; i < G.size(); i++) {
+//            col      = new LimBitset<NUM_QUBITS>();
+//            col->lim = *G[i];
+//            col->bits.set(i, 1);
+//            GI.push_back(col);
+//        }
+//        return GI;
+//    }
+
+//    // TODO if this method is unused, delete it
+//    template<std::size_t NUM_QUBITS>
+//    inline std::vector<LimBitset<2*NUM_QUBITS>*> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+//        std::vector<LimBitset<2*NUM_QUBITS>*> GI;
+//        LimBitset<2*NUM_QUBITS>*              col;
+//        for (unsigned int i = 0; i < G.size(); i++) {
+//            col      = new LimBitset<2*NUM_QUBITS>();
+//            col->lim = *G[i];
+//            col->bits.set(i, 1);
+//            GI.push_back(col);
+//        }
+//        return GI;
+//    }
 
     template<std::size_t NUM_QUBITS>
-    inline std::vector<LimBitset<2 * NUM_QUBITS>*> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
-        std::vector<LimBitset<2 * NUM_QUBITS>*> GI;
-        LimBitset<2 * NUM_QUBITS>*              col;
+    inline std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
+        GI.reserve(G.size());
+        LimBitset<NUM_QUBITS, 2*NUM_QUBITS>             col;
         for (unsigned int i = 0; i < G.size(); i++) {
-            col      = new LimBitset<2 * NUM_QUBITS>();
-            col->lim = *G[i];
-            col->bits.set(i, 1);
-            GI.push_back(col);
-        }
-        return GI;
-    }
-
-    template<std::size_t NUM_QUBITS>
-    inline std::vector<LimBitset<2 * NUM_QUBITS>> appendIdentityMatrixBitsetBig(const std::vector<LimEntry<NUM_QUBITS>>& G) {
-        std::vector<LimBitset<2 * NUM_QUBITS>> GI;
-        LimBitset<2 * NUM_QUBITS>              col;
-        for (unsigned int i = 0; i < G.size(); i++) {
-            col     = LimBitset<2 * NUM_QUBITS>();
+            col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>();
             col.lim = G[i];
             col.bits.set(i, 1);
+            GI.push_back(col);
+        }
+        return GI;
+    }
+
+    // Concatenates G and H, and then sets the 'bits' objects to the Identity matrix
+    template<std::size_t NUM_QUBITS>
+    std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> concatenateAndAppendIdentityMatrix(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H) {
+        std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>> GI;
+        GI.reserve(G.size() + H.size());
+        for (std::size_t i = 0; i < G.size(); i++) {
+            auto col      = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(G[i]);
+            col.bits.set(i, 1);
+            GI.push_back(col);
+        }
+        for (std::size_t i=0; i<H.size(); i++) {
+            auto col = LimBitset<NUM_QUBITS, 2*NUM_QUBITS>(H[i]);
+            col.bits.set(G.size() + i, 1);
             GI.push_back(col);
         }
         return GI;
@@ -217,8 +237,8 @@ namespace dd {
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>*>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         unsigned int i = 0;
         while (i < G.size()) {
             if (G[i]->lim.isIdentityModuloPhase()) {
@@ -232,8 +252,8 @@ namespace dd {
         }
     }
 
-    template<std::size_t NUM_QUBITS>
-    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS>>& G) {
+    template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
         unsigned int i = 0;
         while (i < G.size()) {
             if (G[i].lim.isIdentityModuloPhase()) {

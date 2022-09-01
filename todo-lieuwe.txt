@@ -1,26 +1,80 @@
 ====    TODO
 
+-- coding, functionality
+
+in makeDDNode, delete the old low and high LIMs of the edge
+
+- Optimize `GramSchmidt()` from $O(n^3)$ to O(n^2)$ by assuming that the group `G` is in column echelon form
+- (low priority) in `getIsomorphismPauli()` in Case 3.1, can we simply set 'X' in the isomorphism, instead of multiplying by an isomorphism?
+- (low priority) in `intersectGroupsPauli()`, prevent the use of `vector oppositePhaseGenerators` by writing more space-efficient code:
+   add the LimEntry objects immediately, instead of storing them for later use.
+
+-- TESTS
+
+Write many tests for
+    GaussianElimination,
+        when -I is generated
+    getVector
+write test for recoverPhase(G, a)
+write test for recoverElement
+
+-- REFACTORING (low priority)
+
+refactor LimEntry<>::setOperator so that one function is called,
+    instead of two different setOperators
+    note that pauli_op is already defined in terms of 'I' and 'X' and so on, so it should already translate correctly
+
+Refactor 'limVector' into 'StabilizerGroup'
+refactor StabilizerGroup into its own class
+    Methods:
+    GramSchmidt
+    IsSorted
+    Sort()
+    getKernel
+    appendIdentity
+    equals
+    concatenate
+    deepcopy
+    gaussianElimination
+    pruneZeroColumns
+    toColumnEchelonForm
+    addLim
+    	don't add duplicate LIMs
+
+-- LOW PRIORITY
+
+make Hamming weight circuits
+
+====    DONE
+
 Documentation:
     HighLabelpauli
     getStabilizerGeneratorSet
 
--- coding, functionality
+refactor CVec utilities into a separate file
+    print
+    is zero
+    add
+    multiply(CMat, CVec)
+put sanity checks in a separate file
 
-incorporate X,Y cases into getIsomorphism's case u==v, see branch limdd-pauli-better-isomorphisms
+In getKernelZ, getKernelPauli,
+    Refactor LimBitset* into LimBitset, i.e., make them local, temporary variables,
+    to reduce memory management problems
 
-ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted, in the knife case of normalizeLIMDDPauli().
+test for isTower
 
-add Pauli-LIMDD functionality to
-    ComputeTable of Add
-    ComputeTable of multiplyMatrix
-    make inventory of places where LIMDD functionality needs to be added in order to support simulation
+fuzz more circuits:
+nqubits = 2 ... 5
+    ngates = 5, 10, 15, 20, 25
+        make 300 clifford circuits
+        make 300 non-Clifford circuits
 
-bool isTower()
+make tests for intersectGroupsPauli
 
-Remove memory leaks
-    make inventory of memory leaks
-
---  INVENTORY OF MEMORY LEAKS
+in new file PauliUtilities.hpp,
+    put the easy Pauli algebra stuff, like printing groups,
+    copying bitset segments, stuff with phases
 
 in normalizeLIMDDPauli:
     (done) via lots of LimEntry<>::multiply calls
@@ -60,97 +114,19 @@ in LimWeight
 GramSchmidt
     - return by value
 
+incorporate X,Y cases into getIsomorphism's case u==v, see branch limdd-pauli-better-isomorphisms
 
--- TESTS
+ask Thomas, Stefan how to decrease refcount to a node, so that the previous node is deleted, in the knife case of normalizeLIMDDPauli().
 
-test for isTower
+add Pauli-LIMDD functionality to
+    ComputeTable of Add
+    ComputeTable of multiplyMatrix
+    make inventory of places where LIMDD functionality needs to be added in order to support simulation
 
-fuzz more circuits:
-nqubits = 2 ... 5
-    ngates = 5, 10, 15, 20, 25
-        make 300 clifford circuits
-        make 300 non-Clifford circuits
+bool isTower()
 
-make tests for intersectGroupsPauli
-
-Write many tests for
-    GaussianElimination,
-        when -I is generated
-    getVector
-write test for recoverPhase(G, a)
-write test for recoverElement
-
--- REFACTORING (low priority)
-
-in new file PauliUtilities.hpp,
-    put the easy Pauli algebra stuff, like printing groups,
-    copying bitset segments, stuff with phases
-
-refactor LimEntry<>::setOperator so that one function is called,
-    instead of two different setOperators
-    note that pauli_op is already defined in terms of 'I' and 'X' and so on, so it should already translate correctly
-
-In getKernelZ, getKernelPauli,
-    Refactor LimBitset* into LimBitset, i.e., make them local, temporary variables,
-    to reduce memory management problems
-
-Refactor 'limVector' into 'StabilizerGroup'
-refactor StabilizerGroup into its own class
-    Methods:
-    GramSchmidt
-    IsSorted
-    Sort()
-    getKernel
-    appendIdentity
-    equals
-    concatenate
-    deepcopy
-    gaussianElimination
-    pruneZeroColumns
-    toColumnEchelonForm
-    addLim
-    	don't add duplicate LIMs
-
-highLabelZ uses GramSchmidt(Group, LimEntry*)
-    result is returned as pointer
-    but we don't want to use it as pointer
-
-rewrite GaussianElimination so that it takes into account the phase
-    - toColumnEchelonForm(StabilizerGroup)
-        - constructStabilizerGroupZ
-            here -I cannot arise
-        - getHighLabelZ 
-            This method should use toColumnEchelonFormModuloPhase, right?
-    in these applications, is it important to handle the case when -I is generated?
-    If so, then neither of these methods will suffer from the "not handling -I correctly"-deficiency.
-
--- LOW PRIORITY
-
-refactor CVec utilities into a separate file
-    print
-    is zero
-    add
-    multiply(CMat, CVec)
-put sanity checks in a separate file
-
-make Hamming weight circuits
-
-getLIMDDFromVector() turn a ket-vector into a LIMDD
-use some tests to test whether the isomorphism-finding machinery works:
-vector := [ ... ]
-iso := xyziy
-transformedVector := iso * vector
-LIMDD a := getLIMDDFromVector(vector)
-LIMDD b := getLIMDDFromVector(vector)
-isoFound := getIsomorphism(a, b)
-if isValidIsomorphism(a, b, isoFound) party else error
-
-in tests, call isIsomorphism instead of defining a handwritten isomorphism
-
-
-====    DONE
-
-
+Remove memory leaks
+    make inventory of memory leaks
 All 'simpleCircuit' tests pass
 
 Talk to Thomas and Jurgen about:

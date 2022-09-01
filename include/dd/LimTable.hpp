@@ -14,7 +14,6 @@
 #include <string>
 #include <vector>
 
-// todo two of the bits should be reserved for the phase, which is one of +1, +i, -1, -i
 namespace dd {
 
     template<std::size_t NUM_QUBITS = dd::NUM_QUBITS>
@@ -27,7 +26,7 @@ namespace dd {
 
         constexpr static std::size_t NUM_BITSETBITS = 2 * NUM_QUBITS + 2;
         std::bitset<NUM_BITSETBITS>  paulis{};
-        LimEntry*                    next{};
+        LimEntry<NUM_QUBITS>*        next{};
         RefCount                     refCount{};
 
         // explicit definition of constructors
@@ -47,44 +46,42 @@ namespace dd {
         static std::bitset<NUM_BITSETBITS> bitsetFromString(std::string pauliString) {
             std::bitset<NUM_BITSETBITS> res{0};
             if (pauliString.size() == 0) return res;
-            std::string::size_type i = 0;  // iterates over the checkvector 'res'
-            std::size_t cursor = 0;        // iterates over 'pauliString'
+            std::string::size_type i      = 0; // iterates over the checkvector 'res'
+            std::size_t            cursor = 0; // iterates over 'pauliString'
             // Step 1: process the phase in front of the string: either "-",  "i",  or "-i"
             if (pauliString[0] == '-') {
                 if (pauliString.size() >= 2 && pauliString[1] == 'i') {
                     // Set phase -i
-                    res.set(NUM_BITSETBITS-1, (phase_t::phase_minus_i & 0x2) >> 1);
-                    res.set(NUM_BITSETBITS-2,  phase_t::phase_minus_i & 0x1);
-                    cursor = 2;  // Start at the character at position 2, skipping the characters '-i'
+                    res.set(NUM_BITSETBITS - 1, (phase_t::phase_minus_i & 0x2) >> 1);
+                    res.set(NUM_BITSETBITS - 2, phase_t::phase_minus_i & 0x1);
+                    cursor = 2; // Start at the character at position 2, skipping the characters '-i'
+                } else {
+                    res.set(NUM_BITSETBITS - 1, (phase_t::phase_minus_one & 0x2) >> 1);
+                    res.set(NUM_BITSETBITS - 2, phase_t::phase_minus_one & 0x1);
+                    cursor = 1; // Start at the character at position 1, skipping the character '-'
                 }
-                else {
-                    res.set(NUM_BITSETBITS-1, (phase_t::phase_minus_one & 0x2) >> 1);
-                    res.set(NUM_BITSETBITS-2,  phase_t::phase_minus_one & 0x1);
-                    cursor = 1;  // Start at the character at position 1, skipping the character '-'
-                }
-            }
-            else if (pauliString[0] == 'i') {
-                res.set(NUM_BITSETBITS-1, (phase_t::phase_i & 0x2) >> 1);
-                res.set(NUM_BITSETBITS-2,  phase_t::phase_i & 0x1);
+            } else if (pauliString[0] == 'i') {
+                res.set(NUM_BITSETBITS - 1, (phase_t::phase_i & 0x2) >> 1);
+                res.set(NUM_BITSETBITS - 2, phase_t::phase_i & 0x1);
                 cursor = 1; // Start at character 1, skipping the character 'i' that indicated the phase
             }
             // Step 2: Process all the qubits
             for (; cursor < pauliString.size() && i < NUM_QUBITS; cursor++) {
                 switch (pauliString[cursor]) {
                     case 'I':
-                        res[2 * i    ] = 0;
+                        res[2 * i]     = 0;
                         res[2 * i + 1] = 0;
                         break;
                     case 'X':
-                        res[2 * i    ] = 0;
+                        res[2 * i]     = 0;
                         res[2 * i + 1] = 1;
                         break;
                     case 'Z':
-                        res[2 * i    ] = 1;
+                        res[2 * i]     = 1;
                         res[2 * i + 1] = 0;
                         break;
                     case 'Y':
-                        res[2 * i    ] = 1;
+                        res[2 * i]     = 1;
                         res[2 * i + 1] = 1;
                         break;
                     default:
@@ -107,7 +104,7 @@ namespace dd {
          */
 
         [[nodiscard]] pauli_op getPauliForQubit(dd::Qubit qubit) const {
-            if(qubit == -1){
+            if (qubit == -1) {
                 // Reached terminal
                 return pauli_id;
             }
@@ -123,8 +120,7 @@ namespace dd {
         }
 
         [[nodiscard]] char getQubit(dd::Qubit qubit) const {
-            // todo return a pauli_t
-            if(qubit == -1){
+            if (qubit == -1) {
                 // Reached terminal
                 return 'I';
             }
@@ -148,8 +144,8 @@ namespace dd {
         }
 
         [[nodiscard]] phase_t getPhase() const {
-            int phase = ((int) paulis.test(2*NUM_QUBITS)) | ((int) paulis.test(2*NUM_QUBITS+1) << 1);
-            return (phase_t) phase;
+            int phase = ((int)paulis.test(2 * NUM_QUBITS)) | ((int)paulis.test(2 * NUM_QUBITS + 1) << 1);
+            return (phase_t)phase;
         }
 
         // returns the phase of the LIM, in two bits, which have the following meaning:
@@ -158,13 +154,13 @@ namespace dd {
             if (l == nullptr) return phase_t::phase_one;
             if (l == noLIM) return phase_t::phase_one;
             return l->getPhase();
-//            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS+1) << 1);
-//            return phase;
+            //            uint32_t phase = (l->paulis.test(2*NUM_QUBITS)) | (l->paulis.test(2*NUM_QUBITS+1) << 1);
+            //            return phase;
         }
 
         void setPhase(char newPhase) {
-            paulis.set(2*NUM_QUBITS, (char) 0x1 & newPhase);
-            paulis.set(2*NUM_QUBITS+1, (char) 0x2 & newPhase);
+            paulis.set(2 * NUM_QUBITS, (char)0x1 & newPhase);
+            paulis.set(2 * NUM_QUBITS + 1, (char)0x2 & newPhase);
         }
 
         /**
@@ -180,13 +176,13 @@ namespace dd {
 
             std::ostringstream os;
             // Write the phase
-            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (!lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << 'i';
             }
-            if ( lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (lim->paulis.test(NUM_BITSETBITS - 1) && !lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << '-';
             }
-            if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << "-i";
             }
             // Write the Pauli operators
@@ -198,56 +194,54 @@ namespace dd {
 
         // Prints operators [0, ... , nQubits], i.e., including index 'nQubits'
         static std::string to_string(const LimEntry<NUM_QUBITS>* lim, Qubit nQubits) {
-//        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
-        	if (nQubits < 0) {
-            	if (lim == nullptr) {
+            //        	Log::log << "[to_string] outputting LIM " << to_string(lim) << " on " << nQubitsInt << " qubits.\n"; Log::log.flush();
+            if (nQubits < 0) {
+                if (lim == nullptr) {
                     return "1";
-            	}
-	            if (!lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
-	                return "1";
-	            }
-	            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
-	                return "i";
-	            }
-	            if ( lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
-	                return "-";
-	            }
-	            if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
-	                return "-i";
-	            }
-				return "";
-        	}
-        	if (lim == nullptr) {
-                return std::string(nQubits+1, 'I');
-        	}
+                }
+                if (!lim->paulis.test(NUM_BITSETBITS - 1) && !lim->paulis.test(NUM_BITSETBITS - 2)) {
+                    return "1";
+                }
+                if (!lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
+                    return "i";
+                }
+                if (lim->paulis.test(NUM_BITSETBITS - 1) && !lim->paulis.test(NUM_BITSETBITS - 2)) {
+                    return "-";
+                }
+                if (lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
+                    return "-i";
+                }
+                return "";
+            }
+            if (lim == nullptr) {
+                return std::string(nQubits + 1, 'I');
+            }
             if (lim == noLIM) {
                 return "(no LIM)";
             }
 
             std::ostringstream os;
             // Write the phase
-            if (!lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (!lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << 'i';
             }
-            if ( lim->paulis.test(NUM_BITSETBITS-1) && !lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (lim->paulis.test(NUM_BITSETBITS - 1) && !lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << '-';
             }
-            if ( lim->paulis.test(NUM_BITSETBITS-1) &&  lim->paulis.test(NUM_BITSETBITS-2)) {
+            if (lim->paulis.test(NUM_BITSETBITS - 1) && lim->paulis.test(NUM_BITSETBITS - 2)) {
                 os << "-i";
             }
             // Write the Pauli operators
-			for (int i = 0; i <= (int) nQubits; i++) {
-				os << getQubit(lim, i);
-			}
+            for (int i = 0; i <= (int)nQubits; i++) {
+                os << getQubit(lim, i);
+            }
             return os.str();
         }
 
-        // TODO: static versions as well to cover nullptr case?
         bool operator==(const LimEntry<NUM_QUBITS>& other) const {
             return paulis == other.paulis;
         }
         bool operator!=(const LimEntry<NUM_QUBITS>& other) const {
-            //todo shouldn't it be enough to define the == operator?
             return paulis != other.paulis;
         }
 
@@ -256,8 +250,8 @@ namespace dd {
         static bool Equal(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             if (a == noLIM) return b == noLIM;
             if (b == noLIM) return false;
-//            if (a == nullptr && b == nullptr) return true;
-//            if (a == nullptr || b == nullptr) return false;
+            //            if (a == nullptr && b == nullptr) return true;
+            //            if (a == nullptr || b == nullptr) return false;
             if (isIdentityOperator(a) && isIdentityOperator(b)) return true;
             if (a == nullptr) return false;
             if (b == nullptr) return false;
@@ -272,9 +266,13 @@ namespace dd {
             if (b == nullptr) {
                 return isIdentityOperator(a);
             }
+            return EqualModuloPhase(*a, *b);
+        }
+
+        static bool EqualModuloPhase(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             // check whether the first 2*NUM_QUBITS bits are equal
-            for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
-                if (a->paulis.test(i) != b->paulis.test(i)) {
+            for (unsigned int i = 0; i < 2 * NUM_QUBITS; i++) {
+                if (a.paulis.test(i) != b.paulis.test(i)) {
                     return false;
                 }
             }
@@ -282,13 +280,8 @@ namespace dd {
         }
 
         // Returns whether this vector is the identity operator, i.e., has all bits set to zero
-        // TODO limdd: there is probably a faster way to check whether a bitvector is all-zero,
-        //   using bit tricks supported by the std::array data structure. --Lieuwe
         bool isAllZeroVector() const {
-            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
-                if (paulis.test(i)) return false;
-            }
-            return true;
+            return !paulis.any();
         }
 
         bool isIdentityOperator() const {
@@ -302,7 +295,7 @@ namespace dd {
         }
 
         bool isIdentityModuloPhase() const {
-            for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+            for (unsigned int i = 0; i < 2 * NUM_QUBITS; i++) {
                 if (paulis.test(i)) return false;
             }
             return true;
@@ -316,30 +309,27 @@ namespace dd {
 
         // Returns whether the subsequence [start ... range) is all-zero
         bool isZeroInRange(unsigned int start, unsigned int end) const {
-//            std::cout << "[isZeroInRange] start=" << start << " end=" << end << "\n"; std::cout.flush();
-            for (unsigned int i=start; i<end && i<NUM_BITSETBITS; i++) {
-//                std::cout << "[isZeroInRange] checking i=" << i << "\n"; std::cout.flush();
+            //            std::cout << "[isZeroInRange] start=" << start << " end=" << end << "\n"; std::cout.flush();
+            for (unsigned int i = start; i < end && i < NUM_BITSETBITS; i++) {
+                //                std::cout << "[isZeroInRange] checking i=" << i << "\n"; std::cout.flush();
                 if (paulis.test(i)) return false;
             }
-//            std::cout << "[isZeroInRange] yes, is zero.\n"; std::cout.flush();
+            //            std::cout << "[isZeroInRange] yes, is zero.\n"; std::cout.flush();
             return true;
         }
 
         // Given a 'phase' in 0,1,2,3,
         // multiply this LIM's phase by that amount
         void multiplyPhaseBy(int phase) {
-//            std::cout << "[multiplyPhaseBy] current = " << (int) LimEntry<NUM_QUBITS>::getPhase(this) << " other = " << (int) phase << "\n";
-            int current_phase = ((int) paulis.test(2*NUM_QUBITS)) | ((int) paulis.test(2*NUM_QUBITS + 1) << 1);
-            int new_phase = current_phase + (phase & 0x3);
-            paulis.set(2*NUM_QUBITS  , new_phase & 0x1);
-            paulis.set(2*NUM_QUBITS+1, (new_phase & 0x2) >> 1);
-//            std::cout << "[multiplyPhaseBy] new phase = " << (int) LimEntry<NUM_QUBITS>::getPhase(this) << "\n";
+            //            std::cout << "[multiplyPhaseBy] current = " << (int) LimEntry<NUM_QUBITS>::getPhase(this) << " other = " << (int) phase << "\n";
+            int current_phase = ((int)paulis.test(2 * NUM_QUBITS)) | ((int)paulis.test(2 * NUM_QUBITS + 1) << 1);
+            int new_phase     = current_phase + (phase & 0x3);
+            paulis.set(2 * NUM_QUBITS, new_phase & 0x1);
+            paulis.set(2 * NUM_QUBITS + 1, (new_phase & 0x2) >> 1);
+            //            std::cout << "[multiplyPhaseBy] new phase = " << (int) LimEntry<NUM_QUBITS>::getPhase(this) << "\n";
         }
 
         // Right-Multiply this Pauli operator with the 'other' Pauli operator, obtaining this * other
-        // todo the 'bitset' data structure supports XOR natively,
-        //   so use that to speed up this operation. When you implement this optimization,
-        //   be careful that the phase is part of the 'bitset'
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char    op1, op2;
             phase_t newPhase = getPhase();
@@ -376,15 +366,15 @@ namespace dd {
         }
 
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
-        	multiplyBy(other);
-        	if (!commutesWith(other)) {
-        		multiplyPhaseBy(phase_t::phase_minus_one);
-        	}
+            multiplyBy(other);
+            if (!commutesWith(other)) {
+                multiplyPhaseBy(phase_t::phase_minus_one);
+            }
         }
 
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>* other) {
-        	if (other == nullptr) return;
-        	leftMultiplyBy(*other);
+            if (other == nullptr) return;
+            leftMultiplyBy(*other);
         }
 
         void multiplyBy(const LimEntry<NUM_QUBITS>* other) {
@@ -397,28 +387,36 @@ namespace dd {
             multiplyBy(other);
         }
 
-        // Returns the LIM a * b
-        // TODO make more efficient by starting with "c = copy of a"
-        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
-            assert(a != noLIM && b != noLIM);
-            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
-            //            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            //            c->multiplyBy(a);
-            c->multiplyBy(b);
-            return c;
-        }
+//        // Returns the LIM a * b
+//        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+//            //todo this function can cause memory leaks!
+//            assert(a != noLIM && b != noLIM);
+//            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
+//            c->multiplyBy(b);
+//            return c;
+//        }
 
-        // TOOD I think this function is not called anywhere
-        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            LimEntry<NUM_QUBITS>* c = LimEntry<NUM_QUBITS>::getIdentityOperator();
-            c->multiplyBy(a);
-            c->multiplyBy(b);
-            return c;
-        }
-
-        // TODO refactor so that multiply(*a, *b) calls this one
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            return *multiply(&a, &b);
+            LimEntry<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
+            LimEntry<NUM_QUBITS> c(a);
+            c.multiplyBy(b);
+            return c;
+        }
+
+        void multiplyByX(Qubit qubit) {
+            if (paulis.test(2*qubit)) {
+                multiplyPhaseByMinusOne();
+            }
+            paulis.flip(2*qubit+1);
+        }
+
+        void multiplyPhaseByMinusOne() {
+            paulis.flip(2*NUM_QUBITS+1);
         }
 
         void setOperator(Qubit v, pauli_op op) {
@@ -437,11 +435,9 @@ namespace dd {
                     paulis.set(2 * v + 1, 1);
                     break;
                 case pauli_op::pauli_z:
-                    paulis.set(2*v,   1);
-                    paulis.set(2*v+1, 0);
+                    paulis.set(2 * v, 1);
+                    paulis.set(2 * v + 1, 0);
                     break;
-//                default:
-                    // TODO limdd throw an exception?
             }
         }
 
@@ -487,53 +483,51 @@ namespace dd {
         }
 
         bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
-        	if (b == nullptr) return true;
-        	return commutesWith(*b);
+            if (b == nullptr) return true;
+            return commutesWith(*b);
         }
 
         // Returns I, the Identity operator
         // (Some subroutines start with an identity operator, and then apply mutations to it;
         //  however, if you need the identity operator as such, then use a null pointer)
-        static LimEntry<NUM_QUBITS>* getIdentityOperator() {
-            LimEntry<NUM_QUBITS>* Id = new LimEntry<NUM_QUBITS>();
-            return Id;
+        static LimEntry<NUM_QUBITS> getIdentityOperator() {
+            return LimEntry<NUM_QUBITS>();
         }
 
         // Returns -I
         // i.e., -1 times the Identity operator
-        static LimEntry<NUM_QUBITS>* getMinusIdentityOperator() {
-            LimEntry<NUM_QUBITS>* Id = getIdentityOperator();
-            Id->setPhase(phase_t::phase_minus_one);
+        static LimEntry<NUM_QUBITS> getMinusIdentityOperator() {
+            LimEntry<NUM_QUBITS> Id;
+            Id.setPhase(phase_t::phase_minus_one);
             return Id;
         }
 
         LimEntry<NUM_QUBITS> getInverse() const {
-        	LimEntry<NUM_QUBITS> inverse(*this);
-        	phase_t phase = getPhase();
-        	if (phase == phase_t::phase_i) {
-        		inverse.setPhase(phase_t::phase_minus_i);
-        	}
-        	else if (phase == phase_t::phase_minus_i) {
-        		inverse.setPhase(phase_t::phase_i);
-        	}
-        	return inverse;
+            LimEntry<NUM_QUBITS> inverse(*this);
+            phase_t              phase = getPhase();
+            if (phase == phase_t::phase_i) {
+                inverse.setPhase(phase_t::phase_minus_i);
+            } else if (phase == phase_t::phase_minus_i) {
+                inverse.setPhase(phase_t::phase_i);
+            }
+            return inverse;
         }
 
         Qubit getMaximumIndex() const {
-        	for (Qubit v=NUM_QUBITS-1; v >= 0; v--) {
-        		if (getQubit(v) != pauli_op::pauli_id) {
-        			return v;
-        		}
-        	}
-        	return (Qubit) 0;
+            for (Qubit v = NUM_QUBITS - 1; v >= 0; v--) {
+                if (getQubit(v) != pauli_op::pauli_id) {
+                    return v;
+                }
+            }
+            return (Qubit)0;
         }
 
         // Returns the index of the first nonzero entry in the checkvector
         unsigned int pivotPosition() const {
-            for (unsigned int i=0; i<2*NUM_QUBITS; i++) {
+            for (unsigned int i = 0; i < 2 * NUM_QUBITS; i++) {
                 if (paulis.test(i)) return i;
             }
-            return (unsigned int) -1;
+            return (unsigned int)-1;
         }
 
         // Returns whether a <= b in the lexicographic order
@@ -542,7 +536,7 @@ namespace dd {
             if (a == nullptr) return true;
             if (b == nullptr) return a->isIdentityOperator();
             // Note the length of the vectors is 2*NUM_QUBITS+2
-            for (unsigned int i=0; i<NUM_BITSETBITS; i++) {
+            for (unsigned int i = 0; i < NUM_BITSETBITS; i++) {
                 if (!a->paulis.test(i) and b->paulis.test(i)) {
                     return true;
                 }
@@ -553,9 +547,30 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
-        // TODO refactor so that comparison in done in this function  and  so that leq-by-reference calls this function instead of the other way around
         static bool geqValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
-            return leq(&b, &a);
+            for (unsigned int i = 0; i < NUM_BITSETBITS; i++) {
+                if (!a.paulis.test(i) and b.paulis.test(i)) {
+                    return false;
+                }
+                if (a.paulis.test(i) and !b.paulis.test(i)) {
+                    return true;
+                }
+            }
+            return true; // in this case, vectors are equal
+        }
+
+        static bool greaterValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
+            assert(a.paulis.size() == b.paulis.size());
+            assert(a.paulis.size() <= NUM_BITSETBITS);
+            for (std::size_t i = 0; i < NUM_BITSETBITS; i++) {
+                if (!a.paulis.test(i) && b.paulis.test(i)) {
+                    return false;
+                }
+                if (a.paulis.test(i) && !b.paulis.test(i)) {
+                    return true;
+                }
+            }
+            return false; // in this case, vectors are equal
         }
 
         static bool geq(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
@@ -584,70 +599,65 @@ namespace dd {
     // A wrapper containing a LimEntry and a std::bitset
     // used in Gaussian Elimination, when the matrix of checkvectors is split up into two parts:
     //   a LIM-part and a '0/1 matrix' part, which is used for finding linear combinations
-    template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
+    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS, std::size_t NUM_BITS = NUM_QUBITS>
     class LimBitset {
     public:
-        LimEntry<NUM_QUBITS>    lim;
-        std::bitset<NUM_QUBITS> bits;
+        LimEntry<NUM_QUBITS>  lim;
+        std::bitset<NUM_BITS> bits;
 
-        LimBitset<NUM_QUBITS>() {
+        LimBitset<NUM_QUBITS, NUM_BITS>() {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimBitset<NUM_QUBITS>* a):
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimBitset<NUM_QUBITS, NUM_BITS>* a):
             lim(a->lim), bits(a->bits) {
             //
         }
 
-        LimBitset<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* _lim):
-            lim(*_lim) {
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<NUM_QUBITS>& _lim):
+            lim(_lim) {
             //
         }
 
-        // TODO refactor so that lim is initialized using constructor lim(a); make another constructor for LimEntry<N1>(LimEntry<N2>)
-        template<std::size_t M>
-        LimBitset<NUM_QUBITS>(const LimEntry<M>* a) {
-            lim = *a;
+        LimBitset<NUM_QUBITS, NUM_BITS>(const LimEntry<NUM_QUBITS>* _lim):
+            lim(*_lim) {
+            //
         }
 
         bool isAllZeroLim() const {
             return lim.isAllZeroVector();
         }
 
-        void multiplyBy(const LimBitset<NUM_QUBITS>& other) {
+        void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other) {
             lim.multiplyBy(other.lim);
             bits ^= other.bits;
         }
 
-        static LimBitset<NUM_QUBITS>* multiply(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
-            LimBitset<NUM_QUBITS>* c = new LimBitset<NUM_QUBITS>();
-            c->multiplyBy(a);
-            c->multiplyBy(b);
-            return c;
-        }
-
-        static LimBitset<NUM_QUBITS> multiply(const LimBitset<NUM_QUBITS> a, const LimBitset<NUM_QUBITS> b) {
-            LimBitset<NUM_QUBITS> c(a);
+        static LimBitset<NUM_QUBITS, NUM_BITS> multiply(const LimBitset<NUM_QUBITS, NUM_BITS> a, const LimBitset<NUM_QUBITS, NUM_BITS> b) {
+            LimBitset<NUM_QUBITS, NUM_BITS> c(a);
             c.multiplyBy(b);
             return c;
         }
 
-        static bool leq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
+        static bool leq(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
             return LimEntry<NUM_QUBITS>::leq(&(a->lim), &(b->lim));
         }
 
-        static bool geq(const LimBitset<NUM_QUBITS>* a, const LimBitset<NUM_QUBITS>* b) {
+        static bool geq(const LimBitset<NUM_QUBITS, NUM_BITS>* a, const LimBitset<NUM_QUBITS, NUM_BITS>* b) {
             return LimEntry<NUM_QUBITS>::geq(&(a->lim), &(b->lim));
         }
 
-        static bool geqValue(const LimBitset<NUM_QUBITS>& a, const LimBitset<NUM_QUBITS>& b) {
+        static bool geqValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
             return LimEntry<NUM_QUBITS>::geqValue(a.lim, b.lim);
+        }
+        static bool greaterValue(const LimBitset<NUM_QUBITS, NUM_BITS>& a, const LimBitset<NUM_QUBITS, NUM_BITS>& b) {
+            return LimEntry<NUM_QUBITS>::greaterValue(a.lim, b.lim);
         }
     };
 
     // LimWeight contains a LIM and a Complex number
     // The complex number is always a temporary element of the complex numbers cache
-    template <std::size_t NUM_QUBITS=dd::NUM_QUBITS>
+    template<std::size_t NUM_QUBITS = dd::NUM_QUBITS>
     struct LimWeight {
     public:
         LimEntry<NUM_QUBITS> lim;
@@ -661,78 +671,65 @@ namespace dd {
             //
         }
 
-        LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a): lim(a->lim), weight(a->weight) {
-    		//
-    	}
+//        LimWeight<NUM_QUBITS>(const LimWeight<NUM_QUBITS>* a):
+//            lim(a->lim), weight(a->weight) {
+//            //
+//        }
+//
+//        LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a):
+//            lim(new LimEntry<NUM_QUBITS>(a)), weight(Complex::one) {
+//            //
+//        }
+//
+//        LimWeight<NUM_QUBITS>(const std::string pauliString):
+//            lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
+//            //
+//        }
 
-    	LimWeight<NUM_QUBITS>(const LimEntry<NUM_QUBITS>* a)
-    			: lim(new LimEntry<NUM_QUBITS>(a)), weight(Complex::one) {
-    		//
-    	}
+//        void setToIdentityOperator() {
+//            if (lim == nullptr) {
+//                lim = new LimEntry<>();
+//            } else {
+//                lim->setToIdentityOperator();
+//            }
+//        }
 
-    	LimWeight<NUM_QUBITS>(const std::string pauliString)
-    			: lim(new LimEntry<NUM_QUBITS>(pauliString)), weight(Complex::one) {
-    		//
-    	}
+        static std::string to_string(const LimWeight<NUM_QUBITS>* a) {
+            if (a == LimWeight<NUM_QUBITS>::noLIM) {
+                return "(no LIM)";
+            }
+            return LimEntry<NUM_QUBITS>::to_string(a->lim);
+        }
 
-    	void setToIdentityOperator() {
-    		if (lim == nullptr) {
-    			lim = new LimEntry<>();
-    		}
-    		else {
-    			lim->setToIdentityOperator();
-    		}
-    	}
-
-    	void multiplyBy(const LimWeight<NUM_QUBITS>& other) {
-    		lim->multiplyBy(other->lim);
-    		// TODO
-    		// Question @Thomas, Stefan: how to multiply the weight? as follows:
-    		//   weight = weight * other.weight
-    	}
-
-    	void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
-    		lim->multiplyBy(other);
-    	}
-
-    	static std::string to_string(const LimWeight<NUM_QUBITS>* a) {
-    		if (a == LimWeight<NUM_QUBITS>::noLIM) {
-    			return "(no LIM)";
-    		}
-    		return LimEntry<NUM_QUBITS>::to_string(a->lim);
-    	}
-
-    	static bool Equal(const LimWeight<NUM_QUBITS>* a, const LimWeight<NUM_QUBITS>* b) {
-    		assert(a != nullptr);
-    		assert(b != nullptr);
-    		if (a == noLIM && b == noLIM) return true;
-    		if (a == noLIM || b == noLIM) return false;
-    		return LimEntry<NUM_QUBITS>::Equal(a->lim, b->lim);
-    	}
-
-
+        static bool Equal(const LimWeight<NUM_QUBITS>* a, const LimWeight<NUM_QUBITS>* b) {
+            assert(a != nullptr);
+            assert(b != nullptr);
+            if (a == noLIM && b == noLIM) return true;
+            if (a == noLIM || b == noLIM) return false;
+            return LimEntry<NUM_QUBITS>::Equal(a->lim, b->lim);
+        }
     };
 
-    template <std::size_t NUM_QUBITS>
-    LimEntry<NUM_QUBITS>* LimEntry<NUM_QUBITS>::noLIM = (LimEntry<NUM_QUBITS>*) -1;
+    template<std::size_t NUM_QUBITS>
+    LimEntry<NUM_QUBITS>* LimEntry<NUM_QUBITS>::noLIM = (LimEntry<NUM_QUBITS>*)-1;
 
-    template <std::size_t NUM_QUBITS>
-    LimWeight<NUM_QUBITS>* LimWeight<NUM_QUBITS>::noLIM = (LimWeight<NUM_QUBITS>*) -1;
+    template<std::size_t NUM_QUBITS>
+    LimWeight<NUM_QUBITS>* LimWeight<NUM_QUBITS>::noLIM = (LimWeight<NUM_QUBITS>*)-1;
 
-    template <std::size_t NUM_QUBITS>
+    template<std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimEntry<NUM_QUBITS>& a) {
         return out << LimEntry<NUM_QUBITS>::to_string(&a);
     }
 
-    template <std::size_t NUM_QUBITS>
+    template<std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimBitset<NUM_QUBITS>& a) {
         return out << a.lim << " -- " << a.bits;
     }
 
-    template <std::size_t NUM_QUBITS>
+    template<std::size_t NUM_QUBITS>
     std::ostream& operator<<(std::ostream& out, const LimWeight<NUM_QUBITS>& a) {
-//    	LimEntry<NUM_QUBITS>* const alim = (LimEntry<NUM_QUBITS>* const) &(a.lim);
-    	return out << a.weight << " * " << LimEntry<NUM_QUBITS>::to_string(a.lim);
+        //    	LimEntry<NUM_QUBITS>* const alim = (LimEntry<NUM_QUBITS>* const) &(a.lim);
+        return out << a.weight << " * " << LimEntry<NUM_QUBITS>::to_string(a.lim);
     }
 } // namespace dd
 
@@ -740,7 +737,7 @@ namespace std {
     template<std::size_t NUM_QUBITS>
     struct hash<dd::LimEntry<NUM_QUBITS>> {
         std::size_t operator()(dd::LimEntry<NUM_QUBITS> const& e) const noexcept {
-            return std::hash<std::bitset<dd::LimEntry<NUM_QUBITS>::NUM_BITSETBITS> >{}(e.paulis);
+            return std::hash<std::bitset<dd::LimEntry<NUM_QUBITS>::NUM_BITSETBITS>>{}(e.paulis);
         }
     };
 
@@ -767,14 +764,13 @@ namespace dd {
         };
         ~LimTable() = default;
 
-        static std::size_t hash(const Entry *a) {
-            if (a != nullptr){
+        static std::size_t hash(const Entry* a) {
+            if (a != nullptr) {
                 return hash(a->paulis);
             } else {
                 return hash(PauliBitSet{});
             }
         }
-
 
         static std::size_t hash(const Entry& a) {
             return hash(a.paulis);
@@ -934,7 +930,7 @@ namespace dd {
             gcCalls++;
             // nothing to be done if garbage collection is not forced, and the limit has not been reached,
             // or the current count is minimal (the complex table always contains at least 0.5)
-            if ((!force && count < gcLimit) || count <= 1 || true) //Todo implement garbage collect
+            if (!force && count < gcLimit)
                 return 0;
 
             gcRuns++;
