@@ -45,8 +45,8 @@ namespace dd {
                 auto entry = Complex{available, available->next};
                 available  = entry.i->next;
                 count += 2;
-//                std::cout << "Providing real " << (long) entry.r << " = " << ((void*) entry.r) << " (" << (((long) entry.r) % 101) << ") ++" << std::endl;
-//                std::cout << "Providing imag " << (long) entry.i << " = " << ((void*) entry.i) << " (" << (((long) entry.i) % 101) << ") ++" << std::endl;
+                //std::cout << "Providing real " << (long) entry.r << " = " << ((void*) entry.r) << " (" << (((long) entry.r) % 101) << ") ++" << std::endl;
+                //std::cout << "Providing imag " << (long) entry.i << " = " << ((void*) entry.i) << " (" << (((long) entry.i) % 101) << ") ++" << std::endl;
                 return entry;
             }
 
@@ -66,8 +66,8 @@ namespace dd {
             c.i = &(*chunkIt);
             ++chunkIt;
             count += 2;
-//            std::cout << "Providing real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ") ++" << std::endl;
-//            std::cout << "Providing imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ") ++" << std::endl;
+            //std::cout << "Providing real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ") ++" << std::endl;
+            //std::cout << "Providing imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ") ++" << std::endl;
             return c;
         }
 
@@ -91,10 +91,10 @@ namespace dd {
         }
 
         void returnToCache(Complex& c) {
-//            std::cout << "Returning real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ")    --" << std::endl;
-//            std::cout << "Returning imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ")    --" << std::endl;
+            //std::cout << "Returning real " << (long) c.r << " = " << ((void*) c.r) << " (" << (((long) c.r) % 101) << ")    --" << std::endl;
+            //std::cout << "Returning imag " << (long) c.i << " = " << ((void*) c.i) << " (" << (((long) c.i) % 101) << ")    --" << std::endl;
             assert(count >= 2);
-            assert((reinterpret_cast<long>(&c) & 1ULL) == 0); // Mate, you flipped the sign of a cached complex number, by using the flipPointerSign from the complexTable!
+            assert((reinterpret_cast<std::uintptr_t>(&c) & 1ULL) == 0); // Mate, you flipped the sign of a cached complex number, by using the flipPointerSign from the complexTable!
             assert(c != Complex::zero);
             assert(c != Complex::one);
             assert(c.r->refCount == 0);
