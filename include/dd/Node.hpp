@@ -102,6 +102,8 @@ namespace dd {
         [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixTempFlagSet(const dNode* p) { return isDensityMatrixTempFlagSet(reinterpret_cast<std::uintptr_t>(p)); }
         [[nodiscard]] [[maybe_unused]] static inline bool isDensityMatrixNode(const dNode* p) { return isDensityMatrixNode(reinterpret_cast<std::uintptr_t>(p)); }
 
+        [[nodiscard]] static inline bool isIdentity() { return false; }
+
         static inline void setConjugateTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 0)); }
         static inline void setNonReduceTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 1)); }
         static inline void setDensityMatTempFlagTrue(dNode*& p) { p = reinterpret_cast<dNode*>(reinterpret_cast<std::uintptr_t>(p) | (1ULL << 2)); }

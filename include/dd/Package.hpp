@@ -2181,7 +2181,6 @@ namespace dd {
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
             if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
-                std::cout << "[multiply] Found Identity at qubit " << (int)(x.p->v) << ".\n";
                 if (y.w.exactlyZero()) {
                     return ResultEdge::zero;
                 }
@@ -3633,7 +3632,7 @@ namespace dd {
             return;
         }
 
-        CMat getMatrix(const dEdge& e) {
+        CMat getMatrix([[maybe_unused]] const dEdge& e) {
             return {};
         }
 
