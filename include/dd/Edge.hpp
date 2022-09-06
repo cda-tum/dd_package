@@ -33,8 +33,8 @@ namespace dd {
         [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
 
         // edges pointing to zero and one terminals
-        static inline Edge one{Node::terminal, Complex::one};
-        static inline Edge zero{Node::terminal, Complex::zero};
+        static const inline Edge one{Node::terminal, Complex::one};
+        static const inline Edge zero{Node::terminal, Complex::zero};
 
         [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }
         [[nodiscard]] constexpr bool        isZeroTerminal() const { return Node::isTerminal(p) && w == Complex::zero; }
@@ -95,7 +95,7 @@ namespace std {
     template<class Node>
     struct hash<dd::Edge<Node>> {
         std::size_t operator()(dd::Edge<Node> const& e) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
+            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
             auto h2 = std::hash<dd::Complex>{}(e.w);
             return dd::combineHash(h1, h2);
         }
@@ -104,7 +104,7 @@ namespace std {
     template<class Node>
     struct hash<dd::CachedEdge<Node>> {
         std::size_t operator()(dd::CachedEdge<Node> const& e) const noexcept {
-            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p));
+            auto h1 = dd::murmur64(reinterpret_cast<std::size_t>(e.p)); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
             auto h2 = std::hash<dd::ComplexValue>{}(e.w);
             return dd::combineHash(h1, h2);
         }
