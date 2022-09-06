@@ -115,8 +115,8 @@ BENCHMARK(BM_MakeSingleQubitGateDD_TargetBottom)->Apply(qubitRange); // NOLINT
 
 static void BM_MakeControlledQubitGateDD_ControlBottom_TargetTop(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    for ([[maybe_unused]]  auto _: state) {
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, 0_pc, static_cast<dd::Qubit>(nqubits - 1)));
     }
 }
@@ -124,8 +124,8 @@ BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetTop)->Apply(qubitRang
 
 static void BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    for ([[maybe_unused]]  auto _: state) {
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, 0_pc, static_cast<dd::Qubit>(nqubits / 2)));
     }
 }
@@ -133,8 +133,8 @@ BENCHMARK(BM_MakeControlledQubitGateDD_ControlBottom_TargetMiddle)->Apply(qubitR
 
 static void BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    for ([[maybe_unused]]  auto _: state) {
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, static_cast<dd::Qubit>(nqubits / 2)));
     }
 }
@@ -142,8 +142,8 @@ BENCHMARK(BM_MakeControlledQubitGateDD_ControlTop_TargetMiddle)->Apply(qubitRang
 
 static void BM_MakeControlledQubitGateDD_ControlTop_TargetBottom(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    for ([[maybe_unused]]  auto _: state) {
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, 0));
     }
 }
@@ -155,8 +155,8 @@ static void BM_MakeFullControlledToffoliDD_TargetTop(benchmark::State& state) {
     dd::Controls   controls;
     for (std::size_t i = 0; i < static_cast<std::size_t>(nqubits - 1); i++) {
         controls.insert({static_cast<dd::Qubit>(i)});
-}
-    for ([[maybe_unused]]  auto _: state) {
+    }
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, static_cast<dd::Qubit>(nqubits - 1)));
     }
 }
@@ -169,9 +169,9 @@ static void BM_MakeFullControlledToffoliDD_TargetMiddle(benchmark::State& state)
     for (std::size_t i = 0; i < nqubits; i++) {
         if (i != nqubits / 2) {
             controls.insert({static_cast<dd::Qubit>(i)});
-}
-}
-    for ([[maybe_unused]]  auto _: state) {
+        }
+    }
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, static_cast<dd::Qubit>(nqubits / 2)));
     }
 }
@@ -183,8 +183,8 @@ static void BM_MakeFullControlledToffoliDD_TargetBottom(benchmark::State& state)
     dd::Controls   controls;
     for (std::size_t i = 1; i < nqubits; i++) {
         controls.insert({static_cast<dd::Qubit>(i)});
-}
-    for ([[maybe_unused]]  auto _: state) {
+    }
+    for ([[maybe_unused]] auto _: state) {
         benchmark::DoNotOptimize(dd->makeGateDD(dd::Xmat, nqubits, controls, 0));
     }
 }
@@ -192,9 +192,9 @@ BENCHMARK(BM_MakeFullControlledToffoliDD_TargetBottom)->Apply(qubitRange); // NO
 
 static void BM_MakeSWAPDD(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sv = dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, 0);
         sv      = dd->multiply(sv, dd->multiply(dd->makeGateDD(dd::Xmat, nqubits, 0_pc, static_cast<dd::Qubit>(nqubits - 1)), sv));
 
@@ -210,11 +210,11 @@ BENCHMARK(BM_MakeSWAPDD)->Apply(qubitRange); // NOLINT
 
 static void bmMxVX(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto zero    = dd->makeZeroState(nqubits);
-    auto x       = dd->makeGateDD(dd::Xmat, nqubits, 0);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           x       = dd->makeGateDD(dd::Xmat, nqubits, 0);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sim = dd->multiply(x, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -225,11 +225,11 @@ BENCHMARK(bmMxVX)->Apply(qubitRange); // NOLINT
 
 static void bmMxVH(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto zero    = dd->makeZeroState(nqubits);
-    auto h       = dd->makeGateDD(dd::Hmat, nqubits, 0);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, 0);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sim = dd->multiply(h, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -240,11 +240,11 @@ BENCHMARK(bmMxVH)->Apply(qubitRange); // NOLINT
 
 static void bmMxVT(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto zero    = dd->makeZeroState(nqubits);
-    auto t       = dd->makeGateDD(dd::Tmat, nqubits, 0);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           t       = dd->makeGateDD(dd::Tmat, nqubits, 0);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sim = dd->multiply(t, zero);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -261,7 +261,7 @@ static void bmMxVCxControlTopTargetBottom(benchmark::State& state) {
     auto plus                  = dd->makeBasisState(nqubits, basisStates);
     auto cx                    = dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, 0);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sim = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -278,7 +278,7 @@ static void bmMxVCxControlBottomTargetTop(benchmark::State& state) {
     auto plus                  = dd->makeBasisState(nqubits, basisStates);
     auto cx                    = dd->makeGateDD(dd::Xmat, nqubits, 0_pc, static_cast<dd::Qubit>(nqubits - 1));
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sim = dd->multiply(cx, plus);
         benchmark::DoNotOptimize(sim);
         // clear compute table so the next iteration does not find the result cached
@@ -289,10 +289,10 @@ BENCHMARK(bmMxVCxControlBottomTargetTop)->Apply(qubitRange); // NOLINT
 
 static void bmMxVHadamardLayer(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto zero    = dd->makeZeroState(nqubits);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           zero    = dd->makeZeroState(nqubits);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sv = zero;
         for (int i = 0; i < nqubits; ++i) {
             auto h = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(i));
@@ -306,11 +306,11 @@ BENCHMARK(bmMxVHadamardLayer)->Apply(qubitRange); // NOLINT
 
 static void bmMxVGhz(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto zero    = dd->makeZeroState(nqubits);
-    auto h       = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(nqubits - 1));
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           zero    = dd->makeZeroState(nqubits);
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(nqubits - 1));
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto sv = zero;
         sv      = dd->multiply(h, sv);
         for (auto i = static_cast<int>(nqubits - 2); i >= 0; --i) {
@@ -325,11 +325,11 @@ BENCHMARK(bmMxVGhz)->Apply(qubitRange); // NOLINT
 
 static void bmMxMBell(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
-    auto h       = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(nqubits - 1));
-    auto cx      = dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, 0);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           h       = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(nqubits - 1));
+    auto           cx      = dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, 0);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto bell = dd->multiply(cx, h);
         benchmark::DoNotOptimize(bell);
         // clear compute table so the next iteration does not find the result cached
@@ -340,9 +340,9 @@ BENCHMARK(bmMxMBell)->Apply(qubitRange); // NOLINT
 
 static void bmMxMGhz(benchmark::State& state) {
     dd::QubitCount nqubits = state.range(0);
-    auto dd      = std::make_unique<dd::Package<>>(nqubits);
+    auto           dd      = std::make_unique<dd::Package<>>(nqubits);
 
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto func = dd->makeGateDD(dd::Hmat, nqubits, static_cast<dd::Qubit>(nqubits - 1));
         for (auto i = static_cast<int>(nqubits - 2); i >= 0; --i) {
             auto cx = dd->makeGateDD(dd::Xmat, nqubits, dd::Control{static_cast<dd::Qubit>(nqubits - 1)}, static_cast<dd::Qubit>(i));
@@ -356,10 +356,10 @@ BENCHMARK(bmMxMGhz)->Apply(qubitRange); // NOLINT
 
 static void bmVUniqueTableGet(benchmark::State& state) {
     auto allocs = state.range(0);
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto dd = std::make_unique<dd::Package<>>(1);
         for (int i = 0; i < allocs; ++i) {
-            auto *p = dd->vUniqueTable.getNode();
+            auto* p = dd->vUniqueTable.getNode();
             benchmark::DoNotOptimize(p);
         }
     }
@@ -368,10 +368,10 @@ BENCHMARK(bmVUniqueTableGet)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)
 
 static void bmVUniqueTableGetAndReturn(benchmark::State& state) {
     auto allocs = state.range(0);
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto dd = std::make_unique<dd::Package<>>(1);
         for (int i = 0; i < allocs; ++i) {
-            auto *p = dd->vUniqueTable.getNode();
+            auto* p = dd->vUniqueTable.getNode();
             benchmark::DoNotOptimize(p);
             if (i % 5 == 0) {
                 dd->vUniqueTable.returnNode(p);
@@ -383,10 +383,10 @@ BENCHMARK(bmVUniqueTableGetAndReturn)->Unit(benchmark::kMillisecond)->RangeMulti
 
 static void bmMUniqueTableGet(benchmark::State& state) {
     auto allocs = state.range(0);
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto dd = std::make_unique<dd::Package<>>(1);
         for (int i = 0; i < allocs; ++i) {
-            auto *p = dd->mUniqueTable.getNode();
+            auto* p = dd->mUniqueTable.getNode();
             benchmark::DoNotOptimize(p);
             if (i % 5 == 0) {
                 dd->mUniqueTable.returnNode(p);
@@ -398,10 +398,10 @@ BENCHMARK(bmMUniqueTableGet)->Unit(benchmark::kMillisecond)->RangeMultiplier(10)
 
 static void bmMUniqueTableGetAndReturn(benchmark::State& state) {
     auto allocs = state.range(0);
-    for ([[maybe_unused]]  auto _: state) {
+    for ([[maybe_unused]] auto _: state) {
         auto dd = std::make_unique<dd::Package<>>(1);
         for (int i = 0; i < allocs; ++i) {
-            auto *p = dd->mUniqueTable.getNode();
+            auto* p = dd->mUniqueTable.getNode();
             benchmark::DoNotOptimize(p);
             if (i % 5 == 0) {
                 dd->mUniqueTable.returnNode(p);

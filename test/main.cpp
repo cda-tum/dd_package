@@ -37,7 +37,7 @@ auto bellCicuit2(std::unique_ptr<dd::Package<>>& dd) {
     return dd->multiply(dd->multiply(hGateQ1, hGateQ0), dd->multiply(cxGate, hGateQ1));
 }
 
-int main() { // NOLINT(bugprone-exception-escape)
+int main() {                           // NOLINT(bugprone-exception-escape)
     dd::Package<>::printInformation(); // uncomment to print various sizes of structs and arrays
     //Initialize package
     auto dd = std::make_unique<dd::Package<>>(4);
