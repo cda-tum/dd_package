@@ -28,14 +28,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pipx run cpp-linter \
+          pipx run --spec git+https://github.com/cpp-linter/cpp-linter@tidy-extra-args cpp-linter \
           --version=14 \
           --style="file" \
           --tidy-checks="" \
           --thread-comments=true \
           --files-changed-only=false \
           --ignore="build" \
-          --database=build
+          --database=build \
+          --extra-arg=-std=c++17
       - name: Fail if linter found errors
         if: steps.linter.outputs.checks-failed > 0
         run: echo "Linter found errors" && exit 1
