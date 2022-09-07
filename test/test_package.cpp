@@ -312,9 +312,9 @@ TEST(DDPackageTest, SerializationErrors) {
 
     ss.str("");
     std::remove_const_t<decltype(dd::SERIALIZATION_VERSION)> version = 2;
-    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION))); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
     EXPECT_THROW(dd->deserialize<dd::vNode>(ss, true), std::runtime_error);
-    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION))); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    ss.write(reinterpret_cast<const char*>(&version), sizeof(decltype(dd::SERIALIZATION_VERSION)));
     EXPECT_THROW(dd->deserialize<dd::mNode>(ss, true), std::runtime_error);
 
     // test wrong format
@@ -581,7 +581,7 @@ TEST(DDPackageTest, PackageReset) {
     const auto& table  = unique[0];
     auto        ihash  = decltype(dd->mUniqueTable)::hash(iGate.p);
     const auto* node   = table[ihash];
-    std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(iGate.p) << std::endl; // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    std::cout << ihash << ": " << reinterpret_cast<uintptr_t>(iGate.p) << std::endl;
     // node should be the first in this unique table bucket
     EXPECT_EQ(node, iGate.p);
     dd->reset();
@@ -1210,8 +1210,8 @@ TEST(DDPackageTest, dNodeMulCache1) {
 
     for (auto& op: operations) {
         auto tmp0 = dd->conjugateTranspose(op);
-        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, false);    // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, false);
         dd->incRef(tmp2);
         state = tmp2;
     }
@@ -1225,20 +1225,20 @@ TEST(DDPackageTest, dNodeMulCache1) {
 
         auto xCopy = state1;
         xCopy.w    = dd::Complex::one;
-        auto yCopy = reinterpret_cast<dd::dEdge&>(tmp0); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto yCopy = reinterpret_cast<dd::dEdge&>(tmp0);
         yCopy.w    = dd::Complex::one;
 
         auto tmptmp1 = computeTable.lookup(xCopy, yCopy, false);
-        auto tmp1    = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-        EXPECT_TRUE(tmp1.p != nullptr && tmp1.p == tmp1.p);
+        auto tmp1    = dd->multiply(state1, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+        EXPECT_TRUE(tmptmp1.p != nullptr && tmp1.p == tmptmp1.p);
 
-        auto xCopy1 = reinterpret_cast<dd::dEdge&>(op); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto xCopy1 = reinterpret_cast<dd::dEdge&>(op);
         xCopy1.w    = dd::Complex::one;
         auto yCopy1 = tmp1;
         yCopy1.w    = dd::Complex::one;
 
         auto tmptmp2 = computeTable.lookup(xCopy1, yCopy1, true);
-        auto tmp2    = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto tmp2    = dd->multiply(reinterpret_cast<dd::dEdge&>(op), tmp1, 0, true);
         EXPECT_EQ(tmptmp2.p, nullptr);
 
         auto tmptmp3 = computeTable.lookup(xCopy1, yCopy1, true);
@@ -1266,8 +1266,8 @@ TEST(DDPackageTest, dNoiseCache) {
     auto noiseLookUpResult = dd->densityNoise.lookup(state, target);
     EXPECT_EQ(noiseLookUpResult.p, nullptr);
     auto tmp0 = dd->conjugateTranspose(operations[0]);
-    auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);        // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-    auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(operations[0]), tmp1, 0, true); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+    auto tmp1 = dd->multiply(state, reinterpret_cast<dd::dEdge&>(tmp0), 0, false);
+    auto tmp2 = dd->multiply(reinterpret_cast<dd::dEdge&>(operations[0]), tmp1, 0, true);
     dd->incRef(tmp2);
     auto state1 = tmp2;
     dd->densityNoise.insert(state, state1, target);
