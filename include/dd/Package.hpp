@@ -2334,7 +2334,7 @@ namespace dd {
             return mat;
         }
 
-        void getDensityMatrix(dEdge& e, Complex& amp, std::size_t i, std::size_t j, CMat& mat) {
+        void getDensityMatrix(dEdge& e, const Complex& amp, std::size_t i, std::size_t j, CMat& mat) {
             // calculate new accumulated amplitude
             auto c = cn.mulCached(e.w, amp);
 
