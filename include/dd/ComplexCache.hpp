@@ -20,7 +20,8 @@ namespace dd {
         using Entry = ComplexTable<>::Entry;
 
     public:
-        ComplexCache(): allocationSize(INITIAL_ALLOCATION_SIZE) {
+        ComplexCache():
+            allocationSize(INITIAL_ALLOCATION_SIZE) {
             // allocate first chunk of cache entries
             chunks.emplace_back(allocationSize);
             allocations += allocationSize;

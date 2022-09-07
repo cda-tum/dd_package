@@ -33,7 +33,7 @@ namespace dd {
         [[nodiscard]] constexpr bool isTerminal() const { return Node::isTerminal(p); }
 
         // edges pointing to zero and one terminals
-        static const inline Edge one{Node::terminal, Complex::one}; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
+        static const inline Edge one{Node::terminal, Complex::one};   // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
         static const inline Edge zero{Node::terminal, Complex::zero}; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
 
         [[nodiscard]] static constexpr Edge terminal(const Complex& w) { return {Node::terminal, w}; }

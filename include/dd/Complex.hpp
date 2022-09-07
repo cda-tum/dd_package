@@ -21,7 +21,7 @@ namespace dd {
         CTEntry* i;
 
         static const Complex zero; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
-        static const Complex one; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
+        static const Complex one;  // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
 
         void setVal(const Complex& c) const {
             r->value = CTEntry::val(c.r);
