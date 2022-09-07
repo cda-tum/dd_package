@@ -1,5 +1,4 @@
 FormatStyle: file
-HeaderFilterRegex: '.*'
 
 Checks: |
   clang-diagnostic-*,
@@ -14,6 +13,7 @@ Checks: |
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-macro-usage,
   -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
   google-*,
   -google-readability-todo,
   -google-build-using-namespace,
