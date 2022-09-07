@@ -8,7 +8,7 @@
 
 #include "ComplexNumbers.hpp"
 #include "Definitions.hpp"
-#include "Edge.hpp"
+#include "Node.hpp"
 
 #include <algorithm>
 #include <array>

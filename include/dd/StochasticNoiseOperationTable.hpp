@@ -6,7 +6,10 @@
 #ifndef DDpackage_NOISEOPERATIONTABLE_HPP
 #define DDpackage_NOISEOPERATIONTABLE_HPP
 
+#include "Definitions.hpp"
+
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
