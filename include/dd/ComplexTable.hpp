@@ -496,7 +496,7 @@ namespace dd {
         static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
         Entry*                                available{};
-        std::vector<std::vector<Entry>>       chunks{INITIAL_ALLOCATION_SIZE};
+        std::vector<std::vector<Entry>>       chunks{1, std::vector<Entry>{INITIAL_ALLOCATION_SIZE}};
         std::size_t                           chunkID{};
         typename std::vector<Entry>::iterator chunkIt{chunks.at(0).begin()};
         typename std::vector<Entry>::iterator chunkEndIt{chunks.at(0).end()};
