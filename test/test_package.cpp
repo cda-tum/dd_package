@@ -418,7 +418,7 @@ TEST(DDPackageTest, Identity) {
     const auto& table = dd->getIdentityTable();
     EXPECT_NE(table[2].p, nullptr);
 
-    auto id2 = dd->makeIdent(0, 1); // should be found in IdTable
+    auto id2 = dd->makeIdent(0, 1); // should be found in idTable
     EXPECT_EQ(dd->makeIdent(2), id2);
 
     auto id4 = dd->makeIdent(0, 3); // should use id3 and extend it
