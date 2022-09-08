@@ -105,9 +105,9 @@ namespace dd {
             }
         };
 
-        static const inline Entry zero{0., nullptr, 1};         // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
-        static const inline Entry sqrt2_2{SQRT2_2, nullptr, 1}; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
-        static const inline Entry one{1., nullptr, 1};          // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
+        static inline Entry zero{0., nullptr, 1};         // NOLINT(readability-identifier-naming,cppcoreguidelines-avoid-non-const-global-variables) automatic renaming does not work reliably, so skip linting
+        static inline Entry sqrt2_2{SQRT2_2, nullptr, 1}; // NOLINT(readability-identifier-naming,cppcoreguidelines-avoid-non-const-global-variables) automatic renaming does not work reliably, so skip linting
+        static inline Entry one{1., nullptr, 1};          // NOLINT(readability-identifier-naming,cppcoreguidelines-avoid-non-const-global-variables) automatic renaming does not work reliably, so skip linting
 
         ComplexTable():
             allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
