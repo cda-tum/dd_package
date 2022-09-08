@@ -41,7 +41,9 @@ namespace dd {
             lookups++;
             Edge r{};
             auto entry = table.at(target).at(kind);
-            if (entry.p == nullptr) return r;
+            if (entry.p == nullptr) {
+                return r;
+            }
             hits++;
             return entry;
         }
