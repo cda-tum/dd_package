@@ -2843,8 +2843,8 @@ namespace dd {
 
         template<class Edge>
         void checkConsistencyCounter(const Edge& edge, const std::map<ComplexTable<>::Entry*, std::size_t>& weightMap, const std::map<decltype(edge.p), std::size_t>& nodeMap) {
-            const auto* rPtr = CTEntry::getAlignedPointer(edge.w.r);
-            const auto* iPtr = CTEntry::getAlignedPointer(edge.w.i);
+            auto* rPtr = CTEntry::getAlignedPointer(edge.w.r);
+            auto* iPtr = CTEntry::getAlignedPointer(edge.w.i);
 
             if (weightMap.at(rPtr) > rPtr->refCount && rPtr != Complex::one.r && rPtr != Complex::zero.i && rPtr != &ComplexTable<>::sqrt2_2) {
                 std::clog << "\nOffending weight: " << edge.w << "\n";
