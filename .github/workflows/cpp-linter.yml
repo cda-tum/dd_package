@@ -28,7 +28,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pipx run --spec git+https://github.com/cpp-linter/cpp-linter@tidy-extra-args cpp-linter \
+          pipx run cpp-linter \
           --version=14 \
           --style="file" \
           --tidy-checks="" \

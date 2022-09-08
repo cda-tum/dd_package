@@ -55,13 +55,21 @@ namespace dd {
             lookups++;
             const auto key   = hash(leftOperand, rightOperand);
             auto&      entry = table[key];
-            if (entry.result.p == nullptr) return result;
-            if (entry.leftOperand != leftOperand) return result;
-            if (entry.rightOperand != rightOperand) return result;
+            if (entry.result.p == nullptr) {
+                return result;
+            }
+            if (entry.leftOperand != leftOperand) {
+                return result;
+            }
+            if (entry.rightOperand != rightOperand) {
+                return result;
+            }
 
             if constexpr (std::is_same_v<RightOperandType, dEdge>) {
                 // Since density matrices are reduced representations of matrices, a density matrix may not be returned when a matrix is required and vice versa
-                if (dNode::isDensityMatrixNode(entry.result.p->flags) != useDensityMatrix) return result;
+                if (dNode::isDensityMatrixNode(entry.result.p->flags) != useDensityMatrix) {
+                    return result;
+                }
             }
             hits++;
             return entry.result;
@@ -69,8 +77,9 @@ namespace dd {
 
         void clear() {
             if (count > 0) {
-                for (auto& entry: table)
+                for (auto& entry: table) {
                     entry.result.p = nullptr;
+                }
                 count = 0;
             }
         }

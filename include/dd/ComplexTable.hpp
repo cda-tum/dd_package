@@ -61,7 +61,7 @@ namespace dd {
             }
 
             [[nodiscard]] static inline bool isNegativePointer(const Entry* e) {
-                return reinterpret_cast<std::uintptr_t>(e) & static_cast<std::uintptr_t>(1U);
+                return (reinterpret_cast<std::uintptr_t>(e) & static_cast<std::uintptr_t>(1U)) != 0U;
             }
 
             [[nodiscard]] static inline fp val(const Entry* e) {
@@ -105,19 +105,18 @@ namespace dd {
             }
         };
 
-        static inline Entry zero{0., nullptr, 1};
-        static inline Entry sqrt2_2{SQRT2_2, nullptr, 1};
-        static inline Entry one{1., nullptr, 1};
+        static const inline Entry zero{0., nullptr, 1};         // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
+        static const inline Entry sqrt2_2{SQRT2_2, nullptr, 1}; // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
+        static const inline Entry one{1., nullptr, 1};          // NOLINT(readability-identifier-naming) automatic renaming does not work reliably, so skip linting
 
         ComplexTable():
-            chunkID(0), allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
+            allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
             // allocate first chunk of numbers
             chunks.emplace_back(allocationSize);
             allocations += allocationSize;
             allocationSize *= GROWTH_FACTOR;
             chunkIt    = chunks[0].begin();
             chunkEndIt = chunks[0].end();
-
             // add 1/2 to the complex table and increase its ref count (so that it is not collected)
             lookup(0.5L)->refCount++;
         }
@@ -195,12 +194,12 @@ namespace dd {
                 p_lower = tailTable[lowerKey];
                 p_upper = table[key];
                 ++lowerNeighbors;
-                //                std::cout << "Border case between lower bucket " << lowerKey << " and actual bucket " << key << ". ";
+                // std::cout << "Border case between lower bucket " << lowerKey << " and actual bucket " << key << ". ";
             } else {
                 p_lower = tailTable[key];
                 p_upper = table[upperKey];
                 ++upperNeighbors;
-                //                std::cout << "Border case between actual bucket " << key << " and upper bucket " << upperKey << ". ";
+                // std::cout << "Border case between actual bucket " << key << " and upper bucket " << upperKey << ". ";
             }
 
             bool lowerMatchFound = (p_lower != nullptr && Entry::approximatelyEquals(val, p_lower->value));
@@ -213,12 +212,12 @@ namespace dd {
                 const auto diffToUpper = std::abs(p_upper->value - val);
                 // val is actually closer to p_lower than to p_upper
                 if (diffToLower < diffToUpper) {
-                    //                    std::cout << val << " is closer to lower val " << p_lower->value << " than to upper val " << p_upper->value << std::endl;
+                    // std::cout << val << " is closer to lower val " << p_lower->value << " than to upper val " << p_upper->value << std::endl;
                     return p_lower;
-                } else {
-                    //                    std::cout << val << " is closer to upper val " << p_upper->value << " than to lower val " << p_upper->value << std::endl;
-                    return p_upper;
                 }
+                // std::cout << val << " is closer to upper val " << p_upper->value << " than to lower val " << p_upper->value << std::endl;
+                return p_upper;
+
             }
 
             if (lowerMatchFound) {
@@ -273,8 +272,9 @@ namespace dd {
             // get valid pointer
             auto entryPtr = Entry::getAlignedPointer(entry);
 
-            if (entryPtr == nullptr)
+            if (entryPtr == nullptr) {
                 return;
+}
 
             // important (static) numbers are never altered
             if (entryPtr != &one && entryPtr != &zero && entryPtr != &sqrt2_2) {
@@ -293,8 +293,9 @@ namespace dd {
             // get valid pointer
             auto entryPtr = Entry::getAlignedPointer(entry);
 
-            if (entryPtr == nullptr)
+            if (entryPtr == nullptr) {
                 return;
+}
 
             // important (static) numbers are never altered
             if (entryPtr != &one && entryPtr != &zero && entryPtr != &sqrt2_2) {
@@ -316,8 +317,9 @@ namespace dd {
             gcCalls++;
             // nothing to be done if garbage collection is not forced, and the limit has not been reached,
             // or the current count is minimal (the complex table always contains at least 0.5)
-            if ((!force && count < gcLimit) || count <= 1)
+            if ((!force && count < gcLimit) || count <= 1) {
                 return 0;
+}
 
             gcRuns++;
             std::size_t collected = 0;
@@ -407,17 +409,19 @@ namespace dd {
             std::cout.precision(std::numeric_limits<dd::fp>::max_digits10);
             for (std::size_t key = 0; key < table.size(); ++key) {
                 auto p = table[key];
-                if (p != nullptr)
+                if (p != nullptr) {
                     std::cout << key << ": "
                               << "\n";
+}
 
                 while (p != nullptr) {
                     std::cout << "\t\t" << p->value << " " << reinterpret_cast<std::uintptr_t>(p) << " " << p->refCount << "\n";
                     p = p->next;
                 }
 
-                if (table[key] != nullptr)
+                if (table[key] != nullptr) {
                     std::cout << "\n";
+}
             }
             std::cout.precision(precision);
         }
@@ -496,11 +500,11 @@ namespace dd {
         std::size_t upperNeighbors   = 0;
 
         // numerical tolerance to be used for floating point values
-        static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024;
+        static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
         Entry*                                available{};
         std::vector<std::vector<Entry>>       chunks{};
-        std::size_t                           chunkID;
+        std::size_t                           chunkID{};
         typename std::vector<Entry>::iterator chunkIt;
         typename std::vector<Entry>::iterator chunkEndIt;
         std::size_t                           allocationSize;
