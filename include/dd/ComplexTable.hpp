@@ -109,14 +109,7 @@ namespace dd {
         static inline Entry sqrt2_2{SQRT2_2, nullptr, 1}; // NOLINT(readability-identifier-naming,cppcoreguidelines-avoid-non-const-global-variables) automatic renaming does not work reliably, so skip linting
         static inline Entry one{1., nullptr, 1};          // NOLINT(readability-identifier-naming,cppcoreguidelines-avoid-non-const-global-variables) automatic renaming does not work reliably, so skip linting
 
-        ComplexTable():
-            allocationSize(INITIAL_ALLOCATION_SIZE), gcLimit(INITIAL_GC_LIMIT) {
-            // allocate first chunk of numbers
-            chunks.emplace_back(allocationSize);
-            allocations += allocationSize;
-            allocationSize *= GROWTH_FACTOR;
-            chunkIt    = chunks[0].begin();
-            chunkEndIt = chunks[0].end();
+        ComplexTable() {
             // add 1/2 to the complex table and increase its ref count (so that it is not collected)
             lookup(0.5L)->refCount++;
         }
@@ -503,13 +496,13 @@ namespace dd {
         static inline fp TOLERANCE = std::numeric_limits<dd::fp>::epsilon() * 1024; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
         Entry*                                available{};
-        std::vector<std::vector<Entry>>       chunks{};
+        std::vector<std::vector<Entry>>       chunks{INITIAL_ALLOCATION_SIZE};
         std::size_t                           chunkID{};
-        typename std::vector<Entry>::iterator chunkIt;
-        typename std::vector<Entry>::iterator chunkEndIt;
-        std::size_t                           allocationSize;
+        typename std::vector<Entry>::iterator chunkIt{chunks.at(0).begin()};
+        typename std::vector<Entry>::iterator chunkEndIt{chunks.at(0).end()};
+        std::size_t                           allocationSize{INITIAL_ALLOCATION_SIZE*GROWTH_FACTOR};
 
-        std::size_t allocations = 0;
+        std::size_t allocations = INITIAL_ALLOCATION_SIZE;
         std::size_t count       = 0;
         std::size_t peakCount   = 0;
 
