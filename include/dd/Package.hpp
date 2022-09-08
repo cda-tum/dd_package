@@ -1380,7 +1380,7 @@ namespace dd {
                             } else if (!m.w.exactlyZero()) {
                                 dEdge::applyDmChangesToEdges(edge[idx], m);
                                 auto oldE = edge[idx];
-                                edge[idx]  = add2(edge[idx], m);
+                                edge[idx] = add2(edge[idx], m);
                                 dEdge::revertDmChangesToEdges(edge[idx], e2);
                                 cn.returnToCache(oldE.w);
                                 cn.returnToCache(m.w);
@@ -1394,7 +1394,7 @@ namespace dd {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
                                 auto oldE = edge[idx];
-                                edge[idx]  = add2(edge[idx], m);
+                                edge[idx] = add2(edge[idx], m);
                                 cn.returnToCache(oldE.w);
                                 cn.returnToCache(m.w);
                             }
@@ -2565,9 +2565,9 @@ namespace dd {
                             }
                             edges[i].w = cn.lookup(currentEdge->p->e[i].w);
                         }
-                        root                        = makeDDNode(currentEdge->p->v, edges);
+                        root                       = makeDDNode(currentEdge->p->v, edges);
                         mappedNode[currentEdge->p] = root.p;
-                        currentEdge                 = nullptr;
+                        currentEdge                = nullptr;
                     }
                 } while (!stack.empty());
 
@@ -2627,7 +2627,7 @@ namespace dd {
 
                 const std::string complexRealRegex = R"(([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?(?![ \d\.]*(?:[eE][+-])?\d*[iI]))?)";
                 const std::string complexImagRegex = R"(( ?[+-]? ?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)?[iI])?)";
-                const std::string edgeRegex         = " \\(((-?\\d+) (" + complexRealRegex + complexImagRegex + "))?\\)";
+                const std::string edgeRegex        = " \\(((-?\\d+) (" + complexRealRegex + complexImagRegex + "))?\\)";
                 const std::regex  complexWeightRegex(complexRealRegex + complexImagRegex);
 
                 std::string lineConstruct = "(\\d+) (\\d+)";
@@ -2635,8 +2635,8 @@ namespace dd {
                     lineConstruct += "(?:" + edgeRegex + ")";
                 }
                 lineConstruct += " *(?:#.*)?";
-                const std::regex  lineRegex(lineConstruct);
-                std::smatch m;
+                const std::regex lineRegex(lineConstruct);
+                std::smatch      m;
 
                 std::string line;
                 if (std::getline(is, line)) {
@@ -2665,7 +2665,7 @@ namespace dd {
                     // match 6: real
                     // match 7: imag (without i)
                     nodeIndex = std::stoi(m.str(1));
-                    v          = static_cast<Qubit>(std::stoi(m.str(2)));
+                    v         = static_cast<Qubit>(std::stoi(m.str(2)));
 
                     for (auto edgeIdx = 3U, i = 0U; i < N; i++, edgeIdx += 5) {
                         if (m.str(edgeIdx).empty()) {
@@ -2784,8 +2784,8 @@ namespace dd {
     private:
         template<class Edge>
         bool isLocallyConsistent2(const Edge& e) {
-            const auto *ptrR = CTEntry::getAlignedPointer(e.w.r);
-            const auto *ptrI = CTEntry::getAlignedPointer(e.w.i);
+            const auto* ptrR = CTEntry::getAlignedPointer(e.w.r);
+            const auto* ptrI = CTEntry::getAlignedPointer(e.w.i);
 
             if ((ptrR->refCount == 0 || ptrI->refCount == 0) && e.w != Complex::one && e.w != Complex::zero) {
                 std::clog << "\nLOCAL INCONSISTENCY FOUND\nOffending Number: " << e.w << " (" << ptrR->refCount << ", " << ptrI->refCount << ")\n\n";
