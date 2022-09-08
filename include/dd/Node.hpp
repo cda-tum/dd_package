@@ -15,23 +15,25 @@
 #include <utility>
 
 namespace dd {
-    struct vNode {// NOLINT(readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    struct vNode {
         std::array<Edge<vNode>, RADIX> e{};    // edges out of this node
         vNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
         Qubit                          v{};    // variable index (nonterminal) value (-1 for terminal)
 
-        static vNode            terminalNode; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-        constexpr static vNode* terminal{&terminalNode};// NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        static vNode            terminalNode;            // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        constexpr static vNode* terminal{&terminalNode}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,readability-identifier-naming)
 
         static constexpr bool isTerminal(const vNode* p) { return p == terminal; }
     };
     using vEdge       = Edge<vNode>;
     using vCachedEdge = CachedEdge<vNode>;
 
-    inline vNode vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+    inline vNode vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1};
 
-    struct mNode {
+    struct mNode {                             // NOLINT(readability-identifier-naming)
         std::array<Edge<mNode>, NEDGE> e{};    // edges out of this node
         mNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
@@ -44,8 +46,8 @@ namespace dd {
         // 2 = mark first path edge (tmp flag),
         // 1 = mark path is conjugated (tmp flag))
 
-        static mNode            terminalNode;// NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-        constexpr static mNode* terminal{&terminalNode};// NOLINT(cppcoreguidelines-avoid-non-const-global-variables,readability-identifier-naming)
+        static mNode            terminalNode;            // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        constexpr static mNode* terminal{&terminalNode}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,readability-identifier-naming)
 
         static constexpr bool isTerminal(const mNode* p) { return p == terminal; }
 
@@ -56,14 +58,14 @@ namespace dd {
                 flags = (flags | 16);
             } else {
                 flags = (flags & (~16));
-}
+            }
         }
         inline void setSymmetric(bool symmetric) {
             if (symmetric) {
                 flags = (flags | 32);
             } else {
                 flags = (flags & (~32));
-}
+            }
         }
     };
     using mEdge       = Edge<mNode>;
@@ -72,6 +74,7 @@ namespace dd {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     inline mNode mNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1, 32 + 16};
 
+    // NOLINTNEXTLINE(readability-identifier-naming)
     struct dNode {
         std::array<Edge<dNode>, NEDGE> e{};    // edges out of this node
         dNode*                         next{}; // used to link nodes in unique table
@@ -85,8 +88,8 @@ namespace dd {
         // 2 = mark first path edge (tmp flag),
         // 1 = mark path is conjugated (tmp flag))
 
-        static dNode            terminalNode; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
-        constexpr static dNode* terminal{&terminalNode}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        static dNode            terminalNode;            // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+        constexpr static dNode* terminal{&terminalNode}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables,readability-identifier-naming)
         static constexpr bool   isTerminal(const dNode* p) { return p == terminal; }
 
         [[nodiscard]] [[maybe_unused]] static inline bool tempDensityMatrixFlagsEqual(const std::uint_least8_t a, const std::uint_least8_t b) { return getDensityMatrixTempFlags(a) == getDensityMatrixTempFlags(b); }
@@ -116,7 +119,7 @@ namespace dd {
                 flags = (flags | 8);
             } else {
                 flags = (flags & (~8));
-}
+            }
         }
 
         static inline std::uint_least8_t alignDensityNodeNode(dNode*& p) {

@@ -70,8 +70,8 @@ namespace dd {
         return os << c.toString();
     }
 
-    inline Complex Complex::zero{&ComplexTable<>::zero, &ComplexTable<>::zero};
-    inline Complex Complex::one{&ComplexTable<>::one, &ComplexTable<>::zero};
+    inline Complex Complex::zero{&ComplexTable<>::zero, &ComplexTable<>::zero}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    inline Complex Complex::one{&ComplexTable<>::one, &ComplexTable<>::zero};   // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace dd
 
 namespace std {
