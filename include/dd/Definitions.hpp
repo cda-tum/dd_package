@@ -88,12 +88,14 @@ namespace dd {
 
     // calculates the Units in Last Place (ULP) distance of two floating point numbers
     [[maybe_unused]] static std::size_t ulpDistance(fp a, fp b) {
+        // NOLINTNEXTLINE(clang-diagnostic-float-equal)
         if (a == b) {
             return 0;
         }
 
         std::size_t ulps   = 1;
         fp          nextFP = std::nextafter(a, b);
+        // NOLINTNEXTLINE(clang-diagnostic-float-equal)
         while (nextFP != b) {
             ulps++;
             nextFP = std::nextafter(nextFP, b);

@@ -82,7 +82,7 @@ namespace dd {
                 return left == right || approximatelyEquals(val(left), val(right));
             }
             [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
-                // NOLINTNTEXTLINE(clang-diagnostic-float-equal) equivalence check is a shortcut before check with tolerance
+                // NOLINTNEXTLINE(clang-diagnostic-float-equal) equivalence check is a shortcut before check with tolerance
                 return left == right || std::abs(left - right) <= TOLERANCE;
             }
 
