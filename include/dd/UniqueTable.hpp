@@ -374,7 +374,7 @@ namespace dd {
         std::vector<Table> tables{nvars};
 
         Node*                                available{};
-        std::vector<std::vector<Node>>       chunks{1, std::vector<Node>{allocationSize}};
+        std::vector<std::vector<Node>>       chunks{1, std::vector<Node>{INITIAL_ALLOCATION_SIZE}};
         std::size_t                          chunkID{0};
         typename std::vector<Node>::iterator chunkIt{chunks[0].begin()};
         typename std::vector<Node>::iterator chunkEndIt{chunks[0].end()};
