@@ -53,7 +53,8 @@ namespace dd {
 
         [[nodiscard]] inline bool isIdentity() const { return (flags & 16U) != 0; }
         [[nodiscard]] inline bool isSymmetric() const { return (flags & 32U) != 0; }
-        inline void               setIdentity(bool identity) {
+
+        inline void setIdentity(bool identity) {
             if (identity) {
                 flags = (flags | 16);
             } else {
