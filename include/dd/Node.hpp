@@ -206,6 +206,7 @@ namespace dd {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     inline dNode dNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0, -1, 0};
 
+    // NOLINTNEXTLINE(clang-diagnostic-unused-function) It's used but clang-tidy in our CI complains...
     static inline dEdge densityFromMatrixEdge(const mEdge& e) {
         return dEdge{reinterpret_cast<dNode*>(e.p), e.w};
     }
