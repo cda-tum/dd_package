@@ -72,7 +72,8 @@ namespace dd {
         }
 
         [[nodiscard]] fp hitRatio() const { return static_cast<fp>(hits) / lookups; }
-        std::ostream&    printStatistics(std::ostream& os = std::cout) {
+
+        std::ostream& printStatistics(std::ostream& os = std::cout) {
             os << "hits: " << hits << ", looks: " << lookups << ", ratio: " << hitRatio() << std::endl;
             return os;
         }
