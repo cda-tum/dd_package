@@ -434,6 +434,7 @@ namespace dd {
             std::array<mEdge, NEDGE> em{};
             auto                     it = controls.begin();
             for (auto i = 0U; i < NEDGE; ++i) {
+                // NOLINTNEXTLINE(clang-diagnostic-float-equal) it has to be really zero
                 if (mat[i].r == 0 && mat[i].i == 0) {
                     em[i] = mEdge::zero;
                 } else {
