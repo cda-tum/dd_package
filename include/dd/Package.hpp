@@ -2644,7 +2644,7 @@ namespace dd {
                     if (!std::regex_match(line, m, complexWeightRegex)) {
                         throw std::runtime_error("Regex did not match second line: " + line);
                     }
-                    rootweight.from_string(m.str(1), m.str(2));
+                    rootweight.fromString(m.str(1), m.str(2));
                 }
 
                 while (std::getline(is, line)) {
@@ -2674,7 +2674,7 @@ namespace dd {
                         }
 
                         edgeIndices[i] = std::stoi(m.str(edgeIdx + 1));
-                        edgeWeights[i].from_string(m.str(edgeIdx + 3), m.str(edgeIdx + 4));
+                        edgeWeights[i].fromString(m.str(edgeIdx + 3), m.str(edgeIdx + 4));
                     }
 
                     result = deserializeNode(nodeIndex, v, edgeIndices, edgeWeights, nodes);

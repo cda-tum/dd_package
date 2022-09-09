@@ -39,6 +39,7 @@ namespace dd {
         }
 
         constexpr bool operator==(const ComplexValue& other) const {
+            // NOLINTNEXTLINE(clang-diagnostic-float-equal)
             return r == other.r && i == other.i;
         }
 
@@ -56,15 +57,15 @@ namespace dd {
             os.write(reinterpret_cast<const char*>(&i), sizeof(decltype(i)));
         }
 
-        void from_string(const std::string& real_str, std::string imag_str) {
-            fp real = real_str.empty() ? 0. : std::stod(real_str);
+        void fromString(const std::string& realStr, std::string imagStr) {
+            fp real = realStr.empty() ? 0. : std::stod(realStr);
 
-            imag_str.erase(remove(imag_str.begin(), imag_str.end(), ' '), imag_str.end());
-            imag_str.erase(remove(imag_str.begin(), imag_str.end(), 'i'), imag_str.end());
-            if (imag_str == "+" || imag_str == "-") {
-                imag_str = imag_str + "1";
+            imagStr.erase(remove(imagStr.begin(), imagStr.end(), ' '), imagStr.end());
+            imagStr.erase(remove(imagStr.begin(), imagStr.end(), 'i'), imagStr.end());
+            if (imagStr == "+" || imagStr == "-") {
+                imagStr = imagStr + "1";
             }
-            fp imag = imag_str.empty() ? 0. : std::stod(imag_str);
+            fp imag = imagStr.empty() ? 0. : std::stod(imagStr);
             r       = {real};
             i       = {imag};
         }
