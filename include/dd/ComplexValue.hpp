@@ -70,7 +70,7 @@ namespace dd {
             i       = {imag};
         }
 
-        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = static_cast<std::uint64_t>(1) << 10, const fp tol = dd::ComplexTable<>::tolerance()) {
+        static auto getLowestFraction(const double x, const std::uint64_t maxDenominator = 1U << 10, const fp tol = dd::ComplexTable<>::tolerance()) {
             assert(x >= 0.);
 
             std::pair<std::uint64_t, std::uint64_t> lowerBound{0U, 1U};

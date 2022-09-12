@@ -2514,7 +2514,7 @@ namespace dd {
                 constexpr std::size_t n = std::tuple_size_v<decltype(original.p->e)>;
                 do {
                     while (currentEdge != nullptr && !currentEdge->isTerminal()) {
-                        for (short i = n - 1; i > 0; --i) { // NOLINT(google-runtime-int)
+                        for (std::size_t i = n - 1; i > 0; --i) {
                             auto& edge = currentEdge->p->e[i];
                             if (edge.isTerminal()) {
                                 continue;

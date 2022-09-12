@@ -33,7 +33,8 @@ namespace dd {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     inline vNode vNode::terminalNode{{{{nullptr, Complex::zero}, {nullptr, Complex::zero}}}, nullptr, 0U, -1};
 
-    struct mNode {                             // NOLINT(readability-identifier-naming)
+    // NOLINTNEXTLINE(readability-identifier-naming)
+    struct mNode {
         std::array<Edge<mNode>, NEDGE> e{};    // edges out of this node
         mNode*                         next{}; // used to link nodes in unique table
         RefCount                       ref{};  // reference count
