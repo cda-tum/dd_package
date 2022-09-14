@@ -962,6 +962,7 @@ namespace dd {
                     e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, e});
                 }
             }
+            setIdentityFlags(e);
             return e;
         }
 
@@ -2476,7 +2477,7 @@ namespace dd {
                 return applyPauliGate(pauligate, gate.target, state);
             }
             Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
-            setIdentityFlags(gateDD);
+            //setIdentityFlags(gateDD);
             return multiply(gateDD, state);
         }
 

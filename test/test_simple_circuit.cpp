@@ -43,6 +43,38 @@ TEST(LimTest, cachingTests) {
     std::cout << "Testing lf" << std::endl;
 }
 
+TEST(LimTest, generatedCircuit_TwoH) {
+    dd::QuantumCircuit circuit(2);
+    circuit.addGate(dd::Hmat, 0);
+    circuit.addGate(dd::Hmat, 1);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+
+TEST(LimTest, MeasureOneCollapseTest) {
+    std::mt19937_64 mt;
+
+    auto dd = std::make_unique<dd::Package<>>(2);
+    dd::vEdge state = dd->makeZeroState(2);
+    std::cout << "Zero state\n";
+    dd->printVector(state);
+
+    auto h0 = dd->makeGateDD(dd::Hmat, 2, 0);
+    state = dd->multiply(h0, state);
+    std::cout << "After Hadamard on q0\n";
+    dd->printVector(state);
+
+    auto h1 = dd->makeGateDD(dd::Hmat, 2, 1);
+    state = dd->multiply(h1, state);
+    std::cout << "After Hadamart on q1\n";
+    dd->printVector(state);
+
+    dd->incRef(state);
+    auto result = dd->measureOneCollapsing(state, 1, true, mt);
+    std::cout << "Measurement result: " << result << "\n";
+    dd->printVector(state);
+}
+
 
 // Randomly generated circuit on 10 qubis, containing 30 Clifford gates.
 TEST(LimTest, bb84Circuit) {
@@ -58,12 +90,15 @@ TEST(LimTest, bb84Circuit) {
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 4), state);
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 5), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->incRef(state);
     dd->measureOneCollapsing(state, 6, true, mt);
+    dd->decRef(state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 5), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 2), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->incRef(state);
     dd->measureOneCollapsing(state, 0, true, mt);
     dd->measureOneCollapsing(state, 3, true, mt);
     dd->measureOneCollapsing(state, 1, true, mt);
@@ -71,6 +106,7 @@ TEST(LimTest, bb84Circuit) {
     dd->measureOneCollapsing(state, 4, true, mt);
     dd->measureOneCollapsing(state, 5, true, mt);
     dd->measureOneCollapsing(state, 7, true, mt);
+    dd->decRef(state);
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 0), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Xmat, 8, 2), state);
@@ -84,9 +120,11 @@ TEST(LimTest, bb84Circuit) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 1), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 3), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 7), state);
+    dd->incRef(state);
     dd->measureOneCollapsing(state, 0, true, mt);
     dd->measureOneCollapsing(state, 5, true, mt);
     dd->measureOneCollapsing(state, 6, true, mt);
+    dd->decRef(state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 2), state);
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
 }
