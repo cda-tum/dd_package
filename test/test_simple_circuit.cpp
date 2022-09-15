@@ -17,7 +17,7 @@
 using namespace dd::literals;
 
 TEST(LimTest, cachingTests) {
-    auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false, false);
+    auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false);
 
     auto firstLim = limdd->lf.limCache.getCachedLim();
     auto secondLim = limdd->lf.limCache.getCachedLim();
@@ -1018,7 +1018,7 @@ TEST(LimTest, generatedCircuit_15) {
 TEST(LimTest, singleHadamard) {
     dd::QubitCount numQubits = 24;
     dd::QubitCount target    = 23;
-    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false, false);
+    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false);
 
     dd::vEdge state = dd->makeZeroState(numQubits);
     auto h_gate  = dd->makeGateDD(dd::Hmat, numQubits, target);
@@ -1035,7 +1035,7 @@ TEST(LimTest, twoHadamardGates) {
     dd::QubitCount numQubits = 24;
     dd::QubitCount target    = 23;
     dd::QubitCount target2    = 15;
-    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false, false);
+    auto dd = std::make_unique<dd::Package<>>(numQubits, dd::LIMDD_group::Pauli_group, false);
 
     dd::vEdge state = dd->makeZeroState(numQubits);
     auto h_gate  = dd->makeGateDD(dd::Hmat, numQubits, target);

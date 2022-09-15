@@ -11,8 +11,8 @@
 #include "gtest/gtest.h"
 
 void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
-    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, false);
-//    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group, false, false);
+    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false);
+//    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group, false);
 
     auto limddState= limdd->makeZeroState(circuit.n);
     limdd->incRef(limddState);
@@ -70,7 +70,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 //        simulateCircuitLIMDDGateByGate(circuit);
 //        return;
     auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
-    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, false);
+    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false);
 
     auto qmddState = qmdd->makeZeroState(circuit.n);
     auto limddState= limdd->makeZeroState(circuit.n);

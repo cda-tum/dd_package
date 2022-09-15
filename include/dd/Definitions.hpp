@@ -6,6 +6,8 @@
 #ifndef DDpackage_DATATYPES_HPP
 #define DDpackage_DATATYPES_HPP
 
+#define NDEBUG true
+
 #include <complex>
 #include <cstdint>
 #include <type_traits>
