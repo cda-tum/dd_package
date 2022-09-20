@@ -46,6 +46,7 @@ jobs:
         with:
           patterns: |
             -**/extern/**
+            -**/test/**
           input: sarif-results/cpp.sarif
           output: sarif-results/cpp.sarif
       - name: Upload SARIF
