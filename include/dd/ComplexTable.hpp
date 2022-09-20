@@ -538,7 +538,6 @@ namespace dd {
             Entry* entry = getEntry();
             entry->value = val;
 
-
             if (prev == nullptr) {
                 // table bucket is empty
                 table[key] = entry;
