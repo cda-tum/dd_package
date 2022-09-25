@@ -1301,7 +1301,7 @@ namespace dd {
                         vece = getVector(l.p);
                         Log::log << "[makeDDNode] just built Stab(" << l.p << "). Amplitude vector: " << outputCVec(vece) << '\n'
                                  << "[makeDDNode] Stab = ";
-                        printStabilizerGroup(l.p->limVector);
+                        printStabilizerGroup(l.p->limVector, l.p->v);
                         Log::log << '\n';
                         sanityCheckStabilizerGroup(l, l.p->limVector);
 

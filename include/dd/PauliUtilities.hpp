@@ -107,6 +107,16 @@ namespace dd {
         return ss.str();
     }
 
+    inline std::string groupToString(const StabilizerGroupValue& G, Qubit nQubits) {
+        std::stringstream ss;
+        ss << "Group (" << G.size() << " elements) = {";
+        for (unsigned int i = 0; i < G.size(); i++) {
+            ss << LimEntry<>::to_string(&G[i], nQubits) << ", ";
+        }
+        ss << "}";
+        return ss.str();
+    }
+
     inline StabilizerGroup groupConcatenate(const StabilizerGroup& G, const StabilizerGroup& H) {
         StabilizerGroup concat = G;
         for (unsigned int i = 0; i < H.size(); i++) {

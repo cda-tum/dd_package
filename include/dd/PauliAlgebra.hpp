@@ -608,16 +608,17 @@ namespace dd {
         //Log::log << "[intersect groups Pauli] intersection mod phase = " << groupToString(intersection, n) << '\n';
         // Remove all elements from intersection where the G-phase is not equal to the H-phase
         std::size_t g = 0;
-        for (std::size_t i = 0; i < intersection.size(); i++) {
+        std::size_t intersectionSize = intersection.size();
+        for (std::size_t i = 0; i < intersectionSize; i++) {
             auto const phaseG = recoverPhase(G, &intersection[g]);
             auto const phaseH = recoverPhase(H, &intersection[g]);
             if (phaseG == phaseH) {
                 intersection[g].setPhase(phaseG);
-                //Log::log << "[intersect groups Pauli] Adding " << LimEntry<>::to_string(intersection[g], 3) << " to intersection.\n";
+                //Log::log << "[intersect groups Pauli] Adding " << LimEntry<>::to_string(&intersection[g], 3) << " to intersection.\n";
                 g++;
             } else {
                 // add it to the list of opposite phases
-                //Log::log << "[intersect groups Pauli] Element " << LimEntry<>::to_string(intersection[g], 3) << " has phase(G)=" << phaseToString(phaseG) << " and phaseH=" << phaseToString(phaseH) << ".\n";
+                //Log::log << "[intersect groups Pauli] Element " << LimEntry<>::to_string(&intersection[g], 3) << " has phase(G)=" << phaseToString(phaseG) << " and phaseH=" << phaseToString(phaseH) << ".\n";
                 oppositePhaseGenerators.push_back(intersection[g]);
                 // remove this from the intersection
                 intersection[g] = intersection[intersection.size() - 1];
@@ -891,7 +892,7 @@ namespace dd {
             if (foundElement) {
                 stab.setOperator(n, 'Z');
                 stabgenset.push_back(stab); // TODO DONE refactor to use stab by value
-                //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(stab, n) << '\n';
+                //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&stab, n) << '\n';
                 //sanityCheckStabilizerGroup(edgeDummy, stabgenset);
             }
             if (low.p == high.p) {
