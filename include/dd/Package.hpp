@@ -2183,7 +2183,7 @@ namespace dd {
 
             static unsigned int callCount = 0;
             callCount++;
-            std::cout << "[multiply2] " << callCount << std::cout;
+            std::cout << "[multiply2] " << callCount << std::endl;
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;
