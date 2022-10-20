@@ -93,7 +93,7 @@ namespace dd {
 
     template<std::size_t NUM_QUBITS, class Node>
     inline LimEntry<NUM_QUBITS> createCanonicalLabel([[maybe_unused]] const LimEntry<NUM_QUBITS>& x, [[maybe_unused]] const LimEntry<NUM_QUBITS>& y, [[maybe_unused]] const Edge<Node> w) {
-        throw std::exception();
+        throw std::runtime_error("canonical labels may only be created for vectors; not for matrices.");
     }
 
     inline static void movePhaseIntoWeight(LimEntry<>& lim, Complex& weight) {
