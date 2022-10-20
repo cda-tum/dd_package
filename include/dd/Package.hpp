@@ -568,7 +568,7 @@ namespace dd {
             sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
 
             Edge<vNode> rOld = copyEdge(r);
-            CVec amplitudeVecBeforeNormalize;
+            CVec        amplitudeVecBeforeNormalize;
 
             amplitudeVecBeforeNormalize = getVector(r);
 
@@ -1750,24 +1750,33 @@ namespace dd {
 
             auto& computeTable = getAddComputeTable<Node>();
 
-            const auto trueLimC      = createCanonicalLabel(trueLimX, trueLimY, y);
-            const auto trueLimCTable = lf.limTable.lookup(trueLimC);
-
-            auto r = computeTable.lookup({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, false);
-            //            auto r = computeTable.lookup({x.p, x.w, trueLimCTable}, {y.p, y.w, nullptr});
-
-            //           if (r.p != nullptr && false) { // activate for debugging caching only
-            if (r.p != nullptr) {
-                if (r.w.approximatelyZero()) {
-                    return Edge<Node>::zero;
-                } else {
-                    auto       weight = cn.getCached(r.w);
-                    LimEntry<> lim    = trueLimX;
-                    if (r.l != nullptr) {
-                        lim.multiplyBy(r.l);
-                        movePhaseIntoWeight(lim, weight);
+            // Do different things depending on whether node is a vNode or an mNode
+            if constexpr (std::is_same_v<Node, vNode>) {
+                const auto trueLimC      = createCanonicalLabel(trueLimX, trueLimY, y);
+                const auto trueLimCTable = lf.limTable.lookup(trueLimC);
+                auto       r             = computeTable.lookup({x.p, x.w, nullptr}, {y.p, y.w, trueLimCTable}, false);
+                if (r.p != nullptr) {
+                    if (r.w.approximatelyZero()) {
+                        return Edge<Node>::zero;
+                    } else {
+                        auto       weight = cn.getCached(r.w);
+                        LimEntry<> lim    = trueLimX;
+                        if (r.l != nullptr) {
+                            lim.multiplyBy(r.l);
+                            movePhaseIntoWeight(lim, weight);
+                        }
+                        return {r.p, weight, lf.limTable.lookup(lim)};
                     }
-                    return {r.p, weight, lf.limTable.lookup(lim)};
+                }
+            } else {
+                // In this case, we are adding two mNodes
+                auto r = computeTable.lookup({x.p, x.w}, {y.p, y.w});
+                if (r.p != nullptr) {
+                    if (r.w.approximatelyZero()) {
+                        return Edge<Node>::zero;
+                    } else {
+                        return {r.p, cn.getCached(r.w)};
+                    }
                 }
             }
 
@@ -2180,7 +2189,6 @@ namespace dd {
         // Returns x * lim * y
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<> lim = {}) {
-
             static unsigned int callCount = 0;
             callCount++;
             std::cout << "[multiply2] " << callCount << std::endl;
