@@ -58,6 +58,10 @@ namespace dd {
                           {std::cos(lambda + phi) * SQRT2_2, std::sin(lambda + phi) * SQRT2_2}};
     }
 
+    inline GateMatrix U1mat(fp lambda) {
+        return GateMatrix{complex_one, complex_zero, complex_zero, {std::cos(lambda) * SQRT2_2, std::sin(lambda) * SQRT2_2}};
+    }
+
     inline GateMatrix Phasemat(fp lambda) {
         return GateMatrix{complex_one, complex_zero, complex_zero, {std::cos(lambda), std::sin(lambda)}};
     }

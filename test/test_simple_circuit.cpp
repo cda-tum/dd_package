@@ -51,50 +51,6 @@ TEST(LimTest, generatedCircuit_TwoH) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 TEST(LimTest, errorCorrectionBitSetError) {
     dd::QuantumCircuit circuit(17);
 
@@ -11627,3 +11583,416 @@ TEST(LimTest, generatedCircuitLarge_32) {
 //
 //    simulateCircuitQMDDvsLIMDDGateByGate(c);
 //}
+
+TEST(LimTest, shorTest) {
+    dd::QuantumCircuit circuit(17);
+
+    circuit.addGate(dd::Xmat, 11);
+    circuit.addGate(dd::Hmat, 7);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 32), 17_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 16), 17_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 14 / 8), 17_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 6 / 4), 17_pc, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 2 / 2), 17_pc, 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 32), 12);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 16), 13);
+    circuit.addGate(dd::U1mat(dd::PI * 14 / 8), 14);
+    circuit.addGate(dd::U1mat(dd::PI * 6 / 4), 15);
+    circuit.addGate(dd::U1mat(dd::PI * 2 / 2), 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 32), 17_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 16), 17_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 14 / 8), 17_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 6 / 4), 17_pc, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 2 / 2), 17_pc, 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 32), 12);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 16), 13);
+    circuit.addGate(dd::U1mat(dd::PI * 14 / 8), 14);
+    circuit.addGate(dd::U1mat(dd::PI * 6 / 4), 15);
+    circuit.addGate(dd::U1mat(dd::PI * 2 / 2), 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 32), 17_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 16), 17_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 14 / 8), 17_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 6 / 4), 17_pc, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 2 / 2), 17_pc, 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 32), 12);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 16), 13);
+    circuit.addGate(dd::U1mat(dd::PI * 14 / 8), 14);
+    circuit.addGate(dd::U1mat(dd::PI * 6 / 4), 15);
+    circuit.addGate(dd::U1mat(dd::PI * 2 / 2), 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Hmat, 7);
+    circuit.addGate(dd::Hmat, 6);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 32), 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 16), 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 14 / 8), 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 6 / 4), 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 2 / 2), 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 32), 17_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 16), 17_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 14 / 8), 17_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 6 / 4), 17_pc, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 2 / 2), 17_pc, 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Xmat, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 32), 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 30 / 16), 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 14 / 8), 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 6 / 4), 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 2 / 2), 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::Xmat, 12_pc, 17);
+    circuit.addGate(dd::Hmat, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 13_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 14_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 15_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 16), 16_pc, 12);
+    circuit.addGate(dd::Hmat, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 32), 17_pc, 12);
+    circuit.addGate(dd::U1mat(dd::PI * 30 / 16), 17_pc, 13);
+    circuit.addGate(dd::U1mat(dd::PI * 14 / 8), 17_pc, 14);
+    circuit.addGate(dd::U1mat(dd::PI * 6 / 4), 17_pc, 15);
+    circuit.addGate(dd::U1mat(dd::PI * 2 / 2), 17_pc, 16);
+    circuit.addGate(dd::Hmat, 16);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 16_pc, 15);
+    circuit.addGate(dd::Hmat, 15);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 15_pc, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 16_pc, 14);
+    circuit.addGate(dd::Hmat, 14);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 2), 14_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 4), 15_pc, 13);
+    circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
+    circuit.addGate(dd::Hmat, 13);
+
+    simulateCircuitLIMDDGateByGate(circuit);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
