@@ -1694,9 +1694,9 @@ namespace dd {
         }
 
     public:
-        long addCallCounter = 0;
+        //        long addCallCounter = 0;
         template<class Node>
-        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<> limX = {}, const LimEntry<> limY = {}) {
+        Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<>& limX = {}, const LimEntry<>& limY = {}) {
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
             // Making a copy from trueLimX as I need it later for inserting the result into the cache
@@ -1705,7 +1705,7 @@ namespace dd {
             LimEntry<> trueLimY = limY;
             trueLimY.multiplyBy(y.l);
 
-            [[maybe_unused]] auto tmpAddCallCounter = ++addCallCounter;
+            //            [[maybe_unused]] auto tmpAddCallCounter = ++addCallCounter;
             if (x.p == nullptr) return y;
             if (y.p == nullptr) return x;
 
@@ -2179,11 +2179,10 @@ namespace dd {
 
         // Returns x * lim * y
         template<class LeftOperandNode, class RightOperandNode>
-        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<> lim = {}) {
-
-            static unsigned int callCount = 0;
-            callCount++;
-            std::cout << "[multiply2] " << callCount << std::endl;
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<>& lim = {}) {
+            //            static unsigned int callCount = 0;
+            //            callCount++;
+            //            std::cout << "[multiply2] " << callCount << std::endl;
             using LEdge      = Edge<LeftOperandNode>;
             using REdge      = Edge<RightOperandNode>;
             using ResultEdge = Edge<RightOperandNode>;
