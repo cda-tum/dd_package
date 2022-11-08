@@ -2493,6 +2493,15 @@ namespace dd {
             if ((int)pauligate != 0) {
                 return applyPauliGate(pauligate, gate.target, state);
             }
+            char cpauligate = gate.checkControlledPauliGate();
+            if ((int)cpauligate != 0) {
+                /*
+                vEdge res = applyCPauliGate(cpauligate, gate, state);
+                std::cout << "applyCPauliGate() done" << std::endl;
+                return res;
+                */
+            }
+
             Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
             //setIdentityFlags(gateDD);
             return multiply(gateDD, state);
@@ -2505,6 +2514,72 @@ namespace dd {
             vEdge      res    = state;
             LimEntry<> newLim = LimEntry<>::multiplyValue(pauliGate, LimEntry<>(state.l));
             res.l             = lf.limTable.lookup(newLim);
+            return res;
+        }
+
+        vEdge applyCPauliGate(char pauli, const QuantumGate& gate, const vEdge state) {
+            Control control;
+            for (auto it = gate.controls.begin(); it != gate.controls.end(); it++) {
+                control = *it;
+			}
+            std::cout << "applyCPauliGate(): C" << pauli << "(" << (int)control.qubit << ", " << (int)gate.target << ")" << std::endl;
+            return applyCPauliGateRec(pauli, gate.target, control, state);
+        }
+
+        vEdge applyCPauliGateRec(char pauli, Qubit target, const Control control, const vEdge state) {
+
+            // TODO: 
+            // if (res <-- check computeTable) {
+            //      res.w = cn.mulCached(res.w, state.w);
+            //      res.l->multiplyBy(state.l);
+            //      return res;
+            // }
+
+            // Get both children of current node
+            Qubit curvar = state.p->v;
+            std::cout << "Var of current node: " << (int) curvar << std::endl;
+            vEdge e0, e1;
+            if (curvar < control.qubit) {
+                // control qubit was skipped, "reinsert" skipped node
+                e0 = vEdge{state.p, Complex::one, NULL};
+                e1 = vEdge{state.p, Complex::one, NULL};
+                curvar = control.qubit;
+                std::cout << "Inserted skipped node" << std::endl;
+            }
+            else {
+                e0 = state.p->e[0];
+                e1 = state.p->e[1];
+            }
+
+            if (curvar == control.qubit) {
+                // current node is control qubit, update |0> or |1> child
+                if (control.type == Control::Type::pos) {
+                    printf("Updating Pauli string of |1> child..."); fflush(stdout);
+                    e1 = applyPauliGate(pauli, target, e1);
+                    printf("done\n");
+                }
+                else {
+                    printf("Updating Pauli string of |0> child..."); fflush(stdout);
+                    e0 = applyPauliGate(pauli, target, e0);
+                    printf("done\n");
+                }
+            }
+            else  /* curvar > control.qubit */ {
+                // current node above control qubit: recurse on both children
+                std::cout << "Recursing on both children" << std::endl;
+                e0 = applyCPauliGateRec(pauli, target, control, e0);
+                e1 = applyCPauliGateRec(pauli, target, control, e1);
+            }
+
+            // makenode
+            printf("makeDDNode..."); fflush(stdout);
+            vEdge res = makeDDNode(curvar, std::array{e0, e1});
+            printf("\n");
+
+            // TODO: Put res into computeTable
+
+            res.w = cn.mulCached(res.w, state.w);
+            res.l->multiplyBy(state.l);        
             return res;
         }
 

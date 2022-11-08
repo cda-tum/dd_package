@@ -53,6 +53,20 @@ public:
 		return 0;
 	}
 
+	char checkControlledPauliGate() const {
+		// check if controlled pauli where all controls are above the target
+		// for now, only consider cases with single control qubit
+		if (isControlledGate() && controls.size() <= 1) {
+			for (auto it = controls.begin(); it != controls.end(); it++) {
+				if ((int) (*it).qubit < (int) target ) return 0;
+			}
+			if (mat == dd::Xmat) return 'X';
+			if (mat == dd::Zmat) return 'Z';
+			if (mat == dd::Ymat) return 'Y';
+		}
+		return 0;
+	}
+
 	bool isCliffordGate() const {
 		if (mat == dd::Hmat && !isControlledGate()) return true;
 		if (mat == dd::Smat && !isControlledGate()) return true;
