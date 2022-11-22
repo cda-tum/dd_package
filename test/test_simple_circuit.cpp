@@ -11585,7 +11585,7 @@ TEST(LimTest, generatedCircuitLarge_32) {
 //}
 
 TEST(LimTest, shorTest) {
-    dd::QuantumCircuit circuit(17);
+    dd::QuantumCircuit circuit(18);
 
     circuit.addGate(dd::Xmat, 11);
     circuit.addGate(dd::Hmat, 7);
@@ -11993,6 +11993,6 @@ TEST(LimTest, shorTest) {
     circuit.addGate(dd::U1mat(-dd::PI * 1 / 8), 16_pc, 13);
     circuit.addGate(dd::Hmat, 13);
 
-    simulateCircuitLIMDDGateByGate(circuit);
+//    simulateCircuitLIMDDGateByGate(circuit);
     simulateCircuitQMDDvsLIMDDGateByGate(circuit);
 }
