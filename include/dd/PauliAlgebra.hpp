@@ -35,6 +35,9 @@ namespace dd {
         LimEntry<NUM_QUBITS> B;
         for (std::size_t g = 0; g < G.size(); g++) {
             auto const pivot = G[g]->pivotPosition();
+            if (pivot == (unsigned int) -1) {
+                throw std::runtime_error("[recoverPhase] column is identity."); // TODO delete in Release mode; this is only for debugging purposes
+            }
             if (A.paulis.test(pivot)) {
                 A.multiplyBy(G[g]);
                 B.multiplyBy(G[g]);
@@ -50,6 +53,9 @@ namespace dd {
         LimEntry<NUM_QUBITS> B;
         for (std::size_t g = 0; g < G.size(); g++) {
             auto const pivot = G[g].pivotPosition();
+            if (pivot == (unsigned int) -1) {
+                throw std::runtime_error("[recoverPhase(*)] column is identity."); // TODO delete in Release mode; this is only for debugging purposes
+            }
             if (A.paulis.test(pivot)) {
                 A.multiplyBy(G[g]);
                 B.multiplyBy(G[g]);
@@ -293,7 +299,7 @@ namespace dd {
     inline void toColumnEchelonForm(StabilizerGroupValue& G) {
         std::sort(G.begin(), G.end(), LimEntry<>::greaterValue);
         GaussianEliminationSortedFast(G);
-        pruneZeroColumns(G);
+        pruneZeroColumnsModuloPhase(G);
         std::sort(G.begin(), G.end(), LimEntry<>::greaterValue);
     }
 
@@ -732,6 +738,12 @@ namespace dd {
         if (lambda == phase_t::no_phase) {
             return {LimEntry<NUM_QUBITS>(), false};
         }
+        if (containsZeroColumnModuloPhase(G)) {
+            throw std::runtime_error("[getCosetIntersectionElementPauli] The group G contains identity.\n");
+        }
+        if (containsZeroColumnModuloPhase(H)) {
+            throw std::runtime_error("[getCosetIntersectionElementPauli] The group G contains identity.\n");
+        }
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
         bool                 foundCIEMP;
@@ -1045,6 +1057,7 @@ namespace dd {
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
+    // Throws an error if no isomorphism is found
     inline void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism) {
         assert(u != nullptr);
         assert(v != nullptr);
@@ -1100,6 +1113,7 @@ namespace dd {
             }
             if (!foundIsomorphism) {
                 //                std::cout << "case 1" << std::endl;
+                throw std::runtime_error("[getIsomorphism] no isomorphism, case 1");
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
@@ -1122,6 +1136,7 @@ namespace dd {
             }
             if (!foundIsomorphism) {
                 //                std::cout << "case 2" << std::endl;
+                throw std::runtime_error("[getIsomorphism] no isomorphism, case 1");
             }
         }
         // Case 3 ("Fork"): Both children are nonzero
@@ -1146,7 +1161,7 @@ namespace dd {
                 uPrime.e[1].l    = u->e[1].l;
                 uPrime.e[1].w    = u->e[0].w;
                 getIsomorphismPauli(&uPrime, v, cn, iso, foundIsomorphism);
-                if (!foundIsomorphism) return;
+                if (foundIsomorphism) return;  // TODO this looks like a typo: should be if (foundIsomorphism) return; after all, it found the isomoprhism, right?
                 LimEntry<> X = *(u->e[1].l);
                 X.setOperator(u->v, pauli_op::pauli_x);
                 iso.lim.multiplyBy(X); // TODO can we simply set the operator to X, instead of multiplying?
@@ -1157,6 +1172,7 @@ namespace dd {
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) {
                 foundIsomorphism = false;
+                throw std::runtime_error("[getIsomorphism] no isomorphism, case 3");
                 return;
             }
             //Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n";
@@ -1221,6 +1237,7 @@ namespace dd {
                 //Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
                 //                std::cout << "case 3" << std::endl;
+                throw std::runtime_error("[getIsomorphism] no isomorphism, case 4");
                 return;
             }
             //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
@@ -1252,17 +1269,18 @@ namespace dd {
                 foundIsomorphism = true;
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {
-                //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
-                //                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
-                //                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
-                //                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
-                //                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
-                //                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
-                //                          << "ulow  = " << uLow << "\n"
-                //                          << "uhigh = " << uHigh << "\n"
-                //                          << "vlow  = " << vLow  << "\n"
-                //                          << "vhigh = " << vHigh << "\n";
-                //                std::cout << "case 4" << std::endl;
+                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
+                                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
+                                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
+                                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
+                                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
+                                          << "ulow  = " << uLow << "\n"
+                                          << "uhigh = " << uHigh << "\n"
+                                          << "vlow  = " << vLow  << "\n"
+                                          << "vhigh = " << vHigh << "\n";
+                std::cout << "case 4" << std::endl;
+                throw std::runtime_error("[getIsomorphism] no isomorphism, case 5");
             }
         }
     }

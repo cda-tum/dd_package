@@ -200,6 +200,15 @@ namespace dd {
         return GI;
     }
 
+    // Returns whether any of the LIMs in this group are the identity (up to a phase)
+    template<std::size_t NUM_QUBITS>
+    inline bool containsZeroColumnModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G) {
+        for (unsigned int i=0; i<G.size(); i++) {
+            if (G[i]->isIdentityModuloPhase()) return true;
+        }
+        return false;
+    }
+
     // TODO this procedure should reduce the refcount of the LimEntry objects it removes from G
     //   or should deallocate these objects in some other way
     template<std::size_t NUM_QUBITS>
@@ -247,6 +256,20 @@ namespace dd {
         }
     }
 
+    template<std::size_t NUM_QUBITS>
+    inline void pruneZeroColumnsModuloPhase(std::vector<LimEntry<NUM_QUBITS>>& G) {
+        unsigned int i = 0;
+        while (i < G.size()) {
+            if (G[i].isIdentityModuloPhase()) {
+                // Remove this all-zero vector from the matrix
+                G[i] = G[G.size() - 1];
+                G.pop_back();
+            } else {
+                i++;
+            }
+        }
+    }
+
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void pruneZeroColumnsModuloPhase(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         unsigned int i = 0;
@@ -276,6 +299,7 @@ namespace dd {
             }
         }
     }
+
 
 } // namespace dd
 #endif

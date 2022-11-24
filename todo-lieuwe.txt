@@ -1,5 +1,84 @@
 ====    TODO
 
+LOG DEBUGGING ShorTest
+
+Remark. There are 17 qubits in the circuit, but the 18th qubit is addressed by gate #22.
+If I correctly notify the circuit that 18 qubits exist in the circuit, then the test passes.
+What is the effect of telling the circuit this, exactly?
+
+All Shor benchmarks pass.
+
++ collect all failing benchmarks from Stefan's spreadsheet.
+  + The 325 benchmarks exit in the following ways:
+    * 6/325: TooManyQubits
+    * 5/325: std::bitset out of range
+    * 10/325: various std::runtime_error:
+      * 3/10: canonical labels may only be created for vectors; not for matrices
+      * 6/10: Numerical instability occurred during measurement
+      * 1/10: LimTable: RefCount of entry
+    * 17/325: timeout (>900 seconds)
+
++ run those failing benchmarks in the terminal
++ keep track of results, in a spreadsheet of my own
+  Some categories:
+  - passes on my end; fails on theirs. Should pass this on; very strange
+  - numerical error; don't see anything I can do about it
+  - canonical label stuff; I think we already fixed that earlier??
+  - too many qubits; todo see if we can fix that
+  - bitset error; todo this I can do
+    - steaneQ7_cBigEnt_n02.qasm is the only one that fails on my end. I've heard about that one before. I think it passes with debug flags?
+    + todo turn on debug flags
+      + in the terminal it fails
+      + run with gdb
+        it fails with the following backtrack:
+#10 0x000055555559ba9c in std::bitset<254ul>::_M_check (this=0x7fffffffa290, __position=4294967295, __s=0x55555577dada "bitset::test") at /usr/include/c++/11/bitset:773
+#11 0x000055555558d70e in std::bitset<254ul>::test (this=0x7fffffffa290, __position=4294967295) at /usr/include/c++/11/bitset:1325
+#12 0x0000555555626a68 in dd::recoverPhase<126ul> (G=std::vector of length 11, capacity 11 = {...}, a=0x7fffffffa410) at /home/lieuwe/Downloads/limddSim/extern/qfr/extern/dd_package/include/dd/PauliAlgebra.hpp:38
+#13 0x0000555555626f4b in dd::getCosetIntersectionElementPauli<126ul> (G=std::vector of length 11, capacity 11 = {...}, H=std::vector of length 11, capacity 11 = {...}, a=0x7fffffffa7b0, b=0x5555584f8890, lambda=dd::phase_minus_i, nQubits=9 '\t')
+    at /home/lieuwe/Downloads/limddSim/extern/qfr/extern/dd_package/include/dd/PauliAlgebra.hpp:745
+#14 0x000055555561e103 in dd::getIsomorphismPauli (u=0x5555581688a0, v=0x7fffffffa850, cn=..., iso=..., foundIsomorphism=@0x7fffffffa747: false) at /home/lieuwe/Downloads/limddSim/extern/qfr/extern/dd_package/include/dd/PauliAlgebra.hpp:1176
+#15 0x0000555555637a30 in dd::Package<32768ul, 2048ul, 32768ul, 2048ul, 16384ul, 16384ul, 4096ul, 4096ul, 16384ul, 16384ul, 4096ul, 4096ul, 4096ul, 1ul, 1ul, 1ul, 1ul, 1ul, 1ul>::normalizeLIMDDPauli (this=0x7ffff6d86010, e=..., cached=true)
+       So, the thing that's passed contains an identity column. But all identity columns are supposed to have be removed before the get to recoverPhase...
+       In fact, the only arguments to recoverPhase are the stabilizer groups of various nodes, but these are supposed to be pruned before they are put in the cache...
+    - put a sanity check in the code that initializes a node's stabilizer group (in makeDDNode): no identity LIMs
+    - put a sanity check in the code getcosetintersectionelementpauli
+    I think I fixed a bug: when constructStabilizerGeneratorSet calls toColumnEchelonForm, it only deleted identities; but it should have also deleted identities modulo phase.
+      I repaired this: now also identities modulo phase are deleted.
+    Now it fails differently depending on how it is called:
+     * in the terminal,   what():  bitset::set: __position (which is 18446744073709551614) >= _Nb (which is 254)
+     * in gdb: terminate called after throwing an instance of 'std::runtime_error'
+                 what():  [normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.
+    this is very confusing.
+    I fixed another bug, I think. In getIsomorphism, in the case if (uLow.p == vHigh.p && uHigh.p == vLow.p && uLow.p != uHigh.p), there was a check if (!foundIsomorphism), which I changed to if (foundIsomorphism).
+    but even after this bugfix, I still get an error in the terminal:
+      what():  [normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.
+    What is the cause of this non-canonical error? Is the node actually not canonical; did something go wrong?
+    Or is it an error finding the right isomorphism?
+    I ran it again, and now it gives a different error:
+      what():  Numerical instability occurred during measurement: |alpha|^2 + |beta|^2 = 0.986328 + 0.000000 = 0.986328, but should be 1!
+    It's good that I don't get the other error anymore... But why do I get this now? Did I solve the other bug?
+    I solved all the bugs that were tractable:
+     * bitset: 4/5 I cannot reproduce, the remaining 1/5 I solved
+     * refcount: cannot reproduce
+     * canonical labels: error is thrown because some functionality is not supported.
+     * numerical instability: no idea where to begin; maybe is not important?
+     * too many qubits: I can solve
+     todo try again with debug mode and {terminal, gdb}
+     - compile in debug mode
+     + run in terminal; the error message is:
+       what():  [getIsomorphism] no isomorphism, case 5
+       This is strange; it's a different error message than with Release mode!!
+
+     - run in gdb; what is the error message?
+
+LOG OF SOLVING TOO MANY QUBITS ERROR
+I change the number of qubits from 126 to 250.
+This seems to be very difficult and causes lots of compilation errors.
+
+
+
+
+
 -- coding, functionality
 
 in makeDDNode, delete the old low and high LIMs of the edge
