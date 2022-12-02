@@ -11996,3 +11996,15 @@ TEST(LimTest, shorTest) {
 //    simulateCircuitLIMDDGateByGate(circuit);
     simulateCircuitQMDDvsLIMDDGateByGate(circuit);
 }
+
+
+
+TEST(LimTest, zeroEdgesTest) {
+    dd::Qubit nqubits = 2;
+
+    auto limdd = std::make_unique<dd::Package<>>(nqubits, dd::LIMDD_group::Pauli_group, false);
+
+    auto limddState= limdd->makeZeroState(nqubits);
+    EXPECT_TRUE(limddState.p->e[1] == dd::vEdge::zero);
+    EXPECT_TRUE(limddState.p->e[0].p->e[1] == dd::vEdge::zero);
+}

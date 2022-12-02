@@ -580,7 +580,7 @@ namespace dd {
             }
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
-            // TODO add case when both children are zero (0)
+            // The case when both children are zero is not handled
             // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
             if (zero[1]) {
                 //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
@@ -603,10 +603,11 @@ namespace dd {
 
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
-                r.p->e[1].w = Complex::zero;
+                //r.p->e[1].w = Complex::zero;
                 // Step 5: Make sure both edges point to the same nodes
-                r.p->e[1].p = r.p->e[0].p;
+                //r.p->e[1].p = r.p->e[0].p;
                 // Set the weight to point to actually zero
+                r.p->e[1] = vEdge::zero;
                 return r;
             }
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
@@ -621,7 +622,7 @@ namespace dd {
                 r.l->multiplyBy(X);
                 // Step 3: Set the low and high edge labels to 'Identity'
                 r.p->e[0].l = nullptr; // Set low  edge to Identity
-                r.p->e[1].l = nullptr; // Set high edge to Identity
+                //r.p->e[1].l = nullptr; // Set high edge to Identity
                 // Step ??: Set the weight right
                 if (r.w.exactlyZero() || r.p->e[1].w.exactlyZero()) {
                     r.w = Complex::zero;
@@ -634,11 +635,12 @@ namespace dd {
                 //                r.w = cn.lookup(rootWeight);
                 //                cn.returnToCache(rootWeight);
                 r.p->e[0].w = Complex::one;
-                r.p->e[1].w = Complex::zero;
+                //r.p->e[1].w = Complex::zero;
                 // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
                 r.p->e[0].p = r.p->e[1].p;
+                r.p->e[1] = vEdge::zero;
                 return r;
             }
             //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
