@@ -125,15 +125,18 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
                 break;
             }
         }
-        std::cout << "[simulate circuit] QMDD mul statistics: ";
+        std::cout << "[simulate circuit] QMDD  mul statistics: ";
         qmdd->matrixVectorMultiplication.printStatistics();
         std::cout << "[simulate circuit] LIMDD mul statistics: ";
         limdd->matrixVectorMultiplication.printStatistics();
 
-        std::cout << "[simulate circuit] QMDD add statistics: ";
+        std::cout << "[simulate circuit] QMDD  add statistics: ";
         qmdd->vectorAdd.printStatistics();
         std::cout << "[simulate circuit] LIMDD add statistics: ";
         limdd->vectorAdd.printStatistics();
+
+        // assert that limdd hit rate is at least as good as qmdd hit rate
+        EXPECT_TRUE( std::isnan(limdd->matrixVectorMultiplication.hitRatio()) || std::isnan(qmdd->matrixVectorMultiplication.hitRatio()) || limdd->matrixVectorMultiplication.hitRatio() >= qmdd->matrixVectorMultiplication.hitRatio());
     }
 
     std::cout << "[simulate circuit] Number of Unique lims: " <<  qmdd->limCount(qmddState) << std::endl;
