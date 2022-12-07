@@ -568,7 +568,7 @@ namespace dd {
             sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
 
             Edge<vNode> rOld = copyEdge(r);
-            CVec amplitudeVecBeforeNormalize;
+            CVec        amplitudeVecBeforeNormalize;
 
             amplitudeVecBeforeNormalize = getVector(r);
 
@@ -640,7 +640,7 @@ namespace dd {
                 r.w.multiplyByPhase(r.l->getPhase());
                 r.l->setPhase(phase_t::phase_one);
                 r.p->e[0].p = r.p->e[1].p;
-                r.p->e[1] = vEdge::zero;
+                r.p->e[1]   = vEdge::zero;
                 return r;
             }
             //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
@@ -1835,7 +1835,7 @@ namespace dd {
                     //                    export2Dot(e1, "e1.dot", true, true, false, false, true);
                     //                    export2Dot(e2, "e2.dot", true, true, false, false, true);
                     edge[i] = add2(e1, e2, trueLimX, trueLimY);
-                    //                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
+//                    export2Dot(edge[i], "e3.dot", true, true, false, false, true);
 #if !NDEBUG
 
                     CVec vectorResult = getVector(edge[i], w);
@@ -2000,6 +2000,8 @@ namespace dd {
         /// Multiplication
         ///
     public:
+        std::size_t mulCallCounter = 0;
+
         ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
         ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
         ComputeTable<dEdge, dEdge, dCachedEdge, CT_DM_DM_MULT_NBUCKET>   densityDensityMultiplication{};
@@ -2181,26 +2183,45 @@ namespace dd {
 
         // Returns x * lim * y
         template<class LeftOperandNode, class RightOperandNode>
-        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>& x, const Edge<RightOperandNode>& y, Qubit var, Qubit start = 0, [[maybe_unused]] bool generateDensityMatrix = false, [[maybe_unused]] const LimEntry<>& lim = {}) {
+        Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>&       x,
+                                         const Edge<RightOperandNode>&      y,
+                                         Qubit                              var,
+                                         Qubit                              start                 = 0,
+                                         [[maybe_unused]] bool              generateDensityMatrix = false,
+                                         [[maybe_unused]] const LimEntry<>& lim                   = {}) {
             //            static unsigned int callCount = 0;
             //            callCount++;
             //            std::cout << "[multiply2] " << callCount << std::endl;
-            using LEdge      = Edge<LeftOperandNode>;
-            using REdge      = Edge<RightOperandNode>;
-            using ResultEdge = Edge<RightOperandNode>;
+
+            auto tempmulCallCounter = mulCallCounter++;
+            using LEdge             = Edge<LeftOperandNode>;
+            using REdge             = Edge<RightOperandNode>;
+            using ResultEdge        = Edge<RightOperandNode>;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
             auto       yCopy   = y;
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
+            trueLim = getRootLabel(y.p, &trueLim);
+
+            auto xCopy = x;
+            xCopy.w    = Complex::one;
+            yCopy.w    = Complex::one;
+
+            phase_t trueLimOldPhase = trueLim.getPhase();
+            trueLim.setPhase(phase_t::phase_one);
+
+            //            [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
+            [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
+
             if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
                 if (y.w.exactlyZero()) {
                     return ResultEdge::zero;
                 }
 
                 auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLim.getPhase());
+                newWeight.multiplyByPhase(trueLimOldPhase);
                 yCopy.l = lf.limTable.lookup(trueLim);
                 yCopy.w = newWeight;
                 return yCopy;
@@ -2228,20 +2249,17 @@ namespace dd {
                     return ResultEdge::zero;
                 } else {
                     auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                    newWeight.multiplyByPhase(trueLim.getPhase());
+                    newWeight.multiplyByPhase(trueLimOldPhase);
                     ComplexNumbers::mul(newWeight, x.w, newWeight);
                     return ResultEdge::terminal(newWeight);
                 }
             }
 
-            auto xCopy = x;
-            xCopy.w    = Complex::one;
-            yCopy.w    = Complex::one;
-
             const auto trueLimTable = lf.limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
-            auto  r            = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
+
+            auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
                 if (r.w.approximatelyZero()) {
@@ -2250,6 +2268,7 @@ namespace dd {
                     auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
+                    e.w.multiplyByPhase(trueLimOldPhase);
                     if (e.w.approximatelyZero()) {
                         cn.returnToCache(e.w);
                         return ResultEdge::zero;
@@ -2301,13 +2320,13 @@ namespace dd {
                 }
             }
 
-            constexpr std::size_t       ROWS = RADIX;
-            constexpr std::size_t       COLS = N == NEDGE ? RADIX : 1U;
-            std::array<ResultEdge, N>   edge{};
-            [[maybe_unused]] const auto op = trueLim.getPauliForQubit(y.p->v);
+            constexpr std::size_t     ROWS = RADIX;
+            constexpr std::size_t     COLS = N == NEDGE ? RADIX : 1U;
+            std::array<ResultEdge, N> edge{};
+            op = trueLim.getPauliForQubit(y.p->v);
 
             CVec vectorArg0, vectorArg1, vectorResult, vectorExpected;
-            trueLim.setOperator(y.p->v, 'I');
+            trueLim.setOperator(y.p->v, pauli_id);
 
             for (auto i = 0U; i < ROWS; i++) {
                 for (auto j = 0U; j < COLS; j++) {
@@ -2452,11 +2471,10 @@ namespace dd {
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
                 }
-
+                e.w.multiplyByPhase(trueLimOldPhase);
                 //                CVec vectorE = getVector(e);
                 //                std::cout << "(" << std::to_string(tempCallCounter) << ")";
                 //                printCVec(vectorE);
-
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
                     return ResultEdge::zero;
@@ -2484,6 +2502,9 @@ namespace dd {
 #endif
 
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
+
+            assert(e.p->v > 0 && e.p->e[0].w.approximatelyZero() && !e.p->e[0].isZeroTerminal());
+            assert(e.p->v > 0 && e.p->e[1].w.approximatelyZero() && !e.p->e[1].isZeroTerminal());
 
             return e;
         }
@@ -2523,14 +2544,13 @@ namespace dd {
             Control control;
             for (auto it = gate.controls.begin(); it != gate.controls.end(); it++) {
                 control = *it;
-			}
+            }
             std::cout << "applyCPauliGate(): C" << pauli << "(" << (int)control.qubit << ", " << (int)gate.target << ")" << std::endl;
             return applyCPauliGateRec(pauli, gate.target, control, state);
         }
 
         vEdge applyCPauliGateRec(char pauli, Qubit target, const Control control, const vEdge state) {
-
-            // TODO: 
+            // TODO:
             // if (res <-- check computeTable) {
             //      res.w = cn.mulCached(res.w, state.w);
             //      res.l->multiplyBy(state.l);
@@ -2539,16 +2559,15 @@ namespace dd {
 
             // Get both children of current node
             Qubit curvar = state.p->v;
-            std::cout << "Var of current node: " << (int) curvar << std::endl;
+            std::cout << "Var of current node: " << (int)curvar << std::endl;
             vEdge e0, e1;
             if (curvar < control.qubit) {
                 // control qubit was skipped, "reinsert" skipped node
-                e0 = vEdge{state.p, Complex::one, NULL};
-                e1 = vEdge{state.p, Complex::one, NULL};
+                e0     = vEdge{state.p, Complex::one, NULL};
+                e1     = vEdge{state.p, Complex::one, NULL};
                 curvar = control.qubit;
                 std::cout << "Inserted skipped node" << std::endl;
-            }
-            else {
+            } else {
                 e0 = state.p->e[0];
                 e1 = state.p->e[1];
             }
@@ -2556,17 +2575,17 @@ namespace dd {
             if (curvar == control.qubit) {
                 // current node is control qubit, update |0> or |1> child
                 if (control.type == Control::Type::pos) {
-                    printf("Updating Pauli string of |1> child..."); fflush(stdout);
+                    printf("Updating Pauli string of |1> child...");
+                    fflush(stdout);
                     e1 = applyPauliGate(pauli, target, e1);
                     printf("done\n");
-                }
-                else {
-                    printf("Updating Pauli string of |0> child..."); fflush(stdout);
+                } else {
+                    printf("Updating Pauli string of |0> child...");
+                    fflush(stdout);
                     e0 = applyPauliGate(pauli, target, e0);
                     printf("done\n");
                 }
-            }
-            else  /* curvar > control.qubit */ {
+            } else /* curvar > control.qubit */ {
                 // current node above control qubit: recurse on both children
                 std::cout << "Recursing on both children" << std::endl;
                 e0 = applyCPauliGateRec(pauli, target, control, e0);
@@ -2574,14 +2593,15 @@ namespace dd {
             }
 
             // makenode
-            printf("makeDDNode..."); fflush(stdout);
+            printf("makeDDNode...");
+            fflush(stdout);
             vEdge res = makeDDNode(curvar, std::array{e0, e1});
             printf("\n");
 
             // TODO: Put res into computeTable
 
             res.w = cn.mulCached(res.w, state.w);
-            res.l->multiplyBy(state.l);        
+            res.l->multiplyBy(state.l);
             return res;
         }
 
