@@ -2000,7 +2000,7 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        std::size_t mulCallCounter = 0;
+        [[maybe_unused]] std::size_t mulCallCounter = 0;
 
         ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
         ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
@@ -2193,7 +2193,7 @@ namespace dd {
             //            callCount++;
             //            std::cout << "[multiply2] " << callCount << std::endl;
 
-            auto tempmulCallCounter = mulCallCounter++;
+            [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
             using LEdge             = Edge<LeftOperandNode>;
             using REdge             = Edge<RightOperandNode>;
             using ResultEdge        = Edge<RightOperandNode>;

@@ -1294,6 +1294,12 @@ namespace dd {
     // This is useful when a canonical edge is needed for a cache entry
     // TODO in Pauli LIMDD, we need to right-multiply the LIM here; whereas in other applications we need a left-multiplication
     //    make sure the left and right-handed multiplications go well
+
+    template<class Node>
+    inline LimEntry<> getRootLabel(const Node* v, const LimEntry<>* lim) {
+        throw std::runtime_error("Not implemented!\n");
+    }
+
     inline LimEntry<> getRootLabel(const vNode* v, const LimEntry<>* lim) {
         return GramSchmidtFastSorted(v->limVector, lim);
     }
