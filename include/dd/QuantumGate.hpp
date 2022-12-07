@@ -67,6 +67,24 @@ public:
 		return 0;
 	}
 
+    pauli_op isDownwardSingleControlledPauliGate() const {
+        // check if controlled pauli where all controls are above the target
+        // for now, only consider cases with single control qubit
+        if (isControlledGate() && controls.size() <= 1) {
+            for (auto it = controls.begin(); it != controls.end(); it++) {
+                if ((int) (*it).qubit < (int) target ) return (pauli_op)0;
+            }
+            if (mat == dd::Xmat) return pauli_x;
+            if (mat == dd::Zmat) return pauli_y;
+            if (mat == dd::Ymat) return pauli_z;
+        }
+        return (pauli_op)0;
+    }
+
+    bool isUncontrolledHadamardGate() const {
+        return (controls.size() == 0 && mat == dd::Hmat);
+    }
+
 	bool isCliffordGate() const {
 		if (mat == dd::Hmat && !isControlledGate()) return true;
 		if (mat == dd::Smat && !isControlledGate()) return true;

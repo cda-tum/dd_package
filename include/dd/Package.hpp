@@ -121,8 +121,8 @@ namespace dd {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false):
-            cn(ComplexNumbers()), nqubits(nq), group(_group) {
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false, bool _optimizeHardcodedGates = false):
+            cn(ComplexNumbers()), nqubits(nq), group(_group), optimizeHardcodedGates(_optimizeHardcodedGates) {
             resize(nq);
             Log::log.verbose = outputToLog;
         };
@@ -159,6 +159,7 @@ namespace dd {
     private:
         std::size_t nqubits;
         LIMDD_group group;
+        bool optimizeHardcodedGates;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -2492,16 +2493,19 @@ namespace dd {
         vEdge applyGate(const QuantumGate& gate, const vEdge state) {
             //            printMatrix(makeGateDD(gate.mat, qubits(), gate.controls, gate.target));
             char pauligate = gate.checkPauliGate();
-            if ((int)pauligate != 0) {
+            if ((int)pauligate != 0 && optimizeHardcodedGates) {
                 return applyPauliGate(pauligate, gate.target, state);
             }
-            char cpauligate = gate.checkControlledPauliGate();
-            if ((int)cpauligate != 0) {
-                /*
+            pauli_op cpauligate = gate.isDownwardSingleControlledPauliGate();
+            if (cpauligate != pauli_none && optimizeHardcodedGates) {
                 vEdge res = applyCPauliGate(cpauligate, gate, state);
                 std::cout << "applyCPauliGate() done" << std::endl;
                 return res;
-                */
+            }
+            if (optimizeHardcodedGates && gate.isUncontrolledHadamardGate()) {
+                vEdge res = applyHadamardGate(gate, state);
+
+                return res;
             }
 
             Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
@@ -2519,6 +2523,7 @@ namespace dd {
             return res;
         }
 
+        // This function selects on of the control qubits
         vEdge applyCPauliGate(char pauli, const QuantumGate& gate, const vEdge state) {
             Control control;
             for (auto it = gate.controls.begin(); it != gate.controls.end(); it++) {
@@ -2583,6 +2588,11 @@ namespace dd {
             res.w = cn.mulCached(res.w, state.w);
             res.l->multiplyBy(state.l);        
             return res;
+        }
+
+        vEdge applyHadamardGate(const QuantumGate& gate, const vEdge state) {
+            std::cout << "ERROR applyHadamardGate not yet implemented.\n";
+            throw std::runtime_error("ERROR applyHadamardGate not yet implemented.");
         }
 
         vEdge simulateCircuit(const QuantumCircuit& circuit) {

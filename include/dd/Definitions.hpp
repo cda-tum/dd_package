@@ -109,7 +109,8 @@ namespace dd {
         pauli_id = 'I',
         pauli_x  = 'X',
         pauli_y  = 'Y',
-        pauli_z  = 'Z'
+        pauli_z  = 'Z',
+        pauli_none = 0
     };
 
     enum phase_t {
