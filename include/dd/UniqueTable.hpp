@@ -83,7 +83,7 @@ namespace dd {
 
         static bool nodesAreEqual(const Node* p, const Node* q) {
             if constexpr (std::is_same_v<Node, mNode>) {
-                return (p->e == q->e && (p->flags == q->flags));
+                return (p->e == q->e);
             } else {
                 assert(p->flags == 0 && q->flags == 0);
                 return p->e == q->e;
@@ -153,6 +153,7 @@ namespace dd {
             // successors of a node shall either have successive variable numbers or be terminals
             for ([[maybe_unused]] const auto& edge: e.p->e)
                 assert(edge.p->v == v - 1 || edge.isTerminal());
+            assert((std::abs(CTEntry::val(e.w.r)) + std::abs(CTEntry::val(e.w.i))) < 0.000000001 && !e.isTerminal());
 
             Node* p = tables[v][key];
             while (p != nullptr) {
