@@ -1252,17 +1252,17 @@ namespace dd {
                 foundIsomorphism = true;
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
             } else {
-                //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
-                //                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
-                //                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
-                //                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
-                //                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
-                //                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
-                //                          << "ulow  = " << uLow << "\n"
-                //                          << "uhigh = " << uHigh << "\n"
-                //                          << "vlow  = " << vLow  << "\n"
-                //                          << "vhigh = " << vHigh << "\n";
-                //                std::cout << "case 4" << std::endl;
+                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
+                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
+                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
+                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
+                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
+                          << "ulow  = " << uLow << "\n"
+                          << "uhigh = " << uHigh << "\n"
+                          << "vlow  = " << vLow  << "\n"
+                          << "vhigh = " << vHigh << "\n";
+                std::cout << "case 4" << std::endl;
             }
         }
     }
@@ -1325,6 +1325,18 @@ namespace dd {
     //			Log::log << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
     //			throw std::exception();
     //		}
+
+    inline void conjugateWithHadamard(LimEntry<>& lim, Qubit target) {
+        pauli_op op = (pauli_op) lim.getQubit(target);
+        switch(op) {
+            case pauli_x:
+                lim.setOperator(target, pauli_z);
+            case pauli_y:
+                lim.multiplyPhaseBy(phase_t::phase_minus_one);
+            case pauli_z:
+                lim.setOperator(target, pauli_z);
+        }
+    }
 
 } // namespace dd
 #endif //DDPACKAGE_PAULIALGEBRA_HPP

@@ -127,6 +127,11 @@ namespace dd {
     	Pauli_group
     };
 
+    enum CachingStrategy {
+        QMDDCachingStrategy,
+        cliffordSpecialCaching
+    };
+
 } // namespace dd
 
 

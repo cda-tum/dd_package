@@ -121,8 +121,8 @@ namespace dd {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false, bool _optimizeHardcodedGates = false):
-            cn(ComplexNumbers()), nqubits(nq), group(_group), optimizeHardcodedGates(_optimizeHardcodedGates) {
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false, CachingStrategy _cachingStrategy = CachingStrategy::QMDDCachingStrategy):
+            cn(ComplexNumbers()), nqubits(nq), group(_group), cachingStrategy(_cachingStrategy) {
             resize(nq);
             Log::log.verbose = outputToLog;
         };
@@ -159,7 +159,7 @@ namespace dd {
     private:
         std::size_t nqubits;
         LIMDD_group group;
-        bool optimizeHardcodedGates;
+        CachingStrategy cachingStrategy;
 
         ///
         /// Vector nodes, edges and quantum states
@@ -690,15 +690,17 @@ namespace dd {
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             iso.weight = cn.getCached();
+            //Log::log << "[normalizeLIMDD] getting isomorphism. one = " << Complex::one << '\n';
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
+            //Log::log << "[normalizeLIMDD] after getting isomorphism. one = " << Complex::one << '\n';
             if (!foundIsomorphism) {
-                //                std::cout << "[normalizeLIMDD] Step 3: Choose High Label; edge is currently " << r << '\n';
-                //                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                //                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
-                //                std::cout << "[normalizeLIMDD] Found high label; now edge is " << r << '\n';
-                //                std::cout << "[normalizeLIMDD] stab(u) = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                //                          << "[normalizeLIMDD] stab(v) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
-                //                          << std::endl;
+                Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"
+                         << "|- Old node is: " << oldNode << '\n'
+                         << "|- new node is: " << r.p << '\n'
+                         << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, r.p->v - 1) << "\n"
+                         << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, r.p->v - 1) << "\n"
+                         << "|- stab(newLow)  = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
+                         << "|- stab(newHigh) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
@@ -2182,6 +2184,25 @@ namespace dd {
             mat.p->flags = (mat.p->flags & (~1));
         }
 
+        // Returns whether the edge represents a single Hadamard gate and several identity gates
+        // If so, returns the index of the qubit to which the Hadamard is applied
+        // Otherwise, returns -1
+        // requires matrix node identity flags to be set
+        Qubit isHadamardGate(const Edge<mNode>& mat) {
+            // either this qubit is the identity, or it's a hadamard and the rest is the identity
+            if (mat.p == mNode::terminal) return (Qubit)-1;
+            if (topQubitIsIdentity(mat)) {
+                return isHadamardGate(mat.p->e[0]);
+            }
+            if (mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::one &&
+                mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::minus_one &&
+                mat.p->e[0].p == mat.p->e[1].p && mat.p->e[0].p == mat.p->e[2].p && mat.p->e[0].p == mat.p->e[3].p &&
+                mat.p->e[0].p->isIdentity()) {
+                return mat.p->v;
+            }
+            return (Qubit) -1;
+        }
+
         // Returns x * lim * y
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>&       x,
@@ -2241,6 +2262,7 @@ namespace dd {
             //            makePrintIdent(var);
             //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
 
+            // TODO it looks like this check can be done earlier; then subsequent checks of this form can be omitted
             if (x.w.exactlyZero() || y.w.exactlyZero()) {
                 return ResultEdge::zero;
             }
@@ -2466,7 +2488,7 @@ namespace dd {
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
-                if (e.w.exactlyZero()) {
+                if (e.w.exactlyZero()) { // TODO this check is redundant, because we just checked that !e.w.exactlyZero()
                     e.w = cn.mulCached(x.w, y.w);
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);
@@ -2514,19 +2536,8 @@ namespace dd {
         vEdge applyGate(const QuantumGate& gate, const vEdge state) {
             //            printMatrix(makeGateDD(gate.mat, qubits(), gate.controls, gate.target));
             char pauligate = gate.checkPauliGate();
-            if ((int)pauligate != 0 && optimizeHardcodedGates) {
+            if ((int)pauligate != 0 && cachingStrategy == cliffordSpecialCaching) {
                 return applyPauliGate(pauligate, gate.target, state);
-            }
-            pauli_op cpauligate = gate.isDownwardSingleControlledPauliGate();
-            if (cpauligate != pauli_none && optimizeHardcodedGates) {
-                vEdge res = applyCPauliGate(cpauligate, gate, state);
-                std::cout << "applyCPauliGate() done" << std::endl;
-                return res;
-            }
-            if (optimizeHardcodedGates && gate.isUncontrolledHadamardGate()) {
-                vEdge res = applyHadamardGate(gate, state);
-
-                return res;
             }
 
             Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
@@ -2610,9 +2621,91 @@ namespace dd {
             return res;
         }
 
-        vEdge applyHadamardGate(const QuantumGate& gate, const vEdge state) {
-            std::cout << "ERROR applyHadamardGate not yet implemented.\n";
-            throw std::runtime_error("ERROR applyHadamardGate not yet implemented.");
+        vEdge applyHadamardGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
+            success = false;
+            Qubit var = x.p->v;
+            if (cachingStrategy != cliffordSpecialCaching) {
+                return y;
+            }
+            Qubit hadamardTarget = isHadamardGate(x);
+            std::cout << "[Hadamard] Hadamard target is " << (int) hadamardTarget << "\n";
+            if (hadamardTarget != (Qubit) -1) {
+                success = true;
+                return applyHadamardGate2(x, y, hadamardTarget);
+            }
+            return y;
+        }
+
+        vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
+            vEdge yCopy = y;
+            std::cout << "[multiply2, Hadamard] left operand is a vEdge. Hadamard target is " << (int) hadamardTarget << "\n";
+            if (y.isTerminal()) return y;
+            std::cout << "[multiply2, Hadamard] Treating special case of Hadamard.\n";
+            vEdge result;
+            LimEntry<> pushedLim = *y.l;
+            conjugateWithHadamard(pushedLim, hadamardTarget);
+            yCopy.l = nullptr;
+            // look up in the cache
+            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
+            // note that when we look it up, we use a nullptr for y's lim
+            auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {yCopy.p, yCopy.w, yCopy.l}, false); // TODO refactor to 'result'
+            //            if (r.p != nullptr && false) { // activate for debugging caching only
+            if (r.p != nullptr) {
+                std::cout << "[muliply2,Hadamard] cache hit!\n";
+                if (r.w.approximatelyZero()) {
+                    return vEdge::zero;
+                } else {
+                    auto e = vEdge{r.p, cn.getCached(r.w), r.l}; // TODO refactor to 'result'
+                    ComplexNumbers::mul(e.w, e.w, x.w);
+                    ComplexNumbers::mul(e.w, e.w, y.w);
+                    if (e.w.approximatelyZero()) {
+                        cn.returnToCache(e.w);
+                        return vEdge::zero;
+                    }
+                    LimEntry<> eLim = pushedLim;
+                    eLim.multiplyBy(e.l);
+                    e.l = lf.limTable.lookup(eLim);
+                    return e;
+                }
+            }
+            // cache miss; now simply compute the result
+            std::cout << "[Hadamard] cache miss.\n";
+            vEdge e0, e1;
+            if (hadamardTarget == y.p->v) {
+                vEdge e00 = yCopy.p->e[0];
+                vEdge e01 = yCopy.p->e[1];
+                vEdge e10 = yCopy.p->e[0];
+                vEdge e11 = yCopy.p->e[1];
+                e11.w = cn.getCached((e11.w));
+                e11.w.multiplyByMinusOne();
+                std::cout << "e0:= add\n";
+                e0 = add2(e00, e01);
+                std::cout << "e1:= add\n";
+                e1 = add2(e10, e11);
+                cn.returnToCache(e11.w);
+            } else {
+                // Apply identity to this qubit, apply Hadamard to the remaining qubits
+                std::cout << "e0:= multiply2\n";
+                e0 = applyHadamardGate2(x.p->e[0], y.p->e[0], hadamardTarget);
+                std::cout << "e1:= multiply2\n";
+                e1 = applyHadamardGate2(x.p->e[0], y.p->e[1], hadamardTarget);
+            }
+            std::array<vEdge, 2> e = {e0, e1};
+            result = makeDDNode(y.p->v, e, true, nullptr);
+            // put the result in the cache
+            //Log::log << "[multiply2, Hadamard] puting the new result in the cache.\n";
+//                result.w = cn.lookup(result.w);
+            //result.l = lf.limTable.lookup(*result.l);
+            //computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
+            // multiply by the old LIM
+            Log::log << "[multily2, Hadamard] correcting LIM.\n";
+            LimEntry<> resultLim = pushedLim;
+            resultLim.multiplyBy(result.l);
+            result.l = lf.limTable.lookup(resultLim);
+            // Multiply by the old weight
+            result.w = cn.getCached(result.w);
+            ComplexNumbers::mul(result.w, result.w, y.w);
+            return result;
         }
 
         vEdge simulateCircuit(const QuantumCircuit& circuit) {
