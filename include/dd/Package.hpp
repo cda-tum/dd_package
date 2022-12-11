@@ -696,7 +696,7 @@ namespace dd {
             if (!foundIsomorphism) {
                 Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"
                          << "|- Old node is: " << oldNode << '\n'
-                         << "|- new node is: " << r.p << '\n'
+                         << "|- new node is: " << *r.p << '\n'
                          << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, r.p->v - 1) << "\n"
                          << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, r.p->v - 1) << "\n"
                          << "|- stab(newLow)  = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
@@ -2069,7 +2069,15 @@ namespace dd {
                 if (!y.isTerminal() && (y.p->v) > var) {
                     var = y.p->v;
                 }
-                e = multiply2(x, y, var, start);
+                bool appliedCliffordGate = false;
+                if constexpr (std::is_same_v<RightOperand, vEdge>) {
+                    if (cachingStrategy == cliffordSpecialCaching) {
+                        e = applyHadamardGate(x, y, appliedCliffordGate);
+                    }
+                }
+                if (!appliedCliffordGate) {
+                    e = multiply2(x, y, var, start);
+                }
             }
 
             if (!e.w.exactlyZero() && !e.w.exactlyOne()) {
@@ -2155,7 +2163,7 @@ namespace dd {
 
         void setIdentityFlagsTraverseDD(Edge<mNode>& mat) {
             if (mat.isTerminal()) {
-                mat.p->setIdentity(false);
+                mat.p->setIdentity(true);
                 return;
             }
             if (mat.p->flags & 1)
@@ -2237,17 +2245,18 @@ namespace dd {
             //            [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
             [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
 
-            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
-                if (y.w.exactlyZero()) {
-                    return ResultEdge::zero;
-                }
-
-                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                newWeight.multiplyByPhase(trueLimOldPhase);
-                yCopy.l = lf.limTable.lookup(trueLim);
-                yCopy.w = newWeight;
-                return yCopy;
-            }
+            // TODO This code, which handles the special case when x is the identity operator, does not work.
+//            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
+//                if (y.w.exactlyZero()) {
+//                    return ResultEdge::zero;
+//                }
+//
+//                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+//                newWeight.multiplyByPhase(trueLimOldPhase);
+//                yCopy.l = lf.limTable.lookup(trueLim);
+//                yCopy.w = newWeight;
+//                return yCopy;
+//            }
 
 #if !NDEBUG
             CMat mat_x;
@@ -2623,7 +2632,6 @@ namespace dd {
 
         vEdge applyHadamardGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
-            Qubit var = x.p->v;
             if (cachingStrategy != cliffordSpecialCaching) {
                 return y;
             }
@@ -2637,12 +2645,12 @@ namespace dd {
         }
 
         vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
-            vEdge yCopy = y;
-            std::cout << "[multiply2, Hadamard] left operand is a vEdge. Hadamard target is " << (int) hadamardTarget << "\n";
+            static unsigned int callCounter = 0; callCounter++;
             if (y.isTerminal()) return y;
-            std::cout << "[multiply2, Hadamard] Treating special case of Hadamard.\n";
+            vEdge yCopy = y;
+            Log::log << "[Hadamard, " << (int)y.p->v << " qubits] Start. target is " << (int) hadamardTarget << ". y = " << y << "\n";
             vEdge result;
-            LimEntry<> pushedLim = *y.l;
+            LimEntry<> pushedLim(y.l);
             conjugateWithHadamard(pushedLim, hadamardTarget);
             yCopy.l = nullptr;
             // look up in the cache
@@ -2651,7 +2659,7 @@ namespace dd {
             auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {yCopy.p, yCopy.w, yCopy.l}, false); // TODO refactor to 'result'
             //            if (r.p != nullptr && false) { // activate for debugging caching only
             if (r.p != nullptr) {
-                std::cout << "[muliply2,Hadamard] cache hit!\n";
+                Log::log << "[muliply2,Hadamard] cache hit!\n";
                 if (r.w.approximatelyZero()) {
                     return vEdge::zero;
                 } else {
@@ -2669,42 +2677,45 @@ namespace dd {
                 }
             }
             // cache miss; now simply compute the result
-            std::cout << "[Hadamard] cache miss.\n";
+            Log::log << "[Hadamard] cache miss.\n";
             vEdge e0, e1;
             if (hadamardTarget == y.p->v) {
                 vEdge e00 = yCopy.p->e[0];
                 vEdge e01 = yCopy.p->e[1];
                 vEdge e10 = yCopy.p->e[0];
                 vEdge e11 = yCopy.p->e[1];
-                e11.w = cn.getCached((e11.w));
-                e11.w.multiplyByMinusOne();
-                std::cout << "e0:= add\n";
+                e11.w.multiplyByMinusOne(false);
                 e0 = add2(e00, e01);
-                std::cout << "e1:= add\n";
+                Log::log << "[Hadamard] e10 = " << e10 << '\n';
+                Log::log << "[Hadamard] e11 = " << e11 << '\n';
                 e1 = add2(e10, e11);
-                cn.returnToCache(e11.w);
             } else {
-                // Apply identity to this qubit, apply Hadamard to the remaining qubits
-                std::cout << "e0:= multiply2\n";
+                // Apply identity to this qubit, then apply Hadamard to the remaining qubits
+                Log::log << "e0:= multiply2\n";
                 e0 = applyHadamardGate2(x.p->e[0], y.p->e[0], hadamardTarget);
-                std::cout << "e1:= multiply2\n";
+                Log::log << "e1:= multiply2\n";
                 e1 = applyHadamardGate2(x.p->e[0], y.p->e[1], hadamardTarget);
             }
             std::array<vEdge, 2> e = {e0, e1};
+            Log::log << "[Hadamard] e0 = " << e0 << '\n';
+            Log::log << "[Hadamard] e1 = " << e1 << '\n';
             result = makeDDNode(y.p->v, e, true, nullptr);
+            Log::log << "[Hadamard] result =  " << result << '\n';
             // put the result in the cache
             //Log::log << "[multiply2, Hadamard] puting the new result in the cache.\n";
-//                result.w = cn.lookup(result.w);
-            //result.l = lf.limTable.lookup(*result.l);
-            //computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
+            result.w = cn.lookup(result.w);
+            result.l = lf.limTable.lookup(*result.l);
+            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
             // multiply by the old LIM
-            Log::log << "[multily2, Hadamard] correcting LIM.\n";
             LimEntry<> resultLim = pushedLim;
             resultLim.multiplyBy(result.l);
             result.l = lf.limTable.lookup(resultLim);
+            Log::log << "[Hadamard] corrected LIM; result = " << result << '\n';
             // Multiply by the old weight
-            result.w = cn.getCached(result.w);
+            result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
             ComplexNumbers::mul(result.w, result.w, y.w);
+            ComplexNumbers::mul(result.w, result.w, x.w);
+            Log::log << "[Hadamard] corrected weight; reslt = " << result << '\n';
             return result;
         }
 

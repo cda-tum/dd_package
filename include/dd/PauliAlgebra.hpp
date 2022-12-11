@@ -1331,10 +1331,15 @@ namespace dd {
         switch(op) {
             case pauli_x:
                 lim.setOperator(target, pauli_z);
+                break;
             case pauli_y:
                 lim.multiplyPhaseBy(phase_t::phase_minus_one);
+                break;
             case pauli_z:
-                lim.setOperator(target, pauli_z);
+                lim.setOperator(target, pauli_x);
+                break;
+            default:
+                break;
         }
     }
 

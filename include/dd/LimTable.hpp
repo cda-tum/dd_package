@@ -438,6 +438,7 @@ namespace dd {
                     paulis.set(2 * v, 1);
                     paulis.set(2 * v + 1, 0);
                     break;
+                default: break;
             }
         }
 
