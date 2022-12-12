@@ -2766,7 +2766,9 @@ namespace dd {
 
         template<class Edge>
         bool isLocallyConsistent(const Edge& e) {
+            // NOLINTNEXTLINE(clang-diagnostic-float-equal)
             assert(Complex::one.r->value == 1 && Complex::one.i->value == 0);
+            // NOLINTNEXTLINE(clang-diagnostic-float-equal)
             assert(Complex::zero.r->value == 0 && Complex::zero.i->value == 0);
 
             const bool result = isLocallyConsistent2(e);
