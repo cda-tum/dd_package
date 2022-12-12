@@ -18,9 +18,9 @@ option(COVERAGE "Configure for coverage report generation")
 option(BUILD_DD_PACKAGE_TESTS "Also build tests for DD package")
 
 # build type settings
-set(default_build_type "Release")
+set(DEFAULT_BUILD_TYPE "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
   set(CMAKE_BUILD_TYPE
       "${default_build_type}"
       CACHE STRING "Choose the type of build." FORCE)
@@ -89,14 +89,14 @@ endif()
 # add MQT alias
 add_library(MQT::DDPackage ALIAS ${PROJECT_NAME})
 
-macro(enable_lto TARGET_NAME)
-  # enable interprocedural optimization if it is supported (Clang's ThinLTO does not work with
-  # Ubuntu 20.04's default linker at the moment)
+# enable interprocedural optimization if it is supported (Clang's ThinLTO does not work with Ubuntu
+# 20.04's default linker at the moment)
+macro(ENABLE_LTO target_name)
   include(CheckIPOSupported)
   check_ipo_supported(RESULT ipo_supported)
   if(ipo_supported AND NOT ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (${CMAKE_CXX_COMPILER_ID}
                                                                         MATCHES "Clang")))
-    set_target_properties(${TARGETNAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_target_properties(${target_name} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 endmacro()
 
@@ -105,8 +105,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR BUILD_DD_PACKAGE_TESTS)
   if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/googletest/CMakeLists.txt")
     message(
       FATAL_ERROR
-        "GoogleTest submodule not cloned properly. Please run `git submodule update --init --recursive` from the main project directory"
-    )
+        "GoogleTest submodule not cloned properly. \
+        Please run `git submodule update --init --recursive` \
+        from the main project directory")
   endif()
 
   enable_testing()

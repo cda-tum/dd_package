@@ -1,6 +1,6 @@
 if(NOT TARGET gtest OR NOT TARGET gmock)
   # Prevent overriding the parent project's compiler/linker settings on Windows
-  set(gtest_force_shared_crt
+  set(gtest_force_shared_crt # cmake-lint: disable=C0103
       ON
       CACHE BOOL "" FORCE)
   add_subdirectory("${PROJECT_SOURCE_DIR}/extern/googletest" "extern/googletest" EXCLUDE_FROM_ALL)
@@ -46,23 +46,25 @@ set_target_properties(
 target_compile_features(${PROJECT_NAME}_example PUBLIC cxx_std_17)
 enable_lto(${PROJECT_NAME}_example)
 
-macro(package_add_test TESTNAME)
-  # create an exectuable in which the tests will be stored
-  add_executable(${TESTNAME} ${ARGN})
-  # link the Google test infrastructure and a default main fuction to the test executable.
-  target_link_libraries(${TESTNAME} PRIVATE ${PROJECT_NAME} gtest_main gmock_main)
+# macro to add a test executable for one of the project libraries
+macro(PACKAGE_ADD_TEST testname)
+  # create an executable in which the tests will be stored
+  add_executable(${testname} ${ARGN})
+  # link the Google test infrastructure and a default main function to the test executable.
+  target_link_libraries(${testname} PRIVATE ${PROJECT_NAME} gmock gtest_main)
   # discover tests
   gtest_discover_tests(
-    ${TESTNAME}
+    ${testname}
     WORKING_DIRECTORY ${PROJECT_DIR}
     PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}")
   set_target_properties(
-    ${TESTNAME}
+    ${testname}
     PROPERTIES FOLDER tests
                CMAKE_CXX_STANDARD_REQUIRED ON
                CXX_EXTENSIONS OFF)
-  target_compile_features(${TESTNAME} PUBLIC cxx_std_17)
-  enable_lto(${TESTNAME})
+
+  target_compile_features(${testname} PUBLIC cxx_std_17)
+  enable_lto(${testname})
 endmacro()
 
 # add unit tests
@@ -83,7 +85,7 @@ add_test(NAME ${PROJECT_NAME}_example COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJ
 
 # add benchmark executable
 add_executable(${PROJECT_NAME}_bench EXCLUDE_FROM_ALL ${CMAKE_CURRENT_SOURCE_DIR}/bench_package.cpp)
-# link the Google benchmark infrastructure and a default main fuction to the benchmark executable.
+# link the Google benchmark infrastructure and a default main function to the benchmark executable.
 target_link_libraries(${PROJECT_NAME}_bench PRIVATE ${PROJECT_NAME} benchmark::benchmark_main
                                                     Threads::Threads)
 set_target_properties(
