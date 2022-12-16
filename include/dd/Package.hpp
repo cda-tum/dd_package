@@ -2957,8 +2957,9 @@ namespace dd {
             Log::log << "[Phase] cache miss.\n";
             vEdge e0, e1;
             if (phaseTarget == y.p->v) {
-                e0 = y.p->e[0];
-                e1 = y.p->e[1];
+                e0   = y.p->e[0];
+                e0.w = cn.getCached(e0.w);
+                e1   = y.p->e[1];
                 Log::log << "[Phase] inverse = " << inverse << ". applying S gate to qubit " << (int) y.p->v << ". e1 = "  << e1 << '\n';
                 e1.w = cn.getCached(e1.w);
                 if (inverse) {
