@@ -94,7 +94,9 @@ namespace dd {
 
             return ar * ar + ai * ai;
         }
-        static inline fp mag(const Complex& a) {
+        static inline fp mag(const Complex& a) { // TODO LV: this introduces numerical inaccuracy in the case when a is a purely real, or purely imaginary number, i.e., is not a complex number. Perhaps better to take this into account, as follows?
+//            if (CTEntry::val(a.i) == 0) return CTEntry::val(a.r); // TODO LV: use appropriate code to check "is equal to zero"
+//            if (CTEntry::val(a.r) == 0) return CTEntry::val(a.i);
             return std::sqrt(mag2(a));
         }
         static inline fp arg(const Complex& a) {

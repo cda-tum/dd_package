@@ -43,6 +43,8 @@ namespace dd {
     constexpr GateMatrix SXdagmat{complex_1minusi_2, complex_1plusi_2, complex_1plusi_2, complex_1minusi_2};
     constexpr GateMatrix Vmat{complex_SQRT2_2, complex_miSQRT2_2, complex_miSQRT2_2, complex_SQRT2_2};
     constexpr GateMatrix Vdagmat{complex_SQRT2_2, complex_iSQRT2_2, complex_iSQRT2_2, complex_SQRT2_2};
+    constexpr GateMatrix project0mat{complex_one, complex_zero, complex_zero, complex_zero};
+    constexpr GateMatrix project1mat{complex_zero, complex_zero, complex_zero, complex_one};
 
     inline GateMatrix U3mat(fp lambda, fp phi, fp theta) {
         return GateMatrix{{{std::cos(theta / 2.), 0.},

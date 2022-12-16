@@ -1343,5 +1343,39 @@ namespace dd {
         }
     }
 
+    inline void conjugateWithPhaseGate(LimEntry<>& lim, Qubit target, bool inverse) {
+        pauli_op op = (pauli_op) lim.getQubit(target);
+        switch(op) {
+            case pauli_x:
+            case pauli_y:
+                if (inverse) {
+                    lim.multiplyPhaseBy(phase_t::phase_minus_i);
+                } else {
+                    lim.multiplyPhaseBy(phase_t::phase_i);
+                }
+                break;
+            case pauli_z:
+                break;
+            default:
+                break;
+        }
+    }
+
+    inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const std::tuple<Qubit, Qubit, pauli_op> gate) {
+        pauli_op pControl = (pauli_op) lim.getQubit(std::get<0>(gate));
+        pauli_op pTarget  = (pauli_op) lim.getQubit(std::get<1>(gate));
+        pauli_op T = std::get<2>(gate);
+        if (!LimEntry<>::commutesWith(pTarget, T)) {
+            // right-multiply pControl by Z
+            lim.multiplyByZ(std::get<0>(gate));
+        }
+        if (pControl == pauli_x || pControl == pauli_y) {
+            // multiply pTarget with T
+            lim.multiplyBy(std::get<1>(gate), T);
+            // multiply phase with -1
+            lim.multiplyPhaseBy(phase_minus_one);
+        }
+    }
+
 } // namespace dd
 #endif //DDPACKAGE_PAULIALGEBRA_HPP

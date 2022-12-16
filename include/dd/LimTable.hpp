@@ -408,11 +408,124 @@ namespace dd {
             return c;
         }
 
-        void multiplyByX(Qubit qubit) {
-            if (paulis.test(2*qubit)) {
-                multiplyPhaseByMinusOne();
+        void multiplyByX(Qubit target) {
+            pauli_op op =(pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_y:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                case pauli_z:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                default: break;
             }
-            paulis.flip(2*qubit+1);
+            paulis.flip(2*target+1);
+        }
+
+        void multiplyByY(Qubit target) {
+            pauli_op op = (pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_z:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                case pauli_x:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                default: break;
+            }
+            paulis.flip(2*target);
+            paulis.flip(2*target+1);
+        }
+
+        void multiplyByZ(Qubit target) {
+            pauli_op op = (pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_x:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                case pauli_y:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                default: break;
+            }
+            paulis.flip(2*target);
+        }
+
+        void leftMultiplyByX(Qubit target) {
+            pauli_op op = (pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_y:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                case pauli_z:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                default: break;
+            }
+            paulis.flip(2*target+1);
+        }
+
+        void leftMultiplyByY(Qubit target) {
+            pauli_op op = (pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_z:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                case pauli_x:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                default: break;
+            }
+            paulis.flip(2*target);
+            paulis.flip(2*target+1);
+        }
+
+        void leftMultiplyByZ(Qubit target) {
+            pauli_op op = (pauli_op) getQubit(target);
+            switch (op) {
+                case pauli_x:
+                    multiplyPhaseBy(phase_i);
+                    break;
+                case pauli_y:
+                    multiplyPhaseBy(phase_minus_i);
+                    break;
+                default: break;
+            }
+            paulis.flip(2*target);
+        }
+
+
+        // Multiply the 'target'-th operator by 'op'
+        void multiplyBy(Qubit target, pauli_op op) {
+            switch(op) {
+                case pauli_x:
+                    multiplyByX(target);
+                    break;
+                case pauli_y:
+                    multiplyByY(target);
+                    break;
+                case pauli_z:
+                    multiplyByZ(target);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        void leftMultiplyBy(Qubit target, pauli_op op) {
+            switch(op) {
+                case pauli_x:
+                    leftMultiplyByX(target);
+                    break;
+                case pauli_y:
+                    leftMultiplyByY(target);
+                    break;
+                case pauli_z:
+                    leftMultiplyByZ(target);
+                    break;
+                default:
+                    break;
+            }
         }
 
         void multiplyPhaseByMinusOne() {
@@ -486,6 +599,10 @@ namespace dd {
         bool commutesWith(const LimEntry<NUM_QUBITS>* b) const {
             if (b == nullptr) return true;
             return commutesWith(*b);
+        }
+
+        static bool commutesWith(pauli_op P, pauli_op Q) {
+            return (P == pauli_id || Q == pauli_id || P == Q);
         }
 
         // Returns I, the Identity operator
