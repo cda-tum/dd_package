@@ -253,6 +253,76 @@ TEST(LimTest, bb84Circuit) {
     state = dd->multiply(dd->makeGateDD(dd::Hmat, 8, 4), state);
 }
 
+// Randomly generated circuit on 3 qubis, containing 30 Clifford gates.
+TEST(LimTest, generatedCircuit_Small) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Zmat, 2);
+    circuit.addGate(dd::Xmat, 1_pc, 2);
+    circuit.addGate(dd::Zmat, 0);
+    circuit.addGate(dd::Zmat, 2_pc, 0);
+    circuit.addGate(dd::Xmat, 2);
+    circuit.addGate(dd::Xmat, 1_pc, 2);
+    circuit.addGate(dd::Xmat, 2_pc, 1);
+    circuit.addGate(dd::Xmat, 1);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Zmat, 2);
+    circuit.addGate(dd::Zmat, 2_pc, 1);
+    circuit.addGate(dd::Ymat, 0_pc, 1);
+    circuit.addGate(dd::Zmat, 1_pc, 1);
+    circuit.addGate(dd::Xmat, 2);
+    circuit.addGate(dd::Zmat, 1_pc, 2);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Zmat, 2);
+    circuit.addGate(dd::Zmat, 1_pc, 2);
+    circuit.addGate(dd::Ymat, 2_pc, 2);
+    circuit.addGate(dd::Ymat, 0);
+    circuit.addGate(dd::Zmat, 1_pc, 2);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Ymat, 1_pc, 2);
+    circuit.addGate(dd::Ymat, 2_pc, 0);
+    circuit.addGate(dd::Xmat, 0);
+    circuit.addGate(dd::Xmat, 1);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+// Randomly generated circuit on 5 qubis, containing 30 Clifford gates.
+TEST(LimTest, generatedCircuit_0) {
+    dd::QuantumCircuit circuit(5);
+
+    circuit.addGate(dd::Zmat, 2);
+    circuit.addGate(dd::Xmat, 3_pc, 2);
+    circuit.addGate(dd::Zmat, 0);
+    circuit.addGate(dd::Zmat, 2_pc, 0);
+    circuit.addGate(dd::Xmat, 2);
+    circuit.addGate(dd::Xmat, 4_pc, 3);
+    circuit.addGate(dd::Xmat, 2_pc, 1);
+    circuit.addGate(dd::Xmat, 1);
+    circuit.addGate(dd::Zmat, 4);
+    circuit.addGate(dd::Zmat, 3);
+    circuit.addGate(dd::Zmat, 2_pc, 1);
+    circuit.addGate(dd::Ymat, 0_pc, 4);
+    circuit.addGate(dd::Zmat, 4_pc, 4);
+    circuit.addGate(dd::Xmat, 2);
+    circuit.addGate(dd::Zmat, 1_pc, 2);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Zmat, 4);
+    circuit.addGate(dd::Zmat, 3);
+    circuit.addGate(dd::Zmat, 1_pc, 2);
+    circuit.addGate(dd::Ymat, 3_pc, 3);
+    circuit.addGate(dd::Ymat, 0);
+    circuit.addGate(dd::Zmat, 1_pc, 3);
+    circuit.addGate(dd::Zmat, 1);
+    circuit.addGate(dd::Ymat, 1_pc, 3);
+    circuit.addGate(dd::Ymat, 2_pc, 0);
+    circuit.addGate(dd::Xmat, 0);
+    circuit.addGate(dd::Xmat, 1);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
 // Randomly generated circuit on 10 qubis, containing 30 Clifford gates.
 TEST(LimTest, generatedCircuit_1) {
     dd::QuantumCircuit circuit(10);

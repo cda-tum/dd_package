@@ -130,6 +130,32 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
                 break;
             }
         }
+        std::cout << "[simulate circuit] QMDD  mul statistics: ";
+        qmdd->matrixVectorMultiplication.printStatistics();
+        std::cout << "[simulate circuit] LIMDD mul statistics: ";
+        limdd->matrixVectorMultiplication.printStatistics();
+
+        std::cout << "[simulate circuit] QMDD  add statistics: ";
+        qmdd->vectorAdd.printStatistics();
+        std::cout << "[simulate circuit] LIMDD add statistics: ";
+        limdd->vectorAdd.printStatistics();
+
+        // assert that limdd hit rate is at least as good as qmdd hit rate
+        //        EXPECT_TRUE(std::isnan(limdd->matrixVectorMultiplication.hitRatio()) || std::isnan(qmdd->matrixVectorMultiplication.hitRatio()) || limdd->matrixVectorMultiplication.hitRatio() >= qmdd->matrixVectorMultiplication.hitRatio());
+    }
+    //    std::mt19937_64 mt;
+    //    qmdd->measureAll(qmddState, false, mt);
+
+    dd::export2Dot(qmddState, "qmdd.dot", false, true, true, false, true, false);
+    dd::export2Dot(limddState, "limdd.dot", false, true, true, false, true, false);
+
+    for (dd::Qubit i = 0; i < (dd::Qubit)qmdd->qubits(); i++) {
+        std::cout << "Testing for " << int(i) << std::endl;
+        auto qmddResult  = qmdd->determineMeasurementProbabilities(qmddState, i, true);
+        auto limddResult = limdd->determineMeasurementProbabilities(limddState, i, true);
+
+        EXPECT_NEAR(qmddResult.first, limddResult.first, 0.0000001);
+        EXPECT_NEAR(qmddResult.second, limddResult.second, 0.0000001);
     }
 
     std::cout << "[simulate circuit] Number of Unique lims: " << qmdd->limCount(qmddState) << std::endl;
@@ -137,12 +163,6 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 
     std::cout << "[simulate circuit] Number of Unique lims: " << limdd->limCount(limddState) << std::endl;
     std::cout << "[simulate circuit] Number of Unique numbers: " << limdd->numberCount(limddState) << std::endl;
-
-    std::cout << "[simulate circuit] qmdd  multiply calls: " << qmdd->mulCallCounter << std::endl;
-    std::cout << "[simulate circuit] limdd multiply calls: " << limdd->mulCallCounter << std::endl;
-
-    //    limdd->printVector(limddState);
-    //    qmdd->printVector(qmddState);
 }
 
 #endif //DDPACKAGE_SIMULATION_HPP
