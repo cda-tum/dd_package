@@ -2885,6 +2885,10 @@ namespace dd {
             result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
             ComplexNumbers::mul(result.w, result.w, x.w); // TODO is this necessary? or is the weight always 1?
             ComplexNumbers::mul(result.w, result.w, y.w);
+            if (result.w.approximatelyZero()) {
+                cn.returnToCache(result.w);
+                return vEdge::zero;
+            }
 //            Log::log << "[makeNode] corrected weight; result = " << result << '\n';
             return result;
         }
@@ -3056,12 +3060,12 @@ namespace dd {
             Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
             if (y.isTerminal()) return y;
             std::pair<Qubit, bool> gateApplied = gate;
-            Qubit targetQubit  = gateApplied.first;
-            bool projection = gateApplied.second;
             LimEntry<> pushedLim(y.l);
+            Qubit targetQubit  = gateApplied.first;
             if (pushedLim.getQubit(targetQubit) == pauli_x || pushedLim.getQubit(targetQubit) == pauli_y) {
                 gateApplied.second ^= 1;
             }
+            bool projection = gateApplied.second;
             Log::log << "[Apply projection, n=" << (int)y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
             auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             std::array<Edge<mNode>, 2> projections = {proj0, proj1};
@@ -3083,7 +3087,6 @@ namespace dd {
                 } else {
                     e0 = vEdge::zero;
                     e1 = y.p->e[1];
-                    e1.w = cn.getCached(e1.w);
                     getCachedWeightIfNonzero(e1.w);
                 }
 //                Log::log << "[Apply projection] Applied projection to this qubit, #" << (int) y.p->v
