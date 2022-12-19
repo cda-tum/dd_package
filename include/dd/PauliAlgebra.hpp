@@ -1374,12 +1374,9 @@ namespace dd {
         if (!LimEntry<>::commutesWith(pTarget, T)) {
             // right-multiply pControl by Z
             lim.multiplyByZ(std::get<0>(gate));
-        }
-        if (pControl == pauli_x || pControl == pauli_y) {
-            // multiply pTarget with T
-            lim.multiplyBy(std::get<1>(gate), T);
-            // multiply phase with -1
-            lim.multiplyPhaseBy(phase_minus_one);
+            if (pControl == pauli_x || pControl == pauli_y) {
+                lim.multiplyPhaseBy(phase_minus_one);
+            }
         }
     }
 

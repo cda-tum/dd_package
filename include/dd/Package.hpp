@@ -3027,8 +3027,8 @@ namespace dd {
                 Log::log << "[CPauli] after multiplication, e1 = " << e1 << '\n';
             } else if (targetQubit == y.p->v) {
                 // TODO handle also upward-controlled Y
-                if (gateType == pauli_x) {
-                    Log::log << "[CPauli, n=" << (int) x.p->v << "] upward CX, control = " << (int) controlQubit << " target = " << targetQubit << "\n";
+                if (gateType == pauli_x || gateType == pauli_y) {
+                    Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gateType << ", control = " << (int) controlQubit << " target = " << (int) targetQubit << "\n";
                     auto project0 = makeGateDD(project0mat, y.p->v-1, controlQubit);
                     auto project1 = makeGateDD(project1mat, y.p->v-1, controlQubit);
                     std::pair<Qubit, bool> project0Gate = {controlQubit, 0};
