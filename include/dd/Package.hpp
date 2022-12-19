@@ -703,7 +703,8 @@ namespace dd {
                          << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, r.p->v - 1) << "\n"
                          << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, r.p->v - 1) << "\n"
                          << "|- stab(newLow)  = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                         << "|- stab(newHigh) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n";
+                         << "|- stab(newHigh) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
+                         << "|- one = " << Complex::one << '\n';
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
@@ -2845,35 +2846,68 @@ namespace dd {
             return y;
         }
 
+        // returns the vEdge equal to:   x.w * y.w * pushedLim * cachedResult
+        // puts the new LIM in the LimTable
+        vEdge processCachedEdge(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vCachedEdge cachedResult) {
+            if (cachedResult.w.approximatelyZero()) {
+                return vEdge::zero;
+            }
+            vEdge result = vEdge{cachedResult.p, cn.getCached(cachedResult.w), cachedResult.l};
+            ComplexNumbers::mul(result.w, result.w, x.w); // TODO is this necessary? or is x.w always == 1?
+            ComplexNumbers::mul(result.w, result.w, y.w);
+            if (result.w.approximatelyZero()) {
+                cn.returnToCache(result.w);
+                return vEdge::zero;
+            }
+            LimEntry<> eLim = pushedLim;
+            eLim.multiplyBy(result.l);
+            result.l = lf.limTable.lookup(eLim);
+            return result;
+        }
+
+        // returns an edge equal to:  x.w * y.w * lim * {e0, e1}
+        // puts this edge in the computeTable
+        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, const vEdge &e0, const vEdge &e1) {
+            std::array<vEdge, 2> edges = {e0, e1};
+            vEdge result = makeDDNode(y.p->v, edges, true, nullptr); // TODO where is result.l? in the table? shouldn't we then dereference it?
+            /// put the result in the cache
+            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
+            result.l = lf.limTable.lookup(*result.l);
+            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
+            /// multiply by the old LIM
+            LimEntry<> resultLim = pushedLim;
+            resultLim.multiplyBy(result.l);
+            result.l = lf.limTable.lookup(resultLim);
+//            Log::log << "[makeNode] corrected LIM; result = " << result << '\n';
+            /// Multiply by the weights of x and y
+            result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
+            ComplexNumbers::mul(result.w, result.w, x.w); // TODO is this necessary? or is the weight always 1?
+            ComplexNumbers::mul(result.w, result.w, y.w);
+//            Log::log << "[makeNode] corrected weight; result = " << result << '\n';
+            return result;
+        }
+
+        // TODO refactor: make member function of complexTable cn
+        void getCachedWeightIfNonzero(Complex& w) {
+            if (!w.exactlyZero()) {
+                w = cn.getCached(w);
+            }
+        }
+
         vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
             static unsigned int callCounter = 0; callCounter++;
             if (y.isTerminal()) return y;
             Log::log << "[Hadamard, " << (int)y.p->v << " qubits] Start. target is " << (int) hadamardTarget << ". y = " << y << "\n";
-            vEdge result;
             LimEntry<> pushedLim(y.l);
             conjugateWithHadamard(pushedLim, hadamardTarget);
             /// look up in the cache
             auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             /// note that when we look it up, we use a nullptr for y's lim. This is because we exploit the algebraic property that the Hadamard gate
             ///   is applied directly to the node, rather than to the edge
-            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, y.l}, false);
+            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
-                Log::log << "[muliply2,Hadamard] cache hit!\n";
-                if (cachedResult.w.approximatelyZero()) {
-                    return vEdge::zero;
-                } else {
-                    result = vEdge{cachedResult.p, cn.getCached(cachedResult.w), cachedResult.l};
-                    ComplexNumbers::mul(result.w, result.w, x.w);
-                    ComplexNumbers::mul(result.w, result.w, y.w);
-                    if (result.w.approximatelyZero()) {
-                        cn.returnToCache(result.w);
-                        return vEdge::zero;
-                    }
-                    LimEntry<> eLim = pushedLim;
-                    eLim.multiplyBy(result.l);
-                    result.l = lf.limTable.lookup(eLim);
-                    return result;
-                }
+                Log::log << "[Hadamard] cache hit!\n";
+                return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             Log::log << "[Hadamard] cache miss.\n";
@@ -2883,7 +2917,11 @@ namespace dd {
                 vEdge e01 = y.p->e[1];
                 vEdge e10 = y.p->e[0];
                 vEdge e11 = y.p->e[1];
-                e11.w.multiplyByMinusOne(false);
+                getCachedWeightIfNonzero(e00.w);
+                getCachedWeightIfNonzero(e01.w);
+                getCachedWeightIfNonzero(e10.w);
+                getCachedWeightIfNonzero(e11.w);
+                e11.w.multiplyByMinusOne(true);
                 e0 = add2(e00, e01);
                 Log::log << "[Hadamard] e10 = " << e10 << '\n';
                 Log::log << "[Hadamard] e11 = " << e11 << '\n';
@@ -2895,33 +2933,16 @@ namespace dd {
                 Log::log << "e1:= multiply2\n";
                 e1 = applyHadamardGate2(x.p->e[0], y.p->e[1], hadamardTarget);
             }
-            std::array<vEdge, 2> edges = {e0, e1};
-            Log::log << "[Hadamard] e0 = " << e0 << '\n';
-            Log::log << "[Hadamard] e1 = " << e1 << '\n';
-            result = makeDDNode(y.p->v, edges, true, nullptr);
-            Log::log << "[Hadamard] result =  " << result << '\n';
-            /// put the result in the cache
-            //Log::log << "[multiply2, Hadamard] puting the new result in the cache.\n";
-            result.l = lf.limTable.lookup(*result.l);
-            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
-            /// multiply by the old LIM
-            LimEntry<> resultLim = pushedLim;
-            resultLim.multiplyBy(result.l);
-            result.l = lf.limTable.lookup(resultLim);
-            Log::log << "[Hadamard] corrected LIM; result = " << result << '\n';
-            /// Multiply by the weights of x and y
-            result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
-            ComplexNumbers::mul(result.w, result.w, x.w);
-            ComplexNumbers::mul(result.w, result.w, y.w);
-            Log::log << "[Hadamard] corrected weight; result = " << result << '\n';
-            return result;
+            getCachedWeightIfNonzero(e0.w);
+            getCachedWeightIfNonzero(e1.w);
+            return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
         }
 
+        // TODO refactor so that the conjugate transpose is passed as parameter
         vEdge applyPhaseGate2(const Edge<mNode>& x, const vEdge y, Qubit phaseTarget, bool inverse) {
             static unsigned int callCounter = 0; callCounter++;
             if (y.isTerminal()) return y;
             Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
-            vEdge result;
             LimEntry<> pushedLim(y.l);
             conjugateWithPhaseGate(pushedLim, phaseTarget, inverse);
             bool inverted = pushedLim.getQubit(phaseTarget) == pauli_x || pushedLim.getQubit(phaseTarget) == pauli_y;
@@ -2934,103 +2955,55 @@ namespace dd {
             auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-            auto cachedResult = computeTable.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, y.l}, false);
+            auto cachedResult = computeTable.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 Log::log << "[Phase] cache hit!\n";
-                if (cachedResult.w.approximatelyZero()) {
-                    return vEdge::zero;
-                } else {
-                    result = vEdge{cachedResult.p, cn.getCached(cachedResult.w), cachedResult.l};
-                    ComplexNumbers::mul(result.w, result.w, x.w);
-                    ComplexNumbers::mul(result.w, result.w, y.w);
-                    if (result.w.approximatelyZero()) {
-                        cn.returnToCache(result.w);
-                        return vEdge::zero;
-                    }
-                    LimEntry<> resultLim = pushedLim;
-                    resultLim.multiplyBy(result.l);
-                    result.l = lf.limTable.lookup(resultLim);
-                    return result;
-                }
+                return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             Log::log << "[Phase] cache miss.\n";
             vEdge e0, e1;
             if (phaseTarget == y.p->v) {
                 e0   = y.p->e[0];
-                e0.w = cn.getCached(e0.w);
                 e1   = y.p->e[1];
+                getCachedWeightIfNonzero(e0.w);
+                getCachedWeightIfNonzero(e1.w);
                 Log::log << "[Phase] inverse = " << inverse << ". applying S gate to qubit " << (int) y.p->v << ". e1 = "  << e1 << '\n';
-                e1.w = cn.getCached(e1.w);
                 if (inverse) {
                     e1.w.multiplyByMinusi(true);
                 }
                 else {
                     e1.w.multiplyByi(true);
                 }
-//                e1.w = cn.lookup(e1.w);
                 Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
                 e0 = applyPhaseGate2(xApply.p->e[0], y.p->e[0], phaseTarget, inverse);
                 e1 = applyPhaseGate2(xApply.p->e[0], y.p->e[1], phaseTarget, inverse);
+                getCachedWeightIfNonzero(e0.w);
+                getCachedWeightIfNonzero(e1.w);
             }
-            std::array<vEdge, 2> edges = {e0, e1};
-            Log::log << "[Phase] e0 = " << e0 << '\n';
-            Log::log << "[Phase] e1 = " << e1 << '\n';
-            result = makeDDNode(y.p->v, edges, true, nullptr);
-            Log::log << "[Phase] after makeDDNode, result =  " << result << '\n';
-            /// put the result in the cache
-            //Log::log << "[multiply2, Hadamard] puting the new result in the cache.\n";
-            result.l = lf.limTable.lookup(*result.l);
-            computeTable.insert({xApply.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
-            /// Multiply by the weights of x and y
-            result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
-            ComplexNumbers::mul(result.w, result.w, xApply.w);
-            ComplexNumbers::mul(result.w, result.w, y.w);
-            Log::log << "[Phase] corrected weight; result = " << result << '\n';
-            /// multiply by the old LIM
-            LimEntry<> resultLim = pushedLim;
-            resultLim.multiplyBy(result.l);
-            movePhaseIntoWeight(resultLim, result.w);
-            result.l = lf.limTable.lookup(resultLim);
-            Log::log << "[Phase] corrected LIM; result = " << result << '\n';
-            return result;
+            return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1); // TODO
         }
 
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, std::tuple<Qubit, Qubit, pauli_op> gate) {
             static unsigned int callCounter = 0; callCounter++;
             Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) std::get<0>(gate) << ", t=" << (int)std::get<1>(gate) << " op=" <<(char) std::get<2>(gate) << "] Start." << '\n';
             if (y.isTerminal()) return y;
-            vEdge result;
             Qubit controlQubit = std::get<0>(gate);
             Qubit targetQubit  = std::get<1>(gate);
             pauli_op gateType  = std::get<2>(gate);
             LimEntry<> pushedLim(y.l);
             conjugateWithControlledPauliGate(pushedLim, gate);
-            Log::log << "[CPauli, n=" << (int)y.p->v << "] pushedLim = " << pushedLim << " inverted\n";
+            Log::log << "[CPauli, n=" << (int)y.p->v << "] pushedLim = " << pushedLim << "\n";
             auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, y.l}, false);
-            if (cachedResult.p != nullptr) { // TODO refactor to a subroutine
+            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            if (cachedResult.p != nullptr) {
                 Log::log << "[CPauli] cache hit!\n";
-                if (cachedResult.w.approximatelyZero()) {
-                    return vEdge::zero;
-                } else {
-                    result = vEdge{cachedResult.p, cn.getCached(cachedResult.w), cachedResult.l};
-                    ComplexNumbers::mul(result.w, result.w, x.w);
-                    ComplexNumbers::mul(result.w, result.w, y.w);
-                    if (result.w.approximatelyZero()) {
-                        cn.returnToCache(result.w);
-                        return vEdge::zero;
-                    }
-                    LimEntry<> resultLim = pushedLim;
-                    resultLim.multiplyBy(result.l);
-                    result.l = lf.limTable.lookup(resultLim);
-                    return result;
-                }
+                return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             Log::log << "[CPauli] cache miss.\n";
@@ -3043,21 +3016,25 @@ namespace dd {
                 LimEntry<> e1Lim(e1.l);
                 e1Lim.leftMultiplyBy(targetQubit, gateType);
                 e1.l = lf.limTable.lookup(e1Lim);
+                getCachedWeightIfNonzero(e0.w);
+                getCachedWeightIfNonzero(e1.w);
                 Log::log << "[CPauli] after multiplication, e1 = " << e1 << '\n';
             } else if (targetQubit == y.p->v) {
-                // TODO handle also upward-controlled Pauli
+                // TODO handle also upward-controlled Y
                 if (gateType == pauli_x) {
                     Log::log << "[CPauli, n=" << (int) x.p->v << "] upward CX, control = " << (int) controlQubit << " target = " << targetQubit << "\n";
-                    auto project0 = makeGateDD(project0mat, NUM_QUBITS, controlQubit);
-                    auto project1 = makeGateDD(project1mat, NUM_QUBITS, controlQubit);
-                    auto yCopy = y;
-                    yCopy.l = nullptr;
-                    auto e00 = multiply(project0, yCopy);
-                    auto e01 = multiply(project1, yCopy);
-                    auto e10 = multiply(project0, yCopy);
-                    auto e11 = multiply(project1, yCopy);
+                    auto project0 = makeGateDD(project0mat, y.p->v-1, controlQubit);
+                    auto project1 = makeGateDD(project1mat, y.p->v-1, controlQubit);
+                    std::pair<Qubit, bool> project0Gate = {controlQubit, 0};
+                    std::pair<Qubit, bool> project1Gate = {controlQubit, 1};
+                    auto e00 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
+                    auto e01 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
+                    auto e10 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
+                    auto e11 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
                     e0 = add2(e00, e11);
                     e1 = add2(e01, e10);
+                    getCachedWeightIfNonzero(e0.w);
+                    getCachedWeightIfNonzero(e1.w);
                 } else if (gateType == pauli_y) {
                     throw std::runtime_error("ERROR upward-controlled Pauli Y gate not yet supported");
                 }
@@ -3066,33 +3043,58 @@ namespace dd {
                 Log::log << "[CPauli] apply identity to qubit " << (int) y.p->v << '\n';
                 e0 = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
                 e1 = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
+                e0.w = cn.getCached(e0.w);
+                e1.w = cn.getCached(e1.w);
             }
-            // TODO refactor to a subroutine
-            std::array<vEdge, 2> edges = {e0, e1};
-            Log::log << "[CPauli] e0 = " << e0 << '\n';
-            Log::log << "[CPauli] e1 = " << e1 << '\n';
-            result = makeDDNode(y.p->v, edges, true, nullptr);
-            Log::log << "[CPauli] after makeDDNode, result =  " << result << '\n';
-            /// put the result in the cache
-            //Log::log << "[multiply2, Hadamard] puting the new result in the cache.\n";
-            result.l = lf.limTable.lookup(*result.l);
-            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, {result.p, result.w, result.l});
-            /// Multiply by the weights of x and y
-            result.w = cn.getCached(result.w); // TODO is this necessary? or is this Complex value already a cached value?
-            ComplexNumbers::mul(result.w, result.w, x.w);
-            ComplexNumbers::mul(result.w, result.w, y.w);
-            Log::log << "[CPauli] corrected weight; result = " << result << '\n';
-            /// multiply by the old LIM
-            LimEntry<> resultLim = pushedLim;
-            resultLim.multiplyBy(result.l);
-            movePhaseIntoWeight(resultLim, result.w);
-            result.l = lf.limTable.lookup(resultLim);
-            Log::log << "[CPauli] corrected LIM; result = " << result << '\n';
-            return result;
+            return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
         }
 
-        vEdge applyProjection2(const Edge<mNode>& x, const vEdge y, std::pair<Qubit, bool> gate) {
-            throw std::runtime_error("ERROR appply projection not yet implemented.\n");
+        vEdge applyProjection2(const Edge<mNode>& proj0, const Edge<mNode>& proj1, const vEdge y, std::pair<Qubit, bool> gate) {
+            static unsigned int callCounter = 0; callCounter++;
+            Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
+            if (y.isTerminal()) return y;
+            std::pair<Qubit, bool> gateApplied = gate;
+            Qubit targetQubit  = gateApplied.first;
+            bool projection = gateApplied.second;
+            LimEntry<> pushedLim(y.l);
+            if (pushedLim.getQubit(targetQubit) == pauli_x || pushedLim.getQubit(targetQubit) == pauli_y) {
+                gateApplied.second ^= 1;
+            }
+            Log::log << "[Apply projection, n=" << (int)y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
+            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
+            std::array<Edge<mNode>, 2> projections = {proj0, proj1};
+            /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
+            /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
+            auto cachedResult = computeTable.lookup({projections[projection].p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            if (cachedResult.p != nullptr) {
+                Log::log << "[Apply projection] cache hit!\n";
+                return processCachedEdge(projections[projection], y, pushedLim, cachedResult);
+            }
+            /// cache miss; now simply compute the result
+            Log::log << "[CPauli] cache miss.\n";
+            vEdge e0, e1;
+            if (targetQubit == y.p->v) {
+                if (projection == 0) { // TODO condense using edges[projection] = y.p->e[projection]; edges[1-projection] = vEdge::zero;
+                    e0 = y.p->e[0];
+                    getCachedWeightIfNonzero(e0.w);
+                    e1 = vEdge::zero;
+                } else {
+                    e0 = vEdge::zero;
+                    e1 = y.p->e[1];
+                    e1.w = cn.getCached(e1.w);
+                    getCachedWeightIfNonzero(e1.w);
+                }
+//                Log::log << "[Apply projection] Applied projection to this qubit, #" << (int) y.p->v
+//                         << ". e0 = " << e0 << ". e1 = " << e1 << '\n';
+            } else {
+                /// Apply identity to this qubit, then apply projection to the remaining qubits
+                Log::log << "[Apply projection] apply identity to qubit " << (int) y.p->v << '\n';
+                e0 = applyProjection2(proj0, proj1, y.p->e[0], gateApplied);
+                e1 = applyProjection2(proj0, proj1, y.p->e[1], gateApplied);
+                getCachedWeightIfNonzero(e0.w);
+                getCachedWeightIfNonzero(e1.w);
+            }
+            return makeNodeAndInsertCache(projections[projection], y, pushedLim, e0, e1);
         }
 
         vEdge simulateCircuit(const QuantumCircuit& circuit) {
