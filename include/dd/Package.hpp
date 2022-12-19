@@ -2867,7 +2867,9 @@ namespace dd {
 
         // returns an edge equal to:  x.w * y.w * lim * {e0, e1}
         // puts this edge in the computeTable
-        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, const vEdge &e0, const vEdge &e1) {
+        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vEdge &e0, vEdge &e1) {
+            movePhaseIntoWeight(e0.l, e0.w);
+            movePhaseIntoWeight(e1.l, e1.w);
             std::array<vEdge, 2> edges = {e0, e1};
             vEdge result = makeDDNode(y.p->v, edges, true, nullptr); // TODO where is result.l? in the table? shouldn't we then dereference it?
             /// put the result in the cache

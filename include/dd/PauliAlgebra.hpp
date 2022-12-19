@@ -103,6 +103,12 @@ namespace dd {
         }
     }
 
+    inline static void movePhaseIntoWeight(LimEntry<>* lim, Complex& weight) {
+        if (lim == nullptr) return;
+        if (lim == LimEntry<>::noLIM) return;
+        movePhaseIntoWeight(*lim, weight);
+    }
+
     // Performs Gaussian elimination on G
     // We assume that G is not stored in the LimTable.
     // In more detail: the elements of G are modified in place
