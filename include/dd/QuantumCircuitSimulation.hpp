@@ -143,11 +143,15 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         // assert that limdd hit rate is at least as good as qmdd hit rate
         //        EXPECT_TRUE(std::isnan(limdd->matrixVectorMultiplication.hitRatio()) || std::isnan(qmdd->matrixVectorMultiplication.hitRatio()) || limdd->matrixVectorMultiplication.hitRatio() >= qmdd->matrixVectorMultiplication.hitRatio());
     }
-    //    std::mt19937_64 mt;
+
     //    qmdd->measureAll(qmddState, false, mt);
 
     dd::export2Dot(qmddState, "qmdd.dot", false, true, true, false, true, false);
     dd::export2Dot(limddState, "limdd.dot", false, true, true, false, true, false);
+
+    std::mt19937_64 mt;
+    auto            qmddResult  = qmdd->measureAll(qmddState, false, mt);
+    auto            limddResult = qmdd->measureAll(limddState, false, mt);
 
     for (dd::Qubit i = 0; i < (dd::Qubit)qmdd->qubits(); i++) {
         std::cout << "Testing for " << int(i) << std::endl;

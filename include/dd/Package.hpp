@@ -1516,7 +1516,7 @@ namespace dd {
         std::pair<dd::fp, dd::fp> determineMeasurementProbabilities(const vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization) {
             std::map<std::pair<vNode*, bool>, fp> probsMone;
             std::set<std::pair<vNode*, bool>>     visited;
-            std::queue<std::pair<vEdge, bool>> queue;
+            std::queue<std::pair<vEdge, bool>>    queue;
 
             if (root_edge.l->getPauliForQubit(index) == dd::pauli_x ||
                 root_edge.l->getPauliForQubit(index) == dd::pauli_y) {
@@ -1616,21 +1616,22 @@ namespace dd {
                     }
                 }
             } else {
-                std::unordered_map<vNode*, fp> probs;
-                assignProbabilities(root_edge, probs);
-
-                while (!queue.empty()) {
-                    //                    auto* ptr = queue.front().first.p;
-                    //                    queue.pop();
-                    //
-                    //                    if (!ptr->e.at(0).w.approximatelyZero()) {
-                    //                        pzero += probsMone[ptr] * probs[ptr->e.at(0).p] * ComplexNumbers::mag2(ptr->e.at(0).w);
-                    //                    }
-                    //
-                    //                    if (!ptr->e.at(1).w.approximatelyZero()) {
-                    //                        pone += probsMone[ptr] * probs[ptr->e.at(1).p] * ComplexNumbers::mag2(ptr->e.at(1).w);
-                    //                    }
-                }
+                throw std::runtime_error("determineMeasurementProbabilities without assumeProbabilityNormalization is not implemented yet.");
+                //                std::unordered_map<vNode*, fp> probs;
+                //                assignProbabilities(root_edge, probs);
+                //
+                //                while (!queue.empty()) {
+                //                                        auto* ptr = queue.front().first.p;
+                //                                        queue.pop();
+                //
+                //                                        if (!ptr->e.at(0).w.approximatelyZero()) {
+                //                                            pzero += probsMone[ptr] * probs[ptr->e.at(0).p] * ComplexNumbers::mag2(ptr->e.at(0).w);
+                //                                        }
+                //
+                //                                        if (!ptr->e.at(1).w.approximatelyZero()) {
+                //                                            pone += probsMone[ptr] * probs[ptr->e.at(1).p] * ComplexNumbers::mag2(ptr->e.at(1).w);
+                //                                        }
+                //                }
             }
             return {pzero, pone};
         }
@@ -2026,7 +2027,7 @@ namespace dd {
         /// Multiplication
         ///
     public:
-        [[maybe_unused]] std::size_t mulCallCounter = 0;
+        //        [[maybe_unused]] std::size_t mulCallCounter = 0;
 
         ComputeTable<mEdge, vEdge, vCachedEdge, CT_MAT_VEC_MULT_NBUCKET> matrixVectorMultiplication{};
         ComputeTable<mEdge, mEdge, mCachedEdge, CT_MAT_MAT_MULT_NBUCKET> matrixMatrixMultiplication{};
@@ -2219,7 +2220,7 @@ namespace dd {
             //            callCount++;
             //            std::cout << "[multiply2] " << callCount << std::endl;
 
-            [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
+            //            [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
             using LEdge                              = Edge<LeftOperandNode>;
             using REdge                              = Edge<RightOperandNode>;
             using ResultEdge                         = Edge<RightOperandNode>;
