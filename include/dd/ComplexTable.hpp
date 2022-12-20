@@ -485,6 +485,21 @@ namespace dd {
             return os;
         }
 
+        bool oneIsIntact() const {
+            return one.value == 1.;
+        }
+
+        void checkConstantsIntegrity() const {
+            if (one.value != 1.) {
+                std::cout << "[ERROR] one has value " << one.value << '\n';
+                throw std::runtime_error("[complexTable] ERROR one does not have value 1.");
+            }
+            if (zero.value != 0.) {
+                std::cout << "[ERROR] zero has value " << zero.value << '\n';
+                throw std::runtime_error("[complexTable] ERROR zero does not have value 1.");
+            }
+        }
+
     private:
         using Bucket = Entry*;
         using Table  = std::array<Bucket, NBUCKET>;

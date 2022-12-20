@@ -12,6 +12,7 @@
 #include "Node.hpp"
 #include "Package.hpp"
 #include "PauliUtilities.hpp"
+#include "QuantumGate.hpp"
 
 #include <algorithm>
 #include <array>
@@ -1105,7 +1106,7 @@ namespace dd {
                 }
             }
             if (!foundIsomorphism) {
-                //                std::cout << "case 1" << std::endl;
+                std::cout << "[getIsomorphism] No isomorphism, case 1" << std::endl;
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
@@ -1127,7 +1128,7 @@ namespace dd {
                 }
             }
             if (!foundIsomorphism) {
-                //                std::cout << "case 2" << std::endl;
+                std::cout << "[getIsomorphism] No isomorphism, case 2" << std::endl;
             }
         }
         // Case 3 ("Fork"): Both children are nonzero
@@ -1163,6 +1164,7 @@ namespace dd {
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) {
                 foundIsomorphism = false;
+                Log::log << "[getIsomorphism] No isomorphism, case 3\n";
                 return;
             }
             //Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n";
@@ -1224,9 +1226,9 @@ namespace dd {
             cn.returnToCache(rhoV);
             cn.returnToCache(rhoU);
             if (lambda == phase_t::no_phase) {
-                //Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
+                Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
-                //                std::cout << "case 3" << std::endl;
+                std::cout << "[getIsomorphism] No isomorphism, case 4" << std::endl;
                 return;
             }
             //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
@@ -1268,7 +1270,7 @@ namespace dd {
                           << "uhigh = " << uHigh << "\n"
                           << "vlow  = " << vLow  << "\n"
                           << "vhigh = " << vHigh << "\n";
-                std::cout << "case 4" << std::endl;
+                std::cout << "case 5" << std::endl;
             }
         }
     }
@@ -1367,13 +1369,13 @@ namespace dd {
         }
     }
 
-    inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const std::tuple<Qubit, Qubit, pauli_op> gate) {
-        pauli_op pControl = (pauli_op) lim.getQubit(std::get<0>(gate));
-        pauli_op pTarget  = (pauli_op) lim.getQubit(std::get<1>(gate));
-        pauli_op T = std::get<2>(gate);
+    inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const CliffordGate gate) {
+        pauli_op pControl = (pauli_op) lim.getQubit(gate.control.qubit);
+        pauli_op pTarget  = (pauli_op) lim.getQubit(gate.target);
+        pauli_op T = (pauli_op) gate.gateType;
         if (!LimEntry<>::commutesWith(pTarget, T)) {
             // right-multiply pControl by Z
-            lim.multiplyByZ(std::get<0>(gate));
+            lim.multiplyByZ(gate.control.qubit);
             if (pControl == pauli_x || pControl == pauli_y) {
                 lim.multiplyPhaseBy(phase_minus_one);
             }

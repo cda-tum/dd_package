@@ -130,6 +130,37 @@ public:
 
 };
 
+enum CliffordGateType_t {
+    cliffNoGate   = 'N',   // indicates that a gate is not a Clifford gate, i.e., "no gate"
+    cliffidentity = 'I',
+    cliffpauli_x  = 'X',
+    cliffpauli_y  = 'Y',
+    cliffPauli_z  = 'Z',
+    cliffPhase    = 'P',
+    cliffPhaseInv = 'Q',
+    cliffHadamard = 'H',
+    cliffProject0 = '0',
+    cliffProject1 = '1'
+};
+
+class CliffordGate {
+public:
+    CliffordGateType_t gateType;
+    Control control;
+    Qubit target;
+
+    CliffordGate(CliffordGateType_t _gateType, Control _control, Qubit _target)
+        : gateType(_gateType), control(_control), target(_target) {
+        //
+    }
+
+    CliffordGate inverse() const {
+        if (gateType == cliffPhase) return CliffordGate(cliffPhaseInv, control, target);
+        if (gateType == cliffPhaseInv) return CliffordGate(cliffPhase, control, target);
+        return *this;
+    }
+};
+
 }
 
 
