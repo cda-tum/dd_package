@@ -1708,9 +1708,10 @@ namespace dd {
         }
 
     public:
-        //        long addCallCounter = 0;
+        long addCallCounter = 0;
         template<class Node>
         Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<>& limX = {}, const LimEntry<>& limY = {}) {
+            addCallCounter++;
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
             // Making a copy from trueLimX as I need it later for inserting the result into the cache
@@ -2081,14 +2082,7 @@ namespace dd {
                 bool appliedCliffordGate = false;
                 if constexpr (std::is_same_v<RightOperand, vEdge>) {
                     if (cachingStrategy == cliffordSpecialCaching) {
-                        e = applyHadamardGate(x, y, appliedCliffordGate);
-                        if (!appliedCliffordGate) {
-                            e = applyPhaseGate(x, y, appliedCliffordGate);
-                        }
-                        if (!appliedCliffordGate) {
-                            e = applyControlledPauliGate(x, y, appliedCliffordGate);
-                        }
-                        // TODO also cover projections?
+                        e = applyCliffordGate(x, y, appliedCliffordGate);
                     }
                 }
                 if (!appliedCliffordGate) {
@@ -2107,6 +2101,22 @@ namespace dd {
             assert(before == after);
             assert(limCountBefore == limCountAfter);
 
+            return e;
+        }
+
+        vEdge applyCliffordGate(const Edge<mNode>& x, const vEdge y, bool& appliedCliffordGate) {
+            vEdge e = applyHadamardGate(x, y, appliedCliffordGate);
+            if (!appliedCliffordGate) {
+                e = applyPhaseGate(x, y, appliedCliffordGate);
+            }
+            if (!appliedCliffordGate) {
+                e = applyControlledPauliGate(x, y, appliedCliffordGate);
+            }
+            // TODO apply Pauli gate
+            if (!appliedCliffordGate) {
+                e = applyPauliGate(x, y, appliedCliffordGate);
+            }
+            // TODO also cover projections?
             return e;
         }
 
@@ -2188,7 +2198,7 @@ namespace dd {
             for (int i = 0; i < 4; i++) {
                 setIdentityFlagsTraverseDD(mat.p->e[i]);
             }
-            if (mat.p->e[0].p->isIdentity() && mat.p->e[3].p->isIdentity() && mat.p->e[0].p == mat.p->e[1].p &&
+            if (mat.p->e[0].p->isIdentity() && mat.p->e[0].p == mat.p->e[3].p &&
                 mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero &&
                 mat.p->e[3].w == Complex::one) {
                 mat.p->setIdentity(true);
@@ -2213,9 +2223,10 @@ namespace dd {
         // If so, returns the index of the qubit to which the Hadamard is applied
         // Otherwise, returns -1
         // requires matrix node identity flags to be set
-        Qubit isHadamardGate(const Edge<mNode>& mat) {
+        CliffordGate isHadamardGate(const Edge<mNode>& mat) {
             // either this qubit is the identity, or it's a hadamard and the rest is the identity
-            if (mat.p == mNode::terminal) return (Qubit)-1;
+            CliffordGate gate = CliffordGate(cliffNoGate, {-1, Control::Type::pos}, -1);
+            if (mat.p == mNode::terminal) return gate;
             if (topQubitIsIdentity(mat)) {
                 return isHadamardGate(mat.p->e[0]);
             }
@@ -2223,9 +2234,9 @@ namespace dd {
                 mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::minus_one &&
                 mat.p->e[0].p == mat.p->e[1].p && mat.p->e[0].p == mat.p->e[2].p && mat.p->e[0].p == mat.p->e[3].p &&
                 mat.p->e[0].p->isIdentity()) {
-                return mat.p->v;
+                return CliffordGate(cliffHadamard, {-1, Control::Type::pos}, mat.p->v);
             }
-            return (Qubit) -1;
+            return gate;
         }
 
         Qubit isPhaseGate(const Edge<mNode>& mat) {
@@ -2272,44 +2283,30 @@ namespace dd {
             return (Qubit) -1;
         }
 
-        std::pair<Qubit, CliffordGateType_t> isPauliGate(const Edge<mNode>& mat) {
-            std::pair<Qubit, CliffordGateType_t> gate = {-1, cliffNoGate};
-            Log::log << "[isPauli] n=" << (int)mat.p->v << "\n";
+        CliffordGate isPauliGate(const Edge<mNode>& mat) {
+            CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
+            Log::log << "[isPauli, n=" << (int)mat.p->v << "]\n";
             if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) return isPauliGate(mat.p->e[0]);
+            Log::log << "[isPauli, n=" << (int)mat.p->v << "] weights = [" << mat.p->e[0].w << ", " << mat.p->e[1].w << ", " << mat.p->e[2].w << ", " << mat.p->e[3].w << "] identity = ["
+                     << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "]\n";
             // Check if this gate is X
-            Log::log << "[isPauli] checking for X. e[1].isIdenity = " << mat.p->e[1].p->isIdentity() << "\n";
-            if (mat.p->e[1] == mat.p->e[2] &&
+            if (mat.p->e[1].p == mat.p->e[2].p &&
                 mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::zero &&
                 mat.p->e[1].p->isIdentity()) {
-                return {mat.p->v, cliffpauli_x};
+                return CliffordGate(cliffpauli_x, {-1, Control::Type::pos}, mat.p->v);
             }
             // Check if this gate is Y
-            if (mat.p->e[1] == mat.p->e[2] &&
-                mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::complex_i && mat.p->e[2].w == Complex::minus_i && mat.p->e[3].w == Complex::zero &&
+            if (mat.p->e[1].p == mat.p->e[2].p &&
+                mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::minus_one && mat.p->e[3].w == Complex::zero &&
                 mat.p->e[1].p->isIdentity()) {
-                return {mat.p->v, cliffpauli_y};
+                return CliffordGate(cliffpauli_y, {-1, Control::Type::pos}, mat.p->v);
             }
             // Check if this gate is Z
-            if (mat.p->e[0] == mat.p->e[3] &&
+            if (mat.p->e[0].p == mat.p->e[3].p &&
                 mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::minus_one &&
                 mat.p->e[0].p->isIdentity()) {
-                return {mat.p->v, cliffPauli_z};
-            }
-            return gate;
-        }
-
-        std::pair<Qubit, Qubit> isControlledXGate(const Edge<mNode>& mat) {
-            std::pair<Qubit, Qubit> gate = {-1, -1};
-            if (mNode::isTerminal(mat.p)) return gate;
-            if (topQubitIsIdentity(mat)) return isControlledXGate(mat.p->e[0]);
-            if (mat.p->e[0].p->isIdentity() && isPauliXGate(mat.p->e[3]) &&
-                mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
-                gate.second = isPauliXGate(mat.p->e[3]);
-                if (gate.second != (Qubit)-1) {
-                    gate.first = mat.p->v;
-                    return gate;
-                }
+                return CliffordGate(cliffPauli_z, {-1, Control::Type::pos}, mat.p->v);
             }
             return gate;
         }
@@ -2336,23 +2333,35 @@ namespace dd {
         // This returns a tuple with a Qubit; we should return a tuple with a Control
         CliffordGate isControlledPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
-            Log::log <<  "[isCP] n=" << (int) mat.p->v << "\n";
+            Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
+                     << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
+                     << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
             if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) {
                 Log::log << "[isCP] top qubit " << (int) mat.p->v << " is identity; recursing.\n";
                 return isControlledPauliGate(mat.p->e[0]);
             }
-            // Check for downward-controlled Pauli
+            // Check for positive downward-controlled Pauli
+            // TODO merge code of cases controlled Pauli and controlled neg Pauli
             if (mat.p->e[0].p->isIdentity() &&
-                mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
-                std::pair<Qubit, CliffordGateType_t> pauliGate = isPauliGate(mat.p->e[3]);
-                Log::log << "[isCP] checked e[3], is gate " << (char) pauliGate.second << " on qubit " << (int)pauliGate.first << '\n';
-                if (pauliGate.first != (Qubit)-1) {
-                    gate = CliffordGate(pauliGate.second, {mat.p->v, Control::Type::pos}, pauliGate.first);
+                mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && (mat.p->e[3].w == Complex::one || mat.p->e[3].w == Complex::minus_i)) {
+                gate = isPauliGate(mat.p->e[3]);
+                Log::log << "[isCP] checked e[3], is gate " << (char) gate.gateType << " on qubit " << (int)gate.target << '\n';
+                if (gate.gateType != cliffNoGate) {
+                    gate.control = {mat.p->v, Control::Type::pos};
                 }
-                // TODO check for downward negative-controlled Pauli gate
             }
-            // TODO merge the upward controlled X and Y cases, to take up less code
+            // Check for negative downard-controlled Pauli
+            else if (mat.p->e[3].p->isIdentity() &&
+                     mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
+                gate = isPauliGate(mat.p->e[0]);
+                Log::log << "[isCP] possible negative controlled Pauli.\n";
+                if (gate.gateType != cliffNoGate) {
+                    gate.control = {mat.p->v, Control::Type::neg};
+                }
+            }
+            // TODO check for downward negative-controlled Pauli gate
+                // TODO merge the upward controlled X and Y cases, to take up less code
             // Check for upwards controlled X
             else if (mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::one &&
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
@@ -2372,10 +2381,13 @@ namespace dd {
                 }
             }
             // TODO check for negative control
-            Log::log << "[isCP, n=" << mat.p->v << "] Verdict: gate is " << (char) gate.gateType << ".\n";
+            Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << (char) gate.gateType << ".\n";
             return gate;
         }
 
+    public:
+        unsigned int multiply2CallCounter = 0;
+    private:
         // Returns x * lim * y
         template<class LeftOperandNode, class RightOperandNode>
         Edge<RightOperandNode> multiply2(const Edge<LeftOperandNode>&       x,
@@ -2388,6 +2400,7 @@ namespace dd {
             //            callCount++;
             //            std::cout << "[multiply2] " << callCount << std::endl;
 
+            multiply2CallCounter++;
             [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
             using LEdge             = Edge<LeftOperandNode>;
             using REdge             = Edge<RightOperandNode>;
@@ -2709,90 +2722,30 @@ namespace dd {
     public:
         vEdge applyGate(const QuantumGate& gate, const vEdge state) {
             //            printMatrix(makeGateDD(gate.mat, qubits(), gate.controls, gate.target));
-            char pauligate = gate.checkPauliGate();
-            if ((int)pauligate != 0 && cachingStrategy == cliffordSpecialCaching) {
-                return applyPauliGate(pauligate, gate.target, state);
-            }
-
             Edge<mNode> gateDD = makeGateDD(gate.mat, qubits(), gate.controls, gate.target);
             //setIdentityFlags(gateDD);
             return multiply(gateDD, state);
         }
 
-        vEdge applyPauliGate(char gate, Qubit target, const vEdge state) {
-            // only change the LIMs on the root edge
-            LimEntry<> pauliGate;
-            pauliGate.setOperator(target, gate);
-            vEdge      res    = state;
-            LimEntry<> newLim = LimEntry<>::multiplyValue(pauliGate, LimEntry<>(state.l));
-            res.l             = lf.limTable.lookup(newLim);
-            return res;
-        }
-
-        // This function selects on of the control qubits
-        vEdge applyCPauliGate(char pauli, const QuantumGate& gate, const vEdge state) {
-            Control control;
-            for (auto it = gate.controls.begin(); it != gate.controls.end(); it++) {
-                control = *it;
+        unsigned int applyPauliCallCounter = 0;
+        // TODO modernize
+        vEdge applyPauliGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
+            applyPauliCallCounter++;
+            success = false;
+            if (cachingStrategy != cliffordSpecialCaching) return y;
+            CliffordGate gate = isPauliGate(x);
+            std::cout << "[Apply Pauli] Pauli gate is " << (char) gate.gateType << " on qubit " << (int) gate.target << "\n";
+            if (gate.gateType != cliffNoGate) {
+                vEdge result = y;
+                LimEntry<> lim(result.l);
+                lim.leftMultiplyBy(gate.target, (pauli_op) gate.gateType);
+                getCachedWeightIfNonzero(result.w);
+                movePhaseIntoWeight(lim, result.w);
+                result.l = lf.limTable.lookup(lim); // TODO should we decrement the refcount of the old LIM?
+                success = true;
+                return result;
             }
-            std::cout << "applyCPauliGate(): C" << pauli << "(" << (int)control.qubit << ", " << (int)gate.target << ")" << std::endl;
-            return applyCPauliGateRec(pauli, gate.target, control, state);
-        }
-
-        vEdge applyCPauliGateRec(char pauli, Qubit target, const Control control, const vEdge state) {
-            // TODO:
-            // if (res <-- check computeTable) {
-            //      res.w = cn.mulCached(res.w, state.w);
-            //      res.l->multiplyBy(state.l);
-            //      return res;
-            // }
-
-            // Get both children of current node
-            Qubit curvar = state.p->v;
-            std::cout << "Var of current node: " << (int)curvar << std::endl;
-            vEdge e0, e1;
-            if (curvar < control.qubit) {
-                // control qubit was skipped, "reinsert" skipped node
-                e0     = vEdge{state.p, Complex::one, NULL};
-                e1     = vEdge{state.p, Complex::one, NULL};
-                curvar = control.qubit;
-                std::cout << "Inserted skipped node" << std::endl;
-            } else {
-                e0 = state.p->e[0];
-                e1 = state.p->e[1];
-            }
-
-            if (curvar == control.qubit) {
-                // current node is control qubit, update |0> or |1> child
-                if (control.type == Control::Type::pos) {
-                    printf("Updating Pauli string of |1> child...");
-                    fflush(stdout);
-                    e1 = applyPauliGate(pauli, target, e1);
-                    printf("done\n");
-                } else {
-                    printf("Updating Pauli string of |0> child...");
-                    fflush(stdout);
-                    e0 = applyPauliGate(pauli, target, e0);
-                    printf("done\n");
-                }
-            } else /* curvar > control.qubit */ {
-                // current node above control qubit: recurse on both children
-                std::cout << "Recursing on both children" << std::endl;
-                e0 = applyCPauliGateRec(pauli, target, control, e0);
-                e1 = applyCPauliGateRec(pauli, target, control, e1);
-            }
-
-            // makenode
-            printf("makeDDNode...");
-            fflush(stdout);
-            vEdge res = makeDDNode(curvar, std::array{e0, e1});
-            printf("\n");
-
-            // TODO: Put res into computeTable
-
-            res.w = cn.mulCached(res.w, state.w);
-            res.l->multiplyBy(state.l);
-            return res;
+            return y;
         }
 
         vEdge applyHadamardGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
@@ -2800,11 +2753,11 @@ namespace dd {
             if (cachingStrategy != cliffordSpecialCaching) {
                 return y;
             }
-            Qubit hadamardTarget = isHadamardGate(x);
-            std::cout << "[Hadamard] Hadamard target is " << (int) hadamardTarget << "\n";
-            if (hadamardTarget != (Qubit) -1) {
+            CliffordGate gate = isHadamardGate(x);
+            std::cout << "[Hadamard] Hadamard target is " << (int) gate.target << "\n";
+            if (gate.gateType != cliffNoGate) {
                 success = true;
-                return applyHadamardGate2(x, y, hadamardTarget);
+                return applyHadamardGate2(x, y, gate.target);
             }
             return y;
         }
@@ -2905,8 +2858,9 @@ namespace dd {
             }
         }
 
+        unsigned int applyHadamardCallCounter = 0;
         vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
-            static unsigned int callCounter = 0; callCounter++;
+            applyHadamardCallCounter++;
             if (y.isTerminal()) return y;
             Log::log << "[Hadamard, " << (int)y.p->v << " qubits] Start. target is " << (int) hadamardTarget << ". y = " << y << "\n";
             LimEntry<> pushedLim(y.l);
@@ -2949,9 +2903,10 @@ namespace dd {
             return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
         }
 
+        unsigned int applyPhaseCallCounter = 0;
         // TODO refactor so that the conjugate transpose is passed as parameter
         vEdge applyPhaseGate2(const Edge<mNode>& x, const vEdge y, Qubit phaseTarget, bool inverse) {
-            static unsigned int callCounter = 0; callCounter++;
+            applyPhaseCallCounter++;
             if (y.isTerminal()) return y;
             Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
             LimEntry<> pushedLim(y.l);
@@ -2998,9 +2953,11 @@ namespace dd {
             return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1); // TODO
         }
 
+        unsigned int applyControlledPauliCallCounter = 0;
         // TODO also allow negative control qubit
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
-            static unsigned int callCounter = 0; callCounter++;
+            applyControlledPauliCallCounter++;
+            if (gate.control.type == Control::Type::neg) throw std::runtime_error("ERROR negative control not supported.\n");
             Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
             if (y.isTerminal()) return y;
             Qubit controlQubit = gate.control.qubit;
@@ -3064,8 +3021,9 @@ namespace dd {
             return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
         }
 
+        unsigned int applyProjectionCallCounter = 0;
         vEdge applyProjection2(const Edge<mNode>& proj0, const Edge<mNode>& proj1, const vEdge y, std::pair<Qubit, bool> gate) {
-            static unsigned int callCounter = 0; callCounter++;
+            applyProjectionCallCounter++;
             Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
             if (y.isTerminal()) return y;
             std::pair<Qubit, bool> gateApplied = gate;
@@ -4923,6 +4881,18 @@ namespace dd {
             cn.complexTable.printStatistics();
             std::cout << "[LimTable] ";
             lf.limTable.printStatistics();
+        }
+
+        void printCallCounterStatistics() {
+            std::cout <<   "Function    Calls"
+                      << "\nPauli       " << applyPauliCallCounter
+                      << "\nHadamard    " << applyHadamardCallCounter
+                      << "\nC Pauli     " << applyControlledPauliCallCounter
+                      << "\nPhase       " << applyPhaseCallCounter
+                      << "\nProjection  " << applyProjectionCallCounter
+                      << "\nmultiply    " << multiply2CallCounter
+                      << "\nadd         " << addCallCounter
+                      << "\n";
         }
     };
 
