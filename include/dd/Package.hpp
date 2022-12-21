@@ -230,12 +230,12 @@ namespace dd {
             auto  r   = e;
             auto& max = r.p->e[argMax];
             if (cached && !max.w.exactlyOne()) { // TODO LV: I don't understand; if max.w is exactly one, then r.w will be looked up in the Complex Numbers Table, even when `cached=true`. Why? The user expects that, if cached=true, then r.w is a cached value, no?
-                Log::log << "[normalizeQMDD] NOT looking up r.w in Complex Numbers Table. cached = " << cached << ", max.w.exactlyOne() = " << max.w.exactlyOne() << "\n";
+                //Log::log << "[normalizeQMDD] NOT looking up r.w in Complex Numbers Table. cached = " << cached << ", max.w.exactlyOne() = " << max.w.exactlyOne() << "\n";
                 r.w = max.w;
                 r.w.r->value *= commonFactor;
                 r.w.i->value *= commonFactor;
             } else {
-                Log::log << "[normalizeQMDD] looking up r.w in Complex Numbers Table. cached = " << cached << ", max.w.exactlyOne() = " << max.w.exactlyOne() << "\n";
+                //Log::log << "[normalizeQMDD] looking up r.w in Complex Numbers Table. cached = " << cached << ", max.w.exactlyOne() = " << max.w.exactlyOne() << "\n";
                 r.w = cn.lookup(CTEntry::val(max.w.r) * commonFactor, CTEntry::val(max.w.i) * commonFactor);
                 if (r.w.approximatelyZero()) {
                     return vEdge::zero;
@@ -547,7 +547,7 @@ namespace dd {
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
             if (e.l == nullptr) {
-                std::cout << "[normalizeLIMDDPauli] e.l == nullptr location 1\n";
+                //std::cout << "[normalizeLIMDDPauli] e.l == nullptr location 1\n";
                 throw std::exception();
             }
             //            static unsigned int callCounter = 0;
@@ -562,8 +562,8 @@ namespace dd {
             amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
 #endif
             Edge<vNode> r = normalize(e, cached);
-            Log::log << "[normalizeLIMDDPauli] after normalize, r = " << r << '\n';
-            Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << "; one(@" << (void*) Complex::one.r << ") = " << Complex::one << "\n";
+            //Log::log << "[normalizeLIMDDPauli] after normalize, r = " << r << '\n';
+            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << "; one(@" << (void*) Complex::one.r << ") = " << Complex::one << "\n";
             cn.complexTable.checkConstantsIntegrity();
             r.l           = e.l;
 #if !NDEBUG
@@ -579,7 +579,7 @@ namespace dd {
 #endif
 
             if (r.l == nullptr) {
-                std::cout << "[normalizeLIMDDPauli] r.l == nullptr, location 2.\n";
+                //std::cout << "[normalizeLIMDDPauli] r.l == nullptr, location 2.\n";
                 throw std::exception();
             }
             auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
@@ -657,15 +657,15 @@ namespace dd {
             // Case 3 ("Fork"):  both edges of e are non-zero
             LimEntry<>* lowLim = r.p->e[0].l;
             // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs, r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs, r = " << r << "\n";
             LimEntry<> highLimTemp2 = LimEntry<>::multiplyValue(r.p->e[0].l, r.p->e[1].l);
             r.p->e[1].l             = &highLimTemp2;
             r.p->e[1].w             = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
-            Log::log << "[normalizeLIMDD] after getting r.p->e[1] from cache, r.w = " << (void*) r.w.r << "; one = " << (void*) Complex::one.r << "\n";
+            //Log::log << "[normalizeLIMDD] after getting r.p->e[1] from cache, r.w = " << (void*) r.w.r << "; one = " << (void*) Complex::one.r << "\n";
             r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
             r.p->e[1].l->setPhase(phase_t::phase_one);
             // Step 2: Make the left LIM Identity
-            Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
             vNode      oldNode            = *(r.p);                    // make a copy of the old node
@@ -673,7 +673,7 @@ namespace dd {
             Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
             LimEntry<> highLimTemp;
             highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
-            Log::log << "[normalizeLIMDD] After got high label, r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] After got high label, r = " << r << "\n";
             r.p->e[1].l = lf.limTable.lookup(highLimTemp);
             r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
             r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
@@ -694,9 +694,9 @@ namespace dd {
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             iso.weight = cn.getCached();
-            Log::log << "[normalizeLIMDD] getting isomorphism. r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] getting isomorphism. r = " << r << "\n";
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
-            Log::log << "[normalizeLIMDD] after getting isomorphism. r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] after getting isomorphism. r = " << r << "\n";
             if (!foundIsomorphism) {
                 Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"
                          << "|- Old node is: " << oldNode << '\n'
@@ -709,25 +709,25 @@ namespace dd {
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
             //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
-            Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, r.p->v) << "\n";
+            //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, r.p->v) << "\n";
             //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(&LimEntry<>::multiplyValue(*r.l, *lowLim), r.p->v) << ".\n";
             r.l->multiplyBy(lowLim);
             //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
             r.l->multiplyBy(iso.lim);
-            Log::log << "[normalizeLIMDD] after correcting LIM, r = " << r << "; one = " << Complex::one << "\n";
-            Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
+            //Log::log << "[normalizeLIMDD] after correcting LIM, r = " << r << "; one = " << Complex::one << "\n";
+            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
             cn.mul(r.w, r.w, iso.weight);
-            Log::log << "[normalizeLIMDD] after multiplying iso weight " << iso.weight << ", r = " << r << "; one = " << Complex::one << "\n";
-            Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
+            //Log::log << "[normalizeLIMDD] after multiplying iso weight " << iso.weight << ", r = " << r << "; one = " << Complex::one << "\n";
+            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
             cn.returnToCache(iso.weight);
             //oldNode.e[1].w contains the cached weight from line "r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));"
             cn.returnToCache(oldNode.e[1].w);
-            Log::log << "[normalizeLIMDD] after returning weights to the cache, r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] after returning weights to the cache, r = " << r << "\n";
 
             // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            Log::log << "[normalizeLIMDD] Step 7: Moving LIM-phase into edge weight; currently r = " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Step 7: Moving LIM-phase into edge weight; currently r = " << r << '\n';
             movePhaseIntoWeight(*r.l, r.w);
-            Log::log << "[normalizeLIMDD] Final root edge: " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Final root edge: " << r << '\n';
 
 #if !NDEBUG
             CVec amplitudeVecAfterNormalize = getVector(r);
@@ -2315,8 +2315,8 @@ namespace dd {
             Log::log << "[isPauli, n=" << (int)mat.p->v << "]\n";
             if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) return isPauliGate(mat.p->e[0]);
-            Log::log << "[isPauli, n=" << (int)mat.p->v << "] weights = [" << mat.p->e[0].w << ", " << mat.p->e[1].w << ", " << mat.p->e[2].w << ", " << mat.p->e[3].w << "] identity = ["
-                     << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "]\n";
+            //Log::log << "[isPauli, n=" << (int)mat.p->v << "] weights = [" << mat.p->e[0].w << ", " << mat.p->e[1].w << ", " << mat.p->e[2].w << ", " << mat.p->e[3].w << "] identity = ["
+            //         << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "]\n";
             // Check if this gate is X
             if (mat.p->e[1].p == mat.p->e[2].p &&
                 mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::zero &&
@@ -2358,9 +2358,9 @@ namespace dd {
 
         CliffordGate isControlledPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
-            Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
-                     << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
-                     << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
+//            Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
+//                     << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
+//                     << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
             if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) {
                 Log::log << "[isCP] top qubit " << (int) mat.p->v << " is identity; recursing.\n";
@@ -2371,7 +2371,7 @@ namespace dd {
             if (mat.p->e[0].p->isIdentity() &&
                 mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && (mat.p->e[3].w == Complex::one || mat.p->e[3].w == Complex::minus_i)) {
                 gate = isPauliGate(mat.p->e[3]);
-                Log::log << "[isCP] checked e[3], is gate " << (char) gate.gateType << " on qubit " << (int)gate.target << '\n';
+//                Log::log << "[isCP] checked e[3], is gate " << (char) gate.gateType << " on qubit " << (int)gate.target << '\n';
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::pos};
                 }
@@ -2380,7 +2380,7 @@ namespace dd {
             else if (mat.p->e[3].p->isIdentity() &&
                     (mat.p->e[0].w == Complex::one || mat.p->e[0].w == Complex::minus_i) && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
                 gate = isPauliGate(mat.p->e[0]);
-                Log::log << "[isCP] possible negative controlled Pauli.\n";
+//                Log::log << "[isCP] possible negative controlled Pauli.\n";
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::neg};
                 }
@@ -2391,7 +2391,7 @@ namespace dd {
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
-                Log::log << "[isCP] possible upward controlled X, " << projection0.second << ", " << projection1.second << "\n";
+//                Log::log << "[isCP] possible upward controlled X, " << projection0.second << ", " << projection1.second << "\n";
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first) {
                     gate = CliffordGate(cliffpauli_x, {projection0.first, Control::Type::pos}, mat.p->v);
                 } else if (projection0.second = true && projection1.second == false && projection0.first == projection1.first) {
@@ -2403,14 +2403,14 @@ namespace dd {
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
-                Log::log << "[isCP] possible upward controlled Y, " << projection0.second << ", " << projection1.second << "\n";
+                //Log::log << "[isCP] possible upward controlled Y, " << projection0.second << ", " << projection1.second << "\n";
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first) {
                     gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::pos}, mat.p->v);
                 } else if (projection0.second = true && projection1.second == false && projection0.first == projection1.first) {
                     gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::neg}, mat.p->v);
                 }
             }
-            Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << (char) gate.gateType << ".\n";
+            //Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << (char) gate.gateType << ".\n";
             return gate;
         }
 
@@ -2766,7 +2766,7 @@ namespace dd {
             success = false;
             if (cachingStrategy != cliffordSpecialCaching) return y;
             CliffordGate gate = isPauliGate(x);
-            std::cout << "[Apply Pauli] Pauli gate is " << (char) gate.gateType << " on qubit " << (int) gate.target << "\n";
+            //Log::log << "[Apply Pauli] Pauli gate is " << (char) gate.gateType << " on qubit " << (int) gate.target << "\n";
             if (gate.gateType != cliffNoGate) {
                 vEdge result = y; // TODO refactor to call applySpecificPauliGate
                 LimEntry<> lim(result.l);
@@ -2796,7 +2796,7 @@ namespace dd {
                 return y;
             }
             CliffordGate gate = isHadamardGate(x);
-            std::cout << "[Hadamard] Hadamard target is " << (int) gate.target << "\n";
+            //std::cout << "[Hadamard] Hadamard target is " << (int) gate.target << "\n";
             if (gate.gateType != cliffNoGate) {
                 success = true;
                 return applyHadamardGate2(x, y, gate.target);
@@ -2824,7 +2824,7 @@ namespace dd {
                 return y;
             }
             CliffordGate gate = isControlledPauliGate(x);
-            Log::log << "[CPauli] controlled Pauli gate is " << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << '\n';
+            //Log::log << "[CPauli] controlled Pauli gate is " << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << '\n';
             if (gate.gateType != cliffNoGate) {
                 success = true;
                 return applyControlledPauliGate2(x, y, gate);
@@ -2838,7 +2838,7 @@ namespace dd {
                 return y;
             }
             std::pair<Qubit, bool> projection = isProjectionOperator(x);
-            Log::log << "[apply projection] projection is " << (int) projection.first << " onto |" << (int)projection.second << ">.\n";
+            //Log::log << "[apply projection] projection is " << (int) projection.first << " onto |" << (int)projection.second << ">.\n";
             if (projection.first != (Qubit)-1) {
                 success = true;
                 return applyProjection2(x, y, projection);
@@ -2904,7 +2904,7 @@ namespace dd {
         vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
             applyHadamardCallCounter++;
             if (y.isTerminal()) return y;
-            Log::log << "[Hadamard, " << (int)y.p->v << " qubits] Start. target is " << (int) hadamardTarget << ". y = " << y << "\n";
+            //Log::log << "[Hadamard, " << (int)y.p->v << " qubits] Start. target is " << (int) hadamardTarget << ". y = " << y << "\n";
             LimEntry<> pushedLim(y.l);
             conjugateWithHadamard(pushedLim, hadamardTarget);
             /// look up in the cache
@@ -2913,11 +2913,11 @@ namespace dd {
             ///   is applied directly to the node, rather than to the edge
             auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
-                Log::log << "[Hadamard] cache hit!\n";
+                //Log::log << "[Hadamard] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            Log::log << "[Hadamard] cache miss.\n";
+            //Log::log << "[Hadamard] cache miss.\n";
             vEdge e0, e1;
             if (hadamardTarget == y.p->v) {
                 vEdge e00 = y.p->e[0];
@@ -2929,15 +2929,15 @@ namespace dd {
                 getCachedWeightIfNonzero(e10.w);
                 getCachedWeightIfNonzero(e11.w);
                 e11.w.multiplyByMinusOne(true);
-                Log::log << "[Hadamard] e10 = " << e10 << '\n';
-                Log::log << "[Hadamard] e11 = " << e11 << '\n';
+                //Log::log << "[Hadamard] e10 = " << e10 << '\n';
+                //Log::log << "[Hadamard] e11 = " << e11 << '\n';
                 e0 = add2(e00, e01);
                 e1 = add2(e10, e11);
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
-                Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e0.\n";
+                //Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e0.\n";
                 e0 = applyHadamardGate2(x.p->e[0], y.p->e[0], hadamardTarget);
-                Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e1.\n";
+                //Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e1.\n";
                 e1 = applyHadamardGate2(x.p->e[0], y.p->e[1], hadamardTarget);
             }
             getCachedWeightIfNonzero(e0.w);
@@ -2950,7 +2950,7 @@ namespace dd {
         vEdge applyPhaseGate2(const Edge<mNode>& x, const vEdge y, Qubit phaseTarget, bool inverse) {
             applyPhaseCallCounter++;
             if (y.isTerminal()) return y;
-            Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
+            //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
             LimEntry<> pushedLim(y.l);
             conjugateWithPhaseGate(pushedLim, phaseTarget, inverse);
             bool inverted = pushedLim.getQubit(phaseTarget) == pauli_x || pushedLim.getQubit(phaseTarget) == pauli_y;
@@ -2959,7 +2959,7 @@ namespace dd {
                 xApply = conjugateTranspose(x);
                 inverse = !inverse;
             }
-            Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] pushedLim = " << pushedLim << " inverted = " << inverted << ", inverse = " << inverse << '\n';
+            //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] pushedLim = " << pushedLim << " inverted = " << inverted << ", inverse = " << inverse << '\n';
             /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
             auto cachedResult = matrixVectorMultiplication.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
@@ -2968,21 +2968,21 @@ namespace dd {
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            Log::log << "[Phase] cache miss.\n";
+            //Log::log << "[Phase] cache miss.\n";
             vEdge e0, e1;
             if (phaseTarget == y.p->v) {
                 e0   = y.p->e[0];
                 e1   = y.p->e[1];
-                Log::log << "[Phase] inverse = " << inverse << ". applying S gate to qubit " << (int) y.p->v << ". e1 = "  << e1 << '\n';
+                //Log::log << "[Phase] inverse = " << inverse << ". applying S gate to qubit " << (int) y.p->v << ". e1 = "  << e1 << '\n';
                 if (inverse) {
                     e1.w.multiplyByMinusi(false);
                 }
                 else {
                     e1.w.multiplyByi(false);
                 }
-                Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
+                //Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
             } else { /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
-                Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
+                //Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
                 e0 = applyPhaseGate2(xApply.p->e[0], y.p->e[0], phaseTarget, inverse);
                 e1 = applyPhaseGate2(xApply.p->e[0], y.p->e[1], phaseTarget, inverse);
             }
@@ -2996,11 +2996,11 @@ namespace dd {
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
             applyControlledPauliCallCounter++;
 //            if (gate.control.type == Control::Type::neg) throw std::runtime_error("ERROR negative control not supported.\n");
-            Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
+//            Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
             if (y.isTerminal()) return y;
             LimEntry<> pushedLim(y.l);
             conjugateWithControlledPauliGate(pushedLim, gate);
-            Log::log << "[CPauli, n=" << (int)y.p->v << "] after conjugation, pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
+            //Log::log << "[CPauli, n=" << (int)y.p->v << "] after conjugation, pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
             auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
@@ -3009,7 +3009,7 @@ namespace dd {
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            Log::log << "[CPauli] cache miss.\n";
+            //Log::log << "[CPauli] cache miss.\n";
             vEdge e[2];
             if (gate.control.qubit == y.p->v) {
                 e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], gate);
@@ -3018,7 +3018,7 @@ namespace dd {
                 // TODO handle also upward-controlled Y
                 if (gate.gateType == cliffpauli_x || gate.gateType == cliffpauli_y) {
                     if (gate.control.type == Control::Type::pos) {
-                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
+                        //Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
                         auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
                         auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
                         std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
@@ -3034,7 +3034,7 @@ namespace dd {
                         e[0] = add2(e00, e11);
                         e[1] = add2(e01, e10);
                     } else {
-                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
+                        //Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
                         auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
                         auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
                         std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
@@ -3053,7 +3053,7 @@ namespace dd {
                 }
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
-                Log::log << "[CPauli] apply identity to qubit " << (int) y.p->v << '\n';
+                //Log::log << "[CPauli] apply identity to qubit " << (int) y.p->v << '\n';
                 e[0] = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
                 e[1] = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
             }
@@ -3065,7 +3065,7 @@ namespace dd {
         unsigned int applyProjectionCallCounter = 0;
         vEdge applyProjection2(const Edge<mNode>& proj0, const Edge<mNode>& proj1, const vEdge y, std::pair<Qubit, bool> gate) {
             applyProjectionCallCounter++;
-            Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
+            //Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
             if (y.isTerminal()) return y;
             std::pair<Qubit, bool> gateApplied = gate;
             LimEntry<> pushedLim(y.l);
@@ -3074,7 +3074,7 @@ namespace dd {
                 gateApplied.second ^= 1;
             }
             bool projection = gateApplied.second;
-            Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
+            //Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
             std::array<Edge<mNode>, 2> projections = {proj0, proj1};
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the projection operator can be pushed through a Pauli LIM, as Proj(b) X = X Proj(1-b), and Proj(b) Z = Z Proj(b)
@@ -3084,7 +3084,7 @@ namespace dd {
                 return processCachedEdge(projections[projection], y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] cache miss.\n";
+            //Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] cache miss.\n";
             vEdge e[2];
             vEdge e0, e1;
             if (targetQubit == y.p->v) {
@@ -3093,7 +3093,7 @@ namespace dd {
                 getCachedWeightIfNonzero(e[projection].w);
             } else {
                 /// Apply identity to this qubit, then apply projection to the remaining qubits
-                Log::log << "[Apply projection] apply identity to qubit " << (int) y.p->v << '\n';
+                //Log::log << "[Apply projection] apply identity to qubit " << (int) y.p->v << '\n';
                 e[0] = applyProjection2(proj0, proj1, y.p->e[0], gateApplied);
                 e[1] = applyProjection2(proj0, proj1, y.p->e[1], gateApplied);
                 getCachedWeightIfNonzero(e[0].w);
