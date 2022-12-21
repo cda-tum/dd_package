@@ -2329,8 +2329,6 @@ namespace dd {
             return gate;
         }
 
-        // TODO this only detects positive controls; we should also detect negative controls
-        // This returns a tuple with a Qubit; we should return a tuple with a Control
         CliffordGate isControlledPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
             Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
@@ -2342,7 +2340,7 @@ namespace dd {
                 return isControlledPauliGate(mat.p->e[0]);
             }
             // Check for positive downward-controlled Pauli
-            // TODO merge code of cases controlled Pauli and controlled neg Pauli
+            // TODO merge code of cases positive controlled Pauli and controlled neg Pauli
             if (mat.p->e[0].p->isIdentity() &&
                 mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && (mat.p->e[3].w == Complex::one || mat.p->e[3].w == Complex::minus_i)) {
                 gate = isPauliGate(mat.p->e[3]);
@@ -2351,24 +2349,26 @@ namespace dd {
                     gate.control = {mat.p->v, Control::Type::pos};
                 }
             }
-            // Check for negative downard-controlled Pauli
+            // Check for negative downward-controlled Pauli
             else if (mat.p->e[3].p->isIdentity() &&
-                     mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
+                    (mat.p->e[0].w == Complex::one || mat.p->e[0].w == Complex::minus_i) && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
                 gate = isPauliGate(mat.p->e[0]);
                 Log::log << "[isCP] possible negative controlled Pauli.\n";
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::neg};
                 }
             }
-            // TODO check for downward negative-controlled Pauli gate
                 // TODO merge the upward controlled X and Y cases, to take up less code
             // Check for upwards controlled X
             else if (mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::one &&
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
+                Log::log << "[isCP] possible upward controlled X, " << projection0.second << ", " << projection1.second << "\n";
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first) {
                     gate = CliffordGate(cliffpauli_x, {projection0.first, Control::Type::pos}, mat.p->v);
+                } else if (projection0.second = true && projection1.second == false && projection0.first == projection1.first) {
+                    gate = CliffordGate(cliffpauli_x, {projection0.first, Control::Type::neg}, mat.p->v);
                 }
             }
             // Check for upwards controlled Y
@@ -2376,11 +2376,13 @@ namespace dd {
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
+                Log::log << "[isCP] possible upward controlled Y, " << projection0.second << ", " << projection1.second << "\n";
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first) {
                     gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::pos}, mat.p->v);
+                } else if (projection0.second = true && projection1.second == false && projection0.first == projection1.first) {
+                    gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::neg}, mat.p->v);
                 }
             }
-            // TODO check for negative control
             Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << (char) gate.gateType << ".\n";
             return gate;
         }
@@ -3002,7 +3004,21 @@ namespace dd {
                         e[0] = add2(e00, e11);
                         e[1] = add2(e01, e10);
                     } else {
-                        throw std::runtime_error("[applyControlledPauliGate2] ERROR negative upward X,Y gate not supported.\n");
+                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
+                        auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
+                        auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
+                        std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
+                        std::pair<Qubit, bool> project1Gate = {gate.control.qubit, 1};
+                        auto e00 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
+                        auto e01 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
+                        auto e10 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
+                        auto e11 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
+                        getCachedWeightIfNonzero(e00.w);
+                        getCachedWeightIfNonzero(e01.w);
+                        getCachedWeightIfNonzero(e10.w);
+                        getCachedWeightIfNonzero(e11.w);
+                        e[0] = add2(e00, e11);
+                        e[1] = add2(e01, e10);
                     }
                 }
             } else {

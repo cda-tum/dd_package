@@ -87,11 +87,11 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD.\n";
         limddState = limdd->applyGate(circuit.gates[gate], limddState);
 
-        resultQMDD  = qmdd->getVector(qmddState);
-        resultLIMDD = limdd->getVector(limddState);
-        //		std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
-        //		std::cout << "[simulate circuit] QMDD  result: " << resultQMDD << '\n';
-        //		std::cout << "[simulate circuit] LIMDD result: " << resultLIMDD << '\n';
+//        resultQMDD  = qmdd->getVector(qmddState);
+//        resultLIMDD = limdd->getVector(limddState);
+//        std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
+//        std::cout << "[simulate circuit] QMDD  result: " << dd::outputCVec(resultQMDD) << '\n';
+//        std::cout << "[simulate circuit] LIMDD result: " << dd::outputCVec(resultLIMDD) << '\n';
 
         std::cout << "[simulate circuit] QMDD mul statistics: ";
         qmdd->matrixVectorMultiplication.printStatistics();
@@ -125,12 +125,18 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
             }
             if (limddState.p->limVector.size() != circuit.n) {
                 std::cout << "[simulate circuit] ERROR Stabilizer state has " << limddState.p->limVector.size() << " stabilizers; expected n = " << (int)circuit.n << ".\n";
+                std::cout << "[simulate circuit]   Failed after applying " << (gate + 1) << " gates.\n";
                 //				dd::export2Dot(limddState, "limdd-less-than-n-stabilizers.dot", false, true, true, false, true, false);
                 EXPECT_TRUE(false);
                 break;
             }
         }
+        if (circuitIsCliffordSoFar) {
+            ASSERT_TRUE(limdd->multiply2CallCounter == 0);
+        }
     }
+
+    limdd->printCallCounterStatistics();
 
     std::cout << "[simulate circuit] Number of Unique lims: " << qmdd->limCount(qmddState) << std::endl;
     std::cout << "[simulate circuit] Number of Unique numbers: " << qmdd->numberCount(qmddState) << std::endl;
@@ -140,6 +146,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 
     std::cout << "[simulate circuit] qmdd  multiply calls: " << qmdd->mulCallCounter << std::endl;
     std::cout << "[simulate circuit] limdd multiply calls: " << limdd->mulCallCounter << std::endl;
+
 
     //    limdd->printVector(limddState);
     //    qmdd->printVector(qmddState);
