@@ -2736,7 +2736,7 @@ namespace dd {
             CliffordGate gate = isPauliGate(x);
             std::cout << "[Apply Pauli] Pauli gate is " << (char) gate.gateType << " on qubit " << (int) gate.target << "\n";
             if (gate.gateType != cliffNoGate) {
-                vEdge result = y;
+                vEdge result = y; // TODO refactor to call applySpecificPauliGate
                 LimEntry<> lim(result.l);
                 lim.leftMultiplyBy(gate.target, (pauli_op) gate.gateType);
                 getCachedWeightIfNonzero(result.w);
@@ -2746,6 +2746,16 @@ namespace dd {
                 return result;
             }
             return y;
+        }
+
+        vEdge applySpecificPauliGate(const vEdge& y, const CliffordGate gate) {
+            vEdge result = y;
+            LimEntry<> lim(result.l);
+            lim.leftMultiplyBy(gate.target, (pauli_op) gate.gateType);
+            getCachedWeightIfNonzero(result.w);
+            movePhaseIntoWeight(lim, result.w);
+            result.l = lf.limTable.lookup(lim); // TODO should we decrement the refcount of y.l?
+            return result;
         }
 
         vEdge applyHadamardGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
@@ -2957,7 +2967,7 @@ namespace dd {
         // TODO also allow negative control qubit
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
             applyControlledPauliCallCounter++;
-            if (gate.control.type == Control::Type::neg) throw std::runtime_error("ERROR negative control not supported.\n");
+//            if (gate.control.type == Control::Type::neg) throw std::runtime_error("ERROR negative control not supported.\n");
             Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
             if (y.isTerminal()) return y;
             Qubit controlQubit = gate.control.qubit;
@@ -2978,37 +2988,45 @@ namespace dd {
             Log::log << "[CPauli] cache miss.\n";
             vEdge e0, e1;
             if (controlQubit == y.p->v) {
-                e0 = y.p->e[0];
-                e1 = y.p->e[1];
-                Log::log << "[CPauli] . applying Pauli " << (char)gateType << " gate to qubit " << (int) y.p->v
-                         << ". e1 = " << e1 << '\n';
-                LimEntry<> e1Lim(e1.l);
-                e1Lim.leftMultiplyBy(targetQubit, (pauli_op) gateType);
-                e1.l = lf.limTable.lookup(e1Lim);
-                getCachedWeightIfNonzero(e0.w);
-                getCachedWeightIfNonzero(e1.w);
-                Log::log << "[CPauli] after multiplication, e1 = " << e1 << '\n';
+                // TODO refactor so that gate.control.type is not in an if-statement, but is the index of an array
+                if (gate.control.type == Control::Type::pos) { // TODO refactor to use applySpecificPauliGate
+                    e0 = y.p->e[0];
+                    e1 = y.p->e[1];
+                    Log::log << "[CPauli] . applying Pauli " << (char)gateType << " gate to qubit " << (int) y.p->v
+                             << ". e1 = " << e1 << '\n';
+                    LimEntry<> e1Lim(e1.l);
+                    e1Lim.leftMultiplyBy(targetQubit, (pauli_op) gateType);
+                    e1.l = lf.limTable.lookup(e1Lim);
+                    Log::log << "[CPauli] after multiplication, e1 = " << e1 << '\n';
+                } else {
+                    e0 = applySpecificPauliGate(y.p->e[0], gate);
+                    e1 = y.p->e[1];
+                }
             } else if (targetQubit == y.p->v) {
                 // TODO handle also upward-controlled Y
                 if (gateType == cliffpauli_x || gateType == cliffpauli_y) {
-                    Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gateType << ", control = " << (int) controlQubit << " target = " << (int) targetQubit << "\n";
-                    auto project0 = makeGateDD(project0mat, y.p->v-1, controlQubit);
-                    auto project1 = makeGateDD(project1mat, y.p->v-1, controlQubit);
-                    std::pair<Qubit, bool> project0Gate = {controlQubit, 0}; // TODO refactor to CliffordGate
-                    std::pair<Qubit, bool> project1Gate = {controlQubit, 1};
-                    auto e00 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
-                    auto e01 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
-                    auto e10 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
-                    auto e11 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
-                    getCachedWeightIfNonzero(e00.w);
-                    getCachedWeightIfNonzero(e01.w);
-                    getCachedWeightIfNonzero(e10.w);
-                    getCachedWeightIfNonzero(e11.w);
-                    e0 = add2(e00, e11);
-                    e1 = add2(e01, e10);
+                    if (gate.control.type == Control::Type::pos) {
+                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gateType << ", control = " << (int) controlQubit << " target = " << (int) targetQubit << "\n";
+                        auto project0 = makeGateDD(project0mat, y.p->v-1, controlQubit);
+                        auto project1 = makeGateDD(project1mat, y.p->v-1, controlQubit);
+                        std::pair<Qubit, bool> project0Gate = {controlQubit, 0}; // TODO refactor to CliffordGate
+                        std::pair<Qubit, bool> project1Gate = {controlQubit, 1};
+                        auto e00 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
+                        auto e01 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
+                        auto e10 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
+                        auto e11 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
+                        getCachedWeightIfNonzero(e00.w);
+                        getCachedWeightIfNonzero(e01.w);
+                        getCachedWeightIfNonzero(e10.w);
+                        getCachedWeightIfNonzero(e11.w);
+                        e0 = add2(e00, e11);
+                        e1 = add2(e01, e10);
 //                    CVec e0_v = getVector(e0);
 //                    CVec e1_v = getVector(e1);
 //                    Log::log << "[CPauli, n=" << (int) x.p->v << "] Added. e0 = " << outputCVec(e0_v) << "; e1 = " << outputCVec(e1_v) << "\n";
+                    } else {
+                        throw std::runtime_error("[applyControlledPauliGate2] ERROR negative upward X,Y gate not supported.\n");
+                    }
                 }
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
