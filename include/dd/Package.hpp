@@ -2928,10 +2928,9 @@ namespace dd {
                 inverse = !inverse;
             }
             Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] pushedLim = " << pushedLim << " inverted = " << inverted << ", inverse = " << inverse << '\n';
-            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
-            /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
+            /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-            auto cachedResult = computeTable.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            auto cachedResult = matrixVectorMultiplication.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 Log::log << "[Phase] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
@@ -2942,25 +2941,22 @@ namespace dd {
             if (phaseTarget == y.p->v) {
                 e0   = y.p->e[0];
                 e1   = y.p->e[1];
-                getCachedWeightIfNonzero(e0.w);
-                getCachedWeightIfNonzero(e1.w);
                 Log::log << "[Phase] inverse = " << inverse << ". applying S gate to qubit " << (int) y.p->v << ". e1 = "  << e1 << '\n';
                 if (inverse) {
-                    e1.w.multiplyByMinusi(true);
+                    e1.w.multiplyByMinusi(false);
                 }
                 else {
-                    e1.w.multiplyByi(true);
+                    e1.w.multiplyByi(false);
                 }
                 Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
-            } else {
-                /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
+            } else { /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
                 e0 = applyPhaseGate2(xApply.p->e[0], y.p->e[0], phaseTarget, inverse);
                 e1 = applyPhaseGate2(xApply.p->e[0], y.p->e[1], phaseTarget, inverse);
-                getCachedWeightIfNonzero(e0.w);
-                getCachedWeightIfNonzero(e1.w);
             }
-            return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1); // TODO
+            getCachedWeightIfNonzero(e0.w);
+            getCachedWeightIfNonzero(e1.w);
+            return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1);
         }
 
         unsigned int applyControlledPauliCallCounter = 0;
@@ -2970,47 +2966,31 @@ namespace dd {
 //            if (gate.control.type == Control::Type::neg) throw std::runtime_error("ERROR negative control not supported.\n");
             Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
             if (y.isTerminal()) return y;
-            Qubit controlQubit = gate.control.qubit;
-            Qubit targetQubit  = gate.target;
-            CliffordGateType_t gateType  = gate.gateType;
             LimEntry<> pushedLim(y.l);
             conjugateWithControlledPauliGate(pushedLim, gate);
             Log::log << "[CPauli, n=" << (int)y.p->v << "] after conjugation, pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
-            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
             /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 Log::log << "[CPauli] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             Log::log << "[CPauli] cache miss.\n";
-            vEdge e0, e1;
-            if (controlQubit == y.p->v) {
-                // TODO refactor so that gate.control.type is not in an if-statement, but is the index of an array
-                if (gate.control.type == Control::Type::pos) { // TODO refactor to use applySpecificPauliGate
-                    e0 = y.p->e[0];
-                    e1 = y.p->e[1];
-                    Log::log << "[CPauli] . applying Pauli " << (char)gateType << " gate to qubit " << (int) y.p->v
-                             << ". e1 = " << e1 << '\n';
-                    LimEntry<> e1Lim(e1.l);
-                    e1Lim.leftMultiplyBy(targetQubit, (pauli_op) gateType);
-                    e1.l = lf.limTable.lookup(e1Lim);
-                    Log::log << "[CPauli] after multiplication, e1 = " << e1 << '\n';
-                } else {
-                    e0 = applySpecificPauliGate(y.p->e[0], gate);
-                    e1 = y.p->e[1];
-                }
-            } else if (targetQubit == y.p->v) {
+            vEdge e[2];
+            if (gate.control.qubit == y.p->v) {
+                e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], gate);
+                e[1^(int)gate.control.type] = y.p->e[1^(int)gate.control.type];
+            } else if (gate.target == y.p->v) {
                 // TODO handle also upward-controlled Y
-                if (gateType == cliffpauli_x || gateType == cliffpauli_y) {
+                if (gate.gateType == cliffpauli_x || gate.gateType == cliffpauli_y) {
                     if (gate.control.type == Control::Type::pos) {
-                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gateType << ", control = " << (int) controlQubit << " target = " << (int) targetQubit << "\n";
-                        auto project0 = makeGateDD(project0mat, y.p->v-1, controlQubit);
-                        auto project1 = makeGateDD(project1mat, y.p->v-1, controlQubit);
-                        std::pair<Qubit, bool> project0Gate = {controlQubit, 0}; // TODO refactor to CliffordGate
-                        std::pair<Qubit, bool> project1Gate = {controlQubit, 1};
+                        Log::log << "[CPauli, n=" << (int) x.p->v << "] upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
+                        auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
+                        auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
+                        std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
+                        std::pair<Qubit, bool> project1Gate = {gate.control.qubit, 1};
                         auto e00 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
                         auto e01 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
                         auto e10 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
@@ -3019,11 +2999,8 @@ namespace dd {
                         getCachedWeightIfNonzero(e01.w);
                         getCachedWeightIfNonzero(e10.w);
                         getCachedWeightIfNonzero(e11.w);
-                        e0 = add2(e00, e11);
-                        e1 = add2(e01, e10);
-//                    CVec e0_v = getVector(e0);
-//                    CVec e1_v = getVector(e1);
-//                    Log::log << "[CPauli, n=" << (int) x.p->v << "] Added. e0 = " << outputCVec(e0_v) << "; e1 = " << outputCVec(e1_v) << "\n";
+                        e[0] = add2(e00, e11);
+                        e[1] = add2(e01, e10);
                     } else {
                         throw std::runtime_error("[applyControlledPauliGate2] ERROR negative upward X,Y gate not supported.\n");
                     }
@@ -3031,12 +3008,12 @@ namespace dd {
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 Log::log << "[CPauli] apply identity to qubit " << (int) y.p->v << '\n';
-                e0 = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
-                e1 = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
+                e[0] = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
+                e[1] = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
             }
-            getCachedWeightIfNonzero(e0.w);
-            getCachedWeightIfNonzero(e1.w);
-            return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
+            getCachedWeightIfNonzero(e[0].w);
+            getCachedWeightIfNonzero(e[1].w);
+            return makeNodeAndInsertCache(x, y, pushedLim, e[0], e[1]);
         }
 
         unsigned int applyProjectionCallCounter = 0;
@@ -3052,39 +3029,31 @@ namespace dd {
             }
             bool projection = gateApplied.second;
             Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
-            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             std::array<Edge<mNode>, 2> projections = {proj0, proj1};
             /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
-            /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-            auto cachedResult = computeTable.lookup({projections[projection].p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            /// We can do this because we exploit the algebraic property that the projection operator can be pushed through a Pauli LIM, as Proj(b) X = X Proj(1-b), and Proj(b) Z = Z Proj(b)
+            auto cachedResult = matrixVectorMultiplication.lookup({projections[projection].p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 Log::log << "[Apply projection] cache hit!\n";
                 return processCachedEdge(projections[projection], y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] cache miss.\n";
+            vEdge e[2];
             vEdge e0, e1;
             if (targetQubit == y.p->v) {
-                if (projection == 0) { // TODO condense using edges[projection] = y.p->e[projection]; edges[1-projection] = vEdge::zero;
-                    e0 = y.p->e[0];
-                    getCachedWeightIfNonzero(e0.w);
-                    e1 = vEdge::zero;
-                } else {
-                    e0 = vEdge::zero;
-                    e1 = y.p->e[1];
-                    getCachedWeightIfNonzero(e1.w);
-                }
-//                Log::log << "[Apply projection] Applied projection to this qubit, #" << (int) y.p->v
-//                         << ". e0 = " << e0 << ". e1 = " << e1 << '\n';
+                e[projection] = y.p->e[projection];
+                e[1-projection] = vEdge::zero;
+                getCachedWeightIfNonzero(e[projection].w);
             } else {
                 /// Apply identity to this qubit, then apply projection to the remaining qubits
                 Log::log << "[Apply projection] apply identity to qubit " << (int) y.p->v << '\n';
-                e0 = applyProjection2(proj0, proj1, y.p->e[0], gateApplied);
-                e1 = applyProjection2(proj0, proj1, y.p->e[1], gateApplied);
-                getCachedWeightIfNonzero(e0.w);
-                getCachedWeightIfNonzero(e1.w);
+                e[0] = applyProjection2(proj0, proj1, y.p->e[0], gateApplied);
+                e[1] = applyProjection2(proj0, proj1, y.p->e[1], gateApplied);
+                getCachedWeightIfNonzero(e[0].w);
+                getCachedWeightIfNonzero(e[1].w);
             }
-            return makeNodeAndInsertCache(projections[projection], y, pushedLim, e0, e1);
+            return makeNodeAndInsertCache(projections[projection], y, pushedLim, e[0], e[1]);
         }
 
         vEdge simulateCircuit(const QuantumCircuit& circuit) {
