@@ -1526,53 +1526,74 @@ namespace dd {
 
     public:
         std::pair<dd::fp, dd::fp> determineMeasurementProbabilities(const vEdge& root_edge, const Qubit index, const bool assumeProbabilityNormalization) {
-            std::map<vNode*, fp> probsMone;
-            //            std::set<vNode*>                         visited;
-            std::set<std::pair<vNode*, LimEntry<>*>>  visited;
-            std::queue<std::pair<vEdge, LimEntry<>*>> q;
-            LimEntry<>                                lim = {};
+            std::map<std::pair<vNode*, bool>, fp> probsMone;
+            std::set<std::pair<vNode*, bool>>     visited;
+            std::queue<std::pair<vEdge, bool>>    queue;
 
-            probsMone[root_edge.p] = ComplexNumbers::mag2(root_edge.w);
-            visited.insert({root_edge.p, &lim});
-            q.push({root_edge, &lim});
+            if (root_edge.l->getPauliForQubit(index) == dd::pauli_x ||
+                root_edge.l->getPauliForQubit(index) == dd::pauli_y) {
+                queue.emplace(root_edge, true);
+                visited.insert({root_edge.p, true});
+                probsMone[{root_edge.p, true}] = ComplexNumbers::mag2(root_edge.w);
+            } else {
+                queue.emplace(root_edge, false);
+                visited.insert({root_edge.p, false});
+                probsMone[{root_edge.p, false}] = ComplexNumbers::mag2(root_edge.w);
+            }
 
-            while (q.front().first.p->v != index) {
-                auto       ptr = q.front().first;
-                LimEntry<> lim = *q.front().second;
-                q.pop();
+            while (queue.front().first.p->v != index) {
+                auto ptr        = queue.front().first;
+                bool flipProb   = queue.front().second;
+                bool flipProbE0 = queue.front().second;
+                bool flipProbE1 = queue.front().second;
+                queue.pop();
 
-                fp prob = probsMone[ptr.p];
+                fp prob = probsMone[{ptr.p, flipProb}];
 
-                lim.multiplyBy(ptr.l);
-                const auto op = lim.getPauliForQubit(ptr.p->v);
-                lim.setOperator(ptr.p->v, 'I');
-                auto limPersistent = lf.limTable.lookup(lim);
+                auto opFollow   = pauli_id;
+                auto opTargetE0 = pauli_id;
+                auto opTargetE1 = pauli_id;
+                if (ptr.l != nullptr) {
+                    opFollow = ptr.l->getPauliForQubit(ptr.p->v);
+                }
+                auto const e0 = follow2(ptr, 0, opFollow);
+                auto const e1 = follow2(ptr, 1, opFollow);
 
-                // recursive case
-                auto const e0 = follow2(ptr, 0, op);
-                auto const e1 = follow2(ptr, 1, op);
+                if (e0.l != nullptr) {
+                    opTargetE0 = e0.l->getPauliForQubit(index);
+                }
+                if (e1.l != nullptr) {
+                    opTargetE1 = e1.l->getPauliForQubit(index);
+                }
+
+                if (opTargetE0 == dd::pauli_x || opTargetE0 == dd::pauli_y) {
+                    flipProbE0 = !flipProbE0;
+                }
+                if (opTargetE1 == dd::pauli_x || opTargetE1 == dd::pauli_y) {
+                    flipProbE1 = !flipProbE1;
+                }
 
                 if (!e0.w.approximatelyZero()) {
                     const fp tmp1 = prob * ComplexNumbers::mag2(e0.w);
 
-                    if (visited.find({e0.p, limPersistent}) != visited.end()) {
-                        probsMone[e0.p] = probsMone[e0.p] + tmp1;
+                    if (visited.find({e0.p, flipProbE0}) != visited.end()) {
+                        probsMone[{e0.p, flipProbE0}] = probsMone[{e0.p, flipProbE0}] + tmp1;
                     } else {
-                        probsMone[e0.p] = tmp1;
-                        visited.insert({e0.p, limPersistent});
-                        q.push({e0, limPersistent});
+                        probsMone[{e0.p, flipProbE0}] = tmp1;
+                        visited.insert({e0.p, flipProbE0});
+                        queue.push({e0, flipProbE0});
                     }
                 }
 
                 if (!e1.w.approximatelyZero()) {
                     const fp tmp1 = prob * ComplexNumbers::mag2(e1.w);
 
-                    if (visited.find({e1.p, limPersistent}) != visited.end()) {
-                        probsMone[e1.p] = probsMone[e1.p] + tmp1;
+                    if (visited.find({e1.p, flipProbE1}) != visited.end()) {
+                        probsMone[{e1.p, flipProbE1}] = probsMone[{e1.p, flipProbE1}] + tmp1;
                     } else {
-                        probsMone[e1.p] = tmp1;
-                        visited.insert({e1.p, limPersistent});
-                        q.push({e1, limPersistent});
+                        probsMone[{e1.p, flipProbE1}] = tmp1;
+                        visited.insert({e1.p, flipProbE1});
+                        queue.push({e1, flipProbE1});
                     }
                 }
             }
@@ -1580,43 +1601,49 @@ namespace dd {
             fp pzero{0}, pone{0};
 
             if (assumeProbabilityNormalization) {
-                while (!q.empty()) {
-                    auto ptr = q.front().first;
-                    auto lim = *q.front().second;
-                    q.pop();
+                while (!queue.empty()) {
+                    auto ptr      = queue.front().first;
+                    bool flipProb = queue.front().second;
+                    queue.pop();
 
-                    lim.multiplyBy(ptr.l);
-                    const auto op = lim.getPauliForQubit(ptr.p->v);
-                    lim.setOperator(ptr.p->v, 'I');
+                    auto opFollow = pauli_id;
 
-                    // recursive case
-                    auto const e0 = follow2(ptr, 0, op);
-                    auto const e1 = follow2(ptr, 1, op);
+                    //                    if (ptr.l != nullptr) {
+                    //                        opFollow = ptr.l->getPauliForQubit(ptr.p->v);
+                    //                    }
+
+                    auto e0 = follow2(ptr, 0, opFollow);
+                    auto e1 = follow2(ptr, 1, opFollow);
+
+                    if (flipProb) {
+                        std::swap(e0, e1);
+                    }
 
                     if (!e0.w.approximatelyZero()) {
-                        pzero += probsMone[ptr.p] * ComplexNumbers::mag2(e0.w);
+                        pzero += probsMone[{ptr.p, flipProb}] * ComplexNumbers::mag2(e0.w);
                     }
 
                     if (!e1.w.approximatelyZero()) {
-                        pone += probsMone[ptr.p] * ComplexNumbers::mag2(e1.w);
+                        pone += probsMone[{ptr.p, flipProb}] * ComplexNumbers::mag2(e1.w);
                     }
                 }
             } else {
-                std::unordered_map<vNode*, fp> probs;
-                assignProbabilities(root_edge, probs);
-
-                while (!q.empty()) {
-                    auto* ptr = q.front().first.p;
-                    q.pop();
-
-                    if (!ptr->e.at(0).w.approximatelyZero()) {
-                        pzero += probsMone[ptr] * probs[ptr->e.at(0).p] * ComplexNumbers::mag2(ptr->e.at(0).w);
-                    }
-
-                    if (!ptr->e.at(1).w.approximatelyZero()) {
-                        pone += probsMone[ptr] * probs[ptr->e.at(1).p] * ComplexNumbers::mag2(ptr->e.at(1).w);
-                    }
-                }
+                throw std::runtime_error("determineMeasurementProbabilities without assumeProbabilityNormalization is not implemented yet.");
+                //                std::unordered_map<vNode*, fp> probs;
+                //                assignProbabilities(root_edge, probs);
+                //
+                //                while (!queue.empty()) {
+                //                                        auto* ptr = queue.front().first.p;
+                //                                        queue.pop();
+                //
+                //                                        if (!ptr->e.at(0).w.approximatelyZero()) {
+                //                                            pzero += probsMone[ptr] * probs[ptr->e.at(0).p] * ComplexNumbers::mag2(ptr->e.at(0).w);
+                //                                        }
+                //
+                //                                        if (!ptr->e.at(1).w.approximatelyZero()) {
+                //                                            pone += probsMone[ptr] * probs[ptr->e.at(1).p] * ComplexNumbers::mag2(ptr->e.at(1).w);
+                //                                        }
+                //                }
             }
             return {pzero, pone};
         }
@@ -2403,10 +2430,13 @@ namespace dd {
             //            std::cout << "[multiply2] " << callCount << std::endl;
 
             multiply2CallCounter++;
-            [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
             using LEdge             = Edge<LeftOperandNode>;
             using REdge             = Edge<RightOperandNode>;
             using ResultEdge        = Edge<RightOperandNode>;
+            //            [[maybe_unused]] auto tempmulCallCounter = mulCallCounter++;
+            using LEdge                              = Edge<LeftOperandNode>;
+            using REdge                              = Edge<RightOperandNode>;
+            using ResultEdge                         = Edge<RightOperandNode>;
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
