@@ -2277,39 +2277,6 @@ namespace dd {
             return (Qubit)-1;
         }
 
-        Qubit isPauliZGate(const Edge<mNode>& mat) {
-            if (mNode::isTerminal(mat.p)) return (Qubit) -1;
-            if (topQubitIsIdentity(mat)) return isPauliXGate(mat.p->e[0]);
-            if (mat.p->e[0] == mat.p->e[3] &&
-                mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::minus_one &&
-                mat.p->e[0].p->isIdentity()) {
-                return mat.p->v;
-            }
-            return (Qubit) -1;
-        }
-
-        Qubit isPauliYGate(const Edge<mNode>& mat) {
-            if (mNode::isTerminal(mat.p)) return (Qubit) -1;
-            if (topQubitIsIdentity(mat)) return isPauliXGate(mat.p->e[0]);
-            if (mat.p->e[1] == mat.p->e[2] &&
-                mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::complex_i && mat.p->e[2].w == Complex::minus_i && mat.p->e[3].w == Complex::zero &&
-                mat.p->e[0].p->isIdentity()) {
-                return mat.p->v;
-            }
-            return (Qubit) -1;
-        }
-
-        Qubit isPauliXGate(const Edge<mNode>& mat) {
-            if (mNode::isTerminal(mat.p)) return (Qubit) -1;
-            if (topQubitIsIdentity(mat)) return isPauliXGate(mat.p->e[0]);
-            if (mat.p->e[1] == mat.p->e[2] &&
-                mat.p->e[0].w == Complex::zero && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::zero &&
-                mat.p->e[0].p->isIdentity()) {
-                return mat.p->v;
-            }
-            return (Qubit) -1;
-        }
-
         CliffordGate isPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
             Log::log << "[isPauli, n=" << (int)mat.p->v << "]\n";
@@ -2891,7 +2858,7 @@ namespace dd {
             /// Multiply by the weights of x and y
             ComplexNumbers::mul(result.w, result.w, x.w); // TODO is this necessary? or is the weight always 1?
             ComplexNumbers::mul(result.w, result.w, y.w);
-            if (result.w.approximatelyZero() && !result.w.exactlyZero()) {
+            if (result.w.approximatelyZero()) {
                 cn.returnToCache(result.w);
                 return vEdge::zero;
             }
@@ -2900,6 +2867,9 @@ namespace dd {
         }
 
         unsigned int applyHadamardCallCounter = 0;
+        /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
+        ///   We can do this because we exploit the algebraic property that the projection operator can be pushed through a Pauli LIM,
+        ///   since Proj(x) Z = Z Proj(x), and Proj(b) X = X Proj(1-b)
         vEdge applyHadamardGate2(const Edge<mNode>& x, const vEdge y, Qubit hadamardTarget) {
             applyHadamardCallCounter++;
             if (y.isTerminal()) return y;
@@ -2907,10 +2877,7 @@ namespace dd {
             LimEntry<> pushedLim(y.l);
             conjugateWithHadamard(pushedLim, hadamardTarget);
             /// look up in the cache
-            auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
-            /// note that when we look it up, we use a nullptr for y's lim. This is because we exploit the algebraic property that the Hadamard gate
-            ///   is applied directly to the node, rather than to the edge
-            auto cachedResult = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 //Log::log << "[Hadamard] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
@@ -2946,6 +2913,8 @@ namespace dd {
 
         unsigned int applyPhaseCallCounter = 0;
         // TODO refactor so that the conjugate transpose is passed as parameter
+        /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
+        /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
         vEdge applyPhaseGate2(const Edge<mNode>& x, const vEdge y, Qubit phaseTarget, bool inverse) {
             applyPhaseCallCounter++;
             if (y.isTerminal()) return y;
@@ -2958,16 +2927,12 @@ namespace dd {
                 xApply = conjugateTranspose(x);
                 inverse = !inverse;
             }
-            //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] pushedLim = " << pushedLim << " inverted = " << inverted << ", inverse = " << inverse << '\n';
-            /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
-            /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
             auto cachedResult = matrixVectorMultiplication.lookup({xApply.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 Log::log << "[Phase] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            //Log::log << "[Phase] cache miss.\n";
             vEdge e0, e1;
             if (phaseTarget == y.p->v) {
                 e0   = y.p->e[0];
@@ -2991,95 +2956,47 @@ namespace dd {
         }
 
         unsigned int applyControlledPauliCallCounter = 0;
+        /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
+        /// We can do this because we exploit the algebraic property that the controlled Pauli gate can be pushed through a Pauli LIM
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
             applyControlledPauliCallCounter++;
             Log::log << "[CPauli, n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. y = " << y << '\n';
             if (y.isTerminal()) return y;
             LimEntry<> pushedLim(y.l);
-            cn.complexCache.health();
             conjugateWithControlledPauliGate(pushedLim, gate);
-            Log::log << "[CPauli, n=" << (int)y.p->v << "] after conjugation, pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
-            /// note that when we look it up, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
-            /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
             auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
             if (cachedResult.p != nullptr) {
-                Log::log << "[CPauli] cache hit!\n";
+                //Log::log << "[CPauli] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
-            Log::log << "[CPauli] cache miss.\n";
+            //Log::log << "[CPauli] cache miss.\n";
             vEdge e[2];
-            if (gate.control.qubit == y.p->v) {
+            if (gate.control.qubit == y.p->v) {  ///  this qubit is the control, and the target qubit is below
                 e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], gate);
                 e[1^(int)gate.control.type] = y.p->e[1^(int)gate.control.type];
-            } else if (gate.target == y.p->v) {
-                // TODO merge code of positive and negative controls
-                // TODO distinguish X and Y gates... if necessary
+            } else if (gate.target == y.p->v) {  ///  this qubit is the target, and the control qubit is below (has lower index); this case is slightly trickier
                 if (gate.gateType == cliffpauli_x || gate.gateType == cliffpauli_y) {
-                    if (gate.control.type == Control::Type::pos) {
-                        //Log::log << "[CPauli, n=" << (int) x.p->v << "] positive upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
-                        //CVec y0vec = getVector(y.p->e[0]);
-                        //CVec y1vec = getVector(y.p->e[1]);
-                        //Log::log << "[CPauli] y0vec = " << outputCVec(y0vec) << " y1vec = " << outputCVec(y1vec) << "\n";
-                        auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
-                        auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
-                        std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
-                        std::pair<Qubit, bool> project1Gate = {gate.control.qubit, 1};
-                        cn.complexCache.health();
-                        auto e00 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
-                        cn.complexCache.health();
-                        //cn.complexTable.checkConstantsIntegrity();
-                        auto e01 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
-                        //cn.complexTable.checkConstantsIntegrity();
-                        auto e10 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
-                        //cn.complexTable.checkConstantsIntegrity();
-                        auto e11 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
-                        //cn.complexTable.checkConstantsIntegrity();
-                        //cn.complexCache.health();
-                        e00.w = cn.getCachedIfNonzero(e00.w);
-                        e01.w = cn.getCachedIfNonzero(e01.w);
-                        e10.w = cn.getCachedIfNonzero(e10.w);
-                        e11.w = cn.getCachedIfNonzero(e11.w);
-                        //CVec e00vec = getVector(e00);
-                        //CVec e01vec = getVector(e01);
-                        //CVec e10vec = getVector(e10);
-                        //CVec e11vec = getVector(e11);
-                        //Log::log << "[CPauli] e00 = " << outputCVec(e00vec) << " e01 = " << outputCVec(e01vec) << " e10 = " << outputCVec(e10vec) << " e11 = " << outputCVec(e11vec) << "\n";
-                        //Log::log << "[CPauli] one = " << Complex::one << "\n";
-                        if (gate.gateType == cliffpauli_y) {
-                            if (!e01.w.exactlyZero())
-                                e01.w.multiplyByi();
-                            if (!e11.w.exactlyZero())
-                                e11.w.multiplyByMinusi();
-                        }
-                        e[0] = add2(e00, e11);
-                        //cn.complexTable.checkConstantsIntegrity();
-                        e[1] = add2(e01, e10);
-                        //cn.complexTable.checkConstantsIntegrity();
-                        //CVec e0vec = getVector(e[0]);
-                        //CVec e1vec = getVector(e[1]);
-                        //Log::log << "[CPauli] e0 = " << outputCVec(e0vec) << " e1 = " << outputCVec(e1vec) << "\n";
-                    } else {
-                        Log::log << "[CPauli, n=" << (int) x.p->v << "] negative upward C" << (char) gate.gateType << ", control = " << (int) gate.control.qubit << " target = " << (int) gate.target << "\n";
-                        auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
-                        auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
-                        std::pair<Qubit, bool> project0Gate = {gate.control.qubit, 0}; // TODO refactor to CliffordGate
-                        std::pair<Qubit, bool> project1Gate = {gate.control.qubit, 1};
-                        auto e00 = applyProjection2(project0, project1, y.p->e[0], project1Gate);
-                        auto e01 = applyProjection2(project0, project1, y.p->e[0], project0Gate);
-                        auto e10 = applyProjection2(project0, project1, y.p->e[1], project1Gate);
-                        auto e11 = applyProjection2(project0, project1, y.p->e[1], project0Gate);
-                        e00.w = cn.getCachedIfNonzero(e00.w);
-                        e01.w = cn.getCachedIfNonzero(e01.w);
-                        e10.w = cn.getCachedIfNonzero(e10.w);
-                        e11.w = cn.getCachedIfNonzero(e11.w);
-                        e[0] = add2(e00, e11);
-                        e[1] = add2(e01, e10);
+                    vEdge f[2][2];
+                    auto project0 = makeGateDD(project0mat, y.p->v-1, gate.control.qubit);
+                    auto project1 = makeGateDD(project1mat, y.p->v-1, gate.control.qubit);
+                    std::pair<Qubit, bool> projectGate[2] = {{gate.control.qubit, gate.control.type == Control::Type::pos ? 0 : 1},
+                                                             {gate.control.qubit, gate.control.type == Control::Type::pos ? 1 : 0}};
+                    for (int i=0; i<2; i++) for (int j=0; j<2; j++) {
+                        f[i][j] = applyProjection2(project0, project1, y.p->e[i], projectGate[j]);
+                        f[i][j].w = cn.getCachedIfNonzero(f[i][j].w);
                     }
+                    if (gate.gateType == cliffpauli_y) {
+                        if (!f[0][1].w.exactlyZero())
+                            f[0][1].w.multiplyByi();
+                        if (!f[1][1].w.exactlyZero())
+                            f[1][1].w.multiplyByMinusi();
+                    }
+                    e[0] = add2(f[0][0], f[1][1]);
+                    e[1] = add2(f[0][1], f[1][0]);
                 }
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
-                Log::log << "[CPauli] apply identity to qubit " << (int) y.p->v << '\n';
                 e[0] = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
                 e[1] = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
             }
