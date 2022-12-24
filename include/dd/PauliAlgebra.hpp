@@ -1372,13 +1372,12 @@ namespace dd {
     inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const CliffordGate gate) {
         pauli_op pControl = (pauli_op) lim.getQubit(gate.control.qubit);
         pauli_op pTarget  = (pauli_op) lim.getQubit(gate.target);
-        pauli_op T = (pauli_op) gate.gateType;
-        if (!LimEntry<>::commutesWith(pTarget, T)) {
+        if (pControl == pauli_x || pControl == pauli_y) {
+            lim.leftMultiplyBy(gate.target, (pauli_op)gate.gateType);
+        }
+        if (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) {
             // right-multiply pControl by Z
             lim.multiplyByZ(gate.control.qubit);
-            if (pControl == pauli_x || pControl == pauli_y) {
-                lim.multiplyPhaseBy(phase_minus_one);
-            }
         }
     }
 

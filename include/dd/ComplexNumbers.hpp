@@ -249,6 +249,15 @@ namespace dd {
         	return getCached(CTEntry::val(c.r), CTEntry::val(c.i));
         }
 
+        inline Complex getCachedIfNonzero(const Complex& c) {
+            if (!c.exactlyZero()) {
+                Complex result = getCached(c);
+                return result;
+                //return getCached(c);
+            }
+            else return Complex::zero;
+        }
+
         void returnToCache(Complex& c) {
             complexCache.returnToCache(c);
         }
