@@ -2781,7 +2781,8 @@ namespace dd {
             //Log::log << "[Phase] phase gate is " << (int) phaseTarget << '\n';
             if (phaseTarget != (Qubit) -1) {
                 success = true;
-                return applyPhaseGate2(x, y, phaseTarget, false);
+                const Edge<mNode> xConjugate = conjugateTranspose(x);
+                return applyPhaseGate2(x, xConjugate, y, phaseTarget, false);
             }
             return y;
         }
@@ -2914,25 +2915,23 @@ namespace dd {
         }
 
         unsigned int applyPhaseCallCounter = 0;
-        // TODO refactor so that the conjugate transpose is passed as parameter
         /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
         /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-        vEdge applyPhaseGate2(const Edge<mNode>& x, const vEdge y, Qubit phaseTarget, bool inverse) {
+        vEdge applyPhaseGate2(const Edge<mNode>& x, const Edge<mNode> xConjugate, const vEdge y, Qubit phaseTarget, bool inverse) {
             applyPhaseCallCounter++;
             if (y.isTerminal()) return y;
             //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
             LimEntry<> pushedLim(y.l);
             conjugateWithPhaseGate(pushedLim, phaseTarget, inverse);
             bool inverted = pushedLim.getQubit(phaseTarget) == pauli_x || pushedLim.getQubit(phaseTarget) == pauli_y;
-            Edge<mNode> xApply = x;
             if (inverted) {
-                xApply = conjugateTranspose(x);
-                inverse = !inverse;
+                inverse = !inverse;  //inverse ^= pushedLim... // alternative, slightly more succinct
             }
+            Edge<mNode> xApply = inverse? xConjugate : x; // 'xApply' is the gate that we will now apply to y
             auto cachedResult = matrixVectorMultiplication.lookup({xApply.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 //Log::log << "[Phase] cache hit!\n";
-                return processCachedEdge(x, y, pushedLim, cachedResult);
+                return processCachedEdge(xApply, y, pushedLim, cachedResult);
             }
             /// cache miss; now simply compute the result
             vEdge e0, e1;
@@ -2949,8 +2948,8 @@ namespace dd {
                 //Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
             } else { /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 //Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
-                e0 = applyPhaseGate2(xApply.p->e[0], y.p->e[0], phaseTarget, inverse);
-                e1 = applyPhaseGate2(xApply.p->e[0], y.p->e[1], phaseTarget, inverse);
+                e0 = applyPhaseGate2(x.p->e[0], xConjugate.p->e[0], y.p->e[0], phaseTarget, inverse);
+                e1 = applyPhaseGate2(x.p->e[0], xConjugate.p->e[0], y.p->e[1], phaseTarget, inverse);
             }
             e0.w = cn.getCachedIfNonzero(e0.w);
             e1.w = cn.getCachedIfNonzero(e1.w);
@@ -2966,7 +2965,7 @@ namespace dd {
             if (y.isTerminal()) return y;
             LimEntry<> pushedLim(y.l);
             conjugateWithControlledPauliGate(pushedLim, gate);
-            auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, y.w, nullptr}, false);
+            auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 //Log::log << "[CPauli] cache hit!\n";
                 return processCachedEdge(x, y, pushedLim, cachedResult);
@@ -3024,16 +3023,11 @@ namespace dd {
             applyProjectionCallCounter++;
             //Log::log << "[Apply projection, n=" << (int)y.p->v << "] Start." << '\n';
             if (y.isTerminal()) return y;
-            CVec yvec = getVector(y);
             std::pair<Qubit, bool> gateApplied = gate;
             LimEntry<> pushedLim(y.l);
             Qubit targetQubit  = gateApplied.first;
-            if (pushedLim.getQubit(targetQubit) == pauli_x || pushedLim.getQubit(targetQubit) == pauli_y) {
-                gateApplied.second ^= 1;
-            }
+            gateApplied.second ^= pushedLim.getQubit(targetQubit) == pauli_x || pushedLim.getQubit(targetQubit) == pauli_y;
             bool projection = gateApplied.second;
-            //Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] y = " << outputCVec(yvec) << "\n";
-            //Log::log << "[Apply projection onto " << projection << ", n=" << (int) y.p->v << "] pushedLim = " << LimEntry<>::to_string(&pushedLim, y.p->v) << "\n";
             Edge<mNode> projections[2] = {proj0, proj1};
             auto cachedResult = matrixVectorMultiplication.lookup({projections[projection].p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, false);
             if (cachedResult.p != nullptr) {
@@ -3055,10 +3049,10 @@ namespace dd {
             } else {
                 /// Recurse by applying identity to this qubit, then apply projection to the remaining qubits
                 //Log::log << "[Apply projection] apply identity to qubit " << (int) y.p->v << '\n';
-                e[0] = applyProjection2(proj0.p->e[0], proj1.p->e[0], y.p->e[0], gateApplied);
-                e[1] = applyProjection2(proj0.p->e[0], proj1.p->e[0], y.p->e[1], gateApplied);
-                e[0].w = cn.getCachedIfNonzero(e[0].w);
-                e[1].w = cn.getCachedIfNonzero(e[1].w);
+                for (int i=0; i<2; i++) {
+                    e[i] = applyProjection2(proj0.p->e[0], proj1.p->e[0], y.p->e[i], gateApplied);
+                    e[i].w = cn.getCachedIfNonzero(e[i].w);
+                }
             }
             return makeNodeAndInsertCache(projections[projection], y, pushedLim, e[0], e[1]);
         }
