@@ -69,7 +69,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     //        simulateCircuitLIMDDGateByGate(circuit);
     //        return;
     auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
-    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, true, dd::cliffordSpecialCaching);
+    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, true, dd::CachingStrategy::localityAwareCachingDirtyTrick);
 
     auto              qmddState  = qmdd->makeZeroState(circuit.n);
     auto              limddState = limdd->makeZeroState(circuit.n);
@@ -87,11 +87,12 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         std::cout << "[simulate circuit] Applying gate " << gate + 1 << " to LIMDD.\n";
         limddState = limdd->applyGate(circuit.gates[gate], limddState);
 
-//        resultQMDD  = qmdd->getVector(qmddState);
-//        resultLIMDD = limdd->getVector(limddState);
-//        std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
-//        std::cout << "[simulate circuit] QMDD  result: " << dd::outputCVec(resultQMDD) << '\n';
-//        std::cout << "[simulate circuit] LIMDD result: " << dd::outputCVec(resultLIMDD) << '\n';
+        resultQMDD  = qmdd->getVector(qmddState);
+        resultLIMDD = limdd->getVector(limddState);
+
+        //std::cout << "[simulate circuit] Intermediate states after " << gate + 1 << " gates.\n";
+        //std::cout << "[simulate circuit] QMDD  result: " << dd::outputCVec(resultQMDD) << '\n';
+        //std::cout << "[simulate circuit] LIMDD result: " << dd::outputCVec(resultLIMDD) << '\n';
 
         std::cout << "[simulate circuit] QMDD mul statistics: ";
         qmdd->matrixVectorMultiplication.printStatistics();
@@ -132,7 +133,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
             }
         }
         if (circuitIsCliffordSoFar) {
-            ASSERT_TRUE(limdd->multiply2CallCounter == 0);
+            //ASSERT_TRUE(limdd->multiply2CallCounter == 0); // This check is disabled in order to test the locality-aware caching strategy
         }
         std::cout << "[simulate circuit] QMDD  mul statistics: ";
         qmdd->matrixVectorMultiplication.printStatistics();

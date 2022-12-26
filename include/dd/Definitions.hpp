@@ -128,8 +128,10 @@ namespace dd {
     };
 
     enum CachingStrategy {
-        QMDDCachingStrategy,
-        cliffordSpecialCaching
+        QMDDCachingStrategy = 0,
+        cliffordSpecialCaching = 1,
+        localityAwareCachingDirtyTrick = 2,
+        localityAwareCachingClean = 4
     };
 
 } // namespace dd

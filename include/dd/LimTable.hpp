@@ -238,6 +238,10 @@ namespace dd {
             return os.str();
         }
 
+        std::string to_string(Qubit nQubits) const {
+            return to_string(this, nQubits);
+        }
+
         bool operator==(const LimEntry<NUM_QUBITS>& other) const {
             return paulis == other.paulis;
         }
@@ -567,7 +571,7 @@ namespace dd {
             setPhase(phase_t::phase_one);
         }
 
-        void getInactiveQubits(const std::vector<Qubit>& activeQubits) {
+        void selectInactivePart(const std::vector<Qubit>& activeQubits) {
             if (activeQubits.size() == 0) {
                 return;
             }

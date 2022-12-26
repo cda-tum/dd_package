@@ -1305,7 +1305,7 @@ namespace dd {
 
     template<class Node>
     inline LimEntry<> getRootLabel(const Node* v, const LimEntry<>* lim) {
-        throw std::runtime_error("Not implemented!\n");
+        throw std::runtime_error("ERROR function 'getRootLabel' is not implemented!\n");
     }
 
     inline LimEntry<> getRootLabel(const vNode* v, const LimEntry<>* lim) {
