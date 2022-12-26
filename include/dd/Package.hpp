@@ -2243,6 +2243,9 @@ namespace dd {
             }
             unsetVisitationFlags(mat.p->e[0]);
             unsetVisitationFlags(mat.p->e[1]);
+            unsetVisitationFlags(mat.p->e[2]);
+            unsetVisitationFlags(mat.p->e[3]);
+
             mat.p->flags = (mat.p->flags & (~1));
         }
 
