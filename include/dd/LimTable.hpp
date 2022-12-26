@@ -578,24 +578,24 @@ namespace dd {
         }
 
         // Assume activeQubits is sorted ascending
-        void getActiveQubits(const std::vector<Qubit>& activeQubits) {
+        void selectActivePart(const std::vector<Qubit>& activeQubits) {
             if (activeQubits.size() == 0) {
                 setToIdentityOperator();
                 return;
             }
             // set the operators before the first active qubits, to identity
             for (Qubit i=0; i<activeQubits[0]; i++) {
-                setOperator((Qubit)i, pauli_id);
+                setOperator(i, pauli_id);
             }
             // set the operators in between the active qubits
             for (unsigned int j=0; j+1<activeQubits.size(); j++) {
-                for (Qubit i=activeQubits[i]+1; i<activeQubits[i+1]; i++) {
-                    setOperator((Qubit)i, pauli_id);
+                for (Qubit i=activeQubits[j]+1; i<activeQubits[j+1]; i++) {
+                    setOperator(i, pauli_id);
                 }
             }
             // set the operators after the last active qubit
             for (Qubit i=activeQubits[activeQubits.size()-1]+1; i< (Qubit) NUM_QUBITS; i++) {
-                setOperator((Qubit)i, pauli_id);
+                setOperator(i, pauli_id);
             }
         }
 
