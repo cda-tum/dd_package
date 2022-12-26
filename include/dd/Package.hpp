@@ -2382,6 +2382,37 @@ namespace dd {
             return gate;
         }
 
+        // returns a vector containing the indices of all qubits on which 'mat' does not act as the identity
+        std::vector<Qubit> getActiveQubits(Edge<mNode> mat) {
+            std::set<Qubit> activeQubits;
+            getActiveQubitsTraverseDD(mat, activeQubits);
+            unsetVisitationFlags(mat);
+            std::vector<Qubit> activeQubitsVec;
+            // add all qubits to the vector
+            for (auto it = activeQubits.begin(); it != activeQubits.end(); it ++) {
+                activeQubitsVec.push_back(*it);
+            }
+            std::sort(activeQubitsVec.begin(), activeQubitsVec.end());
+            return activeQubitsVec;
+        }
+
+        void getActiveQubitsTraverseDD(Edge<mNode> mat, std::set<Qubit>& active) {
+            if (mNode::isTerminal(mat.p)) return;
+            if (mat.p->flags & 1) return; // node has been previously visited
+            if (mat.w.exactlyZero()) return; // matrix acts trivially on all qubits
+            if (mat.p->isIdentity()) return; // matrix acts trivially on all qubits
+            //Log::log << "[getActQubits, n=" << (int) mat.p->v << "] weights = " << mat.p->e[0].w << ", " << mat.p->e[1].w << ", " << mat.p->e[2].w << ", " << mat.p->e[3].w << "\n";
+            if (!topQubitIsIdentity(mat)) {
+                //Log::log << "[getActQubits, n=" << (int) mat.p->v << "] found non-identity.\n";
+                active.insert(mat.p->v);
+                // output set
+            }
+            for (int i=0; i<4; i++) {
+                getActiveQubitsTraverseDD(mat.p->e[i], active);
+            }
+            mat.p->flags |= 1; // mark node as visited
+        }
+
     public:
         unsigned int multiply2CallCounter = 0;
     private:
@@ -2398,6 +2429,7 @@ namespace dd {
             //            std::cout << "[multiply2] " << callCount << std::endl;
 
             multiply2CallCounter++;
+            const unsigned int callIndex = multiply2CallCounter;
             using LEdge             = Edge<LeftOperandNode>;
             using REdge             = Edge<RightOperandNode>;
             using ResultEdge        = Edge<RightOperandNode>;
@@ -2408,6 +2440,9 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
+            CVec yvec2 = getVector(y);
+            if (y.p->v >= 0)
+                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] Start. matrix " << (x.p->isIdentity() ? " is identity " : " is not identity ") << " y=" << y << " with vector " << outputCVec(yvec2) << "\n";
             auto       yCopy   = y;
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
@@ -2420,8 +2455,7 @@ namespace dd {
             phase_t trueLimOldPhase = trueLim.getPhase();
             trueLim.setPhase(phase_t::phase_one);
 
-            //            [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
-            [[maybe_unused]] auto op = trueLim.getPauliForQubit(y.p->v);
+            [[maybe_unused]] pauli_op op;
 
             // TODO This code, which handles the special case when x is the identity operator, does not work.
 //            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
@@ -2465,25 +2499,64 @@ namespace dd {
                 }
             }
 
+            // TODO this puts 'trueLimTable' in the table, which may not be desirable, since this LIM is not referenced by any node.
+            //   Therefore, its refcount is not decremented at the end of the method, and it henceforth lives on as a 'zombie' in the table
+            //   (if I understand correctly) -LV
             const auto trueLimTable = lf.limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
 
-            auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
-            //            if (r.p != nullptr && false) { // activate for debugging caching only
-            if (r.p != nullptr) {
-                if (r.w.approximatelyZero()) {
-                    return ResultEdge::zero;
-                } else {
-                    auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
-                    ComplexNumbers::mul(e.w, e.w, x.w);
-                    ComplexNumbers::mul(e.w, e.w, y.w);
-                    e.w.multiplyByPhase(trueLimOldPhase);
-                    if (e.w.approximatelyZero()) {
-                        cn.returnToCache(e.w);
+            LimEntry<> limActive(trueLimTable);
+            LimEntry<> limInactive(trueLimTable);
+            if (cachingStrategy == CachingStrategy::activeQubitsDirtyTrick) { // TODO use cachingStrategy & dirtyTrick != 0
+                std::vector<Qubit> activeQubits = getActiveQubits(x);
+                limActive.getActiveQubits(activeQubits);
+                limInactive.getInactiveQubits(activeQubits);
+                LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
+                Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache y=" << vEdge{y.p, Complex::one, limActiveTable} << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
+                // TODO use limActive = getrootLabel(limActive, y.p)
+                auto cachedEdge = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, false);
+                //if (cachedEdge.p != nullptr) {
+                //    auto result = ResultEdge{cachedEdge.p, cn.getCached(cachedEdge.w), cachedEdge.l};
+                //    Log::log << "[multiply, n=" << (int) y.p->v << "] cache hit! Asked for y=" << y << "  got result = " << result << "\n";
+                //    ComplexNumbers::mul(result.w, result.w, x.w);
+                //    ComplexNumbers::mul(result.w, result.w, y.w);
+                //    if (result.w.approximatelyZero()) {
+                //        cn.returnToCache(result.w);
+                //        return ResultEdge::zero;
+                //    }
+                //    result.w.multiplyByPhase(trueLimOldPhase);
+                //    LimEntry<> resultLim(result.l);
+                //    resultLim.leftMultiplyBy(limInactive);
+                //    result.l = lf.limTable.lookup(resultLim);
+                //    return result;
+                //}
+                yCopy.l = limActiveTable;
+                op = yCopy.l->getPauliForQubit(yCopy.p->v);
+                Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
+            }
+            else if (cachingStrategy == CachingStrategy::activeQubitsCleanTrick) { // TODO
+                std::cout << "[multiply2] ERROR clean caching not yet implemented.\n";
+                throw std::runtime_error("[multiply2] ERROR clean caching not yet implemented.\n");
+            }
+            else {
+                op = trueLim.getPauliForQubit(yCopy.p->v);
+                auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
+                //            if (r.p != nullptr && false) { // activate for debugging caching only
+                if (r.p != nullptr) {
+                    if (r.w.approximatelyZero()) {
                         return ResultEdge::zero;
+                    } else {
+                        auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
+                        ComplexNumbers::mul(e.w, e.w, x.w);
+                        ComplexNumbers::mul(e.w, e.w, y.w);
+                        e.w.multiplyByPhase(trueLimOldPhase);
+                        if (e.w.approximatelyZero()) {
+                            cn.returnToCache(e.w);
+                            return ResultEdge::zero;
+                        }
+                        return e;
                     }
-                    return e;
                 }
             }
 
@@ -2533,7 +2606,6 @@ namespace dd {
             constexpr std::size_t     ROWS = RADIX;
             constexpr std::size_t     COLS = N == NEDGE ? RADIX : 1U;
             std::array<ResultEdge, N> edge{};
-            op = trueLim.getPauliForQubit(y.p->v);
 
             CVec vectorArg0, vectorArg1, vectorResult, vectorExpected;
             trueLim.setOperator(y.p->v, pauli_id);
@@ -2592,14 +2664,10 @@ namespace dd {
                             REdge      e2{};
                             LimEntry<> lim2;
                             if (!y.isTerminal() && y.p->v == var) {
-                                //e2 = y.p->e[j + COLS * k];
-                                //                                std::tie(e2, lim2) = follow(yCopy, j + COLS * k, lim);
                                 e2 = follow2(yCopy, j + COLS * k, op);
                             } else {
                                 e2 = yCopy;
                             }
-                            //                            makePrintIdent(var);
-                            //                            std::cout << "(" << tempCallCounter << "/" << std::to_string(var) << ") Calculating: edge[" << std::to_string(idx) << "]" << std::endl;
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim);
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
@@ -2639,14 +2707,13 @@ namespace dd {
 
                 vece0 = getVector(edge[0], var - 1);
                 vece1 = getVector(edge[1], var - 1);
-
 #endif
                 e = makeDDNode(var, edge, true, nullptr);
 #if !NDEBUG
 
                 vece = getVector(e, var);
                 if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
-                    Log::log << "[multiply2] ERROR sanity check failed after makeDDNode.\n"
+                    Log::log << "[multiply2, c=" << callIndex << " n="<< (int) y.p->v << "] ERROR sanity check failed after makeDDNode.\n"
                              << "[multiply2] edge[0]    = " << edge[0] << '\n'
                              << "[multiply2] edge[1]    = " << edge[1] << '\n'
                              << "[multiply2] e (result) = " << e << '\n'
@@ -2670,7 +2737,21 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l});
+            if (cachingStrategy == CachingStrategy::activeQubitsDirtyTrick) {
+                CVec evec = getVector(e);
+                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation before correcting LIM: " << e << " with vector " << outputCVec(evec) << "  op=" << (char) op << "\n";
+                LimEntry<>* limActiveTable = lf.limTable.lookup(limActive);
+                computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
+                //Log::log << "[multiply2, n=" << (int)x.p->v << "] inserted edge into cache: y=" << vEdge{y.p, Complex::one, limActiveTable} << " e=" << vEdge{e.p, e.w, e.l} << "\n";
+                LimEntry<> elim(e.l);
+                elim.leftMultiplyBy(limInactive);
+                movePhaseIntoWeight(elim, e.w);
+                e.l = lf.limTable.lookup(elim);
+                evec = getVector(e);
+                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation (before multiplying) = " << e << " with vector " << outputCVec(evec) << "\n";
+            } else {
+                computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
+            }
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
 
@@ -2682,25 +2763,22 @@ namespace dd {
                     ComplexNumbers::mul(e.w, e.w, y.w);
                 }
                 e.w.multiplyByPhase(trueLimOldPhase);
-                //                CVec vectorE = getVector(e);
-                //                std::cout << "(" << std::to_string(tempCallCounter) << ")";
-                //                printCVec(vectorE);
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
                     return ResultEdge::zero;
                 }
             }
 
-            // Last step: sanity check to see whether the resulting vector is what was expected
 #if !NDEBUG
+            // Last step: sanity check to see whether the resulting vector is what was expected
             CVec vecResult;
             vecResult = getVector(e);
             if (!vectorsApproximatelyEqual(vecResult, vecExpected)) {
-                Log::log << "[multiply2] ERROR.\n"
+                Log::log << "[multiply2, c=" << callIndex << "] ERROR. Computed DD result vector is different from expected result vector.\n"
                          << "[multiply2] state: " << y << "\n"
-                         << "[multiply2] amplitude vector: ";
+                         << "[multiply2] input amplitude vector: ";
                 printCVec(vec_y);
-                Log::log << "[multiply2] Matrix:\n";
+                Log::log << "\n[multiply2] Matrix:\n";
                 printMatrix(xCopy);
                 Log::log << "\n[multiply2] Expected result: ";
                 printCVec(vecExpected);
@@ -2708,11 +2786,8 @@ namespace dd {
                 printCVec(vecResult);
                 throw std::runtime_error("[multiply2] ERROR  multiply does not return expected result.\n");
             }
-
-#endif
-
             //            export2Dot(e, "edgeResult.dot", true, true, false, false, true);
-
+#endif
             assert(e.p->v > 0 && e.p->e[0].w.approximatelyZero() && !e.p->e[0].isZeroTerminal());
             assert(e.p->v > 0 && e.p->e[1].w.approximatelyZero() && !e.p->e[1].isZeroTerminal());
 
