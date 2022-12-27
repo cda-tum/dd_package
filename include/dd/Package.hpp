@@ -125,6 +125,7 @@ namespace dd {
             cn(ComplexNumbers()), nqubits(nq), group(_group), cachingStrategy(_cachingStrategy) {
             resize(nq);
             Log::log.verbose = outputToLog;
+            if (group == QMDD_group) cachingStrategy = QMDDCachingStrategy;
         };
         ~Package()                      = default;
         Package(const Package& package) = delete;
@@ -2519,6 +2520,7 @@ namespace dd {
                     std::vector<Qubit> activeQubits = getActiveQubits(x);
                     //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
                     limActive.selectActivePart(activeQubits);
+                    limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
                     limInactive.selectInactivePart(activeQubits);
                     LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
                     Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";

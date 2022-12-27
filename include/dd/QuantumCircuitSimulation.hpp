@@ -78,13 +78,13 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     std::cout << "[race circuit] Simulating old LIMDD\n";
     // simulate old LIMDD
     clock_t limdd_old_begin = clock();
-    limddOld->simulateCircuit(circuit);
+    //limddOld->simulateCircuit(circuit);
     clock_t limdd_old_end = clock();
 
     // simulate clifford LIMDD
     std::cout << "[race circuit] Simulating LIMDD with Clifford-specialized caching\n";
     clock_t limdd_clifford_begin = clock();
-    limddClifford->simulateCircuit(circuit);
+    //limddClifford->simulateCircuit(circuit);
     clock_t limdd_clifford_end = clock();
 
     // simulate locality-aware LIMDD
@@ -96,7 +96,7 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     std::cout << "[race circuit] Simulating QMDD.\n";
     // simulate QMDD
     clock_t qmdd_begin = clock();
-    qmdd->simulateCircuit(circuit);
+    //qmdd->simulateCircuit(circuit);
     clock_t qmdd_end = clock();
 
     std::cout   <<   "QMDD time:                        " << (qmdd_end - qmdd_begin)
@@ -116,17 +116,23 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
 
     std::cout << "QMDD  --  call counter statistics:\n";
     qmdd->printCallCounterStatistics();
-    std::cout << "nodes       " << qmdd->vUniqueTable.getActiveNodeCount() << "\n";
+    std::cout << "nodes       " << qmdd->vUniqueTable.getNodeCount() << "\n";
     std::cout << "LIMDD old                     -- call counter statistics:\n";
     limddOld->printCallCounterStatistics();
-    std::cout << "nodes       " << limddOld->vUniqueTable.getActiveNodeCount() << "\n";
+    std::cout << "nodes       " << limddOld->vUniqueTable.getNodeCount() << "\n";
     std::cout << "LIMDD Clifford-specialized    --  call counter statistics:\n";
     limddClifford->printCallCounterStatistics();
-    std::cout << "nodes:      " << limddClifford->vUniqueTable.getActiveNodeCount() << "\n";
+    std::cout << "nodes:      " << limddClifford->vUniqueTable.getNodeCount() << "\n";
     std::cout << "LIMDD locality-aware caching  --  call counter statistics:\n";
     limddLocality->printCallCounterStatistics();
-    std::cout << "nodes:      " << limddLocality->vUniqueTable.getActiveNodeCount() << "\n";
+    std::cout << "nodes:      " << limddLocality->vUniqueTable.getNodeCount() << "\n";
 
+    std::ofstream statsfile;
+    statsfile.open("DDstatsfile.csv", std::ios_base::app);
+    //format: version name, time taken,nodecount
+    statsfile << "limdd-locality-1.0," << (limdd_locality_end - limdd_locality_begin) << "\n";
+    //statsfile << "qmdd," << (limdd_locality_begin - limdd_locality_end) << "\n";
+    statsfile.close();
 }
 
 void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {

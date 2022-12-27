@@ -19,3 +19,5 @@ test/createNode-test-illustrations.drawio
 *.out
 *.synctex.gz
 pics/*
+
+test/generate-circuits/generateCliffordCircuit
