@@ -6,6 +6,7 @@
 #ifndef DDpackage_DATATYPES_HPP
 #define DDpackage_DATATYPES_HPP
 
+// Set to 'false' to activate debugging
 #define NDEBUG true
 
 #include <complex>

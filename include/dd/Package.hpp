@@ -2443,9 +2443,9 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
-            CVec yvec2 = getVector(y);
-            if (y.p->v >= 0)
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] Start. matrix " << (x.p->isIdentity() ? " is identity " : " is not identity ") << " y=" << y << " with vector " << outputCVec(yvec2) << "; lim = " << lim.to_string(y.p->v) << "\n";
+            //CVec yvec2 = getVector(y);
+            //if (y.p->v >= 0)
+            //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] Start. matrix " << (x.p->isIdentity() ? " is identity " : " is not identity ") << " y=" << y << " with vector " << outputCVec(yvec2) << "; lim = " << lim.to_string(y.p->v) << "\n";
             auto       yCopy   = y;
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
@@ -2457,10 +2457,10 @@ namespace dd {
 
             phase_t trueLimOldPhase = trueLim.getPhase();
             trueLim.setPhase(phase_t::phase_one);
-            if (y.p->v >= 0)
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] trueLim = " << trueLim.to_string(y.p->v) << "\n";
+            //if (y.p->v >= 0)
+            //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] trueLim = " << trueLim.to_string(y.p->v) << "\n";
 
-            [[maybe_unused]] pauli_op op;
+            pauli_op op;
 
             // TODO This code, which handles the special case when x is the identity operator, does not work.
 //            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
@@ -2513,56 +2513,59 @@ namespace dd {
 
             LimEntry<> limActive(trueLimTable);
             LimEntry<> limInactive(trueLimTable);
-            if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) { // TODO use cachingStrategy & dirtyTrick != 0
-                std::vector<Qubit> activeQubits = getActiveQubits(x);
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
-                limActive.selectActivePart(activeQubits);
-                limInactive.selectInactivePart(activeQubits);
-                LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
-                // TODO use limActive = getrootLabel(limActive, y.p)
-                auto cachedEdge = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, false);
-                if (cachedEdge.p != nullptr) {
-                    auto result = ResultEdge{cachedEdge.p, cn.getCached(cachedEdge.w), cachedEdge.l};
-                    Log::log << "[multiply, n=" << (int) y.p->v << "] cache hit! Asked for y=" << y << "  got result = " << result << "\n";
-                    ComplexNumbers::mul(result.w, result.w, x.w);
-                    ComplexNumbers::mul(result.w, result.w, y.w);
-                    if (result.w.approximatelyZero()) {
-                        cn.returnToCache(result.w);
-                        return ResultEdge::zero;
-                    }
-                    result.w.multiplyByPhase(trueLimOldPhase);
-                    LimEntry<> resultLim(result.l);
-                    resultLim.leftMultiplyBy(limInactive);
-                    result.l = lf.limTable.lookup(resultLim);
-                    movePhaseIntoWeight(result.l, result.w);
-                    return result;
-                }
-                yCopy.l = limActiveTable;
-                op = yCopy.l->getPauliForQubit(yCopy.p->v);
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << " op = " << (char) op << "\n";
-            }
-            else if (cachingStrategy == CachingStrategy::localityAwareCachingClean) { // TODO
-                std::cout << "[multiply2] ERROR clean caching not yet implemented.\n";
-                throw std::runtime_error("[multiply2] ERROR clean caching not yet implemented.\n");
-            }
-            else {
-                op = trueLim.getPauliForQubit(yCopy.p->v);
-                auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
-                //            if (r.p != nullptr && false) { // activate for debugging caching only
-                if (r.p != nullptr) {
-                    if (r.w.approximatelyZero()) {
-                        return ResultEdge::zero;
-                    } else {
-                        auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
-                        ComplexNumbers::mul(e.w, e.w, x.w);
-                        ComplexNumbers::mul(e.w, e.w, y.w);
-                        e.w.multiplyByPhase(trueLimOldPhase);
-                        if (e.w.approximatelyZero()) {
-                            cn.returnToCache(e.w);
+
+            if constexpr (std::is_same_v<RightOperandNode, vNode>) {
+                if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) { // TODO use cachingStrategy & dirtyTrick != 0
+                    std::vector<Qubit> activeQubits = getActiveQubits(x);
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
+                    limActive.selectActivePart(activeQubits);
+                    limInactive.selectInactivePart(activeQubits);
+                    LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
+                    Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
+                    // TODO use limActive = getrootLabel(limActive, y.p)
+                    auto cachedEdge = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, false);
+                    if (cachedEdge.p != nullptr) {
+                        auto result = ResultEdge{cachedEdge.p, cn.getCached(cachedEdge.w), cachedEdge.l};
+                        Log::log << "[multiply, n=" << (int) y.p->v << "] cache hit! Asked for y=" << y << "  got result = " << result << "\n";
+                        ComplexNumbers::mul(result.w, result.w, x.w);
+                        ComplexNumbers::mul(result.w, result.w, y.w);
+                        if (result.w.approximatelyZero()) {
+                            cn.returnToCache(result.w);
                             return ResultEdge::zero;
                         }
-                        return e;
+                        result.w.multiplyByPhase(trueLimOldPhase);
+                        LimEntry<> resultLim(result.l);
+                        resultLim.leftMultiplyBy(limInactive);
+                        result.l = lf.limTable.lookup(resultLim);
+                        movePhaseIntoWeight(result.l, result.w);
+                        return result;
+                    }
+                    yCopy.l = limActiveTable;
+                    op = yCopy.l->getPauliForQubit(yCopy.p->v);
+                    Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << " op = " << (char) op << "\n";
+                }
+                else if (cachingStrategy == CachingStrategy::localityAwareCachingClean) { // TODO
+                    std::cout << "[multiply2] ERROR clean caching not yet implemented.\n";
+                    throw std::runtime_error("[multiply2] ERROR clean caching not yet implemented.\n");
+                }
+                else {
+                    op = trueLim.getPauliForQubit(yCopy.p->v);
+                    auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
+                    //            if (r.p != nullptr && false) { // activate for debugging caching only
+                    if (r.p != nullptr) {
+                        if (r.w.approximatelyZero()) {
+                            return ResultEdge::zero;
+                        } else {
+                            auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
+                            ComplexNumbers::mul(e.w, e.w, x.w);
+                            ComplexNumbers::mul(e.w, e.w, y.w);
+                            e.w.multiplyByPhase(trueLimOldPhase);
+                            if (e.w.approximatelyZero()) {
+                                cn.returnToCache(e.w);
+                                return ResultEdge::zero;
+                            }
+                            return e;
+                        }
                     }
                 }
             }
@@ -2753,17 +2756,17 @@ namespace dd {
             //            }
 
             if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) {
-                CVec evec = getVector(e);
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation before correcting LIM: " << e << " with vector " << outputCVec(evec) << "  op=" << (char) op << "\n";
+                //CVec evec = getVector(e);
+                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation before correcting LIM: " << e << " with vector " << outputCVec(evec) << "  op=" << (char) op << "\n";
                 LimEntry<>* limActiveTable = lf.limTable.lookup(limActive);
                 computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
-                Log::log << "[multiply2, n=" << (int)x.p->v << "] inserted edge into cache: y=" << vEdge{y.p, Complex::one, limActiveTable} << " e=" << vEdge{e.p, e.w, e.l} << "\n";
+                //Log::log << "[multiply2, n=" << (int)x.p->v << "] inserted edge into cache: y=" << vEdge{y.p, Complex::one, limActiveTable} << " e=" << vEdge{e.p, e.w, e.l} << "\n";
                 LimEntry<> elim(e.l);
                 elim.leftMultiplyBy(limInactive);
                 movePhaseIntoWeight(elim, e.w);
                 e.l = lf.limTable.lookup(elim);
-                evec = getVector(e);
-                Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation (before multiplying) = " << e << " with vector " << outputCVec(evec) << "\n";
+                //evec = getVector(e);
+                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation (before multiplying) = " << e << " with vector " << outputCVec(evec) << "\n";
             } else {
                 computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
             }
@@ -4092,7 +4095,9 @@ namespace dd {
             return getVector(edge);
         }
 
+        long getVectorCallCounter = 0;
         void getVector(const vEdge& e, const Complex& amp, std::size_t i, CVec& vec, LimEntry<> lim = {}) {
+            getVectorCallCounter++;
             // calculate new accumulated amplitude
             auto c = cn.mulCached(e.w, amp);
             //            Log::log << "[getVector] i=" << i << " qubit=" << (int)(e.p->v) << " e.w=" << e.w << " amp=" << amp << " c=" << c << " lim = " << LimEntry<>::to_string(&lim, e.p->v) << '\n';

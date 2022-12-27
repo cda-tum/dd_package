@@ -1304,7 +1304,7 @@ namespace dd {
     //    make sure the left and right-handed multiplications go well
 
     template<class Node>
-    inline LimEntry<> getRootLabel(const Node* v, const LimEntry<>* lim) {
+    inline LimEntry<> getRootLabel([[maybe_unused]]const Node* v, [[maybe_unused]] const LimEntry<>* lim) {
         throw std::runtime_error("ERROR function 'getRootLabel' is not implemented!\n");
     }
 
