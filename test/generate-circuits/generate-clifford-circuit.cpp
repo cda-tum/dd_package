@@ -5,6 +5,8 @@ using namespace std;
 #include <ctime>
 #include <chrono>
 
+unsigned int gateSetSize = 7;
+
 string getGateName(unsigned int gate) {
 	switch(gate) {
 		case 0: return "Xmat";
@@ -12,6 +14,8 @@ string getGateName(unsigned int gate) {
 		case 2: return "Zmat";
 		case 3: return "Smat";
 		case 4: return "Hmat";
+        case 5: return "Tmat";
+        case 6: return "Tdagmat";
 		default: return "??";
 	}
 }
@@ -25,53 +29,75 @@ long millisecondsSinceEpoch() {
 
 int main(int nargs, char** args) {
 //	cout << "Hello, generation!\n";
-	unsigned int nQubits, nGates, testId, gate, control, target;
+	unsigned int nQubits, nGates, testId, gate, control, control2, control1polarity, control2polarity, target, nGatesMade;
+    bool cliffordOnly;
 	if (nargs < 4) {
-		cout << "usage: " << args[0] << " nQubits nGates testId\n"
-		     << "This generates a Quantum circuits consisting of 'nQubits' qubits and 'nGates' Clifford gates.\n";
+		cout << "usage: " << args[0] << " nQubits nGates testId [0/1 clifford-only]\n"
+		     << "This generates a Quantum circuits consisting of 'nQubits' qubits and 'nGates' Clifford gates, or general gates if clifford-only=0.\n";
 		return -1;
 	}
 	srand(millisecondsSinceEpoch());
-	nQubits = atoi(args[1]);
-	nGates  = atoi(args[2]);
-	testId  = atoi(args[3]);
-	cout << "// Randomly generated circuit on " << nQubits << " qubis, containing " << nGates << " Clifford gates.\n"
+    nQubits = atoi(args[1]);
+    nGates  = atoi(args[2]);
+    testId  = atoi(args[3]);
+    cliffordOnly = (nargs >= 5 && atoi(args[4]) == 1);
+    cout << "// Randomly generated circuit on " << nQubits << " qubis, containing " << nGates << " gates.\n"
 		 << "TEST(LimTest, generatedCircuit_" << testId << ") {\n"
 		 << "    dd::QuantumCircuit circuit(" << nQubits << ");\n\n";
-	for (unsigned int gateId=0; gateId<nGates; gateId++) {
-		if (rand() % 2 == 0) {
-			// do a non-controlled gate
-			gate = rand() % 5;
-			target = rand() % nQubits;
-			cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << target << ");\n";
-		}
-		else {
-			// do a controlled gate
-			gate = rand() % 3;
-			control = rand() % nQubits;
-			do {
-				target = rand() % nQubits;
-			} while (target == control);
-			cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_pc, " << target << ");\n";
-		}
+    // Step 1: apply a Hadamard gate to each qubit, with 50% probability
+    for (unsigned int i=0; i<nQubits && nGatesMade < nGates; i++) {
+        if (rand() % 2) {
+            // apply a Hadamard to qubit i
+            cout << "    circuit.addGate(dd::Hmat, " << i << ");\n";
+            nGatesMade++;
+        }
+    }
+    for (unsigned int gateId=nGatesMade; gateId<nGates; gateId++) {
+        if (cliffordOnly) {
+            if (rand() % 2 == 0) {
+                // do a non-controlled gate
+                gate = rand() % 5;
+                target = rand() % nQubits;
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << target << ");\n";
+            }
+            else {
+                // do a controlled gate
+                gate = rand() % 3;
+                control = rand() % nQubits;
+                do {
+                    target = rand() % nQubits;
+                } while (target == control);
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_pc, " << target << ");\n";
+            }
+        } else {
+            gate = rand() % gateSetSize;
+            target = rand() % nQubits;
+            if (rand() % 2 == 0) {
+                // add a non-controlled gate
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << target << ");\n";
+            } else if (rand() % 2 == 0) {
+                // add a controlled gate
+                do {
+                    control = rand() % nQubits;
+                } while (control == target);
+                control1polarity = rand() % 2;
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_" << (control1polarity ?  'p' : 'n') << "c, " << target << ");\n";
+            } else {
+                // add a controlled-controlled gate
+                do {
+                    control = rand() % nQubits;
+                } while (control == target);
+                do {
+                    control2 = rand() % nQubits;
+                } while (control2 == target || control2 == control);
+                control1polarity = rand() % 2;
+                control2polarity = rand() % 2;
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", "
+                     << control << "_" << (control1polarity ?  'p' : 'n') << "c, "
+                     << control2 << "_" << (control2polarity ? 'p' : 'n') << "c, " << target << ");\n";
+            }
+        }
 	}
-	cout << "\n    simulateCircuitLIMDDGateByGate(circuit);\n"
+	cout << "\n    simulateCircuitQMDDvsLIMDDGateByGate(circuit);\n"
  	 	 << "}\n\n";
 }
-
-
-
-//TEST(LimTest, simpleCircuit107) {
-//	dd::QuantumCircuit c(5);
-//	c.addGate(dd::Hmat, 0);
-//	c.addGate(dd::Hmat, 1);
-//	c.addGate(dd::Hmat, 2);
-//	c.addGate(dd::Hmat, 3);
-//	c.addGate(dd::Hmat, 4);
-//	c.addGate(dd::Zmat, 0_pc, 2);
-//	c.addGate(dd::Zmat, 1_pc, 2);
-//	c.addGate(dd::Zmat, 3_pc, 2);
-//	c.addGate(dd::Zmat, 4_pc, 2);
-//
-//	simulateCircuitQMDDvsLIMDDGateByGate(c);
-//}

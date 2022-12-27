@@ -1,8 +1,8 @@
 #!/bin/bash
-id=1
-for n in {10..31}
+id=3
+for n in {3..100}
 do
-    gates=$((3*$n))
+    gates=$((10*$n))
     ./generateCliffordCircuit $n $gates $id
     id=$(($id+1))
 done
