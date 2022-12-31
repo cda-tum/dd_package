@@ -132,8 +132,13 @@ namespace dd {
         QMDDCachingStrategy = 0,
         cliffordSpecialCaching = 1,
         localityAwareCachingDirtyTrick = 2,
-        localityAwareCachingClean = 4
+        localityAwareCachingClean = 4,
+        localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick
     };
+
+    bool usingSpecialCliffordCaching(CachingStrategy strategy) {
+        return (strategy & cliffordSpecialCaching) != 0;
+    }
 
 } // namespace dd
 

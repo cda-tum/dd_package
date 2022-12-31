@@ -546,11 +546,15 @@ namespace dd {
         // The edge is labeled with a LIM
         // the node e.p is canonical, according to <Z>-LIMDD reduction rules
         // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
+        long normalizeLIMDDcallCounter = 0;
+        clock_t normalizeLIMDDTime = 0;
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
             if (e.l == nullptr) {
                 //std::cout << "[normalizeLIMDDPauli] e.l == nullptr location 1\n";
                 throw std::exception();
             }
+            normalizeLIMDDcallCounter++;
+            clock_t begin = clock();
             //            static unsigned int callCounter = 0;
             //            callCounter++;
             // Step 1: Make sure the weight on the LIMs is +1
@@ -613,6 +617,7 @@ namespace dd {
                 //r.p->e[1].p = r.p->e[0].p;
                 // Set the weight to point to actually zero
                 r.p->e[1] = vEdge::zero;
+                normalizeLIMDDTime += clock() - begin;
                 return r;
             }
             // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
@@ -646,6 +651,7 @@ namespace dd {
                 r.l->setPhase(phase_t::phase_one);
                 r.p->e[0].p = r.p->e[1].p;
                 r.p->e[1]   = vEdge::zero;
+                normalizeLIMDDTime += clock() - begin;
                 return r;
             }
             //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
@@ -735,6 +741,7 @@ namespace dd {
             sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
 #endif
 
+            normalizeLIMDDTime += clock() - begin;
             return r;
         }
 
@@ -1089,6 +1096,13 @@ namespace dd {
             getUniqueTable<Node>().decRef(e);
         }
 
+        std::size_t countNodes(vEdge e) {
+            incRef(e);
+            std::size_t nodeCount = vUniqueTable.getActiveNodeCount();
+            decRef(e);
+            return nodeCount;
+        }
+
         UniqueTable<vNode, UT_VEC_NBUCKET, UT_VEC_INITIAL_ALLOCATION_SIZE> vUniqueTable{nqubits};
         UniqueTable<mNode, UT_MAT_NBUCKET, UT_MAT_INITIAL_ALLOCATION_SIZE> mUniqueTable{nqubits};
         UniqueTable<dNode, UT_DM_NBUCKET, UT_DM_INITIAL_ALLOCATION_SIZE>   dUniqueTable{nqubits};
@@ -1242,8 +1256,10 @@ namespace dd {
         }
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        long makeDDNodeCallCount = 0;
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
             //std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
+            makeDDNodeCallCount++;
             auto& uniqueTable = getUniqueTable<vNode>();
 
             Edge<vNode> e{uniqueTable.getNode(), Complex::one, lim};
@@ -2109,7 +2125,7 @@ namespace dd {
                 }
                 bool appliedCliffordGate = false;
                 if constexpr (std::is_same_v<RightOperand, vEdge>) {
-                    if (cachingStrategy == cliffordSpecialCaching) {
+                    if (usingSpecialCliffordCaching(cachingStrategy)) {
                         e = applyCliffordGate(x, y, appliedCliffordGate);
                     }
                 }
@@ -2869,7 +2885,7 @@ namespace dd {
 
         vEdge applyPhaseGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
-            if (cachingStrategy != cliffordSpecialCaching) {
+            if (!usingSpecialCliffordCaching(cachingStrategy)) {
                 return y;
             }
             Qubit phaseTarget = isPhaseGate(x);
@@ -2884,7 +2900,7 @@ namespace dd {
 
         vEdge applyControlledPauliGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
-            if (cachingStrategy != cliffordSpecialCaching) {
+            if (!usingSpecialCliffordCaching(cachingStrategy)) {
                 return y;
             }
             CliffordGate gate = isControlledPauliGate(x);
@@ -2898,7 +2914,7 @@ namespace dd {
 
         vEdge applyProjection(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
-            if (cachingStrategy != cliffordSpecialCaching) {
+            if (!usingSpecialCliffordCaching(cachingStrategy)) {
                 return y;
             }
             std::pair<Qubit, bool> projection = isProjectionOperator(x);

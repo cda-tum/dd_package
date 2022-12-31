@@ -75,63 +75,79 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     auto limddLocality = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false,
                                                  dd::CachingStrategy::localityAwareCachingDirtyTrick);
 
+    dd::vEdge resultEdge[4];
+    clock_t begin[4], end[4];
+
+    dd::groupIntersectTime          = 0;
+    dd::cosetIntersectModPTime      = 0;
+    dd::cosetIntersectPauliTime     = 0;
+    dd::constructStabilizerTime     = 0;
+    dd::recoverPhaseTime            = 0;
+    dd::gramSchmidtTime             = 0;
+    dd::gaussianEliminationTime     = 0;
+    dd::cosetIntersectCallCount     = 0;
+    dd::groupIntersectCallCount     = 0;
+    dd::recoverPhaseCallCount       = 0;
+
     std::cout << "[race circuit] Simulating old LIMDD\n";
     // simulate old LIMDD
-    clock_t limdd_old_begin = clock();
-    //limddOld->simulateCircuit(circuit);
-    clock_t limdd_old_end = clock();
+    begin[0] = clock();
+    //resultEdge[0] = limddOld->simulateCircuit(circuit);
+    end[0] = clock();
 
     // simulate clifford LIMDD
     std::cout << "[race circuit] Simulating LIMDD with Clifford-specialized caching\n";
-    clock_t limdd_clifford_begin = clock();
-    //limddClifford->simulateCircuit(circuit);
-    clock_t limdd_clifford_end = clock();
+    begin[1] = clock();
+    resultEdge[1] = limddClifford->simulateCircuit(circuit);
+    end[1] = clock();
 
     // simulate locality-aware LIMDD
     std::cout << "[race circuit] Simulating LIMDD with locality-aware caching, but without Clifford-specialized caching\n";
-    clock_t limdd_locality_begin = clock();
-    limddLocality->simulateCircuit(circuit);
-    clock_t limdd_locality_end = clock();
+    begin[2] = clock();
+    //resultEdge[2] = limddLocality->simulateCircuit(circuit);
+    end[2] = clock();
 
-    std::cout << "[race circuit] Simulating QMDD.\n";
     // simulate QMDD
-    clock_t qmdd_begin = clock();
-    //qmdd->simulateCircuit(circuit);
-    clock_t qmdd_end = clock();
+    std::cout << "[race circuit] Simulating QMDD.\n";
+    begin[3] = clock();
+    //resultEdge[3] = qmdd->simulateCircuit(circuit);
+    end[3] = clock();
 
-    std::cout   <<   "QMDD time:                        " << (qmdd_end - qmdd_begin)
-                << "\nLIMDD old time:                   " << (limdd_old_end - limdd_old_begin)
-                << "\nLIMDD clifford-specialized time:  " << (limdd_clifford_end - limdd_clifford_begin)
-                << "\nLIMDD locality-aware time:        " << (limdd_locality_end - limdd_locality_begin) << "\n";
-    float ratio = ((float)(qmdd_end - qmdd_begin)) / ((float)(limdd_clifford_end - limdd_clifford_begin));
-    if (ratio < 1.0f) {
-        std::cout << "Worse by:                         " << 100.0*(1/ratio - 1.0f) << "%\n";
-    } else {
-        std::cout << "Better by:                        " << 100.0*(ratio - 1.0) << "%\n";
-    }
+    std::cout   <<   "LIMDD old time:                   " << (end[0] - begin[0])
+                << "\nLIMDD clifford-specialized time:  " << (end[1] - begin[1])
+                << "\nLIMDD locality-aware time:        " << (end[2] - begin[2])
+                << "\nQMDD time:                        " << (end[3] - begin[3]) << "\n";
+    //float ratio = ((float)(end[3] - begin[3])) / ((float)(end[1] - begin[1]));
+    //if (ratio < 1.0f) {
+    //    std::cout << "Worse by:                         " << 100.0*(1/ratio - 1.0f) << "%\n";
+    //} else {
+    //    std::cout << "Better by:                        " << 100.0*(ratio - 1.0) << "%\n";
+    //}
     std::cout << "getVector: " << limddOld->getVectorCallCounter << " (should be zero)\n";
     if (limddOld->getVectorCallCounter != 0) {
         std::cout << "    ERROR getVector was called. Double-check: did you compile in debug mode?\n";
     }
 
-    std::cout << "QMDD  --  call counter statistics:\n";
-    qmdd->printCallCounterStatistics();
-    std::cout << "nodes       " << qmdd->vUniqueTable.getNodeCount() << "\n";
-    std::cout << "LIMDD old                     -- call counter statistics:\n";
-    limddOld->printCallCounterStatistics();
-    std::cout << "nodes       " << limddOld->vUniqueTable.getNodeCount() << "\n";
-    std::cout << "LIMDD Clifford-specialized    --  call counter statistics:\n";
-    limddClifford->printCallCounterStatistics();
-    std::cout << "nodes:      " << limddClifford->vUniqueTable.getNodeCount() << "\n";
-    std::cout << "LIMDD locality-aware caching  --  call counter statistics:\n";
-    limddLocality->printCallCounterStatistics();
-    std::cout << "nodes:      " << limddLocality->vUniqueTable.getNodeCount() << "\n";
+    //std::cout << "QMDD  --  call counter statistics:\n";
+    //qmdd->printCallCounterStatistics();
+    //std::cout << "LIMDD old                     -- call counter statistics:\n";
+    //limddOld->printCallCounterStatistics();
+    //std::cout << "LIMDD Clifford-specialized    --  call counter statistics:\n";
+    //limddClifford->printCallCounterStatistics();
+    //std::cout << "LIMDD locality-aware caching  --  call counter statistics:\n";
+    //limddLocality->printCallCounterStatistics();
 
     std::ofstream statsfile;
     statsfile.open("DDstatsfile.csv", std::ios_base::app);
-    //format: version name, time taken,nodecount
-    statsfile << "limdd-locality-1.0," << (limdd_locality_end - limdd_locality_begin) << "\n";
-    //statsfile << "qmdd," << (limdd_locality_begin - limdd_locality_end) << "\n";
+    statsfile << (int) circuit.n << ",";
+    //format: nqubits, version name, time taken, multiply calls, add calls, nodecount, gates, time group intersect, time coset mod phase intersect, time coset pauli intersect, time construct stabs, time recover phase, time gram schmidt, gaussian elimination time..
+    // .. normalize time, group intersect calls, coset intersect calls, construct stabs calls, recover phase calls, gram schmidt calls, normalizeLIMDD() calls, makeDDNode calls
+    //statsfile << "limddOld," <<           (end[0] - begin[0]) << "," << limddOld->     multiply2CallCounter << "," << limddOld->     addCallCounter << "," << limddOld->     countNodes(resultEdge[0]) << "," << circuit.gates.size() << ",";
+    statsfile << "limddClifford-Clifford-circuits," << (end[1] - begin[1]) << "," << limddClifford->multiply2CallCounter << "," << limddClifford->addCallCounter << "," << limddClifford->countNodes(resultEdge[1]) << "," << circuit.gates.size() << ",";
+    //statsfile << "limddLocality-v1-0-clifford-circuits," << (end[2] - begin[2]) << "," << limddLocality->multiply2CallCounter << "," << limddLocality->addCallCounter << "," << limddLocality->countNodes(resultEdge[2]) << "," << circuit.gates.size() << ",";
+    //statsfile << "qmdd," <<               (end[3] - begin[3]) << "," << qmdd->         multiply2CallCounter << "," << qmdd->         addCallCounter << "," << qmdd->         countNodes(resultEdge[3]) << "," << circuit.gates.size() << ",";
+    statsfile << dd::groupIntersectTime << "," << dd::cosetIntersectModPTime << "," << dd::cosetIntersectPauliTime << "," << dd::constructStabilizerTime << "," << dd::recoverPhaseTime << "," << dd::gramSchmidtTime << "," << dd::gaussianEliminationTime << "," << limddClifford->normalizeLIMDDTime << ","
+              << dd::groupIntersectCallCount << "," << dd::cosetIntersectCallCount << ",0," << dd::recoverPhaseCallCount << ",0," << limddClifford->normalizeLIMDDcallCounter << "," << limddClifford->makeDDNodeCallCount << "\n";
     statsfile.close();
 }
 
@@ -141,7 +157,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     //        simulateCircuitLIMDDGateByGate(circuit);
     //        return;
     auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
-    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, dd::CachingStrategy::cliffordSpecialCaching);
+    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, dd::CachingStrategy::localityAndCliffordCaching);
 
     auto              qmddState  = qmdd->makeZeroState(circuit.n);
     auto              limddState = limdd->makeZeroState(circuit.n);
