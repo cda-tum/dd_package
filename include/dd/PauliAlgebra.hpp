@@ -1120,7 +1120,7 @@ namespace dd {
                     // We next check whether a Z-element and an X-element have been found. If so, then we know for sure there is a Y-element, and it has already been found
                     // moreover, if only a Z but no X element was found, then we can be sure that there is no Y-element.
                     // TODO So we should only perform this check when neither a Z nor an X element has been found (!)
-                    if (!(foundElementZ && foundElementX)) {
+                    if (!(foundElementZ || foundElementX)) {
                         //Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
                         phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
                         // TODO check if minusRhoSquared == -1; if so, reuse the result from above
