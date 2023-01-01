@@ -18,7 +18,7 @@
 using namespace dd::literals;
 
 // Randomly generated circuit on 3 qubis, containing 30 gates.
-TEST(LimTest, generatedCircuit_3) {
+TEST(LimTest, hardCircuit_3) {
 dd::QuantumCircuit circuit(3);
 
 circuit.addGate(dd::Hmat, 0);
@@ -46,11 +46,11 @@ circuit.addGate(dd::Tmat, 2);
 circuit.addGate(dd::Tmat, 2);
 circuit.addGate(dd::Ymat, 1_pc, 2_pc, 0);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 4 qubis, containing 40 gates.
-TEST(LimTest, generatedCircuit_4) {
+TEST(LimTest, hardCircuit_4) {
 dd::QuantumCircuit circuit(4);
 
 circuit.addGate(dd::Hmat, 0);
@@ -88,11 +88,11 @@ circuit.addGate(dd::Tdagmat, 3);
 circuit.addGate(dd::Zmat, 0);
 circuit.addGate(dd::Hmat, 0_pc, 2_nc, 3);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 5 qubis, containing 50 gates.
-TEST(LimTest, generatedCircuit_5) {
+TEST(LimTest, hardCircuit_5) {
 dd::QuantumCircuit circuit(5);
 
 circuit.addGate(dd::Hmat, 0);
@@ -137,14 +137,63 @@ circuit.addGate(dd::Tmat, 1_pc, 2);
 circuit.addGate(dd::Hmat, 0);
 circuit.addGate(dd::Zmat, 0);
 circuit.addGate(dd::Tdagmat, 2);
-circuit.addGate(dd::Ymat, 1_nc, 2);
+circuit.addGate(dd::Ymat, 1_nc, 2); // triggers an error
 circuit.addGate(dd::Xmat, 2);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
+}
+
+TEST(LimTest, hardCircuit_5_minimized) {
+dd::QuantumCircuit circuit(5);
+
+circuit.addGate(dd::Hmat, 0);
+circuit.addGate(dd::Hmat, 4);
+circuit.addGate(dd::Zmat, 3);
+circuit.addGate(dd::Smat, 1_pc, 0);
+circuit.addGate(dd::Zmat, 2);
+circuit.addGate(dd::Ymat, 4_nc, 1);
+circuit.addGate(dd::Ymat, 1_pc, 0_pc, 2);
+circuit.addGate(dd::Tdagmat, 0_nc, 4_pc, 1);
+circuit.addGate(dd::Hmat, 2_pc, 1);
+circuit.addGate(dd::Tdagmat, 1);
+circuit.addGate(dd::Tdagmat, 4);
+circuit.addGate(dd::Hmat, 2);
+circuit.addGate(dd::Tmat, 3_nc, 1_pc, 2);
+circuit.addGate(dd::Zmat, 3);
+circuit.addGate(dd::Zmat, 2);
+//circuit.addGate(dd::Tmat, 4);
+//circuit.addGate(dd::Smat, 4_pc, 0_nc, 2);
+//circuit.addGate(dd::Ymat, 0_nc, 3);
+//circuit.addGate(dd::Smat, 2_pc, 4);
+//circuit.addGate(dd::Hmat, 2_nc, 1);
+//circuit.addGate(dd::Hmat, 0_pc, 2);
+//circuit.addGate(dd::Smat, 1_pc, 3_pc, 0);
+//circuit.addGate(dd::Hmat, 1_nc, 2_nc, 3);
+circuit.addGate(dd::Smat, 3);
+circuit.addGate(dd::Tdagmat, 0_pc, 3);
+circuit.addGate(dd::Tdagmat, 0);
+//circuit.addGate(dd::Hmat, 3_pc, 1_nc, 0);
+//circuit.addGate(dd::Zmat, 2_nc, 4);
+//circuit.addGate(dd::Xmat, 1_pc, 2);
+circuit.addGate(dd::Smat, 2_pc, 1_pc, 4);
+circuit.addGate(dd::Xmat, 3_nc, 0_nc, 4);
+circuit.addGate(dd::Ymat, 1_pc, 2);
+//circuit.addGate(dd::Tmat, 2_pc, 4_pc, 3);
+//circuit.addGate(dd::Hmat, 2_nc, 1_nc, 3);
+//circuit.addGate(dd::Hmat, 1);
+//circuit.addGate(dd::Xmat, 1);
+//circuit.addGate(dd::Ymat, 3);
+//circuit.addGate(dd::Smat, 4_nc, 2);
+//circuit.addGate(dd::Tmat, 1_pc, 2);
+//circuit.addGate(dd::Hmat, 0);
+//circuit.addGate(dd::Tdagmat, 2);
+circuit.addGate(dd::Ymat, 1_nc, 2); // triggers an error
+
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 6 qubis, containing 60 gates.
-TEST(LimTest, generatedCircuit_6) {
+TEST(LimTest, hardCircuit_6) {
 dd::QuantumCircuit circuit(6);
 
 circuit.addGate(dd::Hmat, 1);
@@ -202,11 +251,11 @@ circuit.addGate(dd::Zmat, 4);
 circuit.addGate(dd::Ymat, 1);
 circuit.addGate(dd::Tmat, 2);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 7 qubis, containing 70 gates.
-TEST(LimTest, generatedCircuit_7) {
+TEST(LimTest, hardCircuit_7) {
 dd::QuantumCircuit circuit(7);
 
 circuit.addGate(dd::Hmat, 0);
@@ -274,11 +323,11 @@ circuit.addGate(dd::Tdagmat, 3_pc, 0);
 circuit.addGate(dd::Xmat, 5_nc, 1);
 circuit.addGate(dd::Tdagmat, 4_pc, 1_nc, 2);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 8 qubis, containing 80 gates.
-TEST(LimTest, generatedCircuit_8) {
+TEST(LimTest, hardCircuit_8) {
 dd::QuantumCircuit circuit(8);
 
 circuit.addGate(dd::Hmat, 1);
@@ -356,11 +405,11 @@ circuit.addGate(dd::Xmat, 5);
 circuit.addGate(dd::Smat, 5);
 circuit.addGate(dd::Hmat, 5_nc, 4);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 9 qubis, containing 90 gates.
-TEST(LimTest, generatedCircuit_9) {
+TEST(LimTest, hardCircuit_9) {
 dd::QuantumCircuit circuit(9);
 
 circuit.addGate(dd::Hmat, 1);
@@ -448,11 +497,11 @@ circuit.addGate(dd::Tmat, 1_nc, 6_nc, 0);
 circuit.addGate(dd::Tdagmat, 2);
 circuit.addGate(dd::Zmat, 5);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 10 qubis, containing 100 gates.
-TEST(LimTest, generatedCircuit_10) {
+TEST(LimTest, hardCircuit_10) {
 dd::QuantumCircuit circuit(10);
 
 circuit.addGate(dd::Hmat, 1);
@@ -550,11 +599,11 @@ circuit.addGate(dd::Ymat, 2_pc, 0_nc, 8);
 circuit.addGate(dd::Tmat, 8);
 circuit.addGate(dd::Hmat, 8_nc, 5_nc, 4);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 11 qubis, containing 110 gates.
-TEST(LimTest, generatedCircuit_11) {
+TEST(LimTest, hardCircuit_11) {
 dd::QuantumCircuit circuit(11);
 
 circuit.addGate(dd::Hmat, 1);
@@ -662,11 +711,11 @@ circuit.addGate(dd::Tdagmat, 9_pc, 0_pc, 1);
 circuit.addGate(dd::Tdagmat, 7);
 circuit.addGate(dd::Xmat, 7);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 12 qubis, containing 120 gates.
-TEST(LimTest, generatedCircuit_12) {
+TEST(LimTest, hardCircuit_12) {
 dd::QuantumCircuit circuit(12);
 
 circuit.addGate(dd::Hmat, 1);
@@ -784,11 +833,11 @@ circuit.addGate(dd::Xmat, 3);
 circuit.addGate(dd::Hmat, 8);
 circuit.addGate(dd::Tdagmat, 10_pc, 5_nc, 6);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 13 qubis, containing 130 gates.
-TEST(LimTest, generatedCircuit_13) {
+TEST(LimTest, hardCircuit_13) {
 dd::QuantumCircuit circuit(13);
 
 circuit.addGate(dd::Hmat, 1);
@@ -916,11 +965,11 @@ circuit.addGate(dd::Ymat, 1_nc, 7_nc, 10);
 circuit.addGate(dd::Tmat, 5_nc, 2);
 circuit.addGate(dd::Smat, 12_nc, 8);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 14 qubis, containing 140 gates.
-TEST(LimTest, generatedCircuit_14) {
+TEST(LimTest, hardCircuit_14) {
 dd::QuantumCircuit circuit(14);
 
 circuit.addGate(dd::Hmat, 0);
@@ -1058,11 +1107,11 @@ circuit.addGate(dd::Smat, 8);
 circuit.addGate(dd::Xmat, 7_nc, 10);
 circuit.addGate(dd::Ymat, 4_nc, 5);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 15 qubis, containing 150 gates.
-TEST(LimTest, generatedCircuit_15) {
+TEST(LimTest, hardCircuit_15) {
 dd::QuantumCircuit circuit(15);
 
 circuit.addGate(dd::Hmat, 1);
@@ -1210,11 +1259,11 @@ circuit.addGate(dd::Tdagmat, 4);
 circuit.addGate(dd::Tdagmat, 6);
 circuit.addGate(dd::Tdagmat, 9_pc, 8);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 16 qubis, containing 160 gates.
-TEST(LimTest, generatedCircuit_16) {
+TEST(LimTest, hardCircuit_16) {
 dd::QuantumCircuit circuit(16);
 
 circuit.addGate(dd::Hmat, 1);
@@ -1372,11 +1421,11 @@ circuit.addGate(dd::Xmat, 14_nc, 10);
 circuit.addGate(dd::Smat, 13);
 circuit.addGate(dd::Ymat, 8_nc, 12);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 17 qubis, containing 170 gates.
-TEST(LimTest, generatedCircuit_17) {
+TEST(LimTest, hardCircuit_17) {
 dd::QuantumCircuit circuit(17);
 
 circuit.addGate(dd::Hmat, 2);
@@ -1544,11 +1593,11 @@ circuit.addGate(dd::Xmat, 8_pc, 14_pc, 5);
 circuit.addGate(dd::Smat, 6);
 circuit.addGate(dd::Ymat, 7);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 18 qubis, containing 180 gates.
-TEST(LimTest, generatedCircuit_18) {
+TEST(LimTest, hardCircuit_18) {
 dd::QuantumCircuit circuit(18);
 
 circuit.addGate(dd::Hmat, 2);
@@ -1726,11 +1775,11 @@ circuit.addGate(dd::Tmat, 0);
 circuit.addGate(dd::Xmat, 10_nc, 6);
 circuit.addGate(dd::Smat, 0_pc, 15);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 19 qubis, containing 190 gates.
-TEST(LimTest, generatedCircuit_19) {
+TEST(LimTest, hardCircuit_19) {
 dd::QuantumCircuit circuit(19);
 
 circuit.addGate(dd::Hmat, 0);
@@ -1918,11 +1967,11 @@ circuit.addGate(dd::Smat, 0_nc, 8);
 circuit.addGate(dd::Smat, 7);
 circuit.addGate(dd::Smat, 0_pc, 12_nc, 1);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 20 qubis, containing 200 gates.
-TEST(LimTest, generatedCircuit_20) {
+TEST(LimTest, hardCircuit_20) {
 dd::QuantumCircuit circuit(20);
 
 circuit.addGate(dd::Hmat, 1);
@@ -2120,11 +2169,11 @@ circuit.addGate(dd::Tdagmat, 14_pc, 7);
 circuit.addGate(dd::Tdagmat, 17_pc, 19);
 circuit.addGate(dd::Ymat, 19);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 21 qubis, containing 210 gates.
-TEST(LimTest, generatedCircuit_21) {
+TEST(LimTest, hardCircuit_21) {
 dd::QuantumCircuit circuit(21);
 
 circuit.addGate(dd::Hmat, 1);
@@ -2332,11 +2381,11 @@ circuit.addGate(dd::Tdagmat, 19);
 circuit.addGate(dd::Tmat, 13_nc, 5_pc, 8);
 circuit.addGate(dd::Xmat, 15);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 22 qubis, containing 220 gates.
-TEST(LimTest, generatedCircuit_22) {
+TEST(LimTest, hardCircuit_22) {
 dd::QuantumCircuit circuit(22);
 
 circuit.addGate(dd::Hmat, 0);
@@ -2554,11 +2603,11 @@ circuit.addGate(dd::Smat, 11_nc, 16_nc, 12);
 circuit.addGate(dd::Xmat, 9_nc, 7_nc, 19);
 circuit.addGate(dd::Ymat, 11_nc, 16);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 23 qubis, containing 230 gates.
-TEST(LimTest, generatedCircuit_23) {
+TEST(LimTest, hardCircuit_23) {
 dd::QuantumCircuit circuit(23);
 
 circuit.addGate(dd::Hmat, 0);
@@ -2786,11 +2835,11 @@ circuit.addGate(dd::Hmat, 13);
 circuit.addGate(dd::Smat, 9_pc, 10_pc, 8);
 circuit.addGate(dd::Zmat, 18);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 24 qubis, containing 240 gates.
-TEST(LimTest, generatedCircuit_24) {
+TEST(LimTest, hardCircuit_24) {
 dd::QuantumCircuit circuit(24);
 
 circuit.addGate(dd::Hmat, 0);
@@ -3028,11 +3077,11 @@ circuit.addGate(dd::Smat, 9_pc, 20_nc, 22);
 circuit.addGate(dd::Hmat, 19_nc, 17);
 circuit.addGate(dd::Zmat, 15);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 25 qubis, containing 250 gates.
-TEST(LimTest, generatedCircuit_25) {
+TEST(LimTest, hardCircuit_25) {
 dd::QuantumCircuit circuit(25);
 
 circuit.addGate(dd::Hmat, 1);
@@ -3280,11 +3329,11 @@ circuit.addGate(dd::Tmat, 18);
 circuit.addGate(dd::Ymat, 12_nc, 7);
 circuit.addGate(dd::Tdagmat, 5);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 26 qubis, containing 260 gates.
-TEST(LimTest, generatedCircuit_26) {
+TEST(LimTest, hardCircuit_26) {
 dd::QuantumCircuit circuit(26);
 
 circuit.addGate(dd::Hmat, 1);
@@ -3542,11 +3591,11 @@ circuit.addGate(dd::Smat, 1_pc, 4_pc, 0);
 circuit.addGate(dd::Tdagmat, 19_pc, 4_nc, 24);
 circuit.addGate(dd::Tmat, 0);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 27 qubis, containing 270 gates.
-TEST(LimTest, generatedCircuit_27) {
+TEST(LimTest, hardCircuit_27) {
 dd::QuantumCircuit circuit(27);
 
 circuit.addGate(dd::Hmat, 0);
@@ -3814,11 +3863,11 @@ circuit.addGate(dd::Tmat, 10);
 circuit.addGate(dd::Ymat, 12);
 circuit.addGate(dd::Tdagmat, 9);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 28 qubis, containing 280 gates.
-TEST(LimTest, generatedCircuit_28) {
+TEST(LimTest, hardCircuit_28) {
 dd::QuantumCircuit circuit(28);
 
 circuit.addGate(dd::Hmat, 0);
@@ -4096,11 +4145,11 @@ circuit.addGate(dd::Tmat, 11);
 circuit.addGate(dd::Ymat, 1_pc, 24_pc, 18);
 circuit.addGate(dd::Smat, 3);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 29 qubis, containing 290 gates.
-TEST(LimTest, generatedCircuit_29) {
+TEST(LimTest, hardCircuit_29) {
 dd::QuantumCircuit circuit(29);
 
 circuit.addGate(dd::Hmat, 0);
@@ -4388,11 +4437,11 @@ circuit.addGate(dd::Zmat, 27_pc, 26_pc, 16);
 circuit.addGate(dd::Hmat, 20_nc, 8);
 circuit.addGate(dd::Tdagmat, 4_pc, 17);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 30 qubis, containing 300 gates.
-TEST(LimTest, generatedCircuit_30) {
+TEST(LimTest, hardCircuit_30) {
 dd::QuantumCircuit circuit(30);
 
 circuit.addGate(dd::Hmat, 4);
@@ -4690,11 +4739,11 @@ circuit.addGate(dd::Hmat, 16_pc, 25_nc, 1);
 circuit.addGate(dd::Smat, 4);
 circuit.addGate(dd::Zmat, 12_nc, 1);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 31 qubis, containing 310 gates.
-TEST(LimTest, generatedCircuit_31) {
+TEST(LimTest, hardCircuit_31) {
 dd::QuantumCircuit circuit(31);
 
 circuit.addGate(dd::Hmat, 1);
@@ -5002,11 +5051,11 @@ circuit.addGate(dd::Smat, 18);
 circuit.addGate(dd::Hmat, 13);
 circuit.addGate(dd::Tdagmat, 7_nc, 12);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 32 qubis, containing 320 gates.
-TEST(LimTest, generatedCircuit_32) {
+TEST(LimTest, hardCircuit_32) {
 dd::QuantumCircuit circuit(32);
 
 circuit.addGate(dd::Hmat, 0);
@@ -5324,11 +5373,11 @@ circuit.addGate(dd::Hmat, 15_pc, 16);
 circuit.addGate(dd::Ymat, 23_pc, 24);
 circuit.addGate(dd::Xmat, 23);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 33 qubis, containing 330 gates.
-TEST(LimTest, generatedCircuit_33) {
+TEST(LimTest, hardCircuit_33) {
 dd::QuantumCircuit circuit(33);
 
 circuit.addGate(dd::Hmat, 1);
@@ -5656,11 +5705,11 @@ circuit.addGate(dd::Zmat, 26_nc, 8);
 circuit.addGate(dd::Ymat, 21_nc, 26_nc, 19);
 circuit.addGate(dd::Tdagmat, 16_pc, 8);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 34 qubis, containing 340 gates.
-TEST(LimTest, generatedCircuit_34) {
+TEST(LimTest, hardCircuit_34) {
 dd::QuantumCircuit circuit(34);
 
 circuit.addGate(dd::Hmat, 0);
@@ -5998,11 +6047,11 @@ circuit.addGate(dd::Xmat, 3_pc, 24);
 circuit.addGate(dd::Xmat, 23);
 circuit.addGate(dd::Smat, 26_nc, 18);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 35 qubis, containing 350 gates.
-TEST(LimTest, generatedCircuit_35) {
+TEST(LimTest, hardCircuit_35) {
 dd::QuantumCircuit circuit(35);
 
 circuit.addGate(dd::Hmat, 0);
@@ -6350,11 +6399,11 @@ circuit.addGate(dd::Smat, 13_nc, 7);
 circuit.addGate(dd::Hmat, 5);
 circuit.addGate(dd::Ymat, 30);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 36 qubis, containing 360 gates.
-TEST(LimTest, generatedCircuit_36) {
+TEST(LimTest, hardCircuit_36) {
 dd::QuantumCircuit circuit(36);
 
 circuit.addGate(dd::Hmat, 0);
@@ -6712,11 +6761,11 @@ circuit.addGate(dd::Smat, 7_nc, 1_nc, 12);
 circuit.addGate(dd::Xmat, 23);
 circuit.addGate(dd::Tdagmat, 6_pc, 1_nc, 2);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 37 qubis, containing 370 gates.
-TEST(LimTest, generatedCircuit_37) {
+TEST(LimTest, hardCircuit_37) {
 dd::QuantumCircuit circuit(37);
 
 circuit.addGate(dd::Hmat, 0);
@@ -7084,11 +7133,11 @@ circuit.addGate(dd::Smat, 29);
 circuit.addGate(dd::Ymat, 7);
 circuit.addGate(dd::Zmat, 33);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 38 qubis, containing 380 gates.
-TEST(LimTest, generatedCircuit_38) {
+TEST(LimTest, hardCircuit_38) {
 dd::QuantumCircuit circuit(38);
 
 circuit.addGate(dd::Hmat, 0);
@@ -7466,11 +7515,11 @@ circuit.addGate(dd::Zmat, 10);
 circuit.addGate(dd::Zmat, 10_pc, 9_pc, 33);
 circuit.addGate(dd::Ymat, 1_pc, 18);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 39 qubis, containing 390 gates.
-TEST(LimTest, generatedCircuit_39) {
+TEST(LimTest, hardCircuit_39) {
 dd::QuantumCircuit circuit(39);
 
 circuit.addGate(dd::Hmat, 3);
@@ -7858,11 +7907,11 @@ circuit.addGate(dd::Ymat, 12_pc, 5);
 circuit.addGate(dd::Tmat, 16);
 circuit.addGate(dd::Zmat, 14);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 40 qubis, containing 400 gates.
-TEST(LimTest, generatedCircuit_40) {
+TEST(LimTest, hardCircuit_40) {
 dd::QuantumCircuit circuit(40);
 
 circuit.addGate(dd::Hmat, 0);
@@ -8260,11 +8309,11 @@ circuit.addGate(dd::Smat, 28_pc, 32);
 circuit.addGate(dd::Ymat, 0_nc, 32);
 circuit.addGate(dd::Smat, 22_pc, 27);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 41 qubis, containing 410 gates.
-TEST(LimTest, generatedCircuit_41) {
+TEST(LimTest, hardCircuit_41) {
 dd::QuantumCircuit circuit(41);
 
 circuit.addGate(dd::Hmat, 0);
@@ -8672,11 +8721,11 @@ circuit.addGate(dd::Ymat, 34_pc, 16);
 circuit.addGate(dd::Tmat, 38_nc, 32);
 circuit.addGate(dd::Smat, 7_nc, 12_pc, 6);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 42 qubis, containing 420 gates.
-TEST(LimTest, generatedCircuit_42) {
+TEST(LimTest, hardCircuit_42) {
 dd::QuantumCircuit circuit(42);
 
 circuit.addGate(dd::Hmat, 0);
@@ -9094,11 +9143,11 @@ circuit.addGate(dd::Smat, 39);
 circuit.addGate(dd::Smat, 3_nc, 7_nc, 27);
 circuit.addGate(dd::Hmat, 27);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 43 qubis, containing 430 gates.
-TEST(LimTest, generatedCircuit_43) {
+TEST(LimTest, hardCircuit_43) {
 dd::QuantumCircuit circuit(43);
 
 circuit.addGate(dd::Hmat, 0);
@@ -9526,11 +9575,11 @@ circuit.addGate(dd::Hmat, 39);
 circuit.addGate(dd::Tmat, 23_nc, 6);
 circuit.addGate(dd::Smat, 6);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 44 qubis, containing 440 gates.
-TEST(LimTest, generatedCircuit_44) {
+TEST(LimTest, hardCircuit_44) {
 dd::QuantumCircuit circuit(44);
 
 circuit.addGate(dd::Hmat, 0);
@@ -9968,11 +10017,11 @@ circuit.addGate(dd::Hmat, 12);
 circuit.addGate(dd::Xmat, 15);
 circuit.addGate(dd::Smat, 41);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 45 qubis, containing 450 gates.
-TEST(LimTest, generatedCircuit_45) {
+TEST(LimTest, hardCircuit_45) {
 dd::QuantumCircuit circuit(45);
 
 circuit.addGate(dd::Hmat, 0);
@@ -10420,11 +10469,11 @@ circuit.addGate(dd::Ymat, 33);
 circuit.addGate(dd::Smat, 10);
 circuit.addGate(dd::Xmat, 20_nc, 23);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 46 qubis, containing 460 gates.
-TEST(LimTest, generatedCircuit_46) {
+TEST(LimTest, hardCircuit_46) {
 dd::QuantumCircuit circuit(46);
 
 circuit.addGate(dd::Hmat, 0);
@@ -10882,11 +10931,11 @@ circuit.addGate(dd::Hmat, 22);
 circuit.addGate(dd::Hmat, 43_pc, 14);
 circuit.addGate(dd::Zmat, 1);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 47 qubis, containing 470 gates.
-TEST(LimTest, generatedCircuit_47) {
+TEST(LimTest, hardCircuit_47) {
 dd::QuantumCircuit circuit(47);
 
 circuit.addGate(dd::Hmat, 3);
@@ -11354,11 +11403,11 @@ circuit.addGate(dd::Smat, 23);
 circuit.addGate(dd::Xmat, 27);
 circuit.addGate(dd::Hmat, 36);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 48 qubis, containing 480 gates.
-TEST(LimTest, generatedCircuit_48) {
+TEST(LimTest, hardCircuit_48) {
 dd::QuantumCircuit circuit(48);
 
 circuit.addGate(dd::Hmat, 0);
@@ -11836,11 +11885,11 @@ circuit.addGate(dd::Tmat, 16);
 circuit.addGate(dd::Zmat, 35);
 circuit.addGate(dd::Ymat, 37);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 49 qubis, containing 490 gates.
-TEST(LimTest, generatedCircuit_49) {
+TEST(LimTest, hardCircuit_49) {
 dd::QuantumCircuit circuit(49);
 
 circuit.addGate(dd::Hmat, 3);
@@ -12328,11 +12377,11 @@ circuit.addGate(dd::Xmat, 30);
 circuit.addGate(dd::Hmat, 7);
 circuit.addGate(dd::Ymat, 6_pc, 7_nc, 31);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 50 qubis, containing 500 gates.
-TEST(LimTest, generatedCircuit_50) {
+TEST(LimTest, hardCircuit_50) {
 dd::QuantumCircuit circuit(50);
 
 circuit.addGate(dd::Hmat, 1);
@@ -12830,11 +12879,11 @@ circuit.addGate(dd::Zmat, 20_nc, 38_nc, 9);
 circuit.addGate(dd::Hmat, 18_nc, 44);
 circuit.addGate(dd::Hmat, 27);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 51 qubis, containing 510 gates.
-TEST(LimTest, generatedCircuit_51) {
+TEST(LimTest, hardCircuit_51) {
 dd::QuantumCircuit circuit(51);
 
 circuit.addGate(dd::Hmat, 0);
@@ -13342,11 +13391,11 @@ circuit.addGate(dd::Smat, 37);
 circuit.addGate(dd::Tdagmat, 13);
 circuit.addGate(dd::Tmat, 23_nc, 4);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 52 qubis, containing 520 gates.
-TEST(LimTest, generatedCircuit_52) {
+TEST(LimTest, hardCircuit_52) {
 dd::QuantumCircuit circuit(52);
 
 circuit.addGate(dd::Hmat, 0);
@@ -13864,11 +13913,11 @@ circuit.addGate(dd::Tdagmat, 15);
 circuit.addGate(dd::Hmat, 23_nc, 46);
 circuit.addGate(dd::Tmat, 22_pc, 21);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 53 qubis, containing 530 gates.
-TEST(LimTest, generatedCircuit_53) {
+TEST(LimTest, hardCircuit_53) {
 dd::QuantumCircuit circuit(53);
 
 circuit.addGate(dd::Hmat, 0);
@@ -14396,11 +14445,11 @@ circuit.addGate(dd::Smat, 14_pc, 47);
 circuit.addGate(dd::Zmat, 5_nc, 29);
 circuit.addGate(dd::Hmat, 31_nc, 15);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 54 qubis, containing 540 gates.
-TEST(LimTest, generatedCircuit_54) {
+TEST(LimTest, hardCircuit_54) {
 dd::QuantumCircuit circuit(54);
 
 circuit.addGate(dd::Hmat, 0);
@@ -14938,11 +14987,11 @@ circuit.addGate(dd::Ymat, 32);
 circuit.addGate(dd::Hmat, 11);
 circuit.addGate(dd::Zmat, 44);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 55 qubis, containing 550 gates.
-TEST(LimTest, generatedCircuit_55) {
+TEST(LimTest, hardCircuit_55) {
 dd::QuantumCircuit circuit(55);
 
 circuit.addGate(dd::Hmat, 0);
@@ -15490,11 +15539,11 @@ circuit.addGate(dd::Tmat, 27);
 circuit.addGate(dd::Ymat, 16_nc, 11);
 circuit.addGate(dd::Tdagmat, 32_nc, 9_pc, 44);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 56 qubis, containing 560 gates.
-TEST(LimTest, generatedCircuit_56) {
+TEST(LimTest, hardCircuit_56) {
 dd::QuantumCircuit circuit(56);
 
 circuit.addGate(dd::Hmat, 0);
@@ -16052,11 +16101,11 @@ circuit.addGate(dd::Smat, 8_nc, 43_nc, 20);
 circuit.addGate(dd::Ymat, 34_nc, 48_nc, 32);
 circuit.addGate(dd::Ymat, 19);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 57 qubis, containing 570 gates.
-TEST(LimTest, generatedCircuit_57) {
+TEST(LimTest, hardCircuit_57) {
 dd::QuantumCircuit circuit(57);
 
 circuit.addGate(dd::Hmat, 1);
@@ -16624,11 +16673,11 @@ circuit.addGate(dd::Tmat, 45);
 circuit.addGate(dd::Xmat, 46_pc, 28);
 circuit.addGate(dd::Tmat, 20_pc, 24);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 58 qubis, containing 580 gates.
-TEST(LimTest, generatedCircuit_58) {
+TEST(LimTest, hardCircuit_58) {
 dd::QuantumCircuit circuit(58);
 
 circuit.addGate(dd::Hmat, 1);
@@ -17206,11 +17255,11 @@ circuit.addGate(dd::Xmat, 34_pc, 50_pc, 40);
 circuit.addGate(dd::Smat, 4_nc, 45_pc, 36);
 circuit.addGate(dd::Tmat, 32);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 59 qubis, containing 590 gates.
-TEST(LimTest, generatedCircuit_59) {
+TEST(LimTest, hardCircuit_59) {
 dd::QuantumCircuit circuit(59);
 
 circuit.addGate(dd::Hmat, 4);
@@ -17798,11 +17847,11 @@ circuit.addGate(dd::Tmat, 7);
 circuit.addGate(dd::Hmat, 29);
 circuit.addGate(dd::Tmat, 42);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 60 qubis, containing 600 gates.
-TEST(LimTest, generatedCircuit_60) {
+TEST(LimTest, hardCircuit_60) {
 dd::QuantumCircuit circuit(60);
 
 circuit.addGate(dd::Hmat, 6);
@@ -18400,11 +18449,11 @@ circuit.addGate(dd::Tdagmat, 41_pc, 42_pc, 31);
 circuit.addGate(dd::Xmat, 12_nc, 32);
 circuit.addGate(dd::Hmat, 3_nc, 56);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 61 qubis, containing 610 gates.
-TEST(LimTest, generatedCircuit_61) {
+TEST(LimTest, hardCircuit_61) {
 dd::QuantumCircuit circuit(61);
 
 circuit.addGate(dd::Hmat, 1);
@@ -19012,11 +19061,11 @@ circuit.addGate(dd::Zmat, 59_pc, 58_pc, 27);
 circuit.addGate(dd::Smat, 60);
 circuit.addGate(dd::Zmat, 33);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 62 qubis, containing 620 gates.
-TEST(LimTest, generatedCircuit_62) {
+TEST(LimTest, hardCircuit_62) {
 dd::QuantumCircuit circuit(62);
 
 circuit.addGate(dd::Hmat, 9);
@@ -19634,11 +19683,11 @@ circuit.addGate(dd::Hmat, 47);
 circuit.addGate(dd::Tdagmat, 42_nc, 37_nc, 52);
 circuit.addGate(dd::Zmat, 46);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 63 qubis, containing 630 gates.
-TEST(LimTest, generatedCircuit_63) {
+TEST(LimTest, hardCircuit_63) {
 dd::QuantumCircuit circuit(63);
 
 circuit.addGate(dd::Hmat, 9);
@@ -20266,11 +20315,11 @@ circuit.addGate(dd::Tdagmat, 42_pc, 27_pc, 45);
 circuit.addGate(dd::Tmat, 15_nc, 51_pc, 7);
 circuit.addGate(dd::Tmat, 24_pc, 57);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 64 qubis, containing 640 gates.
-TEST(LimTest, generatedCircuit_64) {
+TEST(LimTest, hardCircuit_64) {
 dd::QuantumCircuit circuit(64);
 
 circuit.addGate(dd::Hmat, 0);
@@ -20908,11 +20957,11 @@ circuit.addGate(dd::Hmat, 28);
 circuit.addGate(dd::Tmat, 50);
 circuit.addGate(dd::Tmat, 44_nc, 4_nc, 62);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 65 qubis, containing 650 gates.
-TEST(LimTest, generatedCircuit_65) {
+TEST(LimTest, hardCircuit_65) {
 dd::QuantumCircuit circuit(65);
 
 circuit.addGate(dd::Hmat, 1);
@@ -21560,11 +21609,11 @@ circuit.addGate(dd::Tdagmat, 9);
 circuit.addGate(dd::Tmat, 34_pc, 54);
 circuit.addGate(dd::Ymat, 64_nc, 56_nc, 59);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 66 qubis, containing 660 gates.
-TEST(LimTest, generatedCircuit_66) {
+TEST(LimTest, hardCircuit_66) {
 dd::QuantumCircuit circuit(66);
 
 circuit.addGate(dd::Hmat, 0);
@@ -22222,11 +22271,11 @@ circuit.addGate(dd::Smat, 65);
 circuit.addGate(dd::Zmat, 27);
 circuit.addGate(dd::Smat, 35_pc, 10);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 67 qubis, containing 670 gates.
-TEST(LimTest, generatedCircuit_67) {
+TEST(LimTest, hardCircuit_67) {
 dd::QuantumCircuit circuit(67);
 
 circuit.addGate(dd::Hmat, 1);
@@ -22894,11 +22943,11 @@ circuit.addGate(dd::Tmat, 60);
 circuit.addGate(dd::Smat, 66);
 circuit.addGate(dd::Tmat, 6_nc, 43);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 68 qubis, containing 680 gates.
-TEST(LimTest, generatedCircuit_68) {
+TEST(LimTest, hardCircuit_68) {
 dd::QuantumCircuit circuit(68);
 
 circuit.addGate(dd::Hmat, 2);
@@ -23576,11 +23625,11 @@ circuit.addGate(dd::Tmat, 5_nc, 43_pc, 63);
 circuit.addGate(dd::Xmat, 21_nc, 9_pc, 3);
 circuit.addGate(dd::Tmat, 4_nc, 6);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 69 qubis, containing 690 gates.
-TEST(LimTest, generatedCircuit_69) {
+TEST(LimTest, hardCircuit_69) {
 dd::QuantumCircuit circuit(69);
 
 circuit.addGate(dd::Hmat, 0);
@@ -24268,11 +24317,11 @@ circuit.addGate(dd::Smat, 1_nc, 49);
 circuit.addGate(dd::Smat, 41);
 circuit.addGate(dd::Tdagmat, 61_nc, 32);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 70 qubis, containing 700 gates.
-TEST(LimTest, generatedCircuit_70) {
+TEST(LimTest, hardCircuit_70) {
 dd::QuantumCircuit circuit(70);
 
 circuit.addGate(dd::Hmat, 3);
@@ -24970,11 +25019,11 @@ circuit.addGate(dd::Zmat, 26);
 circuit.addGate(dd::Hmat, 14_pc, 65);
 circuit.addGate(dd::Smat, 62_nc, 27);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 71 qubis, containing 710 gates.
-TEST(LimTest, generatedCircuit_71) {
+TEST(LimTest, hardCircuit_71) {
 dd::QuantumCircuit circuit(71);
 
 circuit.addGate(dd::Hmat, 0);
@@ -25682,11 +25731,11 @@ circuit.addGate(dd::Smat, 13);
 circuit.addGate(dd::Tdagmat, 53);
 circuit.addGate(dd::Xmat, 29);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 72 qubis, containing 720 gates.
-TEST(LimTest, generatedCircuit_72) {
+TEST(LimTest, hardCircuit_72) {
 dd::QuantumCircuit circuit(72);
 
 circuit.addGate(dd::Hmat, 0);
@@ -26404,11 +26453,11 @@ circuit.addGate(dd::Tmat, 4);
 circuit.addGate(dd::Ymat, 27);
 circuit.addGate(dd::Smat, 4_nc, 5);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 73 qubis, containing 730 gates.
-TEST(LimTest, generatedCircuit_73) {
+TEST(LimTest, hardCircuit_73) {
 dd::QuantumCircuit circuit(73);
 
 circuit.addGate(dd::Hmat, 0);
@@ -27136,11 +27185,11 @@ circuit.addGate(dd::Xmat, 35);
 circuit.addGate(dd::Zmat, 21);
 circuit.addGate(dd::Tdagmat, 3_pc, 69);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 74 qubis, containing 740 gates.
-TEST(LimTest, generatedCircuit_74) {
+TEST(LimTest, hardCircuit_74) {
 dd::QuantumCircuit circuit(74);
 
 circuit.addGate(dd::Hmat, 1);
@@ -27878,11 +27927,11 @@ circuit.addGate(dd::Zmat, 43);
 circuit.addGate(dd::Tdagmat, 56_pc, 13);
 circuit.addGate(dd::Hmat, 4_nc, 30);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 75 qubis, containing 750 gates.
-TEST(LimTest, generatedCircuit_75) {
+TEST(LimTest, hardCircuit_75) {
 dd::QuantumCircuit circuit(75);
 
 circuit.addGate(dd::Hmat, 1);
@@ -28630,11 +28679,11 @@ circuit.addGate(dd::Tmat, 48);
 circuit.addGate(dd::Xmat, 7);
 circuit.addGate(dd::Tdagmat, 74_pc, 69);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 76 qubis, containing 760 gates.
-TEST(LimTest, generatedCircuit_76) {
+TEST(LimTest, hardCircuit_76) {
 dd::QuantumCircuit circuit(76);
 
 circuit.addGate(dd::Hmat, 0);
@@ -29392,11 +29441,11 @@ circuit.addGate(dd::Hmat, 14);
 circuit.addGate(dd::Xmat, 39);
 circuit.addGate(dd::Xmat, 26_nc, 70);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 77 qubis, containing 770 gates.
-TEST(LimTest, generatedCircuit_77) {
+TEST(LimTest, hardCircuit_77) {
 dd::QuantumCircuit circuit(77);
 
 circuit.addGate(dd::Hmat, 1);
@@ -30164,11 +30213,11 @@ circuit.addGate(dd::Tdagmat, 25_nc, 55_pc, 57);
 circuit.addGate(dd::Smat, 30);
 circuit.addGate(dd::Smat, 54);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 78 qubis, containing 780 gates.
-TEST(LimTest, generatedCircuit_78) {
+TEST(LimTest, hardCircuit_78) {
 dd::QuantumCircuit circuit(78);
 
 circuit.addGate(dd::Hmat, 1);
@@ -30946,11 +30995,11 @@ circuit.addGate(dd::Zmat, 54_nc, 65);
 circuit.addGate(dd::Ymat, 40_nc, 4);
 circuit.addGate(dd::Zmat, 22);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 79 qubis, containing 790 gates.
-TEST(LimTest, generatedCircuit_79) {
+TEST(LimTest, hardCircuit_79) {
 dd::QuantumCircuit circuit(79);
 
 circuit.addGate(dd::Hmat, 0);
@@ -31738,11 +31787,11 @@ circuit.addGate(dd::Tmat, 40_pc, 4);
 circuit.addGate(dd::Smat, 49);
 circuit.addGate(dd::Tdagmat, 11_pc, 18_nc, 60);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 80 qubis, containing 800 gates.
-TEST(LimTest, generatedCircuit_80) {
+TEST(LimTest, hardCircuit_80) {
 dd::QuantumCircuit circuit(80);
 
 circuit.addGate(dd::Hmat, 1);
@@ -32540,11 +32589,11 @@ circuit.addGate(dd::Tmat, 34_pc, 66_nc, 62);
 circuit.addGate(dd::Tdagmat, 8_nc, 11);
 circuit.addGate(dd::Ymat, 52);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 81 qubis, containing 810 gates.
-TEST(LimTest, generatedCircuit_81) {
+TEST(LimTest, hardCircuit_81) {
 dd::QuantumCircuit circuit(81);
 
 circuit.addGate(dd::Hmat, 0);
@@ -33352,11 +33401,11 @@ circuit.addGate(dd::Hmat, 25);
 circuit.addGate(dd::Xmat, 42);
 circuit.addGate(dd::Tdagmat, 11);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 82 qubis, containing 820 gates.
-TEST(LimTest, generatedCircuit_82) {
+TEST(LimTest, hardCircuit_82) {
 dd::QuantumCircuit circuit(82);
 
 circuit.addGate(dd::Hmat, 2);
@@ -34174,11 +34223,11 @@ circuit.addGate(dd::Tdagmat, 33_nc, 13);
 circuit.addGate(dd::Smat, 44_pc, 57_pc, 1);
 circuit.addGate(dd::Tmat, 41_pc, 20_pc, 19);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 83 qubis, containing 830 gates.
-TEST(LimTest, generatedCircuit_83) {
+TEST(LimTest, hardCircuit_83) {
 dd::QuantumCircuit circuit(83);
 
 circuit.addGate(dd::Hmat, 0);
@@ -35006,11 +35055,11 @@ circuit.addGate(dd::Hmat, 70_nc, 7);
 circuit.addGate(dd::Zmat, 15_nc, 9);
 circuit.addGate(dd::Zmat, 82);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 84 qubis, containing 840 gates.
-TEST(LimTest, generatedCircuit_84) {
+TEST(LimTest, hardCircuit_84) {
 dd::QuantumCircuit circuit(84);
 
 circuit.addGate(dd::Hmat, 1);
@@ -35848,11 +35897,11 @@ circuit.addGate(dd::Ymat, 53_nc, 69);
 circuit.addGate(dd::Ymat, 25_pc, 83_nc, 6);
 circuit.addGate(dd::Hmat, 82);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 85 qubis, containing 850 gates.
-TEST(LimTest, generatedCircuit_85) {
+TEST(LimTest, hardCircuit_85) {
 dd::QuantumCircuit circuit(85);
 
 circuit.addGate(dd::Hmat, 0);
@@ -36700,11 +36749,11 @@ circuit.addGate(dd::Zmat, 74_nc, 45);
 circuit.addGate(dd::Tmat, 10_nc, 49_nc, 15);
 circuit.addGate(dd::Hmat, 10);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 86 qubis, containing 860 gates.
-TEST(LimTest, generatedCircuit_86) {
+TEST(LimTest, hardCircuit_86) {
 dd::QuantumCircuit circuit(86);
 
 circuit.addGate(dd::Hmat, 0);
@@ -37562,11 +37611,11 @@ circuit.addGate(dd::Ymat, 48);
 circuit.addGate(dd::Xmat, 28);
 circuit.addGate(dd::Tmat, 47);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 87 qubis, containing 870 gates.
-TEST(LimTest, generatedCircuit_87) {
+TEST(LimTest, hardCircuit_87) {
 dd::QuantumCircuit circuit(87);
 
 circuit.addGate(dd::Hmat, 0);
@@ -38434,11 +38483,11 @@ circuit.addGate(dd::Xmat, 11_nc, 76_pc, 42);
 circuit.addGate(dd::Tmat, 30_pc, 32_nc, 19);
 circuit.addGate(dd::Ymat, 33);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 88 qubis, containing 880 gates.
-TEST(LimTest, generatedCircuit_88) {
+TEST(LimTest, hardCircuit_88) {
 dd::QuantumCircuit circuit(88);
 
 circuit.addGate(dd::Hmat, 0);
@@ -39316,11 +39365,11 @@ circuit.addGate(dd::Hmat, 40);
 circuit.addGate(dd::Xmat, 15_pc, 52);
 circuit.addGate(dd::Tmat, 20_nc, 2);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 89 qubis, containing 890 gates.
-TEST(LimTest, generatedCircuit_89) {
+TEST(LimTest, hardCircuit_89) {
 dd::QuantumCircuit circuit(89);
 
 circuit.addGate(dd::Hmat, 0);
@@ -40208,11 +40257,11 @@ circuit.addGate(dd::Smat, 25);
 circuit.addGate(dd::Tdagmat, 60);
 circuit.addGate(dd::Ymat, 34);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 90 qubis, containing 900 gates.
-TEST(LimTest, generatedCircuit_90) {
+TEST(LimTest, hardCircuit_90) {
 dd::QuantumCircuit circuit(90);
 
 circuit.addGate(dd::Hmat, 4);
@@ -41110,11 +41159,11 @@ circuit.addGate(dd::Smat, 51);
 circuit.addGate(dd::Ymat, 43);
 circuit.addGate(dd::Hmat, 63);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 91 qubis, containing 910 gates.
-TEST(LimTest, generatedCircuit_91) {
+TEST(LimTest, hardCircuit_91) {
 dd::QuantumCircuit circuit(91);
 
 circuit.addGate(dd::Hmat, 3);
@@ -42022,11 +42071,11 @@ circuit.addGate(dd::Tdagmat, 88);
 circuit.addGate(dd::Tmat, 8);
 circuit.addGate(dd::Xmat, 21_pc, 86);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 92 qubis, containing 920 gates.
-TEST(LimTest, generatedCircuit_92) {
+TEST(LimTest, hardCircuit_92) {
 dd::QuantumCircuit circuit(92);
 
 circuit.addGate(dd::Hmat, 0);
@@ -42944,11 +42993,11 @@ circuit.addGate(dd::Tmat, 28_pc, 4_pc, 48);
 circuit.addGate(dd::Zmat, 91_nc, 90);
 circuit.addGate(dd::Zmat, 49_pc, 81);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 93 qubis, containing 930 gates.
-TEST(LimTest, generatedCircuit_93) {
+TEST(LimTest, hardCircuit_93) {
 dd::QuantumCircuit circuit(93);
 
 circuit.addGate(dd::Hmat, 0);
@@ -43876,11 +43925,11 @@ circuit.addGate(dd::Smat, 1_nc, 30);
 circuit.addGate(dd::Tdagmat, 85);
 circuit.addGate(dd::Hmat, 66);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 94 qubis, containing 940 gates.
-TEST(LimTest, generatedCircuit_94) {
+TEST(LimTest, hardCircuit_94) {
 dd::QuantumCircuit circuit(94);
 
 circuit.addGate(dd::Hmat, 0);
@@ -44818,11 +44867,11 @@ circuit.addGate(dd::Hmat, 39);
 circuit.addGate(dd::Xmat, 66);
 circuit.addGate(dd::Tmat, 63);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 95 qubis, containing 950 gates.
-TEST(LimTest, generatedCircuit_95) {
+TEST(LimTest, hardCircuit_95) {
 dd::QuantumCircuit circuit(95);
 
 circuit.addGate(dd::Hmat, 1);
@@ -45770,11 +45819,11 @@ circuit.addGate(dd::Zmat, 0_pc, 36_pc, 76);
 circuit.addGate(dd::Zmat, 17);
 circuit.addGate(dd::Tmat, 77_pc, 55);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 96 qubis, containing 960 gates.
-TEST(LimTest, generatedCircuit_96) {
+TEST(LimTest, hardCircuit_96) {
 dd::QuantumCircuit circuit(96);
 
 circuit.addGate(dd::Hmat, 0);
@@ -46732,11 +46781,11 @@ circuit.addGate(dd::Zmat, 47_nc, 65);
 circuit.addGate(dd::Xmat, 43);
 circuit.addGate(dd::Hmat, 95_nc, 70);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 97 qubis, containing 970 gates.
-TEST(LimTest, generatedCircuit_97) {
+TEST(LimTest, hardCircuit_97) {
 dd::QuantumCircuit circuit(97);
 
 circuit.addGate(dd::Hmat, 0);
@@ -47704,11 +47753,11 @@ circuit.addGate(dd::Xmat, 82);
 circuit.addGate(dd::Hmat, 43_nc, 52_nc, 14);
 circuit.addGate(dd::Smat, 52_pc, 28_nc, 3);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 98 qubis, containing 980 gates.
-TEST(LimTest, generatedCircuit_98) {
+TEST(LimTest, hardCircuit_98) {
 dd::QuantumCircuit circuit(98);
 
 circuit.addGate(dd::Hmat, 0);
@@ -48686,11 +48735,11 @@ circuit.addGate(dd::Xmat, 49_nc, 57_nc, 72);
 circuit.addGate(dd::Zmat, 39_pc, 87_nc, 76);
 circuit.addGate(dd::Hmat, 21_nc, 68);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 99 qubis, containing 990 gates.
-TEST(LimTest, generatedCircuit_99) {
+TEST(LimTest, hardCircuit_99) {
 dd::QuantumCircuit circuit(99);
 
 circuit.addGate(dd::Hmat, 0);
@@ -49678,11 +49727,11 @@ circuit.addGate(dd::Hmat, 6);
 circuit.addGate(dd::Zmat, 10_nc, 39);
 circuit.addGate(dd::Zmat, 61_nc, 51_pc, 32);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
 // Randomly generated circuit on 100 qubis, containing 1000 gates.
-TEST(LimTest, generatedCircuit_100) {
+TEST(LimTest, hardCircuit_100) {
 dd::QuantumCircuit circuit(100);
 
 circuit.addGate(dd::Hmat, 0);
@@ -50680,6 +50729,6 @@ circuit.addGate(dd::Tdagmat, 38);
 circuit.addGate(dd::Tmat, 74_pc, 16);
 circuit.addGate(dd::Zmat, 4_pc, 86);
 
-simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+raceCircuitQMDDvsLIMDD(circuit);
 }
 
