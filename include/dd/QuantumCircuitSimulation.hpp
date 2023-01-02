@@ -143,7 +143,7 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     //format: nqubits, version name, time taken, multiply calls, add calls, nodecount, gates, time group intersect, time coset mod phase intersect, time coset pauli intersect, time construct stabs, time recover phase, time gram schmidt, gaussian elimination time..
     // .. normalize time, group intersect calls, coset intersect calls, construct stabs calls, recover phase calls, gram schmidt calls, normalizeLIMDD() calls, makeDDNode calls
     //statsfile << "limddOld," <<           (end[0] - begin[0]) << "," << limddOld->     multiply2CallCounter << "," << limddOld->     addCallCounter << "," << limddOld->     countNodes(resultEdge[0]) << "," << circuit.gates.size() << ",";
-    statsfile << "limddClifford-v1.2.2-Clifford-circuits," << (end[1] - begin[1]) << "," << limddClifford->multiply2CallCounter << "," << limddClifford->addCallCounter << "," << limddClifford->countNodes(resultEdge[1]) << "," << circuit.gates.size() << ",";
+    statsfile << "limddClifford-v1.2.3-Clifford-circuits," << (end[1] - begin[1]) << "," << limddClifford->multiply2CallCounter << "," << limddClifford->addCallCounter << "," << limddClifford->countNodes(resultEdge[1]) << "," << circuit.gates.size() << ",";
     //statsfile << "limddLocality-v1-0-clifford-circuits," << (end[2] - begin[2]) << "," << limddLocality->multiply2CallCounter << "," << limddLocality->addCallCounter << "," << limddLocality->countNodes(resultEdge[2]) << "," << circuit.gates.size() << ",";
     //statsfile << "qmdd," <<               (end[3] - begin[3]) << "," << qmdd->         multiply2CallCounter << "," << qmdd->         addCallCounter << "," << qmdd->         countNodes(resultEdge[3]) << "," << circuit.gates.size() << ",";
     statsfile << dd::groupIntersectTime << "," << dd::cosetIntersectModPTime << "," << dd::cosetIntersectPauliTime << "," << dd::constructStabilizerTime << "," << dd::recoverPhaseTime << "," << dd::gramSchmidtTime << "," << dd::gaussianEliminationTime << "," << limddClifford->normalizeLIMDDTime << ","
@@ -157,7 +157,8 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     //        simulateCircuitLIMDDGateByGate(circuit);
     //        return;
     auto qmdd  = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
-    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, dd::CachingStrategy::cliffordSpecialCaching);
+    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, (dd::CachingStrategy)(dd::CachingStrategy::cliffordSpecialCaching | dd::CachingStrategy::lazyMemoizationGroupIntersect));
+    //auto limdd2 = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false, (dd::CachingStrategy)(dd::CachingStrategy::cliffordSpecialCaching | dd::CachingStrategy::lazyMemoizationGroupIntersect));
 
     auto              qmddState  = qmdd->makeZeroState(circuit.n);
     auto              limddState = limdd->makeZeroState(circuit.n);
@@ -221,6 +222,7 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
             }
         }
         if (circuitIsCliffordSoFar) {
+            // This check verifies that all Clifford gates were correctly recognized as such by the LIMDD implementation, and were handled as special cases
             //ASSERT_TRUE(limdd->multiply2CallCounter == 0); // This check is disabled in order to test the locality-aware caching strategy
         }
         std::cout << "[simulate circuit] QMDD  mul statistics: ";
@@ -237,10 +239,10 @@ void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
         //        EXPECT_TRUE(std::isnan(limdd->matrixVectorMultiplication.hitRatio()) || std::isnan(qmdd->matrixVectorMultiplication.hitRatio()) || limdd->matrixVectorMultiplication.hitRatio() >= qmdd->matrixVectorMultiplication.hitRatio());
     }
 
-    //    qmdd->measureAll(qmddState, false, mt);
+    //qmdd->measureAll(qmddState, false, mt);
 
-    dd::export2Dot(qmddState, "qmdd.dot", false, true, true, false, true, false);
-    dd::export2Dot(limddState, "limdd.dot", false, true, true, false, true, false);
+    //dd::export2Dot(qmddState, "qmdd.dot", false, true, true, false, true, false);
+    //dd::export2Dot(limddState, "limdd.dot", false, true, true, false, true, false);
 
     std::mt19937_64 mt;
     auto            qmddResult  = qmdd->measureAll(qmddState, false, mt);

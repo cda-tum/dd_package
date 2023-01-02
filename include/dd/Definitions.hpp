@@ -133,11 +133,16 @@ namespace dd {
         cliffordSpecialCaching = 1,
         localityAwareCachingDirtyTrick = 2,
         localityAwareCachingClean = 4,
+        lazyMemoizationGroupIntersect = 8,
         localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick
     };
 
     bool usingSpecialCliffordCaching(CachingStrategy strategy) {
         return (strategy & cliffordSpecialCaching) != 0;
+    }
+
+    bool usingLazyMemoizationGroupIntersect(CachingStrategy strategy) {
+        return (strategy & lazyMemoizationGroupIntersect) != 0;
     }
 
 } // namespace dd

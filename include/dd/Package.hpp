@@ -1325,7 +1325,7 @@ namespace dd {
                         l.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
                         break;
                     case Pauli_group:
-                        stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn);
+                        stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn, cachingStrategy);
                         putStabilizersInTable(l, stabilizers);
 #if !NDEBUG
 
@@ -2843,7 +2843,7 @@ namespace dd {
         vEdge applyPauliGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             applyPauliCallCounter++;
             success = false;
-            if (cachingStrategy != cliffordSpecialCaching) return y;
+            if (!usingSpecialCliffordCaching(cachingStrategy)) return y;
             CliffordGate gate = isPauliGate(x);
             //Log::log << "[Apply Pauli] Pauli gate is " << (char) gate.gateType << " on qubit " << (int) gate.target << "\n";
             if (gate.gateType != cliffNoGate) {
@@ -2871,7 +2871,7 @@ namespace dd {
 
         vEdge applyHadamardGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
-            if (cachingStrategy != cliffordSpecialCaching) {
+            if (!usingSpecialCliffordCaching(cachingStrategy)) {
                 return y;
             }
             CliffordGate gate = isHadamardGate(x);

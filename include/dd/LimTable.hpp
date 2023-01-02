@@ -714,6 +714,7 @@ namespace dd {
             return true; // in this case, vectors are equal
         }
 
+        // TODO speed up this routine, if possible: get a and b as integers, and just compare as integers, which yields the same result
         static bool greaterValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             assert(a.paulis.size() == b.paulis.size());
             assert(a.paulis.size() <= NUM_BITSETBITS);
