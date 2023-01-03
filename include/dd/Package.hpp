@@ -702,7 +702,7 @@ namespace dd {
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             iso.weight = cn.getCached();
             //Log::log << "[normalizeLIMDD] getting isomorphism. r = " << r << "\n";
-            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism);
+            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism, cachingStrategy);
             //Log::log << "[normalizeLIMDD] after getting isomorphism. r = " << r << "\n";
             if (!foundIsomorphism) {
                 Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"

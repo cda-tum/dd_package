@@ -37,6 +37,7 @@ namespace dd {
     long groupIntersectCallCount = 0;
     long recoverPhaseCallCount   = 0;
     long gramSchmidtCallCount    = 0;
+    long intersectionMemoizationHits         = 0;
 
     // TODO write a test
     // TODO refactor to use recoverElement
@@ -878,6 +879,8 @@ namespace dd {
             if (!memoizedGintersectH && usingLazyMemoizationGroupIntersect(cachingStrategy) || !usingLazyMemoizationGroupIntersect(cachingStrategy)) {
                 GintersectH = intersectGroupsModuloPhaseValue(G, H);
                 memoizedGintersectH = true;
+            } else {
+                intersectionMemoizationHits++;
             }
             // See if some element of J has xy = -1
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
@@ -1044,7 +1047,7 @@ namespace dd {
             // Step 2: find out whether an element P*P' should be added, where P acts on qubit 'n'
             //Log::log << "[constructStabilizerGeneratorSet] Treating case Z...\n";
             bool foundElementX, foundElementY, foundElementZ;
-            LimEntry<> stabX, stabY, stabZ;
+            LimEntry<> CIE_Z, stabX, stabY, stabZ;
 
             // Next we do some memoization for getCosetIntersectionElementPauli2. This routine uses the matrix [G H; Id] in column echelon form, and uses the group G intersect H.
             //   Since this routine is called up to two times, we aim to do that work only once
@@ -1057,8 +1060,9 @@ namespace dd {
             bool memoizedGintersectH = false;
 
             // Step 2.1: Find out whether a stabilizer of the form Z*P' exists
-            std::tie(stabZ, foundElementZ) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
+            std::tie(CIE_Z, foundElementZ) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, phase_t::phase_minus_one, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
             if (foundElementZ) {
+                stabZ = CIE_Z;
                 stabZ.setOperator(n, 'Z');
                 stabgenset.push_back(stabZ);
                 //Log::log << "[constructStabilizerGeneratorSet] found stabilizer: " << LimEntry<>::to_string(&stab, n) << '\n';
@@ -1074,7 +1078,13 @@ namespace dd {
                     // Step 2.2: Find out whether a stabilizer of the form X*P' exists
                     //Log::log << "[constructStabilizerGeneratorSet] Treating case X...\n";
                     // TODO check if rhoSquared == -1; if so, reuse the result from above (i.e., if foundElementZ, then reuse stabZ, otherwise skip this part)
-                    std::tie(stabX, foundElementX) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, rhoSquared, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
+                    if (rhoSquared == phase_t::phase_minus_one) {
+                        stabX = CIE_Z;
+                        foundElementX = foundElementZ;
+                    }
+                    else {
+                        std::tie(stabX, foundElementX) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, rhoSquared, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
+                    }
                     if (foundElementX) {
                         LimEntry<> X;
                         X.setOperator(n, pauli_op::pauli_x);
@@ -1094,8 +1104,14 @@ namespace dd {
                     if (!(foundElementZ || foundElementX)) {
                         //Log::log << "[constructStabilizerGeneratorSet] Treating case Y...\n";
                         phase_t minusRhoSquared = multiplyPhases(rhoSquared, phase_t::phase_minus_one);
-                        // TODO check if minusRhoSquared == -1; if so, reuse the result from above
-                        std::tie(stabY, foundElementY) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
+                        // if minusRhoSquared == -1, then we may reuse the result from above - from the 'Z' case in step 2.1
+                        if (minusRhoSquared == phase_t::phase_minus_one) {
+                            stabY = CIE_Z;
+                            foundElementX = foundElementZ;
+                        }
+                        else {
+                            std::tie(stabY, foundElementY) = getCosetIntersectionElementPauli2(*stabLow, *stabHigh, high.l, high.l, minusRhoSquared, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, n - 1);
+                        }
                         if (foundElementY) {
                             LimEntry<> X;
                             X.setOperator(n, pauli_op::pauli_y);
@@ -1222,7 +1238,7 @@ namespace dd {
     //    in case 3.1
     //    in knife cases
     //    check if uhigh.w = 1 / vhigh.w
-    inline void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism) {
+    inline void getIsomorphismPauli(const vNode* u, const vNode* v, ComplexNumbers& cn, LimWeight<>& iso, bool& foundIsomorphism, CachingStrategy cachingStrategy) {
         assert(u != nullptr);
         assert(v != nullptr);
         //        Log::log << "[getIsomorphismPauli] Start. states have " << (int) u->v+1 << " qubits.\n";
@@ -1322,7 +1338,7 @@ namespace dd {
                 uPrime.e[1]      = u->e[0];
                 uPrime.e[1].l    = u->e[1].l;
                 uPrime.e[1].w    = u->e[0].w;
-                getIsomorphismPauli(&uPrime, v, cn, iso, foundIsomorphism);
+                getIsomorphismPauli(&uPrime, v, cn, iso, foundIsomorphism, cachingStrategy);
                 if (!foundIsomorphism) return;
                 LimEntry<> X = *(u->e[1].l);
                 X.setOperator(u->v, pauli_op::pauli_x);
@@ -1344,7 +1360,6 @@ namespace dd {
             std::vector<LimBitset<NUM_QUBITS, 2 * NUM_QUBITS>> GH_Id_CEF = concatenateAndAppendIdentityMatrix(uLow.p->limVector, uHigh.p->limVector);
             toColumnEchelonFormModuloPhase(GH_Id_CEF);
             std::vector<LimEntry<NUM_QUBITS>> GintersectH;
-            CachingStrategy cachingStrategy = CachingStrategy::lazyMemoizationGroupIntersect;
             if (!usingLazyMemoizationGroupIntersect(cachingStrategy)) {
                 GintersectH = intersectGroupsModuloPhaseValue(uLow.p->limVector, uHigh.p->limVector);
             }
@@ -1394,9 +1409,6 @@ namespace dd {
                 }
             }
 
-            // TODO if u==v and lambda is the same as here, we may be able to skip this stuff
-            // TODO should we refactor this last part and just call getIsomorphismZ?
-            //      we could refactor ONLY this last part, and thereby make both this and the getIsomorphismZ functions more readable
             Complex rhoVdivRhoU = cn.getCached();
             ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
             ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
@@ -1406,14 +1418,15 @@ namespace dd {
             cn.returnToCache(rhoVdivRhoU);
             cn.returnToCache(rhoV);
             cn.returnToCache(rhoU);
+#ifdef NDEBUG
             if (lambda == phase_t::no_phase) {
                 Log::log << "[getIsomorphismPauli] Edge weights differ by a factor " << rhoVdivRhoU << " != +/- 1,i so returning noLIM.\n";
                 foundIsomorphism = false;
                 std::cout << "[getIsomorphism] No isomorphism, case 4" << std::endl;
                 return;
             }
+#endif
             //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
-            //
             //
             //            Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
             //iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
@@ -1421,6 +1434,7 @@ namespace dd {
 
             //            Log::log << "[getIsomorphismPauli] uLow.p->limVector  = "; printStabilizerGroup(uLow.p->limVector, uLow.p->v); Log::log << '\n';
             //            Log::log << "[getIsomorphismPauli] uHigh.p->limVector = "; printStabilizerGroup(uHigh.p->limVector, uHigh.p->v); Log::log << '\n';
+            // TODO use iso.lim instead of temp
             auto [temp, foundElement] = getCosetIntersectionElementPauli2(uLow.p->limVector, uHigh.p->limVector, v->e[1].l, u->e[1].l, lambda, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, u->v);
             if (foundElement) {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";

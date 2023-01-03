@@ -10,6 +10,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+void simulateCircuitQMDDvsLIMDDGateByGate(const dd::QuantumCircuit& circuit);
+
 void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
     auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false);
     //    auto limdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group, false);
@@ -67,11 +69,13 @@ void simulateCircuitLIMDDGateByGate(const dd::QuantumCircuit& circuit) {
 
 
 void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
+    //simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+    //return;
     auto qmdd = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::QMDD_group);
     auto limddOld = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false,
                                                     dd::CachingStrategy::QMDDCachingStrategy);
     auto limddClifford = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false,
-                                                 dd::CachingStrategy::cliffordSpecialCaching);
+                                                         (dd::CachingStrategy)(dd::CachingStrategy::cliffordSpecialCaching | dd::CachingStrategy::lazyMemoizationGroupIntersect));
     auto limddLocality = std::make_unique<dd::Package<>>(circuit.n, dd::LIMDD_group::Pauli_group, false,
                                                  dd::CachingStrategy::localityAwareCachingDirtyTrick);
 
@@ -88,6 +92,7 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     dd::cosetIntersectCallCount     = 0;
     dd::groupIntersectCallCount     = 0;
     dd::recoverPhaseCallCount       = 0;
+    dd::intersectionMemoizationHits = 0;
 
     std::cout << "[race circuit] Simulating old LIMDD\n";
     // simulate old LIMDD
@@ -141,13 +146,13 @@ void raceCircuitQMDDvsLIMDD(const dd::QuantumCircuit& circuit) {
     statsfile.open("DDstatsfile.csv", std::ios_base::app);
     statsfile << (int) circuit.n << ",";
     //format: nqubits, version name, time taken, multiply calls, add calls, nodecount, gates, time group intersect, time coset mod phase intersect, time coset pauli intersect, time construct stabs, time recover phase, time gram schmidt, gaussian elimination time..
-    // .. normalize time, group intersect calls, coset intersect calls, construct stabs calls, recover phase calls, gram schmidt calls, normalizeLIMDD() calls, makeDDNode calls
+    // .. normalize time, group intersect calls, coset intersect calls, construct stabs calls, recover phase calls, gram schmidt calls, normalizeLIMDD() calls, makeDDNode calls, intersection memoziation hits
     //statsfile << "limddOld," <<           (end[0] - begin[0]) << "," << limddOld->     multiply2CallCounter << "," << limddOld->     addCallCounter << "," << limddOld->     countNodes(resultEdge[0]) << "," << circuit.gates.size() << ",";
-    statsfile << "limddClifford-v1.2.3-Clifford-circuits," << (end[1] - begin[1]) << "," << limddClifford->multiply2CallCounter << "," << limddClifford->addCallCounter << "," << limddClifford->countNodes(resultEdge[1]) << "," << circuit.gates.size() << ",";
+    statsfile << "limddClifford-v1.2.6-Clifford-circuits," << (end[1] - begin[1]) << "," << limddClifford->multiply2CallCounter << "," << limddClifford->addCallCounter << "," << limddClifford->countNodes(resultEdge[1]) << "," << circuit.gates.size() << ",";
     //statsfile << "limddLocality-v1-0-clifford-circuits," << (end[2] - begin[2]) << "," << limddLocality->multiply2CallCounter << "," << limddLocality->addCallCounter << "," << limddLocality->countNodes(resultEdge[2]) << "," << circuit.gates.size() << ",";
     //statsfile << "qmdd," <<               (end[3] - begin[3]) << "," << qmdd->         multiply2CallCounter << "," << qmdd->         addCallCounter << "," << qmdd->         countNodes(resultEdge[3]) << "," << circuit.gates.size() << ",";
     statsfile << dd::groupIntersectTime << "," << dd::cosetIntersectModPTime << "," << dd::cosetIntersectPauliTime << "," << dd::constructStabilizerTime << "," << dd::recoverPhaseTime << "," << dd::gramSchmidtTime << "," << dd::gaussianEliminationTime << "," << limddClifford->normalizeLIMDDTime << ","
-              << dd::groupIntersectCallCount << "," << dd::cosetIntersectCallCount << ",0," << dd::recoverPhaseCallCount << "," << dd::gramSchmidtCallCount << "," << limddClifford->normalizeLIMDDcallCounter << "," << limddClifford->makeDDNodeCallCount << "\n";
+              << dd::groupIntersectCallCount << "," << dd::cosetIntersectCallCount << ",0," << dd::recoverPhaseCallCount << "," << dd::gramSchmidtCallCount << "," << limddClifford->normalizeLIMDDcallCounter << "," << limddClifford->makeDDNodeCallCount << "," << dd::intersectionMemoizationHits << "\n";
     statsfile.close();
 }
 
