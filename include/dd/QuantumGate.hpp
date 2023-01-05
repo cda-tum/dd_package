@@ -161,6 +161,16 @@ public:
     }
 };
 
+std::ostream& operator<<(std::ostream& out, const CliffordGate& gate) {
+    out << (char)gate.gateType << "[" << (int)gate.target;
+    if (gate.control.qubit != -1) {
+        out << " | " << ( (bool)gate.control.type ? "+" : "-") << (int)gate.control.qubit << "]";
+    } else {
+        out << "]";
+    }
+    return out;
+}
+
 }
 
 
