@@ -855,7 +855,7 @@ namespace dd {
     // GH_Id is the concatenation of G and H, to which an identity matrix is appended, and on which Gaussian elimination modulo phase has been performed
     // TODO refactor so that we compute the intersection if needed; otherwise, not. If we compute it, then we give it back to the calling function
     template <std::size_t NUM_QUBITS>
-    std::pair<LimEntry<NUM_QUBITS>, bool> getCosetIntersectionElementPauli2(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, const std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS> >& GH_Id_CEF, std::vector<LimEntry<NUM_QUBITS>>& GintersectH, bool& memoizedGintersectH, CachingStrategy cachingStrategy, const  [[maybe_unused]] Qubit nQubits = 5) {
+    std::pair<LimEntry<NUM_QUBITS>, bool> getCosetIntersectionElementPauli2(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, const std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS> >& GH_Id_CEF, std::vector<LimEntry<NUM_QUBITS>>& GintersectH, bool& memoizedGintersectH, CachingStrategy cachingStrategy, [[maybe_unused]] const  Qubit nQubits = 5) {
         if (lambda == phase_t::no_phase) {
             return {LimEntry<NUM_QUBITS>(), false};
         }
@@ -887,7 +887,7 @@ namespace dd {
             // TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
             //    Check if this conjecture is true.
         else if (alpha == multiplyPhases(tau, phase_t::phase_minus_one)) {
-            if (!memoizedGintersectH && usingLazyMemoizationGroupIntersect(cachingStrategy) || !usingLazyMemoizationGroupIntersect(cachingStrategy)) {
+            if ((!memoizedGintersectH && usingLazyMemoizationGroupIntersect(cachingStrategy)) || !usingLazyMemoizationGroupIntersect(cachingStrategy)) {
                 GintersectH = intersectGroupsModuloPhaseValue(G, H);
                 memoizedGintersectH = true;
             } else {
@@ -1601,9 +1601,9 @@ namespace dd {
             // right-multiply pControl by Z
             lim.multiplyByZ(gate.control.qubit);
         }
-        if ((pControl == pauli_id || pControl == pauli_y) && (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) && gate.control.type == Control::Type::neg) {
-            lim.multiplyPhaseByMinusOne();
-        }
+//        if ((pControl == pauli_id || pControl == pauli_y) && (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) && gate.control.type == Control::Type::neg) {
+//            lim.multiplyPhaseByMinusOne();
+//        }
     }
 
 } // namespace dd

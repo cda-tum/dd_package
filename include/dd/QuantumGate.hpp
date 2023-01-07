@@ -167,8 +167,9 @@ public:
             case cliffpauli_y:  return Ymat;
             case cliffpauli_z:  return Zmat;
             case cliffHadamard: return Hmat;
+            default:
+                return Imat;
         }
-        return Imat;
     }
 };
 

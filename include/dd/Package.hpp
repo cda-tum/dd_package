@@ -2364,12 +2364,22 @@ namespace dd {
                     gate.control = {mat.p->v, Control::Type::pos};
                 }
             }
+            // Check for negative upward-controlled Pauli Z
+            else if (mat.p->e[0].p->isIdentity() &&
+                     mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::minus_one) {
+                gate = isPauliGate(mat.p->e[3]);
+                Log::log << "[isCP] possible negative upward controlled " << (char)gate.gateType << " gate (should be Z).\n";
+                if (gate.gateType == cliffpauli_z) {
+                    gate = CliffordGate(cliffpauli_z, Control{gate.target, Control::Type::neg}, mat.p->v);
+//                    gate.control = {mat.p->v, Control::Type::neg};
+                }
+            }
             // Check for negative downward-controlled Pauli
             // TODO merge code of downward-controlled Pauli X,Z with Pauli Y
             else if (mat.p->e[3].p->isIdentity() &&
                     (mat.p->e[0].w == Complex::one || mat.p->e[0].w == Complex::minus_i) && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
                 gate = isPauliGate(mat.p->e[0]);
-                Log::log << "[isCP] possible negative controlled Pauli.\n";
+                Log::log << "[isCP] possible negative downward controlled Pauli.\n";
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::neg};
                 }
@@ -2871,6 +2881,7 @@ namespace dd {
         }
 
         vEdge applySpecificPauliGate(const vEdge& y, const CliffordGate gate) {
+            Log::log << "[applySpecificPauliGate, gate=" << gate << "] Start.\n";
             vEdge result = y;
             LimEntry<> lim(result.l);
             lim.leftMultiplyBy(gate.target, (pauli_op) gate.gateType);
@@ -2922,15 +2933,21 @@ namespace dd {
                 /// Our implementation can apply only positive-controlled gates. Nevertheless, when 'gate' is a negative-controlled gate, then we can still apply this gate, by applying also two X gates.
                 ///   specifically, to achieve this we apply X * positive-gate * X
                 if (gate.control.type == Control::Type::neg) {
-                    // Prepare the X gate
-                    CliffordGate xGate = CliffordGate(cliffpauli_x, Control{-1, Control::Type::pos}, gate.control.qubit);
-                    // Prepare the positive-controlled gate
+                    /// Prepare the positive-controlled gate
                     CliffordGate positiveControlledGate  = gate;
                     positiveControlledGate.control.type  = Control::Type::pos;
+                    /// By convention, we always say that controlled Z gates are downward-controlled (we have this option, since they are symmetric)
+                    if (positiveControlledGate.gateType == cliffpauli_z && gate.control.qubit < gate.target) {
+                        positiveControlledGate.target        = gate.control.qubit;
+                        positiveControlledGate.control.qubit = gate.target;
+                    }
+                    /// Prepare the X gate
+                    CliffordGate xGate = CliffordGate(cliffpauli_x, Control{-1, Control::Type::pos}, gate.control.qubit);
+                    /// Prepare the DD of the new, positive-controlled gate
                     GateMatrix  gatematrix               = positiveControlledGate.getGateMatrix();
                     Controls controls = {positiveControlledGate.control};
-                    Edge<mNode> positiveControlledGateDD = makeGateDD(gatematrix, qubits(), controls, gate.target);
-                    // Apply the gates
+                    Edge<mNode> positiveControlledGateDD = makeGateDD(gatematrix, qubits(), controls, positiveControlledGate.target);
+                    /// Apply the gates
                     vEdge result = applySpecificPauliGate(y, xGate);
                     result = applyControlledPauliGate2(positiveControlledGateDD, result, positiveControlledGate);
                     result = applySpecificPauliGate(result, xGate);
@@ -3006,7 +3023,7 @@ namespace dd {
                 cn.returnToCache(result.w);
                 return vEdge::zero;
             }
-            //Log::log << "[makeNodeAndCache] corrected weight; result = " << result << '\n';
+            Log::log << "[makeNodeAndCache] corrected weight; result = " << result << " with vector " << outputCVec(getVector(result)) << '\n';
             return result;
         }
 
@@ -3107,7 +3124,7 @@ namespace dd {
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
             applyControlledPauliCallCounter++;
             unsigned int callCount = applyControlledPauliCallCounter;
-            Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << ", c=" << (int) gate.control.qubit << ", t=" << (int) gate.target << " op=" <<(char) gate.gateType << "] Start. mat has " << (int)x.p->v << " qubits. y = " << y << '\n';
+            Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << ", gate=" << gate << "] Start. mat has " << (int)x.p->v << " qubits. y = " << y << '\n';
             Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y   = " << outputCVec(getVector(y)) << "\n";
             Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y.p = " << outputCVec(getVector(y.p)) << "\n";
 #if !NDEBUG
