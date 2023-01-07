@@ -5,6 +5,7 @@
 #include "ComplexValue.hpp"
 #include "Definitions.hpp"
 #include "Control.hpp"
+#include "GateMatrixDefinitions.hpp"
 
 #include <array>
 #include <vector>
@@ -135,7 +136,7 @@ enum CliffordGateType_t {
     cliffidentity = 'I',
     cliffpauli_x  = 'X',
     cliffpauli_y  = 'Y',
-    cliffPauli_z  = 'Z',
+    cliffpauli_z  = 'Z',
     cliffPhase    = 'P',
     cliffPhaseInv = 'Q',
     cliffHadamard = 'H',
@@ -158,6 +159,16 @@ public:
         if (gateType == cliffPhase) return CliffordGate(cliffPhaseInv, control, target);
         if (gateType == cliffPhaseInv) return CliffordGate(cliffPhase, control, target);
         return *this;
+    }
+
+    GateMatrix getGateMatrix() const {
+        switch(gateType) {
+            case cliffpauli_x:  return Xmat;
+            case cliffpauli_y:  return Ymat;
+            case cliffpauli_z:  return Zmat;
+            case cliffHadamard: return Hmat;
+        }
+        return Imat;
     }
 };
 

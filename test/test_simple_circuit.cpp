@@ -1379,6 +1379,163 @@ TEST(LimTest, simpleCircuit109) {
     simulateCircuitQMDDvsLIMDDGateByGate(c);
 }
 
+TEST(LimTest, simpleCircuit120) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 0_pc, 1);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit121) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 1);
+    c.addGate(dd::Zmat, 0_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit122) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 0_pc, 1);
+    c.addGate(dd::Zmat, 0_pc, 2);
+    c.addGate(dd::Zmat, 1_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit123) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 0_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 1);
+    c.addGate(dd::Zmat, 1_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit124) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 0_pc, 2);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit125) {
+    dd::QuantumCircuit c(3);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 2);
+    c.addGate(dd::Zmat, 0_pc, 1);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit126) {
+    dd::QuantumCircuit c(5);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Hmat, 3);
+    c.addGate(dd::Hmat, 4);
+    c.addGate(dd::Zmat, 0_pc, 1);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 3_pc, 4);
+    c.addGate(dd::Zmat, 2_pc, 3);
+    c.addGate(dd::Zmat, 2_pc, 0);
+    c.addGate(dd::Zmat, 2_pc, 3);
+    c.addGate(dd::Zmat, 2_pc, 4);
+    c.addGate(dd::Xmat, 0);
+    c.addGate(dd::Ymat, 1);
+    c.addGate(dd::Zmat, 2);
+    c.addGate(dd::Hmat, 3);
+    c.addGate(dd::Smat, 4);
+    c.addGate(dd::Hmat, 3);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit127) {
+    dd::QuantumCircuit c(5);
+    c.addGate(dd::Hmat, 0);
+    c.addGate(dd::Hmat, 1);
+    c.addGate(dd::Hmat, 2);
+    c.addGate(dd::Hmat, 3);
+    c.addGate(dd::Hmat, 4);
+    c.addGate(dd::Zmat, 0_pc, 2);
+    c.addGate(dd::Zmat, 1_pc, 2);
+    c.addGate(dd::Zmat, 3_pc, 2);
+    c.addGate(dd::Zmat, 4_pc, 2);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(c);
+}
+
+TEST(LimTest, simpleCircuit128) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Hmat, 2);
+    circuit.addGate(dd::Xmat, 2_nc, 0);
+    circuit.addGate(dd::Ymat, 1_nc, 0);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+TEST(LimTest, simpleCircuit129) {
+    dd::QuantumCircuit circuit(2);
+
+    circuit.addGate(dd::Hmat, 1);
+    circuit.addGate(dd::Ymat, 1_nc, 0);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+TEST(LimTest, simpleCircuit130) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Hmat, 1);
+    circuit.addGate(dd::Ymat, 0_nc, 1);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+TEST(LimTest, simpleCircuit131) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Hmat, 2);
+    circuit.addGate(dd::Xmat, 2_nc, 0);
+    circuit.addGate(dd::Ymat, 0_nc, 1);
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+TEST(LimTest, simpleCircuit132) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Hmat, 1);
+    circuit.addGate(dd::Hmat, 0);
+    circuit.addGate(dd::Zmat, 1_pc, 0);
+    circuit.addGate(dd::Ymat, 1_pc, 2);
+    circuit.addGate(dd::Ymat, 1_nc, 0);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
 TEST(LimTest, cachingTests) {
     auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false);
 
@@ -1650,116 +1807,6 @@ TEST(LimTest, twoHadamardGates) {
     state = dd->multiply(h_gate2, state);
 }
 
-TEST(LimTest, simpleCircuit120) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 0_pc, 1);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit121) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 1);
-    c.addGate(dd::Zmat, 0_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit122) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 0_pc, 1);
-    c.addGate(dd::Zmat, 0_pc, 2);
-    c.addGate(dd::Zmat, 1_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit123) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 0_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 1);
-    c.addGate(dd::Zmat, 1_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit124) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 0_pc, 2);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit125) {
-    dd::QuantumCircuit c(3);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 2);
-    c.addGate(dd::Zmat, 0_pc, 1);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit126) {
-    dd::QuantumCircuit c(5);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Hmat, 4);
-    c.addGate(dd::Zmat, 0_pc, 1);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 3_pc, 4);
-    c.addGate(dd::Zmat, 2_pc, 3);
-    c.addGate(dd::Zmat, 2_pc, 0);
-    c.addGate(dd::Zmat, 2_pc, 3);
-    c.addGate(dd::Zmat, 2_pc, 4);
-    c.addGate(dd::Xmat, 0);
-    c.addGate(dd::Ymat, 1);
-    c.addGate(dd::Zmat, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Smat, 4);
-    c.addGate(dd::Hmat, 3);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
-
-TEST(LimTest, simpleCircuit127) {
-    dd::QuantumCircuit c(5);
-    c.addGate(dd::Hmat, 0);
-    c.addGate(dd::Hmat, 1);
-    c.addGate(dd::Hmat, 2);
-    c.addGate(dd::Hmat, 3);
-    c.addGate(dd::Hmat, 4);
-    c.addGate(dd::Zmat, 0_pc, 2);
-    c.addGate(dd::Zmat, 1_pc, 2);
-    c.addGate(dd::Zmat, 3_pc, 2);
-    c.addGate(dd::Zmat, 4_pc, 2);
-
-    simulateCircuitQMDDvsLIMDDGateByGate(c);
-}
 
 TEST(LimTest, simpleCircuit_graphstate_18) {
     dd::QuantumCircuit c(18);

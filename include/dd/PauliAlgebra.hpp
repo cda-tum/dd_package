@@ -1589,6 +1589,8 @@ namespace dd {
         }
     }
 
+    // For a Controlled Pauli gate 'gate', sets lim := gate * lim * gate
+    // how to conjugate X with negative controlled Y?
     inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const CliffordGate gate) {
         pauli_op pControl = (pauli_op) lim.getQubit(gate.control.qubit);
         pauli_op pTarget  = (pauli_op) lim.getQubit(gate.target);
@@ -1598,6 +1600,9 @@ namespace dd {
         if (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) {
             // right-multiply pControl by Z
             lim.multiplyByZ(gate.control.qubit);
+        }
+        if ((pControl == pauli_id || pControl == pauli_y) && (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) && gate.control.type == Control::Type::neg) {
+            lim.multiplyPhaseByMinusOne();
         }
     }
 

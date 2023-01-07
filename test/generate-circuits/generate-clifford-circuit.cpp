@@ -67,7 +67,8 @@ int main(int nargs, char** args) {
                 do {
                     target = rand() % nQubits;
                 } while (target == control);
-                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_pc, " << target << ");\n";
+                control1polarity = rand() % 2;
+                cout << "    circuit.addGate(dd::" << getGateName(gate) << ", " << control << "_" << (control1polarity ?  'p' : 'n') << "c, " << target << ");\n";
             }
         } else {
             gate = rand() % gateSetSize;
