@@ -1536,6 +1536,15 @@ TEST(LimTest, simpleCircuit132) {
     simulateCircuitQMDDvsLIMDDGateByGate(circuit);
 }
 
+TEST(LimTest, simpleCircuit133) {
+    dd::QuantumCircuit circuit(2);
+
+    circuit.addGate(dd::Hmat, 0);
+    circuit.addGate(dd::Zmat, 0_nc, 1);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
 TEST(LimTest, cachingTests) {
     auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false);
 

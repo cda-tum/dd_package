@@ -46,17 +46,27 @@ endmacro()
 # add unit tests
 package_add_test(${PROJECT_NAME}_test
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_complex.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
-		#${CMAKE_CURRENT_SOURCE_DIR}/hard-circuits.cpp)
-        #${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuitsLarge.cpp)
-		#${CMAKE_CURRENT_SOURCE_DIR}/test_lim.cpp)
+		#${CMAKE_CURRENT_SOURCE_DIR}/test_lim.cpp
 		#${CMAKE_CURRENT_SOURCE_DIR}/test_package.cpp)
+		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
+
+package_add_test(${PROJECT_NAME}_simpleCircuitTest
+		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
+
+package_add_test(${PROJECT_NAME}_cliffordCircuitsLarge
+		${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuitsLarge.cpp)
+
+package_add_test(${PROJECT_NAME}_hardCircuitTest
+		${CMAKE_CURRENT_SOURCE_DIR}/hard-circuits.cpp)
+
+package_add_test(${PROJECT_NAME}_minimizedCircuitTest
+		${CMAKE_CURRENT_SOURCE_DIR}/cc5_minimized.cpp)
 
 add_custom_command(TARGET ${PROJECT_NAME}_test
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_test>/${PROJECT_NAME}_test ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_test
-                   COMMENT "Creating symlink for ${PROJECT_NAME}_test"
-                   VERBATIM)
+		   POST_BUILD
+		   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_test>/${PROJECT_NAME}_test ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_test
+		   COMMENT "Creating symlink for ${PROJECT_NAME}_test"
+		   VERBATIM)
 
 # include dd_example in test suite
 add_test(NAME ${PROJECT_NAME}_example COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_example)
