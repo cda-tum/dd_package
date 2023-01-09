@@ -17,6 +17,7 @@ namespace dd {
 
         Qubit qubit{};
         Type  type = Type::pos;
+        static Control noControl;
     };
 
     inline bool operator<(const Control& lhs, const Control& rhs) {
@@ -30,6 +31,8 @@ namespace dd {
     inline bool operator!=(const Control& lhs, const Control& rhs) {
         return !(lhs == rhs);
     }
+
+    Control Control::noControl = Control{(Qubit)-1, Control::Type::pos};
 
     // this allows a set of controls to be indexed by a `Qubit`
     struct CompareControl {

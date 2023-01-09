@@ -436,14 +436,10 @@ namespace dd {
         template<class Edge>
         void sanityCheckNormalize(CVec before, CVec after, [[maybe_unused]] const Edge& originalEdge, [[maybe_unused]] const Edge& normalizedEdge) {
             if (!vectorsApproximatelyEqual(before, after)) {
-                //Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
-                //Log::log << "[normalizeLIMDD] original:   ";
-                printCVec(before);
-                //Log::log << '\n';
-                //Log::log << "[normalizeLIMDD] normalized: ";
-                printCVec(after);
-                Log::log << '\n';
-                //export2Dot(originalEdge, "originalEdge.dot", false, true, true, false, true);
+                Log::log << "[normalizeLIMDD] ERROR normalized vector is off :-(\n";
+                Log::log << "[normalizeLIMDD] original:   " << outputCVec(before) << "\n";
+                Log::log << "[normalizeLIMDD] normalized: " << outputCVec(after) << "\n";
+                //export2Dot(originalEdge,   "originalEdge.dot",   false, true, true, false, true);
                 //export2Dot(normalizedEdge, "normalizedEdge.dot", false, true, true, false, true);
                 throw std::runtime_error("[normalizeLIMDD] ERROR normalized edge has different vector than original edge! See files originalEdge.svg and normalizedEdge.svg\n");
             }
@@ -465,10 +461,11 @@ namespace dd {
             CVec  nodeVec = getVector(edge.p);
             vEdge edgeId  = edge;
             edgeId.l      = nullptr;
+            edgeId.w      = Complex::one;
             CVec stabVec;
             for (unsigned int i = 0; i < stabilizerGroup.size(); i++) {
                 stabVec = getVector(edgeId, *stabilizerGroup[i]);
-                if (!vectorsApproximatelyEqual(nodeVec, stabVec)) {
+                if (!vectorsApproximatelyPointwiseEqual(nodeVec, stabVec)) {
                     CVec edgeVec = getVector(edge);
                     Log::log << "[sanity check stabilizer group] ERROR stabilizer group contains a non-stabilizer element: " << LimEntry<>::to_string(stabilizerGroup[i], edge.p->v) << "\n";
                     Log::log << "[sanity check stabilizer group] Edge is " << edge << '\n';
@@ -485,17 +482,17 @@ namespace dd {
 
         // Checks whether a == iso * b
         template<class Edge>
-        void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<>* iso, [[maybe_unused]] Edge dummy) {
+        void sanityCheckIsomorphism(vNode& a, vNode& b, LimEntry<> iso, [[maybe_unused]] Edge dummy) {
             Edge edgeA{&a, Complex::one, nullptr};
             Edge edgeB{&b, Complex::one, nullptr};
             CVec avec    = getVector(edgeA);
-            CVec isobvec = getVector(edgeB, *iso);
+            CVec isobvec = getVector(edgeB, iso);
             if (!vectorsApproximatelyEqual(avec, isobvec)) {
                 CVec bvec = getVector(edgeB);
                 Log::log << "[sanity check isomorphism] ERROR isomorphism is not an isomorphism\n"
                          << "[sanity check isomorphism] node A is " << a << "\n"
                          << "[sanity check isomorphism] node B is " << b << "\n"
-                         << "[sanity check isomorphism] iso = " << LimEntry<>::to_string(iso, a.v) << '\n';
+                         << "[sanity check isomorphism] iso = " << iso.to_string(a.v) << '\n';
                 Log::log << "[sanity check isomorphism] node a = ";
                 printCVec(avec);
                 Log::log << "\n[sanity check isomorphism] node b = ";
@@ -581,6 +578,8 @@ namespace dd {
 
             amplitudeVecBeforeNormalize = getVector(r);
 
+            sanityCheckStabilizerGroup(e.p->e[0], e.p->e[0].p->limVector);
+            sanityCheckStabilizerGroup(e.p->e[1], e.p->e[1].p->limVector);
 #endif
 
             if (r.l == nullptr) {
@@ -692,11 +691,10 @@ namespace dd {
 
             CVec rpVec      = getVector(r.p);
             CVec oldNodeVec = getVector(&oldNode);
-            Log::log << "[normalizeLIMDD] vector r.p = " << outputCVec(rpVec) << '\n'
-                     << "[normalizeLIMDD] vector old = " << outputCVec(oldNodeVec) << '\n';
+            Log::log << "[normalizeLIMDD] vector of original node                     = " << outputCVec(oldNodeVec) << '\n'
+                     << "[normalizeLIMDD] vector after assigning canonical high label = " << outputCVec(rpVec) << '\n';
 
 #endif
-
             LimWeight<> iso;
             bool        foundIsomorphism = false;
             // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
@@ -715,7 +713,9 @@ namespace dd {
                          << "|- one = " << Complex::one << '\n';
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
-            //            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+#if !NDEBUG
+            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+#endif
             //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, r.p->v) << "\n";
             //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(&LimEntry<>::multiplyValue(*r.l, *lowLim), r.p->v) << ".\n";
             r.l->multiplyBy(lowLim);
@@ -1257,7 +1257,7 @@ namespace dd {
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         long makeDDNodeCallCount = 0;
-        Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr) {
+        Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr, const vEdge targetEdge = {}, const CliffordGate gate = CliffordGate::cliffordGateNone) {
             //std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
             makeDDNodeCallCount++;
             auto& uniqueTable = getUniqueTable<vNode>();
@@ -1325,7 +1325,14 @@ namespace dd {
                         l.p->limVector = constructStabilizerGeneratorSetZ(*(e.p));
                         break;
                     case Pauli_group:
-                        stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn, cachingStrategy);
+                        if (usingSmartStabilizerGeneration(cachingStrategy) && !gate.isNone()) {
+                            //Log::log << "[makeDDNode] Smartly finding stabilizers. Node vector is " << outputCVec(getVector(e.p)) << ". originalEdge = " << targetEdge << "\n";
+                            stabilizers = constructStabilizerGeneratorSetPauliAfterClifford(l, cn, cachingStrategy, targetEdge, gate);
+                        }
+                        else {
+                            //Log::log << "[makeDDNode] not using smart stabs.\n";
+                            stabilizers = constructStabilizerGeneratorSetPauli(*(e.p), cn, cachingStrategy);
+                        }
                         putStabilizersInTable(l, stabilizers);
 #if !NDEBUG
 
@@ -2149,16 +2156,14 @@ namespace dd {
         }
 
         vEdge applyCliffordGate(const Edge<mNode>& x, const vEdge y, bool& appliedCliffordGate) {
-            Log::log << "[applyCliffordGate] start.\n";
+            //Log::log << "[applyCliffordGate] start.\n";
             vEdge e = applyHadamardGate(x, y, appliedCliffordGate);
             if (!appliedCliffordGate) {
                 e = applyPhaseGate(x, y, appliedCliffordGate);
             }
-            Log::log << "[applyCliffordGAte] before trying controlled pauli.\n";
             if (!appliedCliffordGate) {
                 e = applyControlledPauliGate(x, y, appliedCliffordGate);
             }
-            Log::log << "[applyCliffordGAte] after trying controlled pauli.\n";
             if (!appliedCliffordGate) {
                 e = applyPauliGate(x, y, appliedCliffordGate);
             }
@@ -2346,12 +2351,12 @@ namespace dd {
 
         CliffordGate isControlledPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
-            Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
-                     << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
-                     << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
+            //Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
+            //         << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
+            //         << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
             if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) {
-                Log::log << "[isCP] top qubit " << (int) mat.p->v << " is identity; recursing.\n";
+                //Log::log << "[isCP] top qubit " << (int) mat.p->v << " is identity; recursing.\n";
                 return isControlledPauliGate(mat.p->e[0]);
             }
             // Check for positive downward-controlled Pauli
@@ -2359,7 +2364,7 @@ namespace dd {
             if (mat.p->e[0].p->isIdentity() &&
                 mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && (mat.p->e[3].w == Complex::one || mat.p->e[3].w == Complex::minus_i)) {
                 gate = isPauliGate(mat.p->e[3]);
-                Log::log << "[isCP] checked e[3], is gate " << (char) gate.gateType << " on qubit " << (int)gate.target << '\n';
+                //Log::log << "[isCP] checked e[3], is gate " << (char) gate.gateType << " on qubit " << (int)gate.target << '\n';
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::pos};
                 }
@@ -2368,10 +2373,9 @@ namespace dd {
             else if (mat.p->e[0].p->isIdentity() &&
                      mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::minus_one) {
                 gate = isPauliGate(mat.p->e[3]);
-                Log::log << "[isCP] possible negative upward controlled " << (char)gate.gateType << " gate (should be Z).\n";
+                //Log::log << "[isCP] possible negative upward controlled " << (char)gate.gateType << " gate (should be Z).\n";
                 if (gate.gateType == cliffpauli_z) {
                     gate = CliffordGate(cliffpauli_z, Control{gate.target, Control::Type::neg}, mat.p->v);
-//                    gate.control = {mat.p->v, Control::Type::neg};
                 }
             }
             // Check for negative downward-controlled Pauli
@@ -2379,7 +2383,7 @@ namespace dd {
             else if (mat.p->e[3].p->isIdentity() &&
                     (mat.p->e[0].w == Complex::one || mat.p->e[0].w == Complex::minus_i) && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::one) {
                 gate = isPauliGate(mat.p->e[0]);
-                Log::log << "[isCP] possible negative downward controlled Pauli.\n";
+                //Log::log << "[isCP] possible negative downward controlled Pauli.\n";
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::neg};
                 }
@@ -2388,18 +2392,18 @@ namespace dd {
             else if (mat.p->e[3].p->isIdentity() &&
                      mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::zero && mat.p->e[2].w == Complex::zero && mat.p->e[3].w == Complex::complex_i) {
                 gate = isPauliGate(mat.p->e[0]);
-                Log::log << "[isCP] possible negative downward controlled Y.\n";
+                //Log::log << "[isCP] possible negative downward controlled Y.\n";
                 if (gate.gateType != cliffNoGate) {
                     gate.control = {mat.p->v, Control::Type::neg};
                 }
             }
-                // TODO merge the upward controlled X and Y cases, to take up less code
+            // TODO merge the upward controlled X and Y cases, to take up less code
             // Check for upwards controlled X
             else if (mat.p->e[0].w == Complex::one && mat.p->e[1].w == Complex::one && mat.p->e[2].w == Complex::one && mat.p->e[3].w == Complex::one &&
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
-                Log::log << "[isCP] possible upward controlled X. projection0 = " << (int)projection0.first << ", " << (int)projection0.second << " projection1 << " << projection1.first << ", " << projection1.second << "\n";
+                //Log::log << "[isCP] possible upward controlled X. projection0 = " << (int)projection0.first << ", " << (int)projection0.second << " projection1 << " << projection1.first << ", " << projection1.second << "\n";
                 // TODO merge these two cases of positive and negative control
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first && projection0.first != (Qubit)-1) {
                     gate = CliffordGate(cliffpauli_x, {projection0.first, Control::Type::pos}, mat.p->v);
@@ -2412,14 +2416,14 @@ namespace dd {
                      mat.p->e[0].p == mat.p->e[3].p && mat.p->e[1].p == mat.p->e[2].p) {
                 std::pair<Qubit, bool> projection0 = isProjectionOperator(mat.p->e[0]);
                 std::pair<Qubit, bool> projection1 = isProjectionOperator(mat.p->e[1]);
-                Log::log << "[isCP] possible upward controlled Y, " << projection0.second << ", " << projection1.second << "\n";
+                //Log::log << "[isCP] possible upward controlled Y, " << projection0.second << ", " << projection1.second << "\n";
                 if (projection0.second == false && projection1.second == true && projection0.first == projection1.first && projection0.first != (Qubit)-1) {
                     gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::pos}, mat.p->v);
                 } else if (projection0.second == true && projection1.second == false && projection0.first == projection1.first && projection0.first != (Qubit)-1) {
                     gate = CliffordGate(cliffpauli_y, {projection0.first, Control::Type::neg}, mat.p->v);
                 }
             }
-            Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << gate << ".\n";
+            //Log::log << "[isCP, n=" << (int)mat.p->v << "] Verdict: gate is " << gate << ".\n";
             return gate;
         }
 
@@ -2560,12 +2564,12 @@ namespace dd {
                     limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
                     limInactive.selectInactivePart(activeQubits);
                     LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
-                    Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
                     // TODO use limActive = getrootLabel(limActive, y.p)
                     auto cachedEdge = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, false);
                     if (cachedEdge.p != nullptr) {
                         auto result = ResultEdge{cachedEdge.p, cn.getCached(cachedEdge.w), cachedEdge.l};
-                        Log::log << "[multiply, n=" << (int) y.p->v << "] cache hit! Asked for y=" << y << "  got result = " << result << "\n";
+                        //Log::log << "[multiply, n=" << (int) y.p->v << "] cache hit! Asked for y=" << y << "  got result = " << result << "\n";
                         ComplexNumbers::mul(result.w, result.w, x.w);
                         ComplexNumbers::mul(result.w, result.w, y.w);
                         if (result.w.approximatelyZero()) {
@@ -2581,7 +2585,7 @@ namespace dd {
                     }
                     yCopy.l = limActiveTable;
                     op = yCopy.l->getPauliForQubit(yCopy.p->v);
-                    Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << " op = " << (char) op << "\n";
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << " op = " << (char) op << "\n";
                 }
                 else if (cachingStrategy == CachingStrategy::localityAwareCachingClean) { // TODO
                     std::cout << "[multiply2] ERROR clean caching not yet implemented.\n";
@@ -2881,7 +2885,7 @@ namespace dd {
         }
 
         vEdge applySpecificPauliGate(const vEdge& y, const CliffordGate gate) {
-            Log::log << "[applySpecificPauliGate, gate=" << gate << "] Start.\n";
+            //Log::log << "[applySpecificPauliGate, gate=" << gate << "] Start.\n";
             vEdge result = y;
             LimEntry<> lim(result.l);
             lim.leftMultiplyBy(gate.target, (pauli_op) gate.gateType);
@@ -2923,7 +2927,7 @@ namespace dd {
         vEdge applyControlledPauliGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
             success = false;
             if (!usingSpecialCliffordCaching(cachingStrategy)) {
-                Log::log << "[applyControlledPauliGate] not using Clifford caching. Exit.\n";
+                //Log::log << "[applyControlledPauliGate] not using Clifford caching. Exit.\n";
                 return y;
             }
             CliffordGate gate = isControlledPauliGate(x);
@@ -2996,11 +3000,11 @@ namespace dd {
         // puts the tuple (x, y, {e0, e1}) in the computeTable
         // TODO refactor so that x and y are passed as pointers to nodes, not edges
         //    includes: refactor so that multiplying by weights x.w, y.w is not necessary
-        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vEdge &e0, vEdge &e1) {
+        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vEdge &e0, vEdge &e1, CliffordGate gate = CliffordGate::cliffordGateNone) {
             movePhaseIntoWeight(e0.l, e0.w);
             movePhaseIntoWeight(e1.l, e1.w);
             std::array<vEdge, 2> edges = {e0, e1};
-            vEdge result = makeDDNode(y.p->v, edges, true, nullptr); // TODO where is result.l? in the table? shouldn't we then dereference it?
+            vEdge result = makeDDNode(y.p->v, edges, true, nullptr, y, gate); // TODO where is result.l? in the table? shouldn't we then dereference it?
             /// put the result in the cache
             auto& computeTable = getMultiplicationComputeTable<mNode, vNode>();
             result.l = lf.limTable.lookup(*result.l);
@@ -3023,7 +3027,7 @@ namespace dd {
                 cn.returnToCache(result.w);
                 return vEdge::zero;
             }
-            Log::log << "[makeNodeAndCache] corrected weight; result = " << result << " with vector " << outputCVec(getVector(result)) << '\n';
+            //Log::log << "[makeNodeAndCache] corrected weight; result = " << result << " with vector " << outputCVec(getVector(result)) << '\n';
             return result;
         }
 
@@ -3060,19 +3064,15 @@ namespace dd {
                 //Log::log << "[Hadamard] e11 = " << e11 << '\n';
                 e0 = add2(e00, e01);
                 e1 = add2(e10, e11);
-                e0.w = cn.getCachedIfNonzero(e0.w);
-                e1.w = cn.getCachedIfNonzero(e1.w);
-//                cn.mul(e0.w, e0.w, x.w);
-//                cn.mul(e1.w, e1.w, x.w);
             } else {
                 /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 //Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e0.\n";
-                e0 = applyHadamardGate2(x.p->e[0], y.p->e[0], hadamardTarget); // TODO should be e[1]???
+                e0 = applyHadamardGate2(x.p->e[0], y.p->e[0], hadamardTarget);
                 //Log::log << "[Hadamard, n=" << (int) y.p->v << "] recursing on e1.\n";
                 e1 = applyHadamardGate2(x.p->e[0], y.p->e[1], hadamardTarget);
-                e0.w = cn.getCachedIfNonzero(e0.w);
-                e1.w = cn.getCachedIfNonzero(e1.w);
             }
+            e0.w = cn.getCachedIfNonzero(e0.w);
+            e1.w = cn.getCachedIfNonzero(e1.w);
             return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
         }
 
@@ -3124,9 +3124,9 @@ namespace dd {
         vEdge applyControlledPauliGate2(const Edge<mNode>& x, const vEdge y, CliffordGate gate) {
             applyControlledPauliCallCounter++;
             unsigned int callCount = applyControlledPauliCallCounter;
-            Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << ", gate=" << gate << "] Start. mat has " << (int)x.p->v << " qubits. y = " << y << '\n';
-            Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y   = " << outputCVec(getVector(y)) << "\n";
-            Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y.p = " << outputCVec(getVector(y.p)) << "\n";
+            //Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << ", gate=" << gate << "] Start. mat has " << (int)x.p->v << " qubits. y = " << y << '\n';
+            //Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y   = " << outputCVec(getVector(y)) << "\n";
+            //Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] y.p = " << outputCVec(getVector(y.p)) << "\n";
 #if !NDEBUG
             CMat mat_x;
             CVec vec_y, vecExpected;
@@ -3140,9 +3140,9 @@ namespace dd {
             conjugateWithControlledPauliGate(pushedLim, gate);
             auto cachedResult = matrixVectorMultiplication.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, false);
             if (cachedResult.p != nullptr) {
-                Log::log << "[CPauli #" << callCount << "] cache hit!\n";
                 vEdge result = processCachedEdge(x, y, pushedLim, cachedResult);
 #if !NDEBUG
+                //Log::log << "[CPauli #" << callCount << "] cache hit!\n";
                 // Last step: sanity check to see whether the resulting vector is what was expected
                 CVec vecResult;
                 vecResult = getVector(result);
@@ -3162,20 +3162,15 @@ namespace dd {
                 return result;
             }
             /// cache miss; now simply compute the result
-            Log::log << "[CPauli #" << callCount << "] cache miss.\n";
+            //Log::log << "[CPauli #" << callCount << "] cache miss.\n";
             vEdge e[2];
             if (gate.control.qubit == y.p->v) {  ///  this qubit is the control, and the target qubit is below
-                Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] applying Pauli " << (char)gate.gateType << " to qubit " << (int)gate.target << " from control qubit " << (int)gate.control.qubit << " with type " << (int)gate.control.type << ".\n";
-                e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], gate);
+                //Log::log << "[CPauli #" << callCount << ", n=" << (int)y.p->v << "] applying Pauli " << (char)gate.gateType << " to qubit " << (int)gate.target << " from control qubit " << (int)gate.control.qubit << " with type " << (int)gate.control.type << ".\n";
+                CliffordGate pauliGate(gate.gateType, Control::noControl, gate.target);
+                e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], pauliGate);
                 e[1^(int)gate.control.type] = y.p->e[1^(int)gate.control.type];
-//                if (gate.gateType == cliffpauli_y) {
-//                    e[  (int)gate.control.type].w = cn.getCachedIfNonzero(e[  (int)gate.control.type].w);
-//                    e[  (int)gate.control.type].w.multiplyByMinusi(true);
-//                }
-                CVec e0vec = getVector(e[0]);
-                Log::log << "[CPauli #" << callCount << "] e[0] = " << outputCVec(e0vec) << "\n";
-                CVec e1vec = getVector(e[1]);
-                Log::log << "[CPauli #" << callCount << "] e[1] = " << outputCVec(e1vec) << "\n";
+                //Log::log << "[CPauli #" << callCount << "] e[0] = " << outputCVec(getVector(e[0])) << "\n";
+                //Log::log << "[CPauli #" << callCount << "] e[1] = " << outputCVec(getVector(e[1])) << "\n";
             } else if (gate.target == y.p->v) {  ///  this qubit is the target, and the control qubit is below (has lower index); this case is slightly trickier
                 if (gate.gateType == cliffpauli_x || gate.gateType == cliffpauli_y) {
                     vEdge f[2][2];
@@ -3210,16 +3205,15 @@ namespace dd {
                 }
             } else {
                 /// Apply identity to this qubit, then apply the controlled Pauli gate to the remaining qubits
+                //Log::log << "[CPauli #" << callCount << "] top qubit is Id; recursing on 0-child.\n";
                 e[0] = applyControlledPauliGate2(x.p->e[0], y.p->e[0], gate);
-                CVec e0vec = getVector(e[0]);
-                Log::log << "[CPauli #" << callCount << "] e[0] = " << outputCVec(e0vec) << "\n";
+                //Log::log << "[CPauli #" << callCount << "] Found 0-child: e[0] = " << outputCVec(getVector(e[0])) << ". Recursing on 1-child.\n";
                 e[1] = applyControlledPauliGate2(x.p->e[0], y.p->e[1], gate);
-                CVec e1vec = getVector(e[1]);
-                Log::log << "[CPauli #" << callCount << "] e[1] = " << outputCVec(e1vec) << "\n";
+                //Log::log << "[CPauli #" << callCount << "] e[1] = " << outputCVec(getVector(e[1])) << "\n";
             }
             e[0].w = cn.getCachedIfNonzero(e[0].w);
             e[1].w = cn.getCachedIfNonzero(e[1].w);
-            vEdge result = makeNodeAndInsertCache(x, y, pushedLim, e[0], e[1]);
+            vEdge result = makeNodeAndInsertCache(x, y, pushedLim, e[0], e[1], gate);
 #if !NDEBUG
             // Last step: sanity check to see whether the resulting vector is what was expected
             CVec vecResult;
@@ -3237,7 +3231,6 @@ namespace dd {
                 //throw std::runtime_error("[CPauli] ERROR  multiply does not return expected result.\n");
             }
 #endif
-
             return result;
         }
 
@@ -4368,6 +4361,18 @@ namespace dd {
         //            }
         //            cn.returnToCache(c);
         //        }
+
+        // Returns whether v ~ w, i.e., whether each entry v[i] of v is approximately equal to w[i],
+        //    without taking into account a multiplicative factor like in 'vectorsApproximatelyEqual'
+        bool vectorsApproximatelyPointwiseEqual(const CVec& v, const CVec& w) {
+            if (v.size() != w.size()) return false;
+            for (unsigned int i=0; i<v.size(); i++) {
+                if (!Complex::approximatelyEqual(v[i], w[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         // Returns whether v ~ w, up to a complex multiplicative factor
         bool vectorsApproximatelyEqual(const CVec& v, const CVec& w) {

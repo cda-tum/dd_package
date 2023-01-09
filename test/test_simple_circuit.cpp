@@ -1545,6 +1545,30 @@ TEST(LimTest, simpleCircuit133) {
     simulateCircuitQMDDvsLIMDDGateByGate(circuit);
 }
 
+// Randomly generated circuit on 3 qubis, containing 7 gates.
+TEST(LimTest, simpleCircuit134) {
+    dd::QuantumCircuit circuit(2);
+
+    circuit.addGate(dd::Hmat, 1);
+    circuit.addGate(dd::Hmat, 0);
+    circuit.addGate(dd::Ymat, 1_pc, 0);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
+
+// Randomly generated circuit on 3 qubis, containing 7 gates.
+TEST(LimTest, simpleCircuit135) {
+    dd::QuantumCircuit circuit(3);
+
+    circuit.addGate(dd::Hmat, 1);
+    circuit.addGate(dd::Hmat, 2);
+    circuit.addGate(dd::Ymat, 1_pc, 2);
+    circuit.addGate(dd::Ymat, 1_pc, 0);
+
+    simulateCircuitQMDDvsLIMDDGateByGate(circuit);
+}
+
 TEST(LimTest, cachingTests) {
     auto limdd = std::make_unique<dd::Package<>>(10, dd::LIMDD_group::Pauli_group, false);
 

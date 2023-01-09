@@ -171,7 +171,20 @@ public:
                 return Imat;
         }
     }
+
+    bool isPauliGate() const {
+        return control.qubit == (Qubit)-1 && (gateType == cliffpauli_x || gateType == cliffpauli_y || gateType == cliffpauli_z);
+    }
+
+    bool isNone() const {
+        return gateType == cliffNoGate;
+    }
+
+    //static CliffordGate cliffordGateNone(CliffordGateType_t::cliffNoGate, Control{(Qubit)-1, Control::Type::pos}, -1);
+    static CliffordGate cliffordGateNone;
 };
+
+CliffordGate CliffordGate::cliffordGateNone = CliffordGate(cliffNoGate, Control{-1, Control::Type::pos}, -1);
 
 std::ostream& operator<<(std::ostream& out, const CliffordGate& gate) {
     out << (char)gate.gateType << "[" << (int)gate.target;

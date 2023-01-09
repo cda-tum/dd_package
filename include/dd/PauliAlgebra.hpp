@@ -44,6 +44,105 @@ namespace dd {
     std::vector<LimEntry<NUM_QUBITS>>                  GintersectH_memoized;
     bool                                               memoizedGintersectH;
 
+    inline void conjugateWithHadamard(LimEntry<>& lim, Qubit target) {
+        pauli_op op = (pauli_op) lim.getQubit(target);
+        switch(op) {
+            case pauli_x:
+                lim.setOperator(target, pauli_z);
+                break;
+            case pauli_y:
+                lim.multiplyPhaseBy(phase_t::phase_minus_one);
+                break;
+            case pauli_z:
+                lim.setOperator(target, pauli_x);
+                break;
+            default:
+                break;
+        }
+    }
+
+    inline void conjugateWithPhaseGate(LimEntry<>& lim, Qubit target, bool inverse) {
+        pauli_op op = (pauli_op) lim.getQubit(target);
+        switch(op) {
+            case pauli_x:
+            case pauli_y:
+                if (inverse) {
+                    lim.multiplyPhaseBy(phase_t::phase_minus_i);
+                } else {
+                    lim.multiplyPhaseBy(phase_t::phase_i);
+                }
+                break;
+            case pauli_z:
+                break;
+            default:
+                break;
+        }
+    }
+
+    // For a Controlled Pauli gate 'gate', sets lim := gate * lim * gate
+    // how to conjugate X with negative controlled Y?
+    inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const CliffordGate gate) {
+        pauli_op pControl = (pauli_op) lim.getQubit(gate.control.qubit);
+        pauli_op pTarget  = (pauli_op) lim.getQubit(gate.target);
+        if (pControl == pauli_x || pControl == pauli_y) {
+            lim.leftMultiplyBy(gate.target, (pauli_op)gate.gateType);
+        }
+        if (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) {
+            // right-multiply pControl by Z
+            lim.multiplyByZ(gate.control.qubit);
+        }
+        //        if ((pControl == pauli_id || pControl == pauli_y) && (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) && gate.control.type == Control::Type::neg) {
+        //            lim.multiplyPhaseByMinusOne();
+        //        }
+    }
+
+    inline void conjugateWithPauliGate(LimEntry<>& lim, const CliffordGate gate) {
+        pauli_op op = lim.getPauliForQubit(gate.target);
+        switch (gate.gateType) {
+            case cliffpauli_x:
+                if (op == pauli_y || op == pauli_z)
+                    lim.multiplyPhaseByMinusOne();
+                break;
+            case cliffpauli_y:
+                if (op == pauli_x || op == pauli_z)
+                    lim.multiplyPhaseByMinusOne();
+                break;
+            case cliffpauli_z:
+                if (op == pauli_x || op == pauli_y)
+                    lim.multiplyPhaseByMinusOne();
+                break;
+            default:
+                //
+                ;
+        }
+    }
+
+    inline void conjugateWithCliffordGate(LimEntry<>& lim, const CliffordGate gate) {
+        LimEntry<> limBefore = lim;
+        switch(gate.gateType) {
+            case cliffpauli_x:
+            case cliffpauli_y:
+            case cliffpauli_z:
+                if (gate.control.qubit == (Qubit)-1) {
+                    conjugateWithPauliGate(lim, gate);
+                } else {
+                    conjugateWithControlledPauliGate(lim, gate);
+                }
+                break;
+            case cliffPhase:
+                conjugateWithPhaseGate(lim, gate.target, 0);
+                break;
+            case cliffPhaseInv:
+                conjugateWithPhaseGate(lim, gate.target, 1);
+                break;
+            case cliffHadamard:
+                conjugateWithHadamard(lim, gate.target);
+                break;
+            default:
+                ;
+        }
+        //Log::log << "[conjugateWithClifford] " << gate << " * lim(=" << limBefore.to_string(3) << ") * " << gate << " = " << lim.to_string(3)<< "\n";
+    }
 
 // TODO write a test
     // TODO refactor to use recoverElement
@@ -852,8 +951,9 @@ namespace dd {
         return {c, false}; // dummy element
     }
 
+    // Given Pauli groups G,H, and Pauli strings a,b, and a phase lambda,
+    // Finds an element in the set G intersect lambda a H b,
     // GH_Id is the concatenation of G and H, to which an identity matrix is appended, and on which Gaussian elimination modulo phase has been performed
-    // TODO refactor so that we compute the intersection if needed; otherwise, not. If we compute it, then we give it back to the calling function
     template <std::size_t NUM_QUBITS>
     std::pair<LimEntry<NUM_QUBITS>, bool> getCosetIntersectionElementPauli2(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b, phase_t lambda, const std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS> >& GH_Id_CEF, std::vector<LimEntry<NUM_QUBITS>>& GintersectH, bool& memoizedGintersectH, CachingStrategy cachingStrategy, [[maybe_unused]] const  Qubit nQubits = 5) {
         if (lambda == phase_t::no_phase) {
@@ -861,6 +961,11 @@ namespace dd {
         }
         cosetIntersectCallCount++;
         clock_t begin = clock();
+        //Log::log << "[cosetIntersection] G = ";
+        //printStabilizerGroup(G, nQubits);
+        //Log::log << " H = ";
+        //printStabilizerGroup(H, nQubits);
+        //Log::log << " a=" << a->to_string(nQubits) << " b=" << LimEntry<>::to_string(b, nQubits) << " lambda = " << phaseToString(lambda) << ". Looking for element in G intersect lambda a H b.\n";
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
         bool                 foundCIEMP;
@@ -882,6 +987,7 @@ namespace dd {
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
             cosetIntersectPauliTime += clock() - begin;
+            //Log::log << "[cosetIntersection] found " << c.to_string(nQubits) << " in G intersect lambda a H b\n";
             return {c, true};
         }
             // TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
@@ -897,6 +1003,7 @@ namespace dd {
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     cosetIntersectPauliTime += clock() - begin;
+                    //Log::log << "[cosetIntersection] found " << LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])).to_string(nQubits) << "\n";
                     return {LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])), true};
                 }
             }
@@ -1150,6 +1257,35 @@ namespace dd {
         return stabgenset;
     }
 
+    // TODO maybe put stabilizers in lookup table directly?
+    // TODO are the parameters cn and cachingStrategy necessary?
+    inline StabilizerGroupValue constructStabilizerGeneratorSetPauliAfterClifford(const vEdge newEdge, ComplexNumbers& cn, CachingStrategy cachingStrategy, const vEdge originalEdge, const CliffordGate gate) {
+        StabilizerGroupValue stabgenset;
+        stabgenset.reserve(originalEdge.p->limVector.size());
+        //Log::log << "[smartStabs] Start. gate = " << gate << ". Original group: " << outputStabilizerGroup(originalEdge.p->limVector, newEdge.p->v) << "\n";
+
+        LimEntry<> stab;
+        for (unsigned int i=0; i<originalEdge.p->limVector.size(); i++) {
+            // conjugate something
+            stab = originalEdge.p->limVector[i];
+
+            conjugateWithCliffordGate(stab, gate);
+            stab.multiplyBy(newEdge.l);
+            stab.leftMultiplyBy(LimEntry<>(newEdge.l).getInverse());
+            //stab.multiplyBy(LimEntry<>(originalEdge.l).getInverse());
+            //stab.leftMultiplyBy(originalEdge.l);
+            stabgenset.push_back(stab);
+        }
+
+        // TODO note that if the CliffordGate was a Pauli gate, then the stabgenset is already in column echelon form
+        if (gate.isPauliGate()) {
+            // TODO don't do CEF
+        }
+        toColumnEchelonForm(stabgenset);
+        //Log::log << "[smartStabs] End. Now group is " << outputStabilizerGroup(stabgenset, newEdge.p->v) << "\n";
+        return stabgenset;
+    }
+
     // Returns an isomorphism between u and v,
     // or LimEntry<>::noLim if u and v are not isomorphic
     // Assumes that the low edges of u and v have an Identity LIM
@@ -1283,7 +1419,7 @@ namespace dd {
         // Case 0: the nodes are equal
         if (u == v) {
             //Log::log << "[getIsomorphismPauli] case u == v.\n";
-            Log::log.flush();
+            //Log::log.flush();
             // In this case, we return the Identity operator, which is represented by a null pointer
             foundIsomorphism = true;
         }
@@ -1363,20 +1499,13 @@ namespace dd {
             // Step 1.1: Check if uLow == vLow and uHigh == vHigh, i.e., check if nodes u and v have the same children
             if (uLow.p != vLow.p || uHigh.p != vHigh.p) {
                 foundIsomorphism = false;
-                Log::log << "[getIsomorphism] No isomorphism, case 3\n";
+                //Log::log << "[getIsomorphism] No isomorphism, case 3\n";
                 return;
             }
             //Log::log << "[getIsomorphismPauli] children of u and v are the same nodes.\n";
 
             // Next we do some memoization for getCosetIntersectionElementPauli2. This routine uses the matrix [G H; Id] in column echelon form, and uses the group G intersect H.
-            //   Since this routine is called up to two times, we aim to do that work only once
-            //std::vector<LimBitset<NUM_QUBITS, 2 * NUM_QUBITS>> GH_Id_CEF = concatenateAndAppendIdentityMatrix(uLow.p->limVector, uHigh.p->limVector);
-            //toColumnEchelonFormModuloPhase(GH_Id_CEF);
-            //std::vector<LimEntry<NUM_QUBITS>> GintersectH;
-            //if (!usingLazyMemoizationGroupIntersect(cachingStrategy)) {
-            //    GintersectH = intersectGroupsModuloPhaseValue(uLow.p->limVector, uHigh.p->limVector);
-            //}
-            //memoizedGintersectH = false;
+            //   Since this routine may be called up to two times, we aim to do that work only once
             GH_Id_CEF_memoized = concatenateAndAppendIdentityMatrix(uLow.p->limVector, uHigh.p->limVector);
             toColumnEchelonFormModuloPhase(GH_Id_CEF_memoized);
             //std::vector<LimEntry<NUM_QUBITS>> GintersectH;
@@ -1384,7 +1513,6 @@ namespace dd {
                 GintersectH_memoized = intersectGroupsModuloPhaseValue(uLow.p->limVector, uHigh.p->limVector);
             }
             memoizedGintersectH = false;
-
 
             Complex rhoU = cn.getCached(); // Eventually returned to cache
             Complex rhoV = cn.getCached(); // Eventually returned to cache
@@ -1398,15 +1526,14 @@ namespace dd {
                 cn.returnToCache(rhoUrhoV);
                 if (lambda != phase_t::no_phase) {
                     bool foundElement{};
-                    //std::tie(iso.lim, foundElement) = getCosetIntersectionElementPauli2(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, GH_Id_CEF, GintersectH, memoizedGintersectH, cachingStrategy, u->v - 1);
                     std::tie(iso.lim, foundElement) = getCosetIntersectionElementPauli2(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, GH_Id_CEF_memoized, GintersectH_memoized, memoizedGintersectH, cachingStrategy, u->v - 1);
                     if (foundElement) {
+                        //Log::log << "[getIsomorphism] found coset intersection element " << iso.lim.to_string(v->v) << ". Left-multiplying by " << v->e[1].l->to_string(v->v) << "\n";
                         iso.lim.leftMultiplyBy(v->e[1].l);
-                        //iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
                         iso.lim.setOperator(u->v, pauli_op::pauli_x);
                         ComplexNumbers::div(iso.weight, v->e[1].w, u->e[0].w);
                         foundIsomorphism = true;
-                        //Log::log << "[getIsomorphismPauli] Case X: Coset was not empty; returning isomorphism " << LimEntry<>::to_string(iso.lim, u->v) << ".\n";
+                        //Log::log << "[getIsomorphismPauli] Case X: Coset was not empty; returning isomorphism " << iso.lim.to_string(u->v) << ".\n";
                         cn.returnToCache(rhoV);
                         cn.returnToCache(rhoU);
 
@@ -1423,7 +1550,7 @@ namespace dd {
                         ComplexNumbers::div(iso.weight, v->e[1].w, u->e[0].w);
                         iso.weight.multiplyByMinusi();
                         foundIsomorphism = true;
-                        //Log::log << "[getIsomorphismPauli] Case Y: Coset was not empty; returning isomorphism " << LimEntry<>::to_string(iso.lim, u->v) << ".\n";
+                        //Log::log << "[getIsomorphismPauli] Case Y: Coset was not empty; returning isomorphism " << iso.lim.to_string(u->v) << ".\n";
                         cn.returnToCache(rhoV);
                         cn.returnToCache(rhoU);
 
@@ -1449,9 +1576,8 @@ namespace dd {
                 return;
             }
 #endif
-            //            Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
-            //
-            //            Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
+            //Log::log << "[getIsomorphismPauli] edge weights differ by a factor " << phaseToString(lambda) << ".\n";
+            //Log::log << "[getIsomorphismPauli] Looking for isomorphism I tensor P.\n";
             //iso.weight = cn.divCached(v->e[0].w, u->e[0].w);
             ComplexNumbers::div(iso.weight, v->e[0].w, u->e[0].w);
 
@@ -1464,7 +1590,7 @@ namespace dd {
                 //Log::log << "[getIsomorphismPauli] Coset was not empty; current Lim: " << LimEntry<>::to_string(iso.lim, u->v) << "\n";
                 iso.lim          = temp;
                 foundIsomorphism = true;
-                //                Log::log << "[getIsomorphismPauli] Found coset intersection element " << LimEntry<>::to_string(iso->lim, u->v) << '\n';
+                //Log::log << "[getIsomorphismPauli] Found coset intersection element " << iso.lim.to_string(u->v) << '\n';
                 return;
             }
             //Log::log << "[getIsomorphismPauli] Coset was empty; so no isomorphism starts with Id.\n";
@@ -1478,19 +1604,19 @@ namespace dd {
                 iso.lim = temp;
                 iso.lim.setOperator(u->v, pauli_op::pauli_z);
                 foundIsomorphism = true;
-                //Log::log << "[getIsomorphismPauli] Coset was not empty; returning result.\n";
+                //Log::log << "[getIsomorphismPauli] Case Z: Coset was not empty; returning iso.lim = " << iso.lim.to_string(u->v) << ".\n";
             } else {
-                Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
-                std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
-                          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
-                          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
-                          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
-                          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
-                          << "ulow  = " << uLow << "\n"
-                          << "uhigh = " << uHigh << "\n"
-                          << "vlow  = " << vLow  << "\n"
-                          << "vhigh = " << vHigh << "\n";
-                std::cout << "case 5" << std::endl;
+                //Log::log << "[getIsomorphismPauli] Coset was empty; returning noLIM.\n";
+                //std::cout << "Stab(u) = " << groupToString(u->e[0].p->limVector, u->v) << "\n"
+                //          << "Stab(v) = " << groupToString(u->e[1].p->limVector, v->v) << "\n"
+                //          << "uHighlim= " << LimEntry<>::to_string(uHigh.l, u->v-1) << "\n"
+                //          << "vHighlim= " << LimEntry<>::to_string(vHigh.l, v->v-1) << "\n"
+                //          << "u->v    = " << (int) u->v << "   v->v = " << (int) v->v << "\n"
+                //          << "ulow  = " << uLow << "\n"
+                //          << "uhigh = " << uHigh << "\n"
+                //          << "vlow  = " << vLow  << "\n"
+                //          << "vhigh = " << vHigh << "\n";
+                //std::cout << "case 5" << std::endl;
             }
         }
     }
@@ -1553,58 +1679,6 @@ namespace dd {
     //			Log::log << "[getIsomorphismPauli] called with matrix nodes. Throwing exception.\n" << u << v << Log::endl;
     //			throw std::exception();
     //		}
-
-    inline void conjugateWithHadamard(LimEntry<>& lim, Qubit target) {
-        pauli_op op = (pauli_op) lim.getQubit(target);
-        switch(op) {
-            case pauli_x:
-                lim.setOperator(target, pauli_z);
-                break;
-            case pauli_y:
-                lim.multiplyPhaseBy(phase_t::phase_minus_one);
-                break;
-            case pauli_z:
-                lim.setOperator(target, pauli_x);
-                break;
-            default:
-                break;
-        }
-    }
-
-    inline void conjugateWithPhaseGate(LimEntry<>& lim, Qubit target, bool inverse) {
-        pauli_op op = (pauli_op) lim.getQubit(target);
-        switch(op) {
-            case pauli_x:
-            case pauli_y:
-                if (inverse) {
-                    lim.multiplyPhaseBy(phase_t::phase_minus_i);
-                } else {
-                    lim.multiplyPhaseBy(phase_t::phase_i);
-                }
-                break;
-            case pauli_z:
-                break;
-            default:
-                break;
-        }
-    }
-
-    // For a Controlled Pauli gate 'gate', sets lim := gate * lim * gate
-    // how to conjugate X with negative controlled Y?
-    inline void conjugateWithControlledPauliGate(LimEntry<>& lim, const CliffordGate gate) {
-        pauli_op pControl = (pauli_op) lim.getQubit(gate.control.qubit);
-        pauli_op pTarget  = (pauli_op) lim.getQubit(gate.target);
-        if (pControl == pauli_x || pControl == pauli_y) {
-            lim.leftMultiplyBy(gate.target, (pauli_op)gate.gateType);
-        }
-        if (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) {
-            // right-multiply pControl by Z
-            lim.multiplyByZ(gate.control.qubit);
-        }
-//        if ((pControl == pauli_id || pControl == pauli_y) && (!LimEntry<>::commutesWith(pTarget, (pauli_op) gate.gateType)) && gate.control.type == Control::Type::neg) {
-//            lim.multiplyPhaseByMinusOne();
-//        }
-    }
 
 } // namespace dd
 #endif //DDPACKAGE_PAULIALGEBRA_HPP

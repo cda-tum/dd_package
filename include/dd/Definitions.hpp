@@ -134,7 +134,8 @@ namespace dd {
         localityAwareCachingDirtyTrick = 2,
         localityAwareCachingClean = 4,
         lazyMemoizationGroupIntersect = 8,
-        localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick
+        localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick,
+        smartStabilizerGeneration = 16
     };
 
     bool usingSpecialCliffordCaching(CachingStrategy strategy) {
@@ -143,6 +144,10 @@ namespace dd {
 
     bool usingLazyMemoizationGroupIntersect(CachingStrategy strategy) {
         return (strategy & lazyMemoizationGroupIntersect) != 0;
+    }
+
+    bool usingSmartStabilizerGeneration(CachingStrategy strategy) {
+        return (strategy & smartStabilizerGeneration) != 0;
     }
 
 } // namespace dd
