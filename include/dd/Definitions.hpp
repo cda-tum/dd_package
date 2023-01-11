@@ -9,6 +9,11 @@
 // Set to 'false' to activate debugging
 #define NDEBUG true
 
+// Set to 'true' to activate profiling. This enables
+//   - call counts of various functions
+//   - clock() timing of these functions
+#define ENABLE_PROFILING false
+
 #include <complex>
 #include <cstdint>
 #include <type_traits>
@@ -152,5 +157,23 @@ namespace dd {
 
 } // namespace dd
 
+// Utilities for profiling code
+// The profiling variables are declared without the 'ENABLE_PROFILING' guard to keep the code compilable also when profiling is disabled
+#define declareProfilingVariables(functionName) clock_t ##functionName##Time = 0; long ##functionName##CallCount = 0;
+
+#if ENABLE_PROFILING
+
+#define startProfile(functionName) \
+    clock_t functionName##Begin = clock();   \
+    functionName##CallCount++;
+
+#define endProfile(functionName) functionName##Time += clock() - functionName##Begin;
+
+#else
+
+#define startProfile(functionName)
+
+#define endProfile(functionName)
+#endif
 
 #endif //DDpackage_DATATYPES_HPP
