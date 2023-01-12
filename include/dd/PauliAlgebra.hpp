@@ -64,6 +64,7 @@ namespace dd {
         }
     }
 
+    // Returns S * lim * S^{-1} if inverse == false; or S^{-1} * lim * S, if inverse == 1
     inline void conjugateWithPhaseGate(LimEntry<>& lim, Qubit target, bool inverse) {
         pauli_op op = (pauli_op) lim.getQubit(target);
         switch(op) {
@@ -74,6 +75,7 @@ namespace dd {
                 } else {
                     lim.multiplyPhaseBy(phase_t::phase_i);
                 }
+                lim.multiplyBy(target, pauli_z);
                 break;
             case pauli_z:
                 break;
@@ -140,6 +142,13 @@ namespace dd {
                 break;
             case cliffHadamard:
                 conjugateWithHadamard(lim, gate.target);
+                break;
+                // TODO conjugate with project0 and project1
+            case cliffProject0:
+
+                break;
+            case cliffProject1:
+
                 break;
             default:
                 ;
@@ -1235,30 +1244,34 @@ namespace dd {
         return stabgenset;
     }
 
+    // Constructs the stabilizer group of newEdge.p
+    // Here originalEdge and 'gate' satisfy newEdge = gate * originalEdge.p
+    // The method then uses the algebraic fact that Stab(newEdge) = gate * Stab(originalEdge.p) * gate^{-1}
     // TODO maybe put stabilizers in lookup table directly?
-    // TODO are the parameters cn and cachingStrategy necessary?
     inline StabilizerGroupValue constructStabilizerGeneratorSetPauliAfterClifford(const vEdge newEdge, const vEdge originalEdge, const CliffordGate gate) {
         StabilizerGroupValue stabgenset;
         stabgenset.reserve(originalEdge.p->limVector.size());
-        //Log::log << "[smartStabs] Start. gate = " << gate << ". Original group: " << outputStabilizerGroup(originalEdge.p->limVector, newEdge.p->v) << "\n";
+        //Log::log << "[smartStabs] Start. gate = " << gate << "; newEdge = " << newEdge << ". Original group: " << outputStabilizerGroup(originalEdge.p->limVector, newEdge.p->v) << "\n";
 
         LimEntry<> stab;
         for (unsigned int i=0; i<originalEdge.p->limVector.size(); i++) {
             // conjugate something
             stab = originalEdge.p->limVector[i];
 
+            //Log::log << "[smartStabs] conjugating " << stab.to_string(newEdge.p->v) << " with " << gate << "...\n";
             conjugateWithCliffordGate(stab, gate);
+            //Log::log << "[smartStabs] result is " << stab.to_string(newEdge.p->v) << ". Now conjugating with " << LimEntry<>::to_string(newEdge.l, newEdge.p->v) << "\n";
             stab.multiplyBy(newEdge.l);
             stab.leftMultiplyBy(LimEntry<>(newEdge.l).getInverse());
-            //stab.multiplyBy(LimEntry<>(originalEdge.l).getInverse());
-            //stab.leftMultiplyBy(originalEdge.l);
+            //Log::log << "[smartStabs] result is " << stab.to_string(newEdge.p->v) << ".\n";
             stabgenset.push_back(stab);
         }
 
         // TODO note that if the CliffordGate was a Pauli gate, then the stabgenset is already in column echelon form
-        if (gate.isPauliGate()) {
+        // On the other hand, this method should never be called when 'gate' is a Pauli gate
+        //if (gate.isPauliGate()) {
             // TODO don't do CEF
-        }
+        //}
         toColumnEchelonForm(stabgenset);
         //Log::log << "[smartStabs] End. Now group is " << outputStabilizerGroup(stabgenset, newEdge.p->v) << "\n";
         return stabgenset;

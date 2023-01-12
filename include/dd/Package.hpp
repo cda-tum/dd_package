@@ -1251,6 +1251,8 @@ namespace dd {
         }
 
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
+        // Here the parameters 'targetEdge' and 'gate' satisfy the equation |edges> = gate * |targetEdge.p>, i.e.,
+        //   the new node was created by applying 'gate' to the node 'targetEdge.p'
         long makeDDNodeCallCount = 0;
         clock_t makeDDNodeTime = 0;
         Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr, const vEdge targetEdge = {}, const CliffordGate gate = CliffordGate::cliffordGateNone()) {
@@ -3079,23 +3081,20 @@ namespace dd {
             }
             e0.w = cn.getCachedIfNonzero(e0.w);
             e1.w = cn.getCachedIfNonzero(e1.w);
-            return makeNodeAndInsertCache(x, y, pushedLim, e0, e1);
+            CliffordGate hadamardGate(cliffHadamard, Control::noControl(), hadamardTarget);
+            return makeNodeAndInsertCache(x, y, pushedLim, e0, e1, hadamardGate); // TODO add 'gate' parameter to enable smart stab construction
         }
 
         unsigned int applyPhaseCallCount = 0;
         /// note that when we look up the computation in the ComputeTable, we use a nullptr for y's lim, i.e., the identity LIM. That is, we apply the phase gate directly to the node, rather than to the edge
         /// We can do this because we exploit the algebraic property that the Phase gate can be pushed through a Pauli LIM
-        vEdge applyPhaseGate2(const Edge<mNode>& x, const Edge<mNode> xConjugate, const vEdge y, Qubit phaseTarget, bool inverse) {
+        vEdge applyPhaseGate2(const Edge<mNode>& phaseGateDD, const Edge<mNode> phaseInverseGateDD, const vEdge y, Qubit phaseTarget, bool inverse) {
             startProfile(applyPhase)
             if (y.isTerminal()) return y;
-            //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. inverse = " << inverse << '\n';
+            //Log::log << "[Phase, n=" << (int)y.p->v << ", t=" << (int) phaseTarget << "] Start. y = " << y << "; inverse = " << inverse << '\n';
             LimEntry<> pushedLim(y.l);
             conjugateWithPhaseGate(pushedLim, phaseTarget, inverse);
-            bool inverted = pushedLim.getQubit(phaseTarget) == pauli_x || pushedLim.getQubit(phaseTarget) == pauli_y;
-            if (inverted) {
-                inverse = !inverse;  //inverse ^= pushedLim... // alternative, slightly more succinct
-            }
-            Edge<mNode> xApply = inverse? xConjugate : x; // 'xApply' is the gate that we will now apply to y
+            Edge<mNode> xApply = inverse? phaseInverseGateDD : phaseGateDD; // 'xApply' is the gate that we will now apply to y
             auto cachedResult = matrixVectorMultiplication.lookup({xApply.p, Complex::one, nullptr}, {y.p, Complex::one, nullptr}, false);
             if (cachedResult.p != nullptr) {
                 //Log::log << "[Phase] cache hit!\n";
@@ -3116,12 +3115,13 @@ namespace dd {
                 //Log::log << "[Phase] after multiplication, e1 = " << e1 << '\n';
             } else { /// Apply identity to this qubit, then apply Hadamard to the remaining qubits
                 //Log::log << "[Phase] apply identity to qubit " << (int) y.p->v << '\n';
-                e0 = applyPhaseGate2(x.p->e[0], xConjugate.p->e[0], y.p->e[0], phaseTarget, inverse);
-                e1 = applyPhaseGate2(x.p->e[0], xConjugate.p->e[0], y.p->e[1], phaseTarget, inverse);
+                e0 = applyPhaseGate2(phaseGateDD.p->e[0], phaseInverseGateDD.p->e[0], y.p->e[0], phaseTarget, inverse);
+                e1 = applyPhaseGate2(phaseGateDD.p->e[0], phaseInverseGateDD.p->e[0], y.p->e[1], phaseTarget, inverse);
             }
             e0.w = cn.getCachedIfNonzero(e0.w);
             e1.w = cn.getCachedIfNonzero(e1.w);
-            return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1);
+            CliffordGate appliedGate(inverse ? cliffPhaseInv : cliffPhase, Control::noControl(), phaseTarget);
+            return makeNodeAndInsertCache(xApply, y, pushedLim, e0, e1, appliedGate);
         }
 
         unsigned int applyControlledPauliCallCount = 0;
@@ -3282,6 +3282,8 @@ namespace dd {
                     e[i].w = cn.getCachedIfNonzero(e[i].w);
                 }
             }
+            // TODO add 'gateApplied' parameter to enable smart stab construction
+            // TODO or should we add 'gate' parameter??
             return makeNodeAndInsertCache(projections[projection], y, pushedLim, e[0], e[1]);
         }
 
