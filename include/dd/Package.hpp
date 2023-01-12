@@ -2155,6 +2155,9 @@ namespace dd {
             if (!appliedCliffordGate) {
                 e = applyPauliGate(x, y, appliedCliffordGate);
             }
+            if (!appliedCliffordGate) {
+                e = applyIdentityGate(x, y, appliedCliffordGate);
+            }
             return e;
         }
 
@@ -2339,10 +2342,13 @@ namespace dd {
 
         CliffordGate isControlledPauliGate(const Edge<mNode>& mat) {
             CliffordGate gate(cliffNoGate, {-1, Control::Type::pos}, -1);
+            if (mNode::isTerminal(mat.p)) {
+                //Log::log << "[isCP] arrived at terminal.\n";
+                return gate;
+            }
             //Log::log <<  "[isCP] n=" << (int) mat.p->v << " identity = [ " << mat.p->e[0].p->isIdentity() << ", " << mat.p->e[1].p->isIdentity() << ", " << mat.p->e[2].p->isIdentity() << ", " << mat.p->e[3].p->isIdentity() << "] "
             //         << "terminal = [" << mNode::isTerminal(mat.p->e[0].p) << ", " << mNode::isTerminal(mat.p->e[1].p) << ", " << mNode::isTerminal(mat.p->e[2].p) << ", " << mNode::isTerminal(mat.p->e[3].p) << "]  "
             //         << "weight = [" << (mat.p->e[0].w) << ", " << (mat.p->e[1].w) << ", " << (mat.p->e[2].w) << ", " << (mat.p->e[3].w) << "]\n";
-            if (mNode::isTerminal(mat.p)) return gate;
             if (topQubitIsIdentity(mat)) {
                 //Log::log << "[isCP] top qubit " << (int) mat.p->v << " is identity; recursing.\n";
                 return isControlledPauliGate(mat.p->e[0]);
@@ -2957,6 +2963,22 @@ namespace dd {
             if (projection.first != (Qubit)-1) {
                 success = true;
                 return applyProjection2(x, y, projection);
+            }
+            return y;
+        }
+
+        vEdge applyIdentityGate(const Edge<mNode>& x, const vEdge& y, bool& success) {
+            success = false;
+            if (!usingSpecialCliffordCaching(cachingStrategy)) {
+                return y;
+            }
+            bool isIdentity = x.p->isIdentity();
+            if (isIdentity) {
+                //Log::log << "[apply identity] gate is identity.\n";
+                success = true;
+                return y;
+            } else {
+                //Log::log << "[apply identity] gate is not identity.\n";
             }
             return y;
         }
