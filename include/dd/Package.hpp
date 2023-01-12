@@ -1253,7 +1253,7 @@ namespace dd {
         // create a normalized DD node and return an edge pointing to it. The node is not recreated if it already exists.
         long makeDDNodeCallCount = 0;
         clock_t makeDDNodeTime = 0;
-        Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr, const vEdge targetEdge = {}, const CliffordGate gate = CliffordGate::cliffordGateNone) {
+        Edge<vNode> makeDDNode(Qubit var, const std::array<Edge<vNode>, std::tuple_size_v<decltype(vNode::e)>>& edges, bool cached = false, LimEntry<>* lim = nullptr, const vEdge targetEdge = {}, const CliffordGate gate = CliffordGate::cliffordGateNone()) {
             //std::cout << "makeDDNode(" << var << ", ..., " << cached << ", ..)\n";
             startProfile(makeDDNode)
             auto& uniqueTable = getUniqueTable<vNode>();
@@ -2984,7 +2984,7 @@ namespace dd {
         // puts the tuple (x, y, {e0, e1}) in the computeTable
         // TODO refactor so that x and y are passed as pointers to nodes, not edges
         //    includes: refactor so that multiplying by weights x.w, y.w is not necessary
-        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vEdge &e0, vEdge &e1, CliffordGate gate = CliffordGate::cliffordGateNone) {
+        vEdge makeNodeAndInsertCache(const Edge <mNode> &x, const vEdge &y, const LimEntry<> &pushedLim, vEdge &e0, vEdge &e1, CliffordGate gate = CliffordGate::cliffordGateNone()) {
             movePhaseIntoWeight(e0.l, e0.w);
             movePhaseIntoWeight(e1.l, e1.w);
             std::array<vEdge, 2> edges = {e0, e1};
@@ -3150,7 +3150,7 @@ namespace dd {
             vEdge e[2];
             if (gate.control.qubit == y.p->v) {  ///  this qubit is the control, and the target qubit is below
                 //Log::log << "[CPauli #" << callIndex << ", n=" << (int)y.p->v << "] applying Pauli " << (char)gate.gateType << " to qubit " << (int)gate.target << " from control qubit " << (int)gate.control.qubit << " with type " << (int)gate.control.type << ".\n";
-                CliffordGate pauliGate(gate.gateType, Control::noControl, gate.target);
+                CliffordGate pauliGate(gate.gateType, Control::noControl(), gate.target);
                 e[  (int)gate.control.type] = applySpecificPauliGate(y.p->e[(int)gate.control.type], pauliGate);
                 e[1^(int)gate.control.type] = y.p->e[1^(int)gate.control.type];
                 //Log::log << "[CPauli #" << callIndex << "] e[0] = " << outputCVec(getVector(e[0])) << "\n";

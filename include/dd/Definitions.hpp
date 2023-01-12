@@ -7,7 +7,9 @@
 #define DDpackage_DATATYPES_HPP
 
 // Set to 'false' to activate debugging
+#ifndef NDEBUG
 #define NDEBUG true
+#endif
 
 // Set to 'true' to activate profiling. This enables
 //   - call counts of various functions
@@ -143,15 +145,15 @@ namespace dd {
         smartStabilizerGeneration = 16
     };
 
-    bool usingSpecialCliffordCaching(CachingStrategy strategy) {
+    inline bool usingSpecialCliffordCaching(CachingStrategy strategy) {
         return (strategy & cliffordSpecialCaching) != 0;
     }
 
-    bool usingLazyMemoizationGroupIntersect(CachingStrategy strategy) {
+    inline bool usingLazyMemoizationGroupIntersect(CachingStrategy strategy) {
         return (strategy & lazyMemoizationGroupIntersect) != 0;
     }
 
-    bool usingSmartStabilizerGeneration(CachingStrategy strategy) {
+    inline bool usingSmartStabilizerGeneration(CachingStrategy strategy) {
         return (strategy & smartStabilizerGeneration) != 0;
     }
 
