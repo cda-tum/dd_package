@@ -971,7 +971,7 @@ namespace dd {
                 GintersectH = intersectGroupsModuloPhaseValue(G, H);
                 memoizedGintersectH = true;
             } else {
-                intersectionMemoizationHits++;
+                //intersectionMemoizationHits++;
             }
             // See if some element of J has xy = -1
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
