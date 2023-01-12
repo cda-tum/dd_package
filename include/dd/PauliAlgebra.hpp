@@ -118,7 +118,7 @@ namespace dd {
     }
 
     inline void conjugateWithCliffordGate(LimEntry<>& lim, const CliffordGate gate) {
-        LimEntry<> limBefore = lim;
+        //LimEntry<> limBefore = lim;
         switch(gate.gateType) {
             case cliffpauli_x:
             case cliffpauli_y:
@@ -153,8 +153,6 @@ namespace dd {
             throw std::runtime_error("[recoverPhase] a is noLIM.\n");
         }
         startProfile(recoverPhase)
-        //recoverPhaseCallCount++;
-        //clock_t begin = clock();
         LimEntry<NUM_QUBITS> A(a);
         LimEntry<NUM_QUBITS> B;
         for (std::size_t g = 0; g < G.size(); g++) {
@@ -165,7 +163,6 @@ namespace dd {
             }
         }
         endProfile(recoverPhase)
-        //recoverPhaseTime += clock() - begin;
         return B.getPhase();
     }
 
@@ -173,8 +170,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline phase_t recoverPhase(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* a) {
         startProfile(recoverPhase)
-        //clock_t begin = clock();
-        //recoverPhaseCallCount++;
         LimEntry<NUM_QUBITS> A(a);
         LimEntry<NUM_QUBITS> B;
         for (std::size_t g = 0; g < G.size(); g++) {
@@ -185,7 +180,6 @@ namespace dd {
             }
         }
         endProfile(recoverPhase)
-        //recoverPhaseTime += clock() - begin;
         return B.getPhase();
     }
 
@@ -197,8 +191,6 @@ namespace dd {
         if (a == LimEntry<NUM_QUBITS>::noLIM) {
             throw std::runtime_error("[recoverPhase] a is noLIM.\n");
         }
-        //clock_t begin = clock();
-        //recoverPhaseCallCount++;
         startProfile(recoverPhase)
         LimEntry<NUM_QUBITS> A(a);
         LimEntry<NUM_QUBITS> B;
@@ -210,7 +202,6 @@ namespace dd {
             }
         }
         endProfile(recoverPhase)
-        //recoverPhaseTime += clock() - begin;
         return B;
     }
     template<std::size_t NUM_QUBITS>
@@ -253,8 +244,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline void GaussianElimination(std::vector<LimEntry<NUM_QUBITS>*>& G) {
         startProfile(gaussianElimination)
-        //gaussianEliminationCallCount++;
-        //clock_t begin = clock();
         if (G.size() <= 1) {
             return;
         }
@@ -285,7 +274,6 @@ namespace dd {
             }
         }
         endProfile(gaussianElimination)
-        //gaussianEliminationTime += clock() - begin;
     }
 
     //    // precondition: G is sorted
@@ -308,8 +296,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline void GaussianEliminationSortedFast(std::vector<LimEntry<NUM_QUBITS>>& G) {
         startProfile(gaussianElimination)
-        //gaussianEliminationCallCount++;
-        //clock_t begin = clock();
         if (G.size() <= 1) {
             return;
         }
@@ -326,14 +312,11 @@ namespace dd {
             }
         }
         endProfile(gaussianElimination)
-        //gaussianEliminationTime += clock() - begin;
     }
 
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G) {
         startProfile(gaussianElimination)
-        //gaussianEliminationCallCount++;
-        //clock_t begin = clock();
         if (G.size() <= 1) {
             return;
         }
@@ -350,15 +333,12 @@ namespace dd {
             }
         }
         endProfile(gaussianElimination)
-        //gaussianEliminationTime += clock() - begin;
     }
 
     // TODO make faster by telling the multiply() routine how many qubits there are (!)
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void GaussianEliminationModuloPhaseSortedFast(std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G) {
         startProfile(gaussianElimination)
-        //gaussianEliminationCallCount++;
-        //clock_t begin = clock();
         if (G.size() <= 1) {
             return;
         }
@@ -375,7 +355,6 @@ namespace dd {
             }
         }
         endProfile(gaussianElimination)
-        //gaussianEliminationTime += clock() - begin;
     }
 
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
@@ -472,7 +451,7 @@ namespace dd {
     // Returns the reduced vector
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
-        gramSchmidtCallCount++;
+        startProfile(gramSchmidt)
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
         if (G.empty()) {
@@ -491,6 +470,7 @@ namespace dd {
                 }
             }
         }
+        endProfile(gramSchmidt)
         return y;
     }
 
@@ -500,8 +480,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> GramSchmidtFastSorted(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         LimEntry<NUM_QUBITS> y(x);
         for (std::size_t g = 0; g < G.size(); g++) {
             auto const pivot = G[g]->pivotPosition();
@@ -511,7 +489,6 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
@@ -520,9 +497,7 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n"; Log::log.flush();
-        //clock_t begin = clock();
         LimEntry<NUM_QUBITS> y(x); // = new LimEntry<NUM_QUBITS>(x);
         if (G.size() == 0) {
             return y;
@@ -541,15 +516,12 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> GramSchmidtFastSorted(const std::vector<LimEntry<NUM_QUBITS>>& G, const LimEntry<NUM_QUBITS>* x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         LimEntry<NUM_QUBITS> y(x);
         for (std::size_t g = 0; g < G.size(); g++) {
             auto const pivot = G[g].pivotPosition();
@@ -561,15 +533,12 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>*>& G, const LimBitset<NUM_QUBITS, NUM_BITS>* x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         if (G.size() == 0) return y;
         constexpr std::size_t height = 2 * NUM_QUBITS;
@@ -588,15 +557,12 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidt(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>& x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         if (G.size() == 0) return y;
         constexpr std::size_t height = 2 * NUM_QUBITS;
@@ -615,7 +581,6 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
@@ -623,8 +588,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline LimBitset<NUM_QUBITS, NUM_BITS> GramSchmidtFastSorted(const std::vector<LimBitset<NUM_QUBITS, NUM_BITS>>& G, const LimBitset<NUM_QUBITS, NUM_BITS>& x) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         LimBitset<NUM_QUBITS, NUM_BITS> y(x);
         for (std::size_t g = 0; g < G.size(); g++) {
             auto const pivot = G[g].lim.pivotPosition();
@@ -633,7 +596,6 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
         return y;
     }
 
@@ -644,8 +606,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS, std::size_t NUM_BITS>
     inline void GramSchmidt(const std::vector<LimEntry<NUM_QUBITS>*>& G, const LimEntry<NUM_QUBITS>* x, std::bitset<NUM_BITS>& indicator) {
         startProfile(gramSchmidt)
-        //gramSchmidtCallCount++;
-        //clock_t begin = clock();
         //        Log::log << "[GramSchmidt] |G|=" << G.size() << "  x = " << LimEntry<>::to_string(x) << "\n";
         //        LimEntry<NUM_QUBITS>* y = new LimEntry<NUM_QUBITS>(x);
         LimEntry<NUM_QUBITS> y(x);
@@ -672,7 +632,6 @@ namespace dd {
             }
         }
         endProfile(gramSchmidt)
-        //gramSchmidtTime += clock() - begin;
     }
 
     // Given a group G and a 0/1 indicator vector,
@@ -766,8 +725,6 @@ namespace dd {
     //    J may contain elements that are equal up to phase
     inline StabilizerGroupValue intersectGroupsModuloPhase(const StabilizerGroup& G, const StabilizerGroupValue& H) {
         startProfile(groupIntersect)
-        groupIntersectCallCount++;
-        clock_t begin = clock();
         StabilizerGroupValue                         intersection;
         StabilizerGroupValue                         concat = groupConcatenate(G, H);
         std::vector<std::bitset<2 * dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
@@ -776,16 +733,12 @@ namespace dd {
             auto g = getProductOfElements(G, kernel[i]);
             intersection.push_back(g);
         }
-        clock_t end = clock();
-        groupIntersectTime += end - begin;
         endProfile(groupIntersect)
         return intersection;
     }
 
     inline StabilizerGroupValue intersectGroupsModuloPhaseValue(const StabilizerGroup& G, const StabilizerGroup& H) {
         startProfile(groupIntersect)
-        //groupIntersectCallCount++;
-        //clock_t begin = clock();
         StabilizerGroupValue                         intersection; // TODO reserve some storage? or use std::array instead of std::vector?
         StabilizerGroupValue                         concat = groupConcatenateValue(G, H);
         std::vector<std::bitset<2 * dd::NUM_QUBITS>> kernel = getKernelModuloPhase(concat);
@@ -794,8 +747,6 @@ namespace dd {
             intersection.push_back(g);
         }
         endProfile(groupIntersect)
-        //groupIntersectTime += clock() - begin;
-
         return intersection;
     }
 
@@ -804,8 +755,6 @@ namespace dd {
     //   the purpose is to have less dynamically allocated memory. In this case the use of the vector oppositePhaseGenerators's DAM is prevented
     inline StabilizerGroupValue intersectGroupsPauli(const StabilizerGroup& G, const StabilizerGroupValue& H) {
         startProfile(groupIntersect)
-        //groupIntersectCallCount++;
-        //clock_t begin = clock();
         StabilizerGroupValue intersection = intersectGroupsModuloPhase(G, H);
         StabilizerGroupValue oppositePhaseGenerators;
         toColumnEchelonForm(intersection);
@@ -837,7 +786,6 @@ namespace dd {
         }
         //Log::log << "[intersect groups Pauli] intersection = " << groupToString(intersection, n) << '\n';
         endProfile(groupIntersect)
-        //groupIntersectTime += clock() - begin;
         return intersection;
     }
 
@@ -907,10 +855,6 @@ namespace dd {
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>& a, bool& foundElement) {
         startProfile(cosetIntersectModP)
-        //cosetIntersectCallCount++;
-        //clock_t begin = clock();
-        static unsigned int callCount = 0;
-        callCount++;
         std::vector<LimBitset<NUM_QUBITS, 2 * NUM_QUBITS>> GH_Id = concatenateAndAppendIdentityMatrix(G, H);
         toColumnEchelonFormModuloPhase(GH_Id);
 
@@ -930,7 +874,6 @@ namespace dd {
             foundElement = true;
         }
         endProfile(cosetIntersectModP)
-        //cosetIntersectModPTime += clock() - begin;
         return a_G;
     }
 
@@ -944,8 +887,6 @@ namespace dd {
             return {LimEntry<NUM_QUBITS>(), false};
         }
         startProfile(cosetIntersectPauli)
-        //cosetIntersectCallCount++;
-        //clock_t begin = clock();
         // find an element in G intersect abH modulo phase
         LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
         bool                 foundCIEMP;
@@ -955,7 +896,6 @@ namespace dd {
             //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
             //            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             endProfile(cosetIntersectPauli)
-            //cosetIntersectPauliTime += clock() - begin;
             return {LimEntry<NUM_QUBITS>(), false};
         }
         c.setPhase(recoverPhase(G, &c));
@@ -968,7 +908,6 @@ namespace dd {
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
             endProfile(cosetIntersectPauli)
-            //cosetIntersectPauliTime += clock() - begin;
             return {c, true};
         }
         // TODO we should just be able to say 'else', because ALWAYS alpha == -tau in this case.
@@ -979,13 +918,11 @@ namespace dd {
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     endProfile(cosetIntersectPauli)
-                    //cosetIntersectPauliTime += clock() - begin;
                     return {LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])), true};
                 }
             }
         }
         endProfile(cosetIntersectPauli)
-        //cosetIntersectPauliTime += clock() - begin;
         return {c, false}; // dummy element
     }
 
@@ -998,8 +935,6 @@ namespace dd {
             return {LimEntry<NUM_QUBITS>(), false};
         }
         startProfile(cosetIntersectPauli)
-        //cosetIntersectCallCount++;
-        //clock_t begin = clock();
         //Log::log << "[cosetIntersection] G = ";
         //printStabilizerGroup(G, nQubits);
         //Log::log << " H = ";
@@ -1014,7 +949,6 @@ namespace dd {
             //            std::cout << "[coset intersection] a = " << LimEntry<>::to_string(a, nQubits) << " b = " << LimEntry<>::to_string(b, nQubits) << " c = " << LimEntry<>::to_string(c, nQubits) << " ab = " << LimEntry<>::to_string(ab, nQubits) << " lambda = " << phaseToString(lambda) << '\n';
             //            std::cout << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
             endProfile(cosetIntersectPauli)
-            //cosetIntersectPauliTime += clock() - begin;
             return {LimEntry<NUM_QUBITS>(), false};
         }
         c.setPhase(recoverPhase(G, &c));
@@ -1027,7 +961,6 @@ namespace dd {
         //Log::log << "[coset intersection] G = " << groupToString(G, nQubits) << "  H = " << groupToString(H, nQubits) << "\n";
         if (alpha == tau) {
             endProfile(cosetIntersectPauli)
-            //cosetIntersectPauliTime += clock() - begin;
             //Log::log << "[cosetIntersection] found " << c.to_string(nQubits) << " in G intersect lambda a H b\n";
             return {c, true};
         }
@@ -1044,22 +977,18 @@ namespace dd {
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     endProfile(cosetIntersectPauli)
-                    //cosetIntersectPauliTime += clock() - begin;
                     //Log::log << "[cosetIntersection] found " << LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])).to_string(nQubits) << "\n";
                     return {LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])), true};
                 }
             }
         }
         endProfile(cosetIntersectPauli)
-        //cosetIntersectPauliTime += clock() - begin;
         return {c, false}; // dummy element
     }
 
     template<std::size_t NUM_QUBITS>
     inline LimEntry<NUM_QUBITS> getCosetIntersectionElementModuloPhase2(const std::vector<LimEntry<NUM_QUBITS>*>& G, const std::vector<LimEntry<NUM_QUBITS>*>& H, const LimEntry<NUM_QUBITS>& a, bool& foundElement, const std::vector<LimBitset<NUM_QUBITS, 2*NUM_QUBITS>>& GH_Id_CEF) {
         startProfile(cosetIntersectModP)
-        //cosetIntersectCallCount++;
-        //clock_t begin = clock();
         //std::vector<LimBitset<NUM_QUBITS, 2 * NUM_QUBITS>> GH_Id = concatenateAndAppendIdentityMatrix(G, H);
         //toColumnEchelonFormModuloPhase(GH_Id);
         //pruneZeroColumnsModuloPhase(GH_Id);
@@ -1081,7 +1010,6 @@ namespace dd {
             foundElement = true;
         }
         endProfile(cosetIntersectModP)
-        //cosetIntersectModPTime += clock() - begin;
         return a_G;
     }
 
@@ -1158,7 +1086,6 @@ namespace dd {
         auto       high = node.e[1];
         auto const n    = node.v;
         auto       zero = std::array{node.e[0].w.approximatelyZero(), node.e[1].w.approximatelyZero()};
-        //clock_t    begin = clock();
         startProfile(constructStabilizer)
 
         // Case 0: Check if this node is the terminal node (aka the Leaf)
@@ -1300,13 +1227,12 @@ namespace dd {
         //            		 << "[constructStabilizerGeneratorSet] Stab = "; //printStabilizerGroup(node.limVector, node.v); Log::log << '\n';
 
         endProfile(constructStabilizer)
-        //constructStabilizerTime += clock() - begin;
         return stabgenset;
     }
 
     // TODO maybe put stabilizers in lookup table directly?
     // TODO are the parameters cn and cachingStrategy necessary?
-    inline StabilizerGroupValue constructStabilizerGeneratorSetPauliAfterClifford(const vEdge newEdge, ComplexNumbers& cn, CachingStrategy cachingStrategy, const vEdge originalEdge, const CliffordGate gate) {
+    inline StabilizerGroupValue constructStabilizerGeneratorSetPauliAfterClifford(const vEdge newEdge, const vEdge originalEdge, const CliffordGate gate) {
         StabilizerGroupValue stabgenset;
         stabgenset.reserve(originalEdge.p->limVector.size());
         //Log::log << "[smartStabs] Start. gate = " << gate << ". Original group: " << outputStabilizerGroup(originalEdge.p->limVector, newEdge.p->v) << "\n";

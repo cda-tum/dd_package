@@ -334,6 +334,9 @@ namespace dd {
         }
 
         // Right-Multiply this Pauli operator with the 'other' Pauli operator, obtaining this * other
+        // TODO this method can be sped up :
+        //  - refactor to reduce the number of if-statements
+        //  - use simple bit-level logic to avoid converting the operations to characters
         void multiplyBy(const LimEntry<NUM_QUBITS>& other) {
             char    op1, op2;
             phase_t newPhase = getPhase();
