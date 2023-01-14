@@ -2467,6 +2467,7 @@ namespace dd {
                                          [[maybe_unused]] bool              generateDensityMatrix = false,
                                          [[maybe_unused]] const LimEntry<>& lim                   = {}) {
             startProfile(multiply2)
+            multiply2CallCount++;
             [[maybe_unused]] const unsigned int callIndex = multiply2CallCount;
             using LEdge             = Edge<LeftOperandNode>;
             using REdge             = Edge<RightOperandNode>;
@@ -2477,50 +2478,46 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
+#if !NDEBUG
+            CMat mat_x = getMatrix(x);
+            CVec vec_y = getVector(y, var, lim);
+            CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
+#endif
             //CVec yvec2 = getVector(y);
             //if (y.p->v >= 0)
             //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] Start. matrix " << (x.p->isIdentity() ? " is identity " : " is not identity ") << " y=" << y << " with vector " << outputCVec(yvec2) << "; lim = " << lim.to_string(y.p->v) << "\n";
+            auto xCopy = x;
+            xCopy.w    = Complex::one;
             auto       yCopy   = y;
+            yCopy.w    = Complex::one;
+
+            // TODO only compute the getRootLabel just in time, which is just before we use it to retrieve things from the compute table
             LimEntry<> trueLim = lim;
             trueLim.multiplyBy(y.l);
             trueLim = getRootLabel(y.p, &trueLim);
-
-            auto xCopy = x;
-            xCopy.w    = Complex::one;
-            yCopy.w    = Complex::one;
-
             phase_t trueLimOldPhase = trueLim.getPhase();
             trueLim.setPhase(phase_t::phase_one);
             //if (y.p->v >= 0)
             //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] trueLim = " << trueLim.to_string(y.p->v) << "\n";
+            LimEntry<> limActive, limInactive;
+            LimEntry<>* limActiveTable;
+            phase_t activeLimPhase;
 
             pauli_op op;
 
             // TODO This code, which handles the special case when x is the identity operator, does not work.
 //            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
-//                if (y.w.exactlyZero()) {
+//                if (y.w.exactlyZero()) { // TODO this step can be done earlier
 //                    return ResultEdge::zero;
 //                }
 //
 //                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-//                newWeight.multiplyByPhase(trueLimOldPhase);
-//                yCopy.l = lf.limTable.lookup(trueLim);
+//                newWeight.multiplyByPhase(trueLimOldPhase); // TODO multiply also by x.w
+//                yCopy.l = lf.limTable.lookup(trueLim); // TODO this step is not necessary
 //                yCopy.w = newWeight;
 //                return yCopy;
 //            }
 
-#if !NDEBUG
-            CMat mat_x;
-            CVec vec_y, vecExpected;
-
-            mat_x       = getMatrix(x);
-            vec_y       = getVector(y, var, lim);
-            vecExpected = multiplyMatrixVector(mat_x, vec_y);
-
-#endif
-
-            //            makePrintIdent(var);
-            //            std::cout << "trueLimTable: " << LimEntry<NUM_QUBITS>::to_string(&trueLimTable) << std::endl;
 
             // TODO it looks like this check can be done earlier; then subsequent checks of this form can be omitted
             if (x.w.exactlyZero() || y.w.exactlyZero()) {
@@ -2532,7 +2529,11 @@ namespace dd {
                     return ResultEdge::zero;
                 } else {
                     auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                    newWeight.multiplyByPhase(trueLimOldPhase);
+                    if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                        newWeight.multiplyByPhase(lim.getPhase());
+                    } else {
+                        newWeight.multiplyByPhase(trueLimOldPhase);
+                    }
                     ComplexNumbers::mul(newWeight, x.w, newWeight);
                     return ResultEdge::terminal(newWeight);
                 }
@@ -2540,24 +2541,29 @@ namespace dd {
 
             // TODO this puts 'trueLimTable' in the table, which may not be desirable, since this LIM is not referenced by any node.
             //   Therefore, its refcount is not decremented at the end of the method, and it henceforth lives on as a 'zombie' in the table
+            //   solution: look up trueLim in the table, and if this LIM is not in the table, then we can immediately conclude that the compute table does not contain what we are looking for either
             //   (if I understand correctly) -LV
             const auto trueLimTable = lf.limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
 
-            LimEntry<> limActive(trueLimTable);
-            LimEntry<> limInactive(trueLimTable);
 
+            /// Lookup the computation in the cache
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
-                if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) { // TODO use cachingStrategy & dirtyTrick != 0
+                if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] Start. y = " << y << "; lim = "<< lim.to_string(y.p->v) << "; lim * |y> = " << outputCVec(getVector(y, var, lim)) << ". Currently limActive = limInactive = " << limActive.to_string(y.p->v) << (x.p->isIdentity() ? "; matrix is identity.\n" : "\n");
                     std::vector<Qubit> activeQubits = getActiveQubits(x);
-                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] [pre process] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
+                    limActive = lim;
+                    limActive.multiplyBy(y.l);
+                    activeLimPhase = limActive.getPhase();
+                    limActive.setPhase(phase_one);
+                    limInactive = limActive;
                     limActive.selectActivePart(activeQubits);
-                    limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
+                    //limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
                     limInactive.selectInactivePart(activeQubits);
-                    LimEntry<>* limActiveTable = lf.limTable.lookup(limActive); // TODO this puts 'limActive' in the LimTable, which may not be desirable
-                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
-                    // TODO use limActive = getrootLabel(limActive, y.p)
+                    limActiveTable = lf.limTable.lookup(limActive); // TODO this inserts 'limActive' into the LimTable, which may not be desirable
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] [pre process] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
                     auto cachedEdge = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, false);
                     if (cachedEdge.p != nullptr) {
                         auto result = ResultEdge{cachedEdge.p, cn.getCached(cachedEdge.w), cachedEdge.l};
@@ -2568,16 +2574,16 @@ namespace dd {
                             cn.returnToCache(result.w);
                             return ResultEdge::zero;
                         }
-                        result.w.multiplyByPhase(trueLimOldPhase);
+                        result.w.multiplyByPhase(activeLimPhase);
                         LimEntry<> resultLim(result.l);
                         resultLim.leftMultiplyBy(limInactive);
+                        movePhaseIntoWeight(resultLim, result.w); // TODO this should go before the lookup, right?
                         result.l = lf.limTable.lookup(resultLim);
-                        movePhaseIntoWeight(result.l, result.w);
                         return result;
                     }
                     yCopy.l = limActiveTable;
                     op = yCopy.l->getPauliForQubit(yCopy.p->v);
-                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] cache miss. yCopy = " << yCopy << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << " op = " << (char) op << "\n";
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] [pre process] cache miss. Now yCopy = " << yCopy << "  limInactive = " << limInactive.to_string(y.p->v) << " op = " << (char)op << "\n";
                 }
                 else if (cachingStrategy == CachingStrategy::localityAwareCachingClean) { // TODO
                     std::cout << "[multiply2] ERROR clean caching not yet implemented.\n";
@@ -2708,17 +2714,17 @@ namespace dd {
                             dEdge::revertDmChangesToEdges(e1, e2);
                         } else {
                             REdge      e2{};
-                            LimEntry<> lim2;
                             if (!y.isTerminal() && y.p->v == var) {
                                 e2 = follow2(yCopy, j + COLS * k, op);
                             } else {
                                 e2 = yCopy;
                             }
                             ResultEdge m;
-                            if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) {
+                            if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                                 limActivePropagate = limActive;
                                 limActivePropagate.setOperator(y.p->v, pauli_id);
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate);
+                                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] got result " << outputCVec(getVector(m,x.p->v-1)) << "\n";
                             } else {
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim);
                             }
@@ -2727,23 +2733,7 @@ namespace dd {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
                                 auto old_e = edge[idx];
-                                //                                export2Dot(edge[idx], "edge0.dot", true, true, false, false, false);
-                                //                                export2Dot(m, "edge1.dot", true, true, false, false, false);
-                                //                                vectorArg0 = getVector(old_e);
-                                //                                vectorArg1 = getVector(m);
-                                //                                vectorExpected = addVectors(vectorArg0, vectorArg1);
                                 edge[idx] = add2(edge[idx], m);
-                                //                                vectorResult = getVector(edge[idx]);
-                                //                                if (!vectorsApproximatelyEqual(vectorResult, vectorExpected)) {
-                                //                                	Log::log << "[multiply2] ERROR addition went wrong.\n";
-                                //									Log::log << "arg0:    "; printCVec(vectorArg0);     Log::log << '\n';
-                                //                                	Log::log << "arg1     "; printCVec(vectorArg1);     Log::log << '\n';
-                                //                                	Log::log << "expected "; printCVec(vectorExpected); Log::log << '\n';
-                                //                                	Log::log << "result   "; printCVec(vectorResult);   Log::log << '\n';
-                                //                                	throw std::runtime_error("[multiply2] ERROR Add did not return expected result.");
-                                //                                }
-
-                                //                                export2Dot(edge[idx], "temp_limdd.dot", true, true, false, false, false);
                                 cn.returnToCache(old_e.w);
                                 cn.returnToCache(m.w);
                             }
@@ -2763,7 +2753,6 @@ namespace dd {
 #endif
                 e = makeDDNode(var, edge, true, nullptr);
 #if !NDEBUG
-
                 vece = getVector(e, var);
                 if (!sanityCheckMakeDDNode(vece0, vece1, vece)) {
                     Log::log << "[multiply2, c=" << callIndex << " n="<< (int) y.p->v << "] ERROR sanity check failed after makeDDNode.\n"
@@ -2778,7 +2767,6 @@ namespace dd {
                     printCVec(vece);
                     throw std::runtime_error("[multiply2] ERROR Sanity check failed after makenode.");
                 }
-
 #endif
             } else {
                 e = makeDDNode(var, edge, true, generateDensityMatrix);
@@ -2790,18 +2778,17 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
-            if (cachingStrategy == CachingStrategy::localityAwareCachingDirtyTrick) {
+            if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                 //CVec evec = getVector(e);
-                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation before correcting LIM: " << e << " with vector " << outputCVec(evec) << "  op=" << (char) op << "\n";
-                LimEntry<>* limActiveTable = lf.limTable.lookup(limActive);
+                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] [postprocess] Result of computation before correcting for limInactive (" << limInactive.to_string(y.p->v) << "): " << e << " with vector " << outputCVec(getVector(e)) << "  op=" << (char) op << "\n";
                 computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, limActiveTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
                 //Log::log << "[multiply2, n=" << (int)x.p->v << "] inserted edge into cache: y=" << vEdge{y.p, Complex::one, limActiveTable} << " e=" << vEdge{e.p, e.w, e.l} << "\n";
+                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] NOTE: NOT inserting result into cache; not yet enabled.\n";
                 LimEntry<> elim(e.l);
                 elim.leftMultiplyBy(limInactive);
                 movePhaseIntoWeight(elim, e.w);
                 e.l = lf.limTable.lookup(elim);
-                //evec = getVector(e);
-                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] Result of computation (before multiplying) = " << e << " with vector " << outputCVec(evec) << "\n";
+                //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] [postprocess] Result of computation after correcting for limInactive, e = " << e << " with vector " << outputCVec(getVector(e)) << "\n";
             } else {
                 computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
             }
@@ -2814,8 +2801,14 @@ namespace dd {
                 } else {
                     ComplexNumbers::mul(e.w, e.w, x.w);
                     ComplexNumbers::mul(e.w, e.w, y.w);
+                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] after multiplying e.w with x.w (" << x.w << ") and y.w ( " << y.w << "), e.w = " << e.w << "\n";
                 }
-                e.w.multiplyByPhase(trueLimOldPhase);
+                if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                    // TODO maybe multiply by activeLimPhase?
+                    e.w.multiplyByPhase(activeLimPhase);
+                } else {
+                    e.w.multiplyByPhase(trueLimOldPhase);
+                }
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
                     return ResultEdge::zero;
@@ -2844,6 +2837,7 @@ namespace dd {
             assert(e.p->v > 0 && e.p->e[0].w.approximatelyZero() && !e.p->e[0].isZeroTerminal());
             assert(e.p->v > 0 && e.p->e[1].w.approximatelyZero() && !e.p->e[1].isZeroTerminal());
 
+            //Log::log << "[multiply2, c=" << callIndex << "] returning e=" << outputCVec(getVector(e, y.p->v)) << "\n";
             return e;
         }
 

@@ -372,6 +372,44 @@ namespace dd {
             multiplyPhaseBy(other.getPhase());
         }
 
+        // TODO this method can be sped up :
+        //  - refactor to reduce the number of if-statements
+        //  - use simple bit-level logic to avoid converting the operations to characters
+        void multiplyBy(const LimEntry<NUM_QUBITS>& other, const Qubit nQubits) {
+            char    op1, op2;
+            phase_t newPhase = getPhase();
+            for (unsigned int i = 0; i < nQubits; i++) {
+                // Step 1: handle the phase, if the operators do not commute
+                op1 = getQubit(i);
+                op2 = other.getQubit(i);
+                if (op1 == 'X' && op2 == 'Y') // XY =  iZ
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'X' && op2 == 'Z') // XZ = -iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
+                else if (op1 == 'Y' && op2 == 'X') // YX = -iZ
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
+                else if (op1 == 'Y' && op2 == 'Z') // YZ =  iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'Z' && op2 == 'X') // ZX =  iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                //                    multiplyPhaseBy(phase_t::phase_i);
+                else if (op1 == 'Z' && op2 == 'Y') // ZY = -iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                //                    multiplyPhaseBy(phase_t::phase_minus_i);
+
+                // Step 2: XOR the bits
+                //                paulis.set(2*i,   paulis.test(2*i) ^ other.paulis.test(2*i));
+                //                paulis.set(2*i+1, paulis.test(2*i+1) ^ other.paulis.test(2*i+1));
+            }
+            paulis ^= other.paulis;
+            setPhase(newPhase);
+            multiplyPhaseBy(other.getPhase());
+        }
+
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
             multiplyBy(other);
             if (!commutesWith(other)) {
@@ -382,6 +420,14 @@ namespace dd {
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>* other) {
             if (other == nullptr) return;
             leftMultiplyBy(*other);
+        }
+
+        // TODO speed up this operation by performing only ONE scan of the LIMs, not two
+        void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other, const Qubit nQubits) {
+            multiplyBy(other, nQubits);
+            if (!commutesWith(other)) {
+                multiplyPhaseBy(phase_t::phase_minus_one);
+            }
         }
 
         void multiplyBy(const LimEntry<NUM_QUBITS>* other) {
@@ -395,25 +441,35 @@ namespace dd {
         }
 
 //        // Returns the LIM a * b
+          //    !!!   WARNING   !!!   this function can cause memory leaks
 //        static LimEntry<NUM_QUBITS>* multiply(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
-//            //todo this function can cause memory leaks!
 //            assert(a != noLIM && b != noLIM);
 //            LimEntry<NUM_QUBITS>* c = new LimEntry<NUM_QUBITS>(a);
 //            c->multiplyBy(b);
 //            return c;
 //        }
 
+        // TODO rename this function to 'multiply'
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b) {
             LimEntry<NUM_QUBITS> c(a);
             c.multiplyBy(b);
             return c;
         }
 
+        // TODO rename this function to 'multiply'
         static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>* a, const LimEntry<NUM_QUBITS>* b) {
             LimEntry<NUM_QUBITS> c(a);
             c.multiplyBy(b);
             return c;
         }
+
+        // TODO rename this function to 'multiply'
+        static LimEntry<NUM_QUBITS> multiplyValue(const LimEntry<NUM_QUBITS>& a, const LimEntry<NUM_QUBITS>& b, const Qubit nQubits) {
+            LimEntry<NUM_QUBITS> c(a);
+            c.multiplyBy(b, nQubits);
+            return c;
+        }
+
 
         void multiplyByX(Qubit target) {
             pauli_op op =(pauli_op) getQubit(target);

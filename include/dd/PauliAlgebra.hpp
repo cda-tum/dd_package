@@ -22,25 +22,7 @@ namespace dd {
 
     // time taken, for profiling
 
-    //clock_t groupIntersectTime       = 0;
-    //clock_t cosetIntersectModPTime   = 0;
-    //clock_t cosetIntersectPauliTime  = 0;
-    //clock_t constructStabilizerTime  = 0;
-    //clock_t recoverPhaseTime         = 0;
-    //clock_t gramSchmidtTime          = 0;
-    //clock_t gaussianEliminationTime  = 0;
-    //// call counts
-    //long cosetIntersectModPCallCount = 0;
-    //long cosetIntersectCallCount     = 0;
-    //long cosetIntersectPauliCallCount= 0;
-    //long groupIntersectCallCount     = 0;
-    //long recoverPhaseCallCount       = 0;
-    //long gramSchmidtCallCount        = 0;
-    //long gaussianEliminationCallCount= 0;
-    //long intersectionMemoizationHits = 0;
-    //long constructStabilizerCallCount= 0;
     // memoized data
-
     struct MemoizedData {
         inline static std::vector<LimBitset<NUM_QUBITS, 2 * NUM_QUBITS>> GH_Id_CEF_memoized;
         inline static std::vector<LimEntry<NUM_QUBITS>>                  GintersectH_memoized;
