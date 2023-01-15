@@ -44,6 +44,7 @@ namespace dd {
         declareProfilingVariables(applyControlledPauli);
         declareProfilingVariables(applyProjection);
         declareProfilingVariables(getVector);
+        inline static size_t intersectionMemoizationHits = 0;
     };
 
 }

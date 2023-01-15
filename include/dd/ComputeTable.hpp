@@ -103,6 +103,15 @@ namespace dd {
             return os;
         }
 
+    public:
+        size_t getHits() const {
+            return hits;
+        }
+
+        size_t getLookups() const {
+            return lookups;
+        }
+
     private:
         std::array<Entry, NBUCKET> table{};
         // compute table lookup statistics

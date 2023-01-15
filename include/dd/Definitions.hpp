@@ -143,7 +143,9 @@ namespace dd {
         localityAwareCachingClean = 4,
         lazyMemoizationGroupIntersect = 8,
         localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick,
-        smartStabilizerGeneration = 16
+        smartStabilizerGeneration = 16,
+        localityAwarePropagateReducedLim = 32,
+        skipIdentityGateMultiplication   = 64
     };
 
     inline bool usingSpecialCliffordCaching(CachingStrategy strategy) {
@@ -161,6 +163,15 @@ namespace dd {
     inline bool usingLocalityAwareCachingDirtyTrick(CachingStrategy strategy) {
         return (strategy & localityAwareCachingDirtyTrick) != 0;
     }
+
+    inline bool usingLocalityAwarePropagateReducedLim(CachingStrategy strategy) {
+        return (strategy & localityAwarePropagateReducedLim) != 0;
+    }
+
+    inline bool usingSkipIdentityGate(CachingStrategy strategy) {
+        return (strategy & skipIdentityGateMultiplication) != 0;
+    }
+
 
 } // namespace dd
 

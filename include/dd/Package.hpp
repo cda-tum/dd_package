@@ -1763,6 +1763,7 @@ namespace dd {
         template<class Node>
         Edge<Node> add2(const Edge<Node>& x, const Edge<Node>& y, const LimEntry<>& limX = {}, const LimEntry<>& limY = {}) {
             startProfile(add)
+            addCallCount++;
             LimEntry<> trueLimX = limX;
             trueLimX.multiplyBy(x.l);
             // Making a copy from trueLimX as I need it later for inserting the result into the cache
@@ -2505,18 +2506,22 @@ namespace dd {
 
             pauli_op op;
 
-            // TODO This code, which handles the special case when x is the identity operator, does not work.
-//            if (x.p->isIdentity() && group == LIMDD_group::Pauli_group) {
-//                if (y.w.exactlyZero()) { // TODO this step can be done earlier
-//                    return ResultEdge::zero;
-//                }
-//
-//                auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-//                newWeight.multiplyByPhase(trueLimOldPhase); // TODO multiply also by x.w
-//                yCopy.l = lf.limTable.lookup(trueLim); // TODO this step is not necessary
-//                yCopy.w = newWeight;
-//                return yCopy;
-//            }
+            if (usingSkipIdentityGate(cachingStrategy)) {
+                if (x.p->isIdentity()) {
+                    if (y.w.exactlyZero()) { // TODO this step can be done earlier
+                        return ResultEdge::zero;
+                    }
+
+                    auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                    cn.mul(newWeight, newWeight, x.w);
+                    newWeight.multiplyByPhase(trueLimOldPhase);
+                    // TODO here 'trueLim' is obtained by using getRootLabel, which employs gramSchmidt, which is expensive
+                    //   instead, we should simply multiply lim * y.l, and look that Lim up. This is cheaper
+                    yCopy.l = lf.limTable.lookup(trueLim);
+                    yCopy.w = newWeight;
+                    return yCopy;
+                }
+            }
 
 
             // TODO it looks like this check can be done earlier; then subsequent checks of this form can be omitted
@@ -2560,7 +2565,9 @@ namespace dd {
                     limActive.setPhase(phase_one);
                     limInactive = limActive;
                     limActive.selectActivePart(activeQubits);
-                    //limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
+                    if (usingLocalityAwarePropagateReducedLim(cachingStrategy)) {
+                        limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
+                    }
                     limInactive.selectInactivePart(activeQubits);
                     limActiveTable = lf.limTable.lookup(limActive); // TODO this inserts 'limActive' into the LimTable, which may not be desirable
                     //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] [pre process] dirty trick. Lookup in cache: " << vEdge{y.p, Complex::one, limActiveTable} << " limActive = " << limActive.to_string(y.p->v) << "  limInactive = " << LimEntry<>::to_string(&limInactive, y.p->v) << "\n";
