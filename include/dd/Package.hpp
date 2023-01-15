@@ -2479,76 +2479,54 @@ namespace dd {
             if (x.p == nullptr) return {nullptr, Complex::zero, nullptr};
             if (y.p == nullptr) return y;
 
+            if (x.w.exactlyZero() || y.w.exactlyZero()) {
+                return ResultEdge::zero;
+            }
 #if !NDEBUG
             CMat mat_x = getMatrix(x);
             CVec vec_y = getVector(y, var, lim);
             CVec vecExpected = multiplyMatrixVector(mat_x, vec_y);
 #endif
-            //CVec yvec2 = getVector(y);
-            //if (y.p->v >= 0)
-            //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] Start. matrix " << (x.p->isIdentity() ? " is identity " : " is not identity ") << " y=" << y << " with vector " << outputCVec(yvec2) << "; lim = " << lim.to_string(y.p->v) << "\n";
             auto xCopy = x;
             xCopy.w    = Complex::one;
             auto       yCopy   = y;
             yCopy.w    = Complex::one;
 
-            // TODO only compute the getRootLabel just in time, which is just before we use it to retrieve things from the compute table
-            LimEntry<> trueLim = lim;
-            trueLim.multiplyBy(y.l);
-            trueLim = getRootLabel(y.p, &trueLim);
-            phase_t trueLimOldPhase = trueLim.getPhase();
-            trueLim.setPhase(phase_t::phase_one);
-            //if (y.p->v >= 0)
-            //    Log::log << "[multiply2, c=" << callIndex << " n=" << (int)y.p->v << "] trueLim = " << trueLim.to_string(y.p->v) << "\n";
+            LimEntry<>  reducedLim;
+            phase_t     reducedLimPhase;
+            LimEntry<>* reducedLimTable;
             LimEntry<> limActive, limInactive;
             LimEntry<>* limActiveTable;
             phase_t activeLimPhase;
-
             pauli_op op;
 
+            /// Check if x is the identity gate; if so, then we can fast-forward this calculation a lot
             if (usingSkipIdentityGate(cachingStrategy)) {
                 if (x.p->isIdentity()) {
-                    if (y.w.exactlyZero()) { // TODO this step can be done earlier
-                        return ResultEdge::zero;
-                    }
+                    auto resultWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                    cn.mul(resultWeight, resultWeight, x.w);
+                    LimEntry<> resultLim(lim);
+                    resultLim.multiplyBy(y.l);
+                    movePhaseIntoWeight(resultLim, resultWeight);
 
-                    auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                    cn.mul(newWeight, newWeight, x.w);
-                    newWeight.multiplyByPhase(trueLimOldPhase);
-                    // TODO here 'trueLim' is obtained by using getRootLabel, which employs gramSchmidt, which is expensive
-                    //   instead, we should simply multiply lim * y.l, and look that Lim up. This is cheaper
-                    yCopy.l = lf.limTable.lookup(trueLim);
-                    yCopy.w = newWeight;
+                    yCopy.l = lf.limTable.lookup(resultLim);
+                    yCopy.w = resultWeight;
                     return yCopy;
                 }
             }
 
-
-            // TODO it looks like this check can be done earlier; then subsequent checks of this form can be omitted
-            if (x.w.exactlyZero() || y.w.exactlyZero()) {
-                return ResultEdge::zero;
-            }
-
             if (var == start - 1) {
-                if (y.w.exactlyZero() || x.w.exactlyZero()) {
-                    return ResultEdge::zero;
-                } else {
-                    auto newWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
-                    if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
-                        newWeight.multiplyByPhase(lim.getPhase());
-                    } else {
-                        newWeight.multiplyByPhase(trueLimOldPhase);
-                    }
-                    ComplexNumbers::mul(newWeight, x.w, newWeight);
-                    return ResultEdge::terminal(newWeight);
-                }
+                auto resultWeight = cn.getCached(CTEntry::val(y.w.r), CTEntry::val(y.w.i));
+                ComplexNumbers::mul(resultWeight, x.w, resultWeight);
+                //if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                //    resultWeight.multiplyByPhase(lim.getPhase());
+                //} else {
+                LimEntry<> lim2(lim);
+                lim2.multiplyBy(y.l);
+                resultWeight.multiplyByPhase(lim2.getPhase());
+                //}
+                return ResultEdge::terminal(resultWeight);
             }
-
-            // TODO this puts 'trueLimTable' in the table, which may not be desirable, since this LIM is not referenced by any node.
-            //   Therefore, its refcount is not decremented at the end of the method, and it henceforth lives on as a 'zombie' in the table
-            //   solution: look up trueLim in the table, and if this LIM is not in the table, then we can immediately conclude that the compute table does not contain what we are looking for either
-            //   (if I understand correctly) -LV
-            const auto trueLimTable = lf.limTable.lookup(trueLim);
 
             auto& computeTable = getMultiplicationComputeTable<LeftOperandNode, RightOperandNode>();
 
@@ -2566,7 +2544,7 @@ namespace dd {
                     limInactive = limActive;
                     limActive.selectActivePart(activeQubits);
                     if (usingLocalityAwarePropagateReducedLim(cachingStrategy)) {
-                        limActive = getRootLabel(y.p, &limActive);  // TODO put this behind a flag guard so that we can profile whether it helps
+                        limActive = getRootLabel(y.p, &limActive);
                     }
                     limInactive.selectInactivePart(activeQubits);
                     limActiveTable = lf.limTable.lookup(limActive); // TODO this inserts 'limActive' into the LimTable, which may not be desirable
@@ -2597,8 +2575,19 @@ namespace dd {
                     throw std::runtime_error("[multiply2] ERROR clean caching not yet implemented.\n");
                 }
                 else {
-                    op = trueLim.getPauliForQubit(yCopy.p->v);
-                    auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, generateDensityMatrix);
+                    reducedLim = lim;
+                    reducedLim.multiplyBy(y.l);
+                    reducedLim      = getRootLabel(y.p, &reducedLim);
+                    reducedLimPhase = reducedLim.getPhase();
+                    reducedLim.setPhase(phase_t::phase_one);
+
+                    // TODO this puts 'reducedLimTable' in the table, which may not be desirable, since this LIM is not referenced by any node.
+                    //   Therefore, its refcount is not decremented at the end of the method, and it henceforth lives on as a 'zombie' in the table
+                    //   solution: look up reducedLim in the table, and if this LIM is not in the table, then we can immediately conclude that the compute table does not contain what we are looking for either
+                    //   (if I understand correctly) -LV
+                    reducedLimTable = lf.limTable.lookup(reducedLim);
+                    op = reducedLim.getPauliForQubit(yCopy.p->v);
+                    auto r = computeTable.lookup({x.p, Complex::one, nullptr}, {y.p, Complex::one, reducedLimTable}, generateDensityMatrix);
                     //            if (r.p != nullptr && false) { // activate for debugging caching only
                     if (r.p != nullptr) {
                         if (r.w.approximatelyZero()) {
@@ -2607,7 +2596,7 @@ namespace dd {
                             auto e = ResultEdge{r.p, cn.getCached(r.w), r.l};
                             ComplexNumbers::mul(e.w, e.w, x.w);
                             ComplexNumbers::mul(e.w, e.w, y.w);
-                            e.w.multiplyByPhase(trueLimOldPhase);
+                            e.w.multiplyByPhase(reducedLimPhase);
                             if (e.w.approximatelyZero()) {
                                 cn.returnToCache(e.w);
                                 return ResultEdge::zero;
@@ -2666,7 +2655,7 @@ namespace dd {
             std::array<ResultEdge, N> edge{};
 
             CVec vectorArg0, vectorArg1, vectorResult, vectorExpected;
-            trueLim.setOperator(y.p->v, pauli_id);
+            reducedLim.setOperator(y.p->v, pauli_id);
 
             LimEntry<> limActivePropagate;
             for (auto i = 0U; i < ROWS; i++) {
@@ -2733,7 +2722,7 @@ namespace dd {
                                 m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate);
                                 //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] got result " << outputCVec(getVector(m,x.p->v-1)) << "\n";
                             } else {
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, trueLim);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, reducedLim);
                             }
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
@@ -2785,6 +2774,7 @@ namespace dd {
             //                e = ResultEdge{r.p, cn.getCached(r.w), r.l};
             //            }
 
+            /// Next step: Insert the result 'e' into the compute cache
             if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                 //CVec evec = getVector(e);
                 //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] [postprocess] Result of computation before correcting for limInactive (" << limInactive.to_string(y.p->v) << "): " << e << " with vector " << outputCVec(getVector(e)) << "  op=" << (char) op << "\n";
@@ -2797,28 +2787,21 @@ namespace dd {
                 e.l = lf.limTable.lookup(elim);
                 //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] [postprocess] Result of computation after correcting for limInactive, e = " << e << " with vector " << outputCVec(getVector(e)) << "\n";
             } else {
-                computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, trueLimTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
+                computeTable.insert({x.p, Complex::one, nullptr}, {y.p, Complex::one, reducedLimTable}, {e.p, e.w, e.l}); // TODO use e instead of {e.p, e.w, e.l}
             }
 
             //            export2Dot(e, "edgeResult0.dot", true, true, false, false, true);
-
             if (!e.w.exactlyZero() && (x.w.exactlyOne() || !y.w.exactlyZero())) {
-                if (e.w.exactlyZero()) { // TODO this check is redundant, because we just checked that !e.w.exactlyZero()
-                    e.w = cn.mulCached(x.w, y.w);
-                } else {
-                    ComplexNumbers::mul(e.w, e.w, x.w);
-                    ComplexNumbers::mul(e.w, e.w, y.w);
-                    //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] after multiplying e.w with x.w (" << x.w << ") and y.w ( " << y.w << "), e.w = " << e.w << "\n";
-                }
-                if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
-                    // TODO maybe multiply by activeLimPhase?
-                    e.w.multiplyByPhase(activeLimPhase);
-                } else {
-                    e.w.multiplyByPhase(trueLimOldPhase);
-                }
+                ComplexNumbers::mul(e.w, e.w, x.w);
+                ComplexNumbers::mul(e.w, e.w, y.w);
                 if (e.w.approximatelyZero()) {
                     cn.returnToCache(e.w);
                     return ResultEdge::zero;
+                }
+                if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                    e.w.multiplyByPhase(activeLimPhase);
+                } else {
+                    e.w.multiplyByPhase(reducedLimPhase);
                 }
             }
 
