@@ -357,10 +357,10 @@ namespace dd {
                 else if (op1 == 'Z' && op2 == 'Y') // ZY = -iX
                     multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
             }
-            setPhase(newPhase);
-            multiplyPhaseBy(other.getPhase());
             /// Step 2: multiply the Pauli operators by XORing the bits
             paulis ^= other.paulis;
+            setPhase(newPhase);
+            multiplyPhaseBy(other.getPhase());
         }
 
         // TODO this method can be sped up :
@@ -386,10 +386,10 @@ namespace dd {
                 else if (op1 == 'Z' && op2 == 'Y') // ZY = -iX
                     multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
             }
-            setPhase(newPhase);
-            multiplyPhaseBy(other.getPhase());
             /// Step 2: multiply the Pauli operators by XORing the bits
             paulis ^= other.paulis;
+            setPhase(newPhase);
+            multiplyPhaseBy(other.getPhase());
         }
 
         void leftMultiplyBy(const LimEntry<NUM_QUBITS>& other) {
