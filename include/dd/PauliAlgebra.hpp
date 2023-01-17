@@ -1159,7 +1159,7 @@ namespace dd {
             if (low.p == high.p) {
                 // TODO use cn.getTemporaryComplex instead of getCached - that is faster
                 Complex rho      = cn.divCached(node.e[1].w, node.e[0].w);
-                phase_t rhoPhase = rho.findClosestPhase();
+                phase_t rhoPhase = rho.toPhase();
                 cn.returnToCache(rho);
                 if (rhoPhase != phase_t::no_phase) {
                     phase_t rhoSquared = multiplyPhases(rhoPhase, rhoPhase);
@@ -1495,7 +1495,7 @@ namespace dd {
                 ComplexNumbers::div(rhoU, u->e[0].w, u->e[1].w);
                 ComplexNumbers::div(rhoV, v->e[0].w, v->e[1].w);
                 ComplexNumbers::mul(rhoUrhoV, rhoU, rhoV);
-                phase_t lambda = rhoUrhoV.findClosestPhase();
+                phase_t lambda = rhoUrhoV.toPhaseApproximately();
                 cn.returnToCache(rhoUrhoV);
                 if (lambda != phase_t::no_phase) {
                     bool foundElement{};

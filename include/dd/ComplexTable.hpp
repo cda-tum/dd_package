@@ -81,8 +81,14 @@ namespace dd {
             [[nodiscard]] static constexpr bool approximatelyEquals(const Entry* left, const Entry* right) {
                 return left == right || approximatelyEquals(val(left), val(right));
             }
+            [[nodiscard]] static constexpr bool veryApproximatelyEquals(const Entry* left, const Entry* right) {
+                return left == right || veryApproximatelyEquals(val(left), val(right));
+            }
             [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
                 return left == right || std::abs(left - right) <= TOLERANCE;
+            }
+            [[nodiscard]] static constexpr bool veryApproximatelyEquals(const fp left, const fp right) {
+                return left == right || std::abs(left - right) <= 8*TOLERANCE;
             }
 
             [[nodiscard]] static constexpr bool approximatelyZero(const Entry* e) {
