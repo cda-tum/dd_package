@@ -54,13 +54,33 @@ package_add_test(${PROJECT_NAME}_simpleCircuitTest
 		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp)
 
 package_add_test(${PROJECT_NAME}_cliffordCircuitsLarge
-		${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuitsLarge.cpp)
+		${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuits-21q-100q.cpp)
 
 package_add_test(${PROJECT_NAME}_hardCircuitTest
-		${CMAKE_CURRENT_SOURCE_DIR}/hard-circuits.cpp)
+		${CMAKE_CURRENT_SOURCE_DIR}/hardCircuitsTest-3q-10q.cpp)
 
-package_add_test(${PROJECT_NAME}_minimizedCircuitTest
-		${CMAKE_CURRENT_SOURCE_DIR}/cc5_minimized.cpp)
+package_add_test(${PROJECT_NAME}_singleCircuitTest
+		${CMAKE_CURRENT_SOURCE_DIR}/singleCircuitTest.cpp)
+
+package_add_test(${PROJECT_NAME}_cliffordCircuitsTiny
+		${CMAKE_CURRENT_SOURCE_DIR}/tinyCliffordCircuits.cpp)
+
+package_add_test(${PROJECT_NAME}_tinyCircuits
+		${CMAKE_CURRENT_SOURCE_DIR}/tinyCircuits.cpp)
+
+package_add_test(${PROJECT_NAME}_comprehensiveTest
+		${CMAKE_CURRENT_SOURCE_DIR}/test_simple_circuit.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tinyCircuits.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/tinyCliffordCircuits.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/hardCircuitsTest-3q-10q.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuits-3q-20q.cpp
+		)
+
+package_add_test(${PROJECT_NAME}_profile
+		${CMAKE_CURRENT_SOURCE_DIR}/hardCircuitsBenchmark-3q-15q.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/cliffordCircuitsBenchmark-3q-25q.cpp
+		)
+
 
 add_custom_command(TARGET ${PROJECT_NAME}_test
 		   POST_BUILD
