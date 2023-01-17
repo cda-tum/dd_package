@@ -1533,10 +1533,13 @@ namespace dd {
             }
 
             Complex rhoVdivRhoU = cn.getCached();
-            ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
-            ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
-            ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU); // TODO it suffices to allocate only two cached Complex objects
-            phase_t lambda = rhoVdivRhoU.toPhase();
+            ComplexNumbers::mul(rhoU, u->e[1].w, v->e[0].w);
+            ComplexNumbers::mul(rhoV, u->e[0].w, v->e[1].w);
+            /// Below is an alternative way to compute rhoVdivRhoU using division; but since this leads to slightly higher rates of numerical error, we use multiplication isntead, above
+            //ComplexNumbers::div(rhoU, u->e[1].w, u->e[0].w);
+            //ComplexNumbers::div(rhoV, v->e[1].w, v->e[0].w);
+            ComplexNumbers::div(rhoVdivRhoU, rhoV, rhoU);
+            phase_t lambda = rhoVdivRhoU.findClosestPhase();
 
             cn.returnToCache(rhoVdivRhoU);
             cn.returnToCache(rhoV);

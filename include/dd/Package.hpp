@@ -672,29 +672,25 @@ namespace dd {
             r.p->e[0].l = nullptr;
             // Step 3: Choose a canonical right LIM
             vNode      oldNode            = *(r.p);                    // make a copy of the old node
+            // TODO can we just use in-place r.p->e[0 and 1].w instead of these temporary weights?
             Complex    lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
             Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
             LimEntry<> highLimTemp;
             highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
             //Log::log << "[normalizeLIMDD] After got high label, r = " << r << "\n";
+            r.p->e[0].w = lowEdgeWeightTemp;
+            r.p->e[1].w = highEdgeWeightTemp;
             r.p->e[1].l = lf.limTable.lookup(highLimTemp);
-            r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
-            r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
-            cn.returnToCache(highEdgeWeightTemp);
-            cn.returnToCache(lowEdgeWeightTemp);
             // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
             // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
 #if !NDEBUG
-
             CVec rpVec      = getVector(r.p);
             CVec oldNodeVec = getVector(&oldNode);
             Log::log << "[normalizeLIMDD] vector of original node                     = " << outputCVec(oldNodeVec) << '\n'
                      << "[normalizeLIMDD] vector after assigning canonical high label = " << outputCVec(rpVec) << '\n';
-
 #endif
             LimWeight<> iso;
             bool        foundIsomorphism = false;
-            // TODO iso->weight is getCache()'d in getIsomorphismPauli, but is not returned to cache
             iso.weight = cn.getCached();
             //Log::log << "[normalizeLIMDD] getting isomorphism. r = " << r << "\n";
             getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism, cachingStrategy);
@@ -713,6 +709,13 @@ namespace dd {
 #if !NDEBUG
             sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
 #endif
+            /// Next step: look up the new low and high weights for 'r' that were found by highLabelPauli()
+            ///   (we only do this now instead of immediately when the weights were found, in order to help the subroutine 'getIsomorphism'.
+            ///    Namely, looking up a number may change that number, which makes it harder for getIsomorphism() to do arithmetic)
+            r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);  // TODO warning: this lookup can change the number; therefore, maybe do it after finding an isomorphism?
+            r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
+            cn.returnToCache(highEdgeWeightTemp);
+            cn.returnToCache(lowEdgeWeightTemp);
             //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, r.p->v) << "\n";
             //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(&LimEntry<>::multiplyValue(*r.l, *lowLim), r.p->v) << ".\n";
             r.l->multiplyBy(lowLim);
