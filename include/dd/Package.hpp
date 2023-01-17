@@ -369,8 +369,6 @@ namespace dd {
         // Sets the
         // Here we demand that 'weight' and 'weightInv' are retrieved with ComplexTable.getTemporary(..),
         // since they will be assigned values but will not be looked up in the ComplexTable
-        // TODO limdd:
-        //   1. make NUM_QUBITS a template parameter
         void highLabelPauli(vNode* u, vNode* v, LimEntry<>* vLabel, Complex& lowWeight, Complex& highWeight, LimEntry<>& newHighLabel) {
             //Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
             //LimEntry<>* newHighLabel;
@@ -393,13 +391,13 @@ namespace dd {
                     // Normalize low, high
                     vNode tempNode{{lo, hi}, nullptr, {}, 0, (Qubit)(u->v + 1)};
                     vEdge tempEdge{&tempNode, Complex::one, nullptr};
-                    //                		Complex lowWeightTemp = cn.getCached(lowWeight);
-                    //                		Complex highWeightTemp = cn.getCached(highWeight);
                     tempEdge = normalize(tempEdge, false);
                     //Log::log << "[highlabelPauli] after  normalize: loTemp = " << loTemp << "; hiTemp = " << hiTemp << '\n';
                     //Log::log << "[highlabelPauli] after  normalize: lo edge= " << tempEdge.p->e[0].w << "; hiEdge = " << tempEdge.p->e[1].w << '\n';
 
                     // Now the weights are normalized
+                    //highWeight.setVal(tempEdge.p->e[0].w);
+                    //lowWeight.setVal(tempEdge.p->e[1].w);
                     highWeight.r->value = CTEntry::val(tempEdge.p->e[0].w.r);
                     highWeight.i->value = CTEntry::val(tempEdge.p->e[0].w.i);
                     lowWeight.r->value  = CTEntry::val(tempEdge.p->e[1].w.r);
@@ -408,8 +406,6 @@ namespace dd {
                     //                		Log::log << "[highLabelPauli] (case high > low) new low = " << lowWeight << "; new high = " << highWeight << "\n";
                     cn.returnToCache(loTemp);
                     cn.returnToCache(hiTemp);
-                    //                		lowWeight = tempEdge.p->e[0].w;
-                    //                		lowWeight  = tempEdge.p->e[1].w;
                 }
                 if (CTEntry::val(highWeight.r) < 0 || (CTEntry::approximatelyEquals(highWeight.r, &ComplexTable<>::zero) && CTEntry::val(highWeight.i) < 0)) {
                     highWeight.multiplyByMinusOne(true);
@@ -539,152 +535,136 @@ namespace dd {
         }
 #endif
 
-        // Returns an edge to a node isomorphic to e.p
-        // The edge is labeled with a LIM
-        // the node e.p is canonical, according to <Z>-LIMDD reduction rules
-        // TODO limdd: prevent various memory leaks caused by LimEntry<>::multiply(..)
-        long normalizeLIMDDCallCount = 0;
         clock_t normalizeLIMDDTime = 0;
+        long normalizeLIMDDCallCount = 0;
+        // Returns an edge r satisfying |r> = |e>
+        // the node e.p is put in canonical form, according to Pauli-LIMDD reduction rules
         vEdge normalizeLIMDDPauli(const vEdge& e, bool cached) {
             if (e.l == nullptr) {
                 //std::cout << "[normalizeLIMDDPauli] e.l == nullptr location 1\n";
                 throw std::exception();
             }
             startProfile(normalizeLIMDD)
-            // Step 1: Make sure the weight on the LIMs is +1
+            /// Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-            CVec amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
 #if !NDEBUG
+            CVec amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
             amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
 #endif
-            Edge<vNode> r = normalize(e, cached);
-            //Log::log << "[normalizeLIMDDPauli] after normalize, r = " << r << '\n';
-            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << "; one(@" << (void*) Complex::one.r << ") = " << Complex::one << "\n";
-            //cn.complexTable.checkConstantsIntegrity();
-            r.l           = e.l;
+            Edge<vNode> result = normalize(e, cached);
+            //Log::log << "[normalizeLIMDDPauli] after normalize, result = " << result << '\n';
+            //Log::log << "[normalizeLIMDD] result.w = " << (void*) result.w.result << "; one(@" << (void*) Complex::one.result << ") = " << Complex::one << "\n";
+            result.l           = e.l;
 #if !NDEBUG
+            cn.complexTable.checkConstantsIntegrity();
+            amplitudeVecAfternormalizeQ = getVector(result, e.p->v);
+            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, result);
 
-            amplitudeVecAfternormalizeQ = getVector(r, e.p->v);
-            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, r);
-
-            Edge<vNode> rOld = copyEdge(r);
+            Edge<vNode> rOld = copyEdge(result);
             CVec        amplitudeVecBeforeNormalize;
 
-            amplitudeVecBeforeNormalize = getVector(r);
+            amplitudeVecBeforeNormalize = getVector(result);
 
             sanityCheckStabilizerGroup(e.p->e[0], e.p->e[0].p->limVector);
             sanityCheckStabilizerGroup(e.p->e[1], e.p->e[1].p->limVector);
 #endif
-
-            if (r.l == nullptr) {
-                //std::cout << "[normalizeLIMDDPauli] r.l == nullptr, location 2.\n";
+            if (result.l == nullptr) {
                 throw std::exception();
             }
-            auto zero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
+            auto isZero = std::array{e.p->e[0].w.approximatelyZero(), e.p->e[1].w.approximatelyZero()};
 
-            // The case when both children are zero is not handled
-            // Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
-            if (zero[1]) {
-                //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (r.p->v + 1) << " qubits.\n";
-                // Step 1: Set the root edge label to 'Identity tensor R'
-                r.l->multiplyBy(r.p->e[0].l); // = LimEntry<>::multiply(r.l, r.p->e[0].l);
-                // Step 2: Set the low and high edge labels to 'Identity'
-                r.p->e[0].l = nullptr; // TODO memory leak
-                r.p->e[1].l = nullptr; // TODO posible memory leak
-                // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
-                r.w.multiplyByPhase(r.l->getPhase());
-                r.l->setPhase(phase_t::phase_one);
-                // Step 4: multiply the root edge weight by the low edge weight
-                if (r.w.exactlyZero() || r.p->e[0].w.exactlyZero()) {
-                    r.w = Complex::zero;
+            // The case when both children are isZero is not handled
+            /// Case 1 ("Low Knife"):  high edge = 0, so |phi> = |0>|lowChild>
+            if (isZero[1]) {
+                //Log::log << "[normalizeLIMDD] Case |0>   (\"low knife\") " << (result.p->v + 1) << " qubits.\n";
+                /// Step 1: Set the root edge label to 'Identity tensor R'
+                result.l->multiplyBy(result.p->e[0].l); // = LimEntry<>::multiply(result.l, result.p->e[0].l);
+                /// Step 2: Set the low and high edge labels to 'Identity'
+                result.p->e[0].l = nullptr; // TODO possible memory leak
+                result.p->e[1].l = nullptr; // TODO posible memory leak
+                /// Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
+                result.w.multiplyByPhase(result.l->getPhase());
+                result.l->setPhase(phase_t::phase_one);
+                /// Step 4: multiply the root edge weight by the low edge weight
+                if (result.w.exactlyZero() || result.p->e[0].w.exactlyZero()) {
+                    result.w = Complex::zero;
                 } else if (cached) {
-                    ComplexNumbers::mul(r.w, r.w, r.p->e[0].w);
+                    ComplexNumbers::mul(result.w, result.w, result.p->e[0].w);
                 } else {
-                    r.w = cn.mulCached(r.w, r.p->e[0].w);
+                    result.w = cn.mulCached(result.w, result.p->e[0].w);
                 }
-
-                //                cn.returnToCache(rootWeight);
-                r.p->e[0].w = Complex::one;
-                //r.p->e[1].w = Complex::zero;
-                // Step 5: Make sure both edges point to the same nodes
-                //r.p->e[1].p = r.p->e[0].p;
-                // Set the weight to point to actually zero
-                r.p->e[1] = vEdge::zero;
+                result.p->e[0].w = Complex::one;
+                /// Step 5: Set the weight to point to actually isZero
+                result.p->e[1] = vEdge::zero;
                 endProfile(normalizeLIMDD)
-                return r;
+                return result;
             }
-            // Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
-            if (zero[0]) {
-                // TODO double-check if this logic makes sense
-                //Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (r.p->v + 1) << " qubits.\n";
-                // Step 1: Multiply the root label by the high edge label
-                r.l->multiplyBy(r.p->e[1].l);
-                // Step 2: Right-multiply the root edge by X
+            /// Case 2 ("High Knife"):  low edge = 0, so |phi> = |1>|highChild>
+            if (isZero[0]) {
+                //Log::log << "[normalizeLIMDD] Case |1>   (\"high knife\")" << (result.p->v + 1) << " qubits.\n";
+                /// Step 1: Multiply the root label by the high edge label
+                result.l->multiplyBy(result.p->e[1].l);
+                /// Step 2: Right-multiply the root edge by X
                 LimEntry<> X;
-                X.setOperator(r.p->v, 'X');
-                r.l->multiplyBy(X);
-                // Step 3: Set the low and high edge labels to 'Identity'
-                r.p->e[0].l = nullptr; // Set low  edge to Identity
-                //r.p->e[1].l = nullptr; // Set high edge to Identity
-                // Step ??: Set the weight right
-                if (r.w.exactlyZero() || r.p->e[1].w.exactlyZero()) {
-                    r.w = Complex::zero;
+                X.setOperator(result.p->v, 'X');
+                result.l->multiplyBy(X);
+                /// Step 3: Set the low and high edge labels to 'Identity'
+                result.p->e[0].l = nullptr; // Set low  edge to Identity
+                /// Step 4: Set the weight right
+                if (result.w.exactlyZero() || result.p->e[1].w.exactlyZero()) {
+                    result.w = Complex::zero;
                 } else if (cached) {
-                    ComplexNumbers::mul(r.w, r.w, r.p->e[1].w);
+                    ComplexNumbers::mul(result.w, result.w, result.p->e[1].w);
                 } else {
-                    r.w = cn.mulCached(r.w, r.p->e[1].w);
+                    result.w = cn.mulCached(result.w, result.p->e[1].w);
                 }
-                //                r.w = cn.mulCached(r.w, r.p->e[1].w);
-                //                r.w = cn.lookup(rootWeight);
-                //                cn.returnToCache(rootWeight);
-                r.p->e[0].w = Complex::one;
-                //r.p->e[1].w = Complex::zero;
-                // Step 3: multiply the root weight by the LIM phase; set the LIM phase to +1
-                r.w.multiplyByPhase(r.l->getPhase());
-                r.l->setPhase(phase_t::phase_one);
-                r.p->e[0].p = r.p->e[1].p;
-                r.p->e[1]   = vEdge::zero;
+                result.p->e[0].w = Complex::one;
+                // Step 5: multiply the root weight by the LIM phase; set the LIM phase to +1
+                result.w.multiplyByPhase(result.l->getPhase());
+                result.l->setPhase(phase_t::phase_one);
+                result.p->e[0].p = result.p->e[1].p;
+                result.p->e[1]   = vEdge::zero;
                 endProfile(normalizeLIMDD)
-                return r;
+                return result;
             }
-            //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(r.p->v) + 1 << " qubits. Edge is currently: " << r << '\n';
+            //Log::log << "[normalizeLIMDD] Start. case Fork on " << (signed int)(result.p->v) + 1 << " qubits. Edge is currently: " << result << '\n';
             if ((long long unsigned int)(e.p->e[0].p) > (long long unsigned int)(e.p->e[1].p)) {
-                std::swap(r.p->e[0], r.p->e[1]);
+                std::swap(result.p->e[0], result.p->e[1]);
                 //Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
-                r.l->multiplyByX(r.p->v);
+                result.l->multiplyByX(result.p->v);
             }
 
-            // Case 3 ("Fork"):  both edges of e are non-zero
-            LimEntry<>* lowLim = r.p->e[0].l;
-            // Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
-            //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs, r = " << r << "\n";
-            LimEntry<> highLimTemp2 = LimEntry<>::multiplyValue(r.p->e[0].l, r.p->e[1].l);
-            r.p->e[1].l             = &highLimTemp2;
-            r.p->e[1].w             = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));
-            //Log::log << "[normalizeLIMDD] after getting r.p->e[1] from cache, r.w = " << (void*) r.w.r << "; one = " << (void*) Complex::one.r << "\n";
-            r.p->e[1].w.multiplyByPhase(r.p->e[1].l->getPhase());
-            r.p->e[1].l->setPhase(phase_t::phase_one);
-            // Step 2: Make the left LIM Identity
-            //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << r << '\n';
-            r.p->e[0].l = nullptr;
-            // Step 3: Choose a canonical right LIM
-            vNode      oldNode            = *(r.p);                    // make a copy of the old node
-            // TODO can we just use in-place r.p->e[0 and 1].w instead of these temporary weights?
-            Complex    lowEdgeWeightTemp  = cn.getCached(r.p->e[0].w); // Returned to cache
-            Complex    highEdgeWeightTemp = cn.getCached(r.p->e[1].w); // Returned to cache
+            /// Case 3 ("Fork"):  both edges of e are non-isZero
+            LimEntry<>* lowLim = result.p->e[0].l;
+            /// Step 1: Make a new LIM, which is the left LIM multiplied by the right LIM
+            //Log::log << "[normalizeLIMDD] Step 1: Multiply low and high LIMs, result = " << result << "\n";
+            LimEntry<> highLimTemp2 = LimEntry<>::multiply(result.p->e[0].l, result.p->e[1].l);
+            result.p->e[1].l             = &highLimTemp2;
+            result.p->e[1].w             = cn.getCached(CTEntry::val(result.p->e[1].w.r), CTEntry::val(result.p->e[1].w.i));
+            //Log::log << "[normalizeLIMDD] after getting result.p->e[1] from cache, result.w = " << (void*) result.w.result << "; one = " << (void*) Complex::one.result << "\n";
+            result.p->e[1].w.multiplyByPhase(result.p->e[1].l->getPhase());
+            result.p->e[1].l->setPhase(phase_t::phase_one);
+            /// Step 2: Make the left LIM Identity
+            //Log::log << "[normalizeLIMDD] Step 2: Set low edge to nullptr. Edge is currently " << result << '\n';
+            result.p->e[0].l = nullptr;
+            /// Step 3: Choose a canonical right LIM
+            vNode      oldNode            = *(result.p);                    // make a copy of the old node
+            // TODO can we just use in-place result.p->e[0 and 1].w instead of these temporary weights?
+            Complex    lowEdgeWeightTemp  = cn.getCached(result.p->e[0].w); // Returned to cache
+            Complex    highEdgeWeightTemp = cn.getCached(result.p->e[1].w); // Returned to cache
             LimEntry<> highLimTemp;
-            highLabelPauli(r.p->e[0].p, r.p->e[1].p, r.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
-            //Log::log << "[normalizeLIMDD] After got high label, r = " << r << "\n";
-            r.p->e[0].w = lowEdgeWeightTemp;
-            r.p->e[1].w = highEdgeWeightTemp;
-            r.p->e[1].l = lf.limTable.lookup(highLimTemp);
-            // TODO limdd should we decrement reference count on the weight r.p->e[1].w here?
-            // Step 4: Find an isomorphism 'iso' which maps the new node to the old node
+            highLabelPauli(result.p->e[0].p, result.p->e[1].p, result.p->e[1].l, lowEdgeWeightTemp, highEdgeWeightTemp, highLimTemp);
+            //Log::log << "[normalizeLIMDD] After got high label, result = " << result << "\n";
+            result.p->e[0].w = lowEdgeWeightTemp;
+            result.p->e[1].w = highEdgeWeightTemp;
+            result.p->e[1].l = lf.limTable.lookup(highLimTemp);
+            // TODO limdd should we decrement reference count on the weight result.p->e[1].w here?
+            /// Step 4: Find an isomorphism 'iso' which maps the new node to the old node
 #if !NDEBUG
-            CVec rpVec      = getVector(r.p);
+            CVec rpVec      = getVector(result.p);
             CVec oldNodeVec = getVector(&oldNode);
             Log::log << "[normalizeLIMDD] vector of original node                     = " << outputCVec(oldNodeVec) << '\n'
                      << "[normalizeLIMDD] vector after assigning canonical high label = " << outputCVec(rpVec) << '\n';
@@ -692,55 +672,55 @@ namespace dd {
             LimWeight<> iso;
             bool        foundIsomorphism = false;
             iso.weight = cn.getCached();
-            //Log::log << "[normalizeLIMDD] getting isomorphism. r = " << r << "\n";
-            getIsomorphismPauli(r.p, &oldNode, cn, iso, foundIsomorphism, cachingStrategy);
-            //Log::log << "[normalizeLIMDD] after getting isomorphism. r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] getting isomorphism. result = " << result << "\n";
+            getIsomorphismPauli(result.p, &oldNode, cn, iso, foundIsomorphism, cachingStrategy);
+            //Log::log << "[normalizeLIMDD] after getting isomorphism. result = " << result << "\n";
             if (!foundIsomorphism) {
                 Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"
                          << "|- Old node is: " << oldNode << '\n'
-                         << "|- new node is: " << *r.p << '\n'
-                         << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, r.p->v - 1) << "\n"
-                         << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, r.p->v - 1) << "\n"
-                         << "|- stab(newLow)  = " << groupToString(r.p->e[0].p->limVector, r.p->v - 1) << "\n"
-                         << "|- stab(newHigh) = " << groupToString(r.p->e[1].p->limVector, r.p->v - 1) << "\n"
+                         << "|- new node is: " << *result.p << '\n'
+                         << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, result.p->v - 1) << "\n"
+                         << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, result.p->v - 1) << "\n"
+                         << "|- stab(newLow)  = " << groupToString(result.p->e[0].p->limVector, result.p->v - 1) << "\n"
+                         << "|- stab(newHigh) = " << groupToString(result.p->e[1].p->limVector, result.p->v - 1) << "\n"
                          << "|- one = " << Complex::one << '\n';
                 throw std::runtime_error("[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n");
             }
 #if !NDEBUG
-            sanityCheckIsomorphism(oldNode, *r.p, iso.lim, vEdge{});
+            sanityCheckIsomorphism(oldNode, *result.p, iso.lim, vEdge{});
 #endif
-            /// Next step: look up the new low and high weights for 'r' that were found by highLabelPauli()
+            /// Next step: look up the new low and high weights for 'result' that were found by highLabelPauli()
             ///   (we only do this now instead of immediately when the weights were found, in order to help the subroutine 'getIsomorphism'.
             ///    Namely, looking up a number may change that number, which makes it harder for getIsomorphism() to do arithmetic)
-            r.p->e[0].w = cn.lookup(lowEdgeWeightTemp);  // TODO warning: this lookup can change the number; therefore, maybe do it after finding an isomorphism?
-            r.p->e[1].w = cn.lookup(highEdgeWeightTemp);
+            result.p->e[0].w = cn.lookup(lowEdgeWeightTemp);
+            result.p->e[1].w = cn.lookup(highEdgeWeightTemp);
             cn.returnToCache(highEdgeWeightTemp);
             cn.returnToCache(lowEdgeWeightTemp);
-            //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, r.p->v) << "\n";
-            //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << r.w << " * " << LimEntry<>::to_string(r.l, r.p->v) << " to " << r.w << " * " << LimEntry<>::to_string(&LimEntry<>::multiplyValue(*r.l, *lowLim), r.p->v) << ".\n";
-            r.l->multiplyBy(lowLim);
-            //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(r.l, iso.lim), r.p->v) << ".\n";
-            r.l->multiplyBy(iso.lim);
-            //Log::log << "[normalizeLIMDD] after correcting LIM, r = " << r << "; one = " << Complex::one << "\n";
-            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
-            cn.mul(r.w, r.w, iso.weight);
-            //Log::log << "[normalizeLIMDD] after multiplying iso weight " << iso.weight << ", r = " << r << "; one = " << Complex::one << "\n";
-            //Log::log << "[normalizeLIMDD] r.w = " << (void*) r.w.r << ", " << (void*) r.w.i << "; one = " << (void*) Complex::one.r << "\n";
+            //Log::log << "[normalizeLIMDD] Found isomorphism: " << iso.weight << " * " << LimEntry<>::to_string(&iso.lim, result.p->v) << "\n";
+            //Log::log << "[normalizeLIMDD] Step 5.1: Multiply root LIM by old low LIM, from " << result.w << " * " << LimEntry<>::to_string(result.l, result.p->v) << " to " << result.w << " * " << LimEntry<>::to_string(&LimEntry<>::multiply(*result.l, *lowLim), result.p->v) << ".\n";
+            result.l->multiplyBy(lowLim);
+            //Log::log << "[normalizeLIMDD] Step 5.2: Multiply root LIM by iso, becomes " << LimEntry<>::to_string(LimEntry<>::multiply(result.l, iso.lim), result.p->v) << ".\n";
+            result.l->multiplyBy(iso.lim);
+            //Log::log << "[normalizeLIMDD] after correcting LIM, result = " << result << "; one = " << Complex::one << "\n";
+            //Log::log << "[normalizeLIMDD] result.w = " << (void*) result.w.result << ", " << (void*) result.w.i << "; one = " << (void*) Complex::one.result << "\n";
+            cn.mul(result.w, result.w, iso.weight);
+            //Log::log << "[normalizeLIMDD] after multiplying iso weight " << iso.weight << ", result = " << result << "; one = " << Complex::one << "\n";
+            //Log::log << "[normalizeLIMDD] result.w = " << (void*) result.w.result << ", " << (void*) result.w.i << "; one = " << (void*) Complex::one.result << "\n";
             cn.returnToCache(iso.weight);
-            //oldNode.e[1].w contains the cached weight from line "r.p->e[1].w = cn.getCached(CTEntry::val(r.p->e[1].w.r), CTEntry::val(r.p->e[1].w.i));"
+            //oldNode.e[1].w contains the cached weight from line "result.p->e[1].w = cn.getCached(CTEntry::val(result.p->e[1].w.result), CTEntry::val(result.p->e[1].w.i));"
             cn.returnToCache(oldNode.e[1].w);
-            //Log::log << "[normalizeLIMDD] after returning weights to the cache, r = " << r << "\n";
+            //Log::log << "[normalizeLIMDD] after returning weights to the cache, result = " << result << "\n";
 
-            // Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight r.w by the phase of the Lim r.l
-            //Log::log << "[normalizeLIMDD] Step 7: Moving LIM-phase into edge weight; currently r = " << r << '\n';
-            movePhaseIntoWeight(*r.l, r.w);
-            //Log::log << "[normalizeLIMDD] Final root edge: " << r << '\n';
+            /// Step 6: Lastly, to make the edge canonical, we make sure the phase of the LIM is +1; to this end, we multiply the weight result.w by the phase of the Lim result.l
+            //Log::log << "[normalizeLIMDD] Step 7: Moving LIM-phase into edge weight; currently result = " << result << '\n';
+            movePhaseIntoWeight(*result.l, result.w);
+            //Log::log << "[normalizeLIMDD] Final root edge: " << result << '\n';
 #if !NDEBUG
-            CVec amplitudeVecAfterNormalize = getVector(r);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, r);
+            CVec amplitudeVecAfterNormalize = getVector(result);
+            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, result);
 #endif
             endProfile(normalizeLIMDD)
-            return r;
+            return result;
         }
 
         dEdge makeZeroDensityOperator(QubitCount n) {

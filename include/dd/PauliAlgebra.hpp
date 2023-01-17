@@ -773,7 +773,7 @@ namespace dd {
             }
         }
         for (std::size_t i = 1; i < oppositePhaseGenerators.size(); i++) {
-            auto a      = LimEntry<>::multiplyValue(oppositePhaseGenerators[0], oppositePhaseGenerators[i]);
+            auto a      = LimEntry<>::multiply(oppositePhaseGenerators[0], oppositePhaseGenerators[i]);
             auto const phaseG = recoverPhase(G, &a);
             a.setPhase(phaseG);
             intersection.push_back(a);
@@ -861,7 +861,7 @@ namespace dd {
         LimEntry<NUM_QUBITS> a_G = getProductOfElements(G, decomposition_G);
         //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
-        LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiplyValue(a_G, a_H);
+        LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             foundElement = false;
         } else {
@@ -882,7 +882,7 @@ namespace dd {
         }
         startProfile(cosetIntersectPauli)
         // find an element in G intersect abH modulo phase
-        LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
+        LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiply(*a, *b);
         bool                 foundCIEMP;
         LimEntry<NUM_QUBITS> c = getCosetIntersectionElementModuloPhase(G, H, ab, foundCIEMP);
         if (!foundCIEMP) {
@@ -893,8 +893,8 @@ namespace dd {
             return {LimEntry<NUM_QUBITS>(), false};
         }
         c.setPhase(recoverPhase(G, &c));
-        LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiplyValue(*a, c);
-        acb                      = LimEntry<NUM_QUBITS>::multiplyValue(acb, *b);
+        LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiply(*a, c);
+        acb                      = LimEntry<NUM_QUBITS>::multiply(acb, *b);
         phase_t alpha            = multiplyPhases(acb.getPhase(), getPhaseInverse(lambda));
         // Retrieve the phase of acb in H
         phase_t tau = recoverPhase(H, &acb);
@@ -912,7 +912,7 @@ namespace dd {
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     endProfile(cosetIntersectPauli)
-                    return {LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])), true};
+                    return {LimEntry<NUM_QUBITS>::multiply(c, recoverElement(G, &GintersectH[i])), true};
                 }
             }
         }
@@ -936,7 +936,7 @@ namespace dd {
         //printStabilizerGroup(H, nQubits);
         //Log::log << " a=" << a->to_string(nQubits) << " b=" << LimEntry<>::to_string(b, nQubits) << " lambda = " << phaseToString(lambda) << ". Looking for element in G intersect lambda a H b.\n";
         // find an element in G intersect abH modulo phase
-        LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiplyValue(*a, *b);
+        LimEntry<NUM_QUBITS> ab = LimEntry<NUM_QUBITS>::multiply(*a, *b);
         bool                 foundCIEMP;
         LimEntry<NUM_QUBITS> c = getCosetIntersectionElementModuloPhase2(G, H, ab, foundCIEMP, GH_Id_CEF);
         if (!foundCIEMP) {
@@ -947,8 +947,8 @@ namespace dd {
             return {LimEntry<NUM_QUBITS>(), false};
         }
         c.setPhase(recoverPhase(G, &c));
-        LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiplyValue(*a, c);
-        acb                      = LimEntry<NUM_QUBITS>::multiplyValue(acb, *b);
+        LimEntry<NUM_QUBITS> acb = LimEntry<NUM_QUBITS>::multiply(*a, c);
+        acb                      = LimEntry<NUM_QUBITS>::multiply(acb, *b);
         phase_t alpha            = multiplyPhases(acb.getPhase(), getPhaseInverse(lambda));
         // Retrieve the phase of acb in H
         phase_t tau = recoverPhase(H, &acb);
@@ -972,8 +972,8 @@ namespace dd {
             for (std::size_t i = 0; i < GintersectH.size(); i++) {
                 if ((!GintersectH[i].commutesWith(b)) ^ (recoverPhase(G, &GintersectH[i]) != recoverPhase(H, &GintersectH[i]))) {
                     endProfile(cosetIntersectPauli)
-                    //Log::log << "[cosetIntersection] found " << LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])).to_string(nQubits) << "\n";
-                    return {LimEntry<NUM_QUBITS>::multiplyValue(c, recoverElement(G, &GintersectH[i])), true};
+                    //Log::log << "[cosetIntersection] found " << LimEntry<NUM_QUBITS>::multiply(c, recoverElement(G, &GintersectH[i])).to_string(nQubits) << "\n";
+                    return {LimEntry<NUM_QUBITS>::multiply(c, recoverElement(G, &GintersectH[i])), true};
                 }
             }
         }
@@ -998,7 +998,7 @@ namespace dd {
         LimEntry<NUM_QUBITS> a_G = getProductOfElements(G, decomposition_G);
         //        Log::log << "[coset intersection P] got first product. Computing second product.\n"; Log::log.flush();
         LimEntry<NUM_QUBITS> a_H     = getProductOfElements(H, decomposition_H);
-        LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiplyValue(a_G, a_H);
+        LimEntry<NUM_QUBITS> a_prime = LimEntry<NUM_QUBITS>::multiply(a_G, a_H);
         if (!LimEntry<NUM_QUBITS>::EqualModuloPhase(a, a_prime)) {
             foundElement = false;
         } else {
@@ -1384,8 +1384,8 @@ namespace dd {
             throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of u does not have identity label.\n");
         if (!LimEntry<>::isIdentityOperator(vLow.l))
             throw std::runtime_error("[getIsomorphismPauli] ERROR low edge of v does not have identity label\n");
-        auto zeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
-        auto zeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
+        auto isZeroU = std::array{u->e[0].w.approximatelyZero(), u->e[1].w.approximatelyZero()};
+        auto isZeroV = std::array{v->e[0].w.approximatelyZero(), v->e[1].w.approximatelyZero()};
 
         iso.lim.setToIdentityOperator();
 
@@ -1397,15 +1397,14 @@ namespace dd {
             foundIsomorphism = true;
         }
         // Case 1 ("Left knife"): Left child is nonzero, right child is zero
-        else if (zeroU[1]) {
+        else if (isZeroU[1]) {
             //Log::log << "[getIsomorphismPauli] Case |u> = |0>|u'>, since uHigh is zero\n";
-            if (zeroV[1]) {
+            if (isZeroV[1]) {
                 if (uLow.p == vLow.p) {
-                    //            		iso = new LimWeight<>((LimEntry<>*)nullptr);
                     iso.lim.setToIdentityOperator();
                     foundIsomorphism = true;
                 }
-            } else if (zeroV[0]) {
+            } else if (isZeroV[0]) {
                 if (uLow.p == vHigh.p) {
                     // TODO limdd inspect weight on high edge
                     iso.lim = vHigh.l;
@@ -1418,16 +1417,16 @@ namespace dd {
             }
         }
         // Case 2 ("Right knife"): Left child is zero, right child is nonzero
-        else if (zeroU[0]) {
+        else if (isZeroU[0]) {
             //Log::log << "[getIsomorphismPauli] case uLow is zero, so |u> = |1>|u'>.\n";
-            if (zeroV[0]) {
+            if (isZeroV[0]) {
                 // TODO limdd inspect weights
                 if (uHigh.p == vHigh.p) {
                     iso.lim = uHigh.l;
                     iso.lim.multiplyBy(vHigh.l);
                     foundIsomorphism = true;
                 }
-            } else if (zeroV[1]) {
+            } else if (isZeroV[1]) {
                 // TODO limdd inspect weights
                 if (uHigh.p == vLow.p) {
                     iso.lim = uHigh.l;
@@ -1518,7 +1517,7 @@ namespace dd {
                     std::tie(iso.lim, foundElement) = getCosetIntersectionElementPauli2(uLow.p->limVector, uLow.p->limVector, v->e[1].l, u->e[1].l, lambda, MemoizedData::GH_Id_CEF_memoized, MemoizedData::GintersectH_memoized, MemoizedData::memoizedGintersectH, cachingStrategy, u->v - 1);
                     if (foundElement) {
                         iso.lim.leftMultiplyBy(v->e[1].l);
-                        //iso.lim = LimEntry<>::multiplyValue(v->e[1].l, &iso.lim);
+                        //iso.lim = LimEntry<>::multiply(v->e[1].l, &iso.lim);
                         iso.lim.setOperator(u->v, pauli_op::pauli_y);
                         ComplexNumbers::div(iso.weight, v->e[1].w, u->e[0].w);
                         iso.weight.multiplyByMinusi();
