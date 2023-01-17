@@ -38,7 +38,7 @@ namespace dd {
         };
 
         [[nodiscard]] inline bool veryApproximatelyEquals(const Complex& c) const {
-            return CTEntry::verApproximatelyEquals(r, c.r) && CTEntry::veryApproximatelyEquals(i, c.i);
+            return CTEntry::veryApproximatelyEquals(r, c.r) && CTEntry::veryApproximatelyEquals(i, c.i);
         }
 
         [[nodiscard]] inline bool exactlyZero() const {
