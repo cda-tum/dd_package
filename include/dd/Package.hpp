@@ -121,7 +121,7 @@ namespace dd {
         static constexpr LIMDD_group defaultGroup = LIMDD_group::Pauli_group;
         //        static constexpr LIMDD_group defaultGroup = LIMDD_group::QMDD_group;
 
-        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false, CachingStrategy _cachingStrategy = (CachingStrategy)(CachingStrategy::cliffordSpecialCaching | CachingStrategy::lazyMemoizationGroupIntersect | CachingStrategy::smartStabilizerGeneration)):
+        explicit Package(std::size_t nq = defaultQubits, LIMDD_group _group = defaultGroup, bool outputToLog = false, CachingStrategy _cachingStrategy = (CachingStrategy)(CachingStrategy::cliffordSpecialCaching | CachingStrategy::lazyMemoizationGroupIntersect | CachingStrategy::smartStabilizerGeneration | CachingStrategy::skipIdentityGateMultiplication)):
             cn(ComplexNumbers()), nqubits(nq), group(_group), cachingStrategy(_cachingStrategy) {
             resize(nq);
             Log::log.verbose = outputToLog;
