@@ -23,7 +23,7 @@ def writePrologue(file_out, n):
     file_out.write("// This circuit is a randomly generated Hamming Weight-controlled circuit. The control and target registers have " + str(n) + " qubits each\n\n")
     file_out.write("OPENQASM 2.0;\n")
     file_out.write("include \"qelib1.inc\";\n")
-    file_out.write("qreg q[" + str(totalNumberQubits(n)) + "];\n\n")
+    file_out.write("qreg q[0" + str(totalNumberQubits(n)) + "];\n\n")
     file_out.write("// Step 1: put the first register in uniform superposition, by applying hadamard to all qubits\n")
     for k in range(0, n):
         file_out.write("h q["+getIndex(n, k)+"];\n")
@@ -40,7 +40,7 @@ def writeHammingControlComputePart(file_out, n, k):
 
 def writeHammingControlUncomputePart(file_out, n, k):
     file_out.write("// Stage "+str(k)+": uncompute part  ("+str(n)+" qubits)\n")
-    file_out.write("Cx q["+getTargetRegisterIndex(n, 0)+"], q["+getAncillaRegisterIndex(n, 0)+"];\n")
+    file_out.write("cx q["+getTargetRegisterIndex(n, 0)+"], q["+getAncillaRegisterIndex(n, 0)+"];\n")
     for w in range(1, k+1):
         file_out.write("x q["  +getIndex(n, k)+"];\n")
         file_out.write("ccx q["+getIndex(n, k)+"], q["+getTargetRegisterIndex(n, w)+"], q["  +getAncillaRegisterIndex(n, w)+"];\n")
