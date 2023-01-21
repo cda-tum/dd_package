@@ -373,7 +373,7 @@ namespace dd {
             //Log::log << "[highLabelPauli] low: " << lowWeight << " * I; high: " << highWeight << " * " << *vLabel << '\n';
             //LimEntry<>* newHighLabel;
             if (u == v) {
-                newHighLabel = GramSchmidtFastSorted(u->limVector, vLabel);
+                newHighLabel = GramSchmidtFastSorted(u->limVector, vLabel, u->v);
                 highWeight.multiplyByPhase(newHighLabel.getPhase());
                 //Log::log << "[highLabelPauli] case u = v; canonical lim is " << newHighLabel << " so multiplying weight by " << phaseToString(newHighLabel.getPhase()) << ", result: weight = " << highWeight << '\n';
                 newHighLabel.setPhase(phase_t::phase_one);
@@ -545,31 +545,31 @@ namespace dd {
                 throw std::exception();
             }
             startProfile(normalizeLIMDD)
+            CVec rpVec;
+            CVec oldNodeVec;
+#if !NDEBUG
+            CVec vec_e0 = getVector(e.p->e[0], e.p->v);
+            CVec vec_e1 = getVector(e.p->e[1], e.p->v);
+            sanityCheckStabilizerGroup(e.p->e[0], e.p->e[0].p->limVector);
+            sanityCheckStabilizerGroup(e.p->e[1], e.p->e[1].p->limVector);
+            CVec eVecStart = getVector(e, e.p->v);
+            CVec currentVector; // temporary variable for reuse
+#endif
             /// Step 1: Make sure the weight on the LIMs is +1
             if (!(LimEntry<>::getPhase(e.p->e[0].l) == phase_t::phase_one &&
                   LimEntry<>::getPhase(e.p->e[1].l) == phase_t::phase_one)) {
                 throw std::runtime_error("[normalizeLIMDD] ERROR phase in LIM is not +1.");
             }
-#if !NDEBUG
-            CVec amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ;
-            amplitudeVecBeforeNormalizeQ = getVector(e, e.p->v);
-#endif
             Edge<vNode> result = normalize(e, cached);
             //Log::log << "[normalizeLIMDDPauli] after normalize, result = " << result << '\n';
             //Log::log << "[normalizeLIMDD] result.w = " << (void*) result.w.result << "; one(@" << (void*) Complex::one.result << ") = " << Complex::one << "\n";
             result.l           = e.l;
 #if !NDEBUG
             cn.complexTable.checkConstantsIntegrity();
-            amplitudeVecAfternormalizeQ = getVector(result, e.p->v);
-            sanityCheckNormalize(amplitudeVecBeforeNormalizeQ, amplitudeVecAfternormalizeQ, e, result);
+            currentVector = getVector(result, e.p->v);
+            sanityCheckNormalize(eVecStart, currentVector, e, result);
 
-            Edge<vNode> rOld = copyEdge(result);
-            CVec        amplitudeVecBeforeNormalize;
-
-            amplitudeVecBeforeNormalize = getVector(result);
-
-            sanityCheckStabilizerGroup(e.p->e[0], e.p->e[0].p->limVector);
-            sanityCheckStabilizerGroup(e.p->e[1], e.p->e[1].p->limVector);
+            Edge<vNode> rOld = copyEdge(result); // TODO this seems out of date
 #endif
             if (result.l == nullptr) {
                 throw std::exception();
@@ -636,6 +636,7 @@ namespace dd {
                 //Log::log << "[normalizeLIMDD] Step 0: We swapped the children, so we correct for this by multiplying with X.\n";
                 result.l->multiplyByX(result.p->v);
             }
+            // TODO if both children's stabilizer groups are empty, probably we can immediately return
 
             /// Case 3 ("Fork"):  both edges of e are non-isZero
             LimEntry<>* lowLim = result.p->e[0].l;
@@ -664,8 +665,8 @@ namespace dd {
             // TODO limdd should we decrement reference count on the weight result.p->e[1].w here?
             /// Step 4: Find an isomorphism 'iso' which maps the new node to the old node
 #if !NDEBUG
-            CVec rpVec      = getVector(result.p);
-            CVec oldNodeVec = getVector(&oldNode);
+            rpVec      = getVector(result.p);
+            oldNodeVec = getVector(&oldNode);
             Log::log << "[normalizeLIMDD] vector of original node                     = " << outputCVec(oldNodeVec) << '\n'
                      << "[normalizeLIMDD] vector after assigning canonical high label = " << outputCVec(rpVec) << '\n';
 #endif
@@ -679,6 +680,8 @@ namespace dd {
                 Log::log << "[normalizeLIMDD] ERROR in step 4: old node is not isomorphic to canonical node.\n"
                          << "|- Old node is: " << oldNode << '\n'
                          << "|- new node is: " << *result.p << '\n'
+                         << "|- old node vector: " << oldNodeVec << '\n'
+                         << "|- new node vector: " << rpVec << '\n'
                          << "|- stab(oldLow)  = " << groupToString(oldNode.e[0].p->limVector, result.p->v - 1) << "\n"
                          << "|- stab(oldHigh) = " << groupToString(oldNode.e[1].p->limVector, result.p->v - 1) << "\n"
                          << "|- stab(newLow)  = " << groupToString(result.p->e[0].p->limVector, result.p->v - 1) << "\n"
@@ -716,8 +719,8 @@ namespace dd {
             movePhaseIntoWeight(*result.l, result.w);
             //Log::log << "[normalizeLIMDD] Final root edge: " << result << '\n';
 #if !NDEBUG
-            CVec amplitudeVecAfterNormalize = getVector(result);
-            sanityCheckNormalize(amplitudeVecBeforeNormalize, amplitudeVecAfterNormalize, rOld, result);
+            currentVector = getVector(result);
+            sanityCheckNormalize(eVecStart, currentVector, rOld, result);
 #endif
             endProfile(normalizeLIMDD)
             return result;
@@ -1252,7 +1255,7 @@ namespace dd {
                 assert(edge.p != nullptr || edge.p->v == var - 1 || edge.isTerminal());
 
             // set specific node properties for matrices
-            CVec       vece0, vece1, vece;
+            CVec       vece0, vece1, vece, vecResult;
             LimEntry<> tempRootLabel; //todo use cached lims in the future
             // normalize it
             switch (group) {
@@ -1264,7 +1267,6 @@ namespace dd {
 
                     vece0 = getVector(edges[0], var - 1);
                     vece1 = getVector(edges[1], var - 1);
-
 #endif
                     e.l = &tempRootLabel;
                     if (e.l == nullptr) {
@@ -1276,15 +1278,16 @@ namespace dd {
 
 #if !NDEBUG
 
-                    vece = getVector(e, var);
-                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vece)) {
+                    vecResult = getVector(e, var);
+                    if (LimEntry<>::isIdentityOperator(lim) && !sanityCheckMakeDDNode(vece0, vece1, vecResult)) {
                         Log::log << "[makeDDNode] ERROR  sanity check failed.\n"
-                                 << "[makeDDNode] edges[0] = " << outputCVec(vece0) << '\n'
-                                 << "[makeDDNode] edges[1] = " << outputCVec(vece1) << '\n'
-                                 << "[makeDDNode] edges[0] : " << edges[0] << '\n'
-                                 << "[makeDDNode] edges[1] : " << edges[1] << '\n'
-                                 << "[makeDDNode] result   = " << outputCVec(vece) << '\n'
-                                 << "[makeDDNode] result   : " << e << '\n';
+                                 << "[makeDDNode] edges[0]   : " << outputCVec(vece0) << '\n'
+                                 << "[makeDDNode] edges[1]   : " << outputCVec(vece1) << '\n'
+                                 << "[makeDDNode] edges[0]   : " << edges[0] << '\n'
+                                 << "[makeDDNode] edges[1]   : " << edges[1] << '\n'
+                                 << "[makeDDNode] input vec  : " << outputCVec(vece) << '\n'
+                                 << "[makeDDNode] result vec : " << outputCVec(vecResult) << '\n'
+                                 << "[makeDDNode] result     : " << e << '\n';
                         throw std::runtime_error("[makeDDNode] ERROR sanity check failed.\n");
                     }
 
@@ -2545,7 +2548,7 @@ namespace dd {
                         result.w.multiplyByPhase(activeLimPhase);
                         LimEntry<> resultLim(result.l);
                         resultLim.leftMultiplyBy(limInactive);
-                        movePhaseIntoWeight(resultLim, result.w); // TODO this should go before the lookup, right?
+                        movePhaseIntoWeight(resultLim, result.w);
                         result.l = lf.limTable.lookup(resultLim);
                         return result;
                     }

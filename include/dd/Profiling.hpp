@@ -33,6 +33,7 @@ namespace dd {
         declareProfilingVariables(constructStabilizer);
         declareProfilingVariables(recoverPhase);
         declareProfilingVariables(gramSchmidt);
+        declareProfilingVariables(gramSchmidtLazy);
         declareProfilingVariables(gaussianElimination);
         declareProfilingVariables(normalizeLIMDD);
         declareProfilingVariables(makeDDNode);

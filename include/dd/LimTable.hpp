@@ -366,11 +366,26 @@ namespace dd {
         // TODO this method can be sped up :
         //  - refactor to reduce the number of if-statements
         //  - use simple bit-level logic to avoid converting the operations to characters
+        //  - hard-code the phase multiplication
+        // Here nQubits is the maximum index that you want to multiply
         void multiplyBy(const LimEntry<NUM_QUBITS>& other, const Qubit nQubits) {
+#if !NDEBUG
+            // Sanity check: are all qubits above nQubits Identity?
+            pauli_op op;
+            for (unsigned int i = nQubits+1; i<NUM_QUBITS; i++) {
+                if (getQubit(i) != pauli_op::pauli_id) {
+                    throw std::runtime_error("This LIM has a non-identity gate at an illegal position.");
+                }
+                if (other.getQubit(i) != pauli_op::pauli_id) {
+                    throw std::runtime_error("[multiplyBy] the other LIM has a non-identity gate at an illegal position");
+                }
+            }
+#endif
+            phase_t newPhase = getPhase();
+#if !fastLazyMultiplication
             /// Step 1: handle the phase, in case the operators do not commute
             char    op1, op2;
-            phase_t newPhase = getPhase();
-            for (unsigned int i = 0; i < nQubits; i++) {
+            for (Qubit i = 0; i <= nQubits; i++) {
                 op1 = getQubit(i);
                 op2 = other.getQubit(i);
                 if (op1 == 'X' && op2 == 'Y') // XY =  iZ
@@ -386,6 +401,29 @@ namespace dd {
                 else if (op1 == 'Z' && op2 == 'Y') // ZY = -iX
                     multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
             }
+#else
+            /// This part of the code does the same as the code above, but uses several bit-tricks
+            ///  this makes use of the bit-wise representation in memory of the Pauli operators
+            bool op1x, op1z, op2x, op2z;
+            for (Qubit i=0; i<= nQubits; i++) {
+                op1z = paulis.test(2*i);
+                op1x = paulis.test(2*i+1);
+                op2z = other.paulis.test(2*i);
+                op2x = other.paulis.test(2*i+1);
+                if      (op1x && !op1z && op2x && op2z)
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                else if (op1x && op1z && !op2x && op2z) // YZ =  iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                else if (!op1x && op1z && op2x && !op2z) // ZX =  iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_i);
+                else if (op1x && !op1z && !op2x && op2z) // XZ = -iY
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                else if (op1x && op1z && op2x && !op2z) // YX = -iZ
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+                else if (!op1x && op1z && op2x && op2z) // ZY = -iX
+                    multiplyPhaseObjectBy(newPhase, phase_t::phase_minus_i);
+            }
+#endif
             /// Step 2: multiply the Pauli operators by XORing the bits
             paulis ^= other.paulis;
             setPhase(newPhase);
@@ -416,6 +454,12 @@ namespace dd {
             assert(other != noLIM);
             if (other == nullptr) return; // multiply by identity
             multiplyBy(*other);
+        }
+
+        void multiplyBy(const LimEntry<NUM_QUBITS>* other, const Qubit nQubits) {
+            assert(other != noLIM);
+            if (other == nullptr) return; // multiply by identity
+            multiplyBy(*other, nQubits);
         }
 
         void operator*=(const LimEntry<NUM_QUBITS>& other) {
@@ -707,8 +751,8 @@ namespace dd {
         }
 
         // Returns the index of the first nonzero entry in the checkvector
-        unsigned int pivotPosition() const {
-            for (unsigned int i = 0; i < 2 * NUM_QUBITS; i++) {
+        unsigned int pivotPosition(const Qubit nQubits = NUM_QUBITS - 1) const {
+            for (unsigned int i = 0; i < 2 * ((unsigned int)nQubits + 1); i++) {
                 if (paulis.test(i)) return i;
             }
             return (unsigned int)-1;
@@ -813,8 +857,13 @@ namespace dd {
             return lim.isAllZeroVector();
         }
 
-        void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other) {
-            lim.multiplyBy(other.lim);
+        //void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other) {
+        //    lim.multiplyBy(other.lim);
+        //    bits ^= other.bits;
+        //}
+
+        void multiplyBy(const LimBitset<NUM_QUBITS, NUM_BITS>& other, Qubit nQubits = NUM_QUBITS - 1) {
+            lim.multiplyBy(other.lim, nQubits);
             bits ^= other.bits;
         }
 

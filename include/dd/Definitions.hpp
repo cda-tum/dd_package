@@ -148,6 +148,9 @@ namespace dd {
         skipIdentityGateMultiplication   = 64
     };
 
+    // Set to 'true' to enable (potentially buggy) bit tricks in the LimEntry<>::multiplyBy() routine
+#define fastLazyMultiplication true
+
     inline bool usingSpecialCliffordCaching(CachingStrategy strategy) {
         return (strategy & cliffordSpecialCaching) != 0;
     }
