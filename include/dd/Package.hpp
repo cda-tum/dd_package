@@ -2114,7 +2114,11 @@ namespace dd {
                     }
                 }
                 if (!appliedCliffordGate) {
-                    e = multiply2(x, y, var, start);
+                    std::vector<Qubit> activeQubits;
+                    if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
+                        activeQubits = getActiveQubits(x);
+                    }
+                    e = multiply2(x, y, var, start,false, {}, activeQubits);
                 }
             }
 
@@ -2452,7 +2456,8 @@ namespace dd {
                                          Qubit                              var,
                                          Qubit                              start                 = 0,
                                          [[maybe_unused]] bool              generateDensityMatrix = false,
-                                         [[maybe_unused]] const LimEntry<>& lim                   = {}) {
+                                         [[maybe_unused]] const LimEntry<>& lim                   = {},
+                                         const std::vector<Qubit>& activeQubits = {}) {
             startProfile(multiply2)
             multiply2CallCount++;
             [[maybe_unused]] const unsigned int callIndex = multiply2CallCount;
@@ -2521,7 +2526,7 @@ namespace dd {
             if constexpr (std::is_same_v<RightOperandNode, vNode>) {
                 if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                     //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] Start. y = " << y << "; lim = "<< lim.to_string(y.p->v) << "; lim * |y> = " << outputCVec(getVector(y, var, lim)) << ". Currently limActive = limInactive = " << limActive.to_string(y.p->v) << (x.p->isIdentity() ? "; matrix is identity.\n" : "\n");
-                    std::vector<Qubit> activeQubits = getActiveQubits(x);
+                    //std::vector<Qubit> activeQubits = activeQubitsMemoized;
                     //Log::log << "[multiply2, c=" << callIndex << " n=" << (int) y.p->v << "] [pre process] found active qubits: {"; for (int i=0; i<activeQubits.size(); i++) Log::log << (int)activeQubits[i] << " "; Log::log << "}\n";
                     limActive = lim;
                     limActive.multiplyBy(y.l);
@@ -2705,10 +2710,10 @@ namespace dd {
                             if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                                 limActivePropagate = limActive;
                                 limActivePropagate.setOperator(y.p->v, pauli_id);
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate, activeQubitsMemoized);
                                 //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] got result " << outputCVec(getVector(m,x.p->v-1)) << "\n";
                             } else {
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, reducedLim);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, reducedLim, activeQubitsMemoized);
                             }
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
