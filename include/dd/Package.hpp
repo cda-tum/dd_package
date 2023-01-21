@@ -2710,10 +2710,10 @@ namespace dd {
                             if (usingLocalityAwareCachingDirtyTrick(cachingStrategy)) {
                                 limActivePropagate = limActive;
                                 limActivePropagate.setOperator(y.p->v, pauli_id);
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate, activeQubitsMemoized);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, limActivePropagate, activeQubits);
                                 //Log::log << "[multiply2, c=" << callIndex << " n=" << (int)x.p->v << "] got result " << outputCVec(getVector(m,x.p->v-1)) << "\n";
                             } else {
-                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, reducedLim, activeQubitsMemoized);
+                                m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start, false, reducedLim, activeQubits);
                             }
 
                             if (k == 0 || edge[idx].w.exactlyZero()) {
