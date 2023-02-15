@@ -1410,7 +1410,7 @@ namespace dd {
         }
 
         ///
-        /// Inner product and fidelity
+        /// Inner product, fidelity, expectation value
         ///
     public:
         ComputeTable<vEdge, vEdge, vCachedEdge, Config::CT_VEC_INNER_PROD_NBUCKET> vectorInnerProduct{};
@@ -1433,6 +1433,8 @@ namespace dd {
 
             return ip;
         }
+
+        
         fp fidelity(const vEdge& x, const vEdge& y) {
             const auto fid = innerProduct(x, y);
             return fid.r * fid.r + fid.i * fid.i;
@@ -1526,6 +1528,44 @@ namespace dd {
             return {CTEntry::val(c.r), CTEntry::val(c.i)};
         }
 
+    public:
+        fp expectationValue(const mEdge& x, const vEdge& y) {
+            /**
+            Calculates the expectation value of an operator x with respect to a quantum state y given their corresponding decision diagrams.
+            @param x a matrix DD representing the operator
+            @param y a vector DD representing the quantum state
+            @return a floating point value representing the expectation value of the operator with respect to the quantum state
+            @throw an exception message is thrown if the edges are not on the same level or if the expectation value is non-real.
+            @note This function calls the multiply() function to apply the operator to the quantum state, then calls innerProduct()
+                  to calculate the overlap between the original state and the applied state i.e. <Psi| Psi'> = <Psi| (Op|Psi>).
+                  It also calls the garbageCollect() function to free up any unused memory.
+            **/
+
+            try {
+                if (x.p->v != y.p->v) {
+                    throw ("Edges are not on same level. Expectation Value cannot be calculated.");
+                }
+            }
+            catch (const char* message) {
+                std::cout << message;  
+            }
+
+            auto yPrime = multiply(x, y);
+            const ComplexValue ip = innerProduct(y, yPrime);
+
+            try {
+                if (!CTEntry::approximatelyZero(ip.i)) {
+                    throw ("Expectation value is non-real.");
+                }
+            }
+            catch (const char* message) {
+                std::cout << message;  
+            }
+
+            garbageCollect();
+
+            return ip.r;
+        }
         ///
         /// Kronecker/tensor product
         ///
