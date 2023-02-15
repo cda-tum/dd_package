@@ -1434,7 +1434,6 @@ namespace dd {
             return ip;
         }
 
-        
         fp fidelity(const vEdge& x, const vEdge& y) {
             const auto fid = innerProduct(x, y);
             return fid.r * fid.r + fid.i * fid.i;
@@ -1566,6 +1565,7 @@ namespace dd {
 
             return ip.r;
         }
+
         ///
         /// Kronecker/tensor product
         ///
