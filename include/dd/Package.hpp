@@ -1542,23 +1542,21 @@ namespace dd {
 
             try {
                 if (x.p->v != y.p->v) {
-                    throw ("Edges are not on same level. Expectation Value cannot be calculated.");
+                    throw("Edges are not on same level. Expectation Value cannot be calculated.");
                 }
-            }
-            catch (const char* message) {
-                std::cout << message;  
+            } catch (const char* message) {
+                std::cout << message;
             }
 
-            auto yPrime = multiply(x, y);
-            const ComplexValue ip = innerProduct(y, yPrime);
+            auto               yPrime = multiply(x, y);
+            const ComplexValue ip     = innerProduct(y, yPrime);
 
             try {
                 if (!CTEntry::approximatelyZero(ip.i)) {
-                    throw ("Expectation value is non-real.");
+                    throw("Expectation value is non-real.");
                 }
-            }
-            catch (const char* message) {
-                std::cout << message;  
+            } catch (const char* message) {
+                std::cout << message;
             }
 
             garbageCollect();
