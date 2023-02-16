@@ -1540,25 +1540,15 @@ namespace dd {
                   It also calls the garbageCollect() function to free up any unused memory.
             **/
 
-            try {
-                if (x.p->v != y.p->v) {
-                    throw ("Edges are not on same level. Expectation Value cannot be calculated.");
-                }
-            }
-            catch (const char* message) {
-                std::cout << message;  
+            if (x.p->v != y.p->v) {
+                throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
             }
 
             auto yPrime = multiply(x, y);
             const ComplexValue ip = innerProduct(y, yPrime);
 
-            try {
-                if (!CTEntry::approximatelyZero(ip.i)) {
-                    throw ("Expectation value is non-real.");
-                }
-            }
-            catch (const char* message) {
-                std::cout << message;  
+            if (!CTEntry::approximatelyZero(ip.i)) {
+                throw std::invalid_argument("Expectation value is non-real.");
             }
 
             garbageCollect();
