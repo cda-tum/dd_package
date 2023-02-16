@@ -1339,7 +1339,7 @@ TEST(DDPackageTest, exactlyOneComparison) {
     EXPECT_TRUE(one.exactlyOne());
 }
 
-TEST(DDPackageTest, expectationValue) {
+TEST(DDPackageTest, expectationValueGlobalOperators) {
     int max_qubits = 3;
     for (dd::Qubit nrQubits = 1; nrQubits < max_qubits + 1; nrQubits++) {
         auto dd        = std::make_unique<dd::Package<>>(nrQubits);
@@ -1365,6 +1365,14 @@ TEST(DDPackageTest, expectationValue) {
         EXPECT_EQ(dd->expectationValue(globalX, zeroState), 0);
         EXPECT_EQ(dd->expectationValue(globalZ, zeroState), 1);
         EXPECT_EQ(dd->expectationValue(globalHadamard, zeroState), std::pow(dd::SQRT2_2, nrQubits));
+    }
+}
+
+TEST(DDPackageTest, expectationValueLocalOperators) {
+    int max_qubits = 3;
+    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits + 1; nrQubits++) {
+        auto dd        = std::make_unique<dd::Package<>>(nrQubits);
+        auto zeroState = dd->makeZeroState(nrQubits);
 
         // Local expectation values at each site
         for (int site = 0; site < nrQubits - 1; site++) {
