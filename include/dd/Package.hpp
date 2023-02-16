@@ -1559,7 +1559,7 @@ namespace dd {
         ///
         /// Kronecker/tensor product
         ///
-    public:
+
         ComputeTable<vEdge, vEdge, vCachedEdge, Config::CT_VEC_KRON_NBUCKET> vectorKronecker{};
         ComputeTable<mEdge, mEdge, mCachedEdge, Config::CT_MAT_KRON_NBUCKET> matrixKronecker{};
 
