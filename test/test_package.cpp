@@ -1377,6 +1377,7 @@ TEST(DDPackageTest, expectationValue) {
             EXPECT_EQ(dd->expectationValue(zGate, zeroState), 1);
             EXPECT_EQ(dd->expectationValue(hadamard, zeroState), dd::SQRT2_2);
         }
+      }
     }
 
     TEST(DDPackageTest, stateFromVectorBell) {
