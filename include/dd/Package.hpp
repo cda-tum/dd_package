@@ -1544,8 +1544,8 @@ namespace dd {
                 throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
             }
 
-            auto yPrime = multiply(x, y);
-            const ComplexValue ip = innerProduct(y, yPrime);
+            auto               yPrime = multiply(x, y);
+            const ComplexValue ip     = innerProduct(y, yPrime);
 
             if (!CTEntry::approximatelyZero(ip.i)) {
                 throw std::invalid_argument("Expectation value is non-real.");

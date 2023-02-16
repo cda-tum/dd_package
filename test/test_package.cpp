@@ -1341,23 +1341,23 @@ TEST(DDPackageTest, exactlyOneComparison) {
 
 TEST(DDPackageTest, expectationValue) {
     int max_qubits = 3;
-    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits+1; nrQubits++) {
+    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits + 1; nrQubits++) {
         auto dd        = std::make_unique<dd::Package<>>(nrQubits);
         auto zeroState = dd->makeZeroState(nrQubits);
 
         // Definition global operators
-        auto singleSiteX         = dd->makeGateDD(dd::Xmat, 1, 0);
-        auto globalX = singleSiteX;
+        auto singleSiteX = dd->makeGateDD(dd::Xmat, 1, 0);
+        auto globalX     = singleSiteX;
 
-        auto singleSiteZ         = dd->makeGateDD(dd::Zmat, 1, 0);
-        auto globalZ = singleSiteZ;
+        auto singleSiteZ = dd->makeGateDD(dd::Zmat, 1, 0);
+        auto globalZ     = singleSiteZ;
 
-        auto singleSiteHadamard      = dd->makeGateDD(dd::Hmat, 1, 0);
-        auto globalHadamard = singleSiteHadamard;
+        auto singleSiteHadamard = dd->makeGateDD(dd::Hmat, 1, 0);
+        auto globalHadamard     = singleSiteHadamard;
 
-        for (int i = 1; i < nrQubits; i++){
-            globalX = dd->kronecker(globalX, singleSiteX);
-            globalZ = dd->kronecker(globalZ, singleSiteZ);
+        for (int i = 1; i < nrQubits; i++) {
+            globalX        = dd->kronecker(globalX, singleSiteX);
+            globalZ        = dd->kronecker(globalZ, singleSiteZ);
             globalHadamard = dd->kronecker(globalHadamard, singleSiteHadamard);
         }
 
@@ -1367,11 +1367,11 @@ TEST(DDPackageTest, expectationValue) {
         EXPECT_EQ(dd->expectationValue(globalHadamard, zeroState), std::pow(dd::SQRT2_2, nrQubits));
 
         // Local expectation values at each site
-        for (int site = 0; site < nrQubits-1; site++) {
+        for (int site = 0; site < nrQubits - 1; site++) {
             // Definition local operators
-            auto      xGate    = dd->makeGateDD(dd::Xmat, nrQubits, site);
-            auto      zGate    = dd->makeGateDD(dd::Zmat, nrQubits, site);
-            auto      hadamard = dd->makeGateDD(dd::Hmat, nrQubits, site);
+            auto xGate    = dd->makeGateDD(dd::Xmat, nrQubits, site);
+            auto zGate    = dd->makeGateDD(dd::Zmat, nrQubits, site);
+            auto hadamard = dd->makeGateDD(dd::Hmat, nrQubits, site);
 
             EXPECT_EQ(dd->expectationValue(xGate, zeroState), 0);
             EXPECT_EQ(dd->expectationValue(zGate, zeroState), 1);
