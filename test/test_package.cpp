@@ -1341,23 +1341,23 @@ TEST(DDPackageTest, exactlyOneComparison) {
 
 TEST(DDPackageTest, expectationValue) {
     int max_qubits = 3;
-    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits+1; nrQubits++) {
+    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits + 1; nrQubits++) {
         auto dd        = std::make_unique<dd::Package<>>(nrQubits);
         auto zeroState = dd->makeZeroState(nrQubits);
 
         // Definition global operators
-        auto singleSiteX         = dd->makeGateDD(dd::Xmat, 1, 0);
-        auto globalX = singleSiteX;
+        auto singleSiteX = dd->makeGateDD(dd::Xmat, 1, 0);
+        auto globalX     = singleSiteX;
 
-        auto singleSiteZ         = dd->makeGateDD(dd::Zmat, 1, 0);
-        auto globalZ = singleSiteZ;
+        auto singleSiteZ = dd->makeGateDD(dd::Zmat, 1, 0);
+        auto globalZ     = singleSiteZ;
 
-        auto singleSiteHadamard      = dd->makeGateDD(dd::Hmat, 1, 0);
-        auto globalHadamard = singleSiteHadamard;
+        auto singleSiteHadamard = dd->makeGateDD(dd::Hmat, 1, 0);
+        auto globalHadamard     = singleSiteHadamard;
 
-        for (int i = 1; i < nrQubits; i++){
-            globalX = dd->kronecker(globalX, singleSiteX);
-            globalZ = dd->kronecker(globalZ, singleSiteZ);
+        for (int i = 1; i < nrQubits; i++) {
+            globalX        = dd->kronecker(globalX, singleSiteX);
+            globalZ        = dd->kronecker(globalZ, singleSiteZ);
             globalHadamard = dd->kronecker(globalHadamard, singleSiteHadamard);
         }
 
@@ -1367,15 +1367,54 @@ TEST(DDPackageTest, expectationValue) {
         EXPECT_EQ(dd->expectationValue(globalHadamard, zeroState), std::pow(dd::SQRT2_2, nrQubits));
 
         // Local expectation values at each site
-        for (int site = 0; site < nrQubits-1; site++) {
+        for (int site = 0; site < nrQubits - 1; site++) {
             // Definition local operators
-            auto      xGate    = dd->makeGateDD(dd::Xmat, nrQubits, site);
-            auto      zGate    = dd->makeGateDD(dd::Zmat, nrQubits, site);
-            auto      hadamard = dd->makeGateDD(dd::Hmat, nrQubits, site);
+            auto xGate    = dd->makeGateDD(dd::Xmat, nrQubits, site);
+            auto zGate    = dd->makeGateDD(dd::Zmat, nrQubits, site);
+            auto hadamard = dd->makeGateDD(dd::Hmat, nrQubits, site);
 
             EXPECT_EQ(dd->expectationValue(xGate, zeroState), 0);
             EXPECT_EQ(dd->expectationValue(zGate, zeroState), 1);
             EXPECT_EQ(dd->expectationValue(hadamard, zeroState), dd::SQRT2_2);
         }
     }
+}
+
+TEST(DDPackageTest, stateFromVectorBell) {
+    auto       dd = std::make_unique<dd::Package<>>(2);
+    const auto v  = std::vector<std::complex<dd::fp>>{dd::SQRT2_2, 0, 0, dd::SQRT2_2};
+    const auto s  = dd->makeStateFromVector(v);
+    EXPECT_EQ(s.p->v, 1);
+    EXPECT_EQ(s.p->e[0].w.r->value, dd::SQRT2_2);
+    EXPECT_EQ(s.p->e[0].w.i->value, 0);
+    EXPECT_EQ(s.p->e[1].w.r->value, dd::SQRT2_2);
+    EXPECT_EQ(s.p->e[1].w.i->value, 0);
+    EXPECT_EQ(s.p->e[0].p->e[0].w.r->value, 1);
+    EXPECT_EQ(s.p->e[0].p->e[0].w.i->value, 0);
+    EXPECT_EQ(s.p->e[0].p->e[1].w.r->value, 0);
+    EXPECT_EQ(s.p->e[0].p->e[1].w.i->value, 0);
+    EXPECT_EQ(s.p->e[1].p->e[0].w.r->value, 0);
+    EXPECT_EQ(s.p->e[1].p->e[0].w.i->value, 0);
+    EXPECT_EQ(s.p->e[1].p->e[1].w.r->value, 1);
+    EXPECT_EQ(s.p->e[1].p->e[1].w.i->value, 0);
+}
+
+TEST(DDPackageTest, stateFromVectorEmpty) {
+    auto dd = std::make_unique<dd::Package<>>(1);
+    auto v  = std::vector<std::complex<dd::fp>>{};
+    EXPECT_EQ(dd->makeStateFromVector(v), dd::vEdge::one);
+}
+
+TEST(DDPackageTest, stateFromVectorNoPowerOfTwo) {
+    auto dd = std::make_unique<dd::Package<>>(3);
+    auto v  = std::vector<std::complex<dd::fp>>{1, 2, 3, 4, 5};
+    EXPECT_THROW(dd->makeStateFromVector(v), std::invalid_argument);
+}
+
+TEST(DDPackageTest, stateFromScalar) {
+    auto dd = std::make_unique<dd::Package<>>(1);
+    auto s  = dd->makeStateFromVector({1});
+    EXPECT_EQ(s.p->v, -1);
+    EXPECT_EQ(s.w.r->value, 1);
+    EXPECT_EQ(s.w.i->value, 0);
 }
