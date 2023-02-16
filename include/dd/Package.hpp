@@ -1547,9 +1547,7 @@ namespace dd {
             auto               yPrime = multiply(x, y);
             const ComplexValue ip     = innerProduct(y, yPrime);
 
-            if (!CTEntry::approximatelyZero(ip.i)) {
-                throw std::invalid_argument("Expectation value is non-real.");
-            }
+            assert(!CTEntry::approximatelyZero(ip.i));
 
             garbageCollect();
 
