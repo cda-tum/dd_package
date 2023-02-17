@@ -1389,11 +1389,10 @@ TEST(DDPackageTest, expectationValueLocalOperators) {
 }
 
 TEST(DDPackageTest, expectationValueExceptions) {
-    const dd::Qubit nrQubits = 1;
+    const dd::Qubit nrQubits = 2;
     auto dd        = std::make_unique<dd::Package<>>(nrQubits);
-    auto zeroState = dd->makeZeroState(nrQubits);
 
-    dd        = std::make_unique<dd::Package<>>(nrQubits+1);
-    auto xGate    = dd->makeGateDD(dd::Xmat, nrQubits+1, 0);
+    const auto zeroState = dd->makeZeroState(static_cast<dd::QubitCount>(nrQubits-1));
+    const auto xGate    = dd->makeGateDD(dd::Xmat, nrQubits, 0);
     EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
 }
