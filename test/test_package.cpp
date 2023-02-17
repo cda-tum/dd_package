@@ -1414,7 +1414,7 @@ TEST(DDPackageTest, expectationValueLocalOperators) {
         const auto zeroState = dd->makeZeroState(nrQubits);
 
         // Local expectation values at each site
-        for (dd::QubitCount site = 0; site < nrQubits - 1; ++site) {
+        for (dd::Qubit site = 0; site < nrQubits - 1; ++site) {
             // Definition local operators
             auto xGate    = dd->makeGateDD(dd::Xmat, nrQubits, site);
             auto zGate    = dd->makeGateDD(dd::Zmat, nrQubits, site);
