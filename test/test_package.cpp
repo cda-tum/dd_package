@@ -1386,13 +1386,13 @@ TEST(DDPackageTest, expectationValueGlobalOperators) {
 
         // Definition global operators
         const auto singleSiteX = dd->makeGateDD(dd::Xmat, 1, 0);
-        auto globalX     = singleSiteX;
+        auto       globalX     = singleSiteX;
 
         const auto singleSiteZ = dd->makeGateDD(dd::Zmat, 1, 0);
-        auto globalZ     = singleSiteZ;
+        auto       globalZ     = singleSiteZ;
 
         const auto singleSiteHadamard = dd->makeGateDD(dd::Hmat, 1, 0);
-        auto globalHadamard     = singleSiteHadamard;
+        auto       globalHadamard     = singleSiteHadamard;
 
         for (dd::QubitCount i = 1; i < nrQubits; ++i) {
             globalX        = dd->kronecker(globalX, singleSiteX);
