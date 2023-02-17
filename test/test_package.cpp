@@ -1380,7 +1380,7 @@ TEST(DDPackageTest, stateFromScalar) {
 
 TEST(DDPackageTest, expectationValueGlobalOperators) {
     const dd::QubitCount maxQubits = 3;
-    for (dd::Qubit nrQubits = 1; nrQubits < max_qubits + 1; nrQubits++) {
+    for (dd::QubitCount nrQubits = 1; nrQubits < maxQubits + 1; ++nrQubits) {
         auto dd        = std::make_unique<dd::Package<>>(nrQubits);
         auto zeroState = dd->makeZeroState(nrQubits);
 
