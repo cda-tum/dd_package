@@ -1394,7 +1394,7 @@ TEST(DDPackageTest, expectationValueGlobalOperators) {
         const auto singleSiteHadamard = dd->makeGateDD(dd::Hmat, 1, 0);
         const auto globalHadamard     = singleSiteHadamard;
 
-        for (int i = 1; i < nrQubits; i++) {
+        for (dd::QubitCount i = 1; i < nrQubits; ++i) {
             globalX        = dd->kronecker(globalX, singleSiteX);
             globalZ        = dd->kronecker(globalZ, singleSiteZ);
             globalHadamard = dd->kronecker(globalHadamard, singleSiteHadamard);
