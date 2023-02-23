@@ -1462,11 +1462,10 @@ TEST(DDPackageTest, DDFromMatrixEmpty) {
 }
 
 TEST(DDPackageTest, DDFromMatrixZeros) {
-
-    auto row0 = dd::CVec{0., 0., 1., 2.};
-    auto row1 = dd::CVec{0., 0., 3., 4.};
-    auto row2 = dd::CVec{0., 0., 0., 0.};
-    auto row3 = dd::CVec{0., 0., 0., 0.};
+    auto row0 = dd::CVec{1, 2, 3, 4};
+    auto row1 = dd::CVec{5, 6, 7, 8};
+    auto row2 = dd::CVec{9, 10, 11, 12};
+    auto row3 = dd::CVec{13, 14, 15, 16};
     auto arbitraryMatrix = dd::CMat{row0, row1, row2, row3};
 
     /*

@@ -372,24 +372,26 @@ namespace dd {
                 CVec quad2;
                 CVec quad3;
 
-                for (int i = 0; i < length; ++i) {
-                    for (int j = 0; j < length; ++j) {
-                        std::cout << matrix[i][j] << "\n";
-                        if (i < length / 2 && j < length / 2) {
-                            quad0.emplace_back(matrix[i][j]);
-                        } else if (i < length / 2 && j >= length / 2) {
-                            quad1.emplace_back(matrix[i][j]);
-                        } else if (i >= length / 2 && j < length / 2) {
-                            quad2.emplace_back(matrix[i][j]);
-                        } else if (i >= length / 2 && j >= length / 2) {
-                            quad3.emplace_back(matrix[i][j]);
+                for (int requiredIterations = level; requiredIterations > 0; --requiredIterations){
+                    for (int i = 0; i < length; ++i) {
+                        for (int j = 0; j < length; ++j) {
+                            std::cout << matrix[i][j] << "\n";
+                            if (i < length / 2 && j < length / 2) {
+                                quad0.emplace_back(matrix[i][j]);
+                            } else if (i < length / 2 && j >= length / 2) {
+                                quad1.emplace_back(matrix[i][j]);
+                            } else if (i >= length / 2 && j < length / 2) {
+                                quad2.emplace_back(matrix[i][j]);
+                            } else if (i >= length / 2 && j >= length / 2) {
+                                quad3.emplace_back(matrix[i][j]);
+                            }
                         }
                     }
+                    flattenedMatrix.insert(flattenedMatrix.end(), quad0.begin(), quad0.end());
+                    flattenedMatrix.insert(flattenedMatrix.end(), quad1.begin(), quad1.end());
+                    flattenedMatrix.insert(flattenedMatrix.end(), quad2.begin(), quad2.end());
+                    flattenedMatrix.insert(flattenedMatrix.end(), quad3.begin(), quad3.end());
                 }
-                flattenedMatrix.insert(flattenedMatrix.end(), quad0.begin(), quad0.end());
-                flattenedMatrix.insert(flattenedMatrix.end(), quad1.begin(), quad1.end());
-                flattenedMatrix.insert(flattenedMatrix.end(), quad2.begin(), quad2.end());
-                flattenedMatrix.insert(flattenedMatrix.end(), quad3.begin(), quad3.end());
             } else {
                 for (int i = 0; i < length; ++i) {
                     for (int j = 0; j < length; ++j) {
