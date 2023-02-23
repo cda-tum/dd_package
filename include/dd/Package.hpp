@@ -364,7 +364,41 @@ namespace dd {
 
             // Bit weird to use begin and end here, could be better to iterate over
             // Each row of the matrix
-            auto       matrixDD = makeDDFromMatrix2(matrix[0].begin(), matrix[0].end(), matrix[0].begin(), matrix[0].end(), level);
+            CVec flattenedMatrix;
+
+            if (level > 0) {
+                CVec quad0;
+                CVec quad1;
+                CVec quad2;
+                CVec quad3;
+
+                for (int i = 0; i < length; ++i) {
+                    for (int j = 0; j < length; ++j) {
+                        std::cout << matrix[i][j] << "\n";
+                        if (i < length / 2 && j < length / 2) {
+                            quad0.emplace_back(matrix[i][j]);
+                        } else if (i < length / 2 && j >= length / 2) {
+                            quad1.emplace_back(matrix[i][j]);
+                        } else if (i >= length / 2 && j < length / 2) {
+                            quad2.emplace_back(matrix[i][j]);
+                        } else if (i >= length / 2 && j >= length / 2) {
+                            quad3.emplace_back(matrix[i][j]);
+                        }
+                    }
+                }
+                flattenedMatrix.insert(flattenedMatrix.end(), quad0.begin(), quad0.end());
+                flattenedMatrix.insert(flattenedMatrix.end(), quad1.begin(), quad1.end());
+                flattenedMatrix.insert(flattenedMatrix.end(), quad2.begin(), quad2.end());
+                flattenedMatrix.insert(flattenedMatrix.end(), quad3.begin(), quad3.end());
+            } else {
+                for (int i = 0; i < length; ++i) {
+                    for (int j = 0; j < length; ++j) {
+                        flattenedMatrix.emplace_back(matrix[i][j]);
+                    }
+                }
+            }
+
+            auto       matrixDD = makeDDFromMatrix2(flattenedMatrix.begin(), flattenedMatrix.end(), level);
 
             if (matrixDD.w != Complex::zero) {
                   cn.returnToCache(matrixDD.w);
@@ -638,20 +672,22 @@ namespace dd {
             return makeDDNode<vNode>(level, {zeroSuccessor, oneSuccessor}, true);
         }
 
-        mEdge makeDDFromMatrix2(const CVec::const_iterator& rowBegin,
-                                const CVec::const_iterator& rowEnd,
-                                const CVec::const_iterator& colBegin,
-                                const CVec::const_iterator& colEnd,
+        mEdge makeDDFromMatrix2(const CVec::const_iterator& begin,
+                                const CVec::const_iterator& end,
                                 const Qubit                 level) {
             std::cout << "Level:" << static_cast<int>(level) << '\n';
+
             if (level == 0) {
-                assert(std::distance(rowBegin, rowEnd) == 2 && std::distance(colBegin, colEnd) == 2);
+                // assert(size == 2);
                 // WIP
 
-                const auto& zeroWeight    = cn.getCached(rowBegin->real(), rowBegin->imag());
-                const auto& oneWeight     = Complex::zero; // cn.getCached(std::next(rowBegin)->real(), std::next(rowBegin)->imag());
-                const auto& twoWeight    = Complex::zero; // cn.getCached(rowBegin->real(), rowBegin->imag());
-                const auto& threeWeight     = Complex::one; // cn.getCached(std::next(rowBegin)->real(), std::next(rowBegin)->imag());
+                const auto& zeroWeight    = cn.getCached(begin->real(), begin->imag());
+                auto element = std::next(begin);
+                const auto& oneWeight     = cn.getCached(element->real(), element->imag());
+                element = std::next(element);
+                const auto& twoWeight    = cn.getCached(element->real(), element->imag());
+                element = std::next(element);
+                const auto& threeWeight     = cn.getCached(element->real(), element->imag());
 
                 const auto  zeroSuccessor = mEdge{mNode::terminal, zeroWeight};
                 const auto  oneSuccessor  = mEdge{mNode::terminal, oneWeight};
@@ -661,19 +697,27 @@ namespace dd {
                 return makeDDNode<mNode>(0, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
             }
 
-            const auto half          = std::distance(rowBegin, rowEnd) / 2;
-            const auto zeroSuccessor = makeDDFromMatrix2(rowBegin, rowBegin + half,
-                                                                colBegin, colBegin + half,
+            /*
+            const auto half          = std::distance(topRowBegin, topRowEnd) / 2;
+            const auto zeroSuccessor = makeDDFromMatrix2(topRowBegin, topRowBegin + half,
+                                                          bottomRowBegin, bottomRowBegin + half,
                                                            level - 1);
-            const auto oneSuccessor  = makeDDFromMatrix2(rowBegin, rowBegin + half,
-                                                                colBegin + half, colEnd,
+            const auto oneSuccessor  = makeDDFromMatrix2(topRowBegin + half, topRowEnd,
+                                                          bottomRowBegin + half, bottomRowEnd,
                                                            level - 1);
-            const auto twoSuccessor = makeDDFromMatrix2(rowBegin + half, rowEnd,
-                                                                colBegin, colBegin + half,
+            const auto twoSuccessor = makeDDFromMatrix2(topRowBegin, topRowBegin + half,
+                                                          bottomRowBegin + half, bottomRowEnd,
                                                            level - 1);
-            const auto threeSuccessor = makeDDFromMatrix2(rowBegin + half, rowEnd,
-                                                          colBegin + half, colEnd,
+            const auto threeSuccessor = makeDDFromMatrix2(topRowBegin + half, topRowEnd,
+                                                          bottomRowBegin + half, bottomRowEnd,
                                                           level - 1);
+            */
+            // const auto half          = length / 2;
+            const auto fourth = std::distance(begin, end) / 4;
+            const auto zeroSuccessor = makeDDFromMatrix2(begin, begin + fourth, level - 1);
+            const auto oneSuccessor  = makeDDFromMatrix2(begin + fourth, begin + 2*fourth, level - 1);
+            const auto twoSuccessor = makeDDFromMatrix2(begin + 2*fourth, begin + 3*fourth, level - 1);
+            const auto threeSuccessor = makeDDFromMatrix2(begin + 3*fourth, end, level-1);
 
             return makeDDNode<mNode>(level, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
         }

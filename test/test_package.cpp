@@ -1437,13 +1437,18 @@ TEST(DDPackageTest, expectationValueExceptions) {
     EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
 }
 
-TEST(DDPackageTest, testArbitraryMatrixDD) {
-    const dd::QubitCount nrQubits = 1;
+TEST(DDPackageTest, DDFromMatrixEmpty) {
+    const dd::QubitCount nrQubits = 2;
     const int size = static_cast<int>(std::pow(2, nrQubits));
 
     dd::CVec tmp;
     for (dd::Qubit col = 0; col < static_cast<dd::Qubit>(size); ++col) {
-        tmp.emplace_back(2.);
+        if ((col % 2) != 0) {
+            tmp.emplace_back(2.);
+        } else {
+            tmp.emplace_back(3.);
+        }
+
     }
 
     dd::CMat arbitraryMatrix;
@@ -1453,11 +1458,27 @@ TEST(DDPackageTest, testArbitraryMatrixDD) {
 
     auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
     auto matDD = dd->makeDDFromMatrix(arbitraryMatrix);
-    // auto test = dd
     dd->printMatrix(matDD);
-    // const dd::QubitCount nrQubits = 1;
+}
 
-    // auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
-    // const auto zeroState = dd->makeZeroState(nrQubits);
-    // EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
+TEST(DDPackageTest, DDFromMatrixZeros) {
+
+    auto row0 = dd::CVec{0., 0., 1., 2.};
+    auto row1 = dd::CVec{0., 0., 3., 4.};
+    auto row2 = dd::CVec{0., 0., 0., 0.};
+    auto row3 = dd::CVec{0., 0., 0., 0.};
+    auto arbitraryMatrix = dd::CMat{row0, row1, row2, row3};
+
+    /*
+    auto row0 = dd::CVec{0., 0.};
+    auto row1 = dd::CVec{0., 1.};
+    auto arbitraryMatrix = dd::CMat{row0, row1};
+    */
+
+    const dd::QubitCount nrQubits = 2;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    auto matDD = dd->makeDDFromMatrix(arbitraryMatrix);
+    // EXPECT_EQ(dd->makeStateFromVector(v), dd::vEdge::one);
+
+    dd->printMatrix(matDD);
 }
