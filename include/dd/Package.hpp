@@ -333,6 +333,49 @@ namespace dd {
             return state;
         }
 
+        // generates decision diagram from arbitrary operator
+        mEdge makeDDFromMatrix(const CMat& matrix) {
+            // Based on vector function, should be checked due to unfamiliarity with data structures
+            // Should still work despite being a vector of vectors
+            if (matrix.empty()) {
+                return mEdge::one;
+            }
+
+            // Matrices are square so this should still work as is
+            const auto& length = matrix.size();
+
+            if ((length & (length - 1)) != 0) {
+                throw std::invalid_argument("Matrix must have a length of a power of two.");
+            }
+
+            // Added a check for square matrices
+            const auto& width = matrix[0].size();
+            if (length != width) {
+                throw std::invalid_argument("Matrix must be square.");
+            }
+
+            if (length == 1 and width == 1) {
+                return mEdge::terminal(cn.lookup(matrix[0][0].real(), matrix[0][0].imag()));
+            }
+
+            [[maybe_unused]] const auto before = cn.cacheCount();
+
+            const auto level = static_cast<Qubit>(std::log2(length) - 1);
+
+            // Bit weird to use begin and end here, could be better to iterate over
+            // Each row of the matrix
+            auto       matrixDD = makeDDFromMatrix2(matrix[0].begin(), matrix[0].end(), matrix[0].begin(), matrix[0].end(), level);
+
+            if (matrixDD.w != Complex::zero) {
+                  cn.returnToCache(matrixDD.w);
+                  matrixDD.w = cn.lookup(matrixDD.w);
+            }
+
+            [[maybe_unused]] const auto after = cn.cacheCount();
+            assert(after == before);
+            return matrixDD;
+        }
+
         ///
         /// Matrix nodes, edges and quantum gates
         ///
@@ -593,6 +636,46 @@ namespace dd {
             const auto zeroSuccessor = makeStateFromVector(begin, begin + half, level - 1);
             const auto oneSuccessor  = makeStateFromVector(begin + half, end, level - 1);
             return makeDDNode<vNode>(level, {zeroSuccessor, oneSuccessor}, true);
+        }
+
+        mEdge makeDDFromMatrix2(const CVec::const_iterator& rowBegin,
+                                const CVec::const_iterator& rowEnd,
+                                const CVec::const_iterator& colBegin,
+                                const CVec::const_iterator& colEnd,
+                                const Qubit                 level) {
+            std::cout << "Level:" << static_cast<int>(level) << '\n';
+            if (level == 0) {
+                assert(std::distance(rowBegin, rowEnd) == 2 && std::distance(colBegin, colEnd) == 2);
+                // WIP
+
+                const auto& zeroWeight    = cn.getCached(rowBegin->real(), rowBegin->imag());
+                const auto& oneWeight     = Complex::zero; // cn.getCached(std::next(rowBegin)->real(), std::next(rowBegin)->imag());
+                const auto& twoWeight    = Complex::zero; // cn.getCached(rowBegin->real(), rowBegin->imag());
+                const auto& threeWeight     = Complex::one; // cn.getCached(std::next(rowBegin)->real(), std::next(rowBegin)->imag());
+
+                const auto  zeroSuccessor = mEdge{mNode::terminal, zeroWeight};
+                const auto  oneSuccessor  = mEdge{mNode::terminal, oneWeight};
+                const auto  twoSuccessor = mEdge{mNode::terminal, twoWeight};
+                const auto  threeSuccessor  = mEdge{mNode::terminal, threeWeight};
+
+                return makeDDNode<mNode>(0, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
+            }
+
+            const auto half          = std::distance(rowBegin, rowEnd) / 2;
+            const auto zeroSuccessor = makeDDFromMatrix2(rowBegin, rowBegin + half,
+                                                                colBegin, colBegin + half,
+                                                           level - 1);
+            const auto oneSuccessor  = makeDDFromMatrix2(rowBegin, rowBegin + half,
+                                                                colBegin + half, colEnd,
+                                                           level - 1);
+            const auto twoSuccessor = makeDDFromMatrix2(rowBegin + half, rowEnd,
+                                                                colBegin, colBegin + half,
+                                                           level - 1);
+            const auto threeSuccessor = makeDDFromMatrix2(rowBegin + half, rowEnd,
+                                                          colBegin + half, colEnd,
+                                                          level - 1);
+
+            return makeDDNode<mNode>(level, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
         }
 
         ///

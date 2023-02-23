@@ -1436,3 +1436,28 @@ TEST(DDPackageTest, expectationValueExceptions) {
 
     EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
 }
+
+TEST(DDPackageTest, testArbitraryMatrixDD) {
+    const dd::QubitCount nrQubits = 1;
+    const int size = static_cast<int>(std::pow(2, nrQubits));
+
+    dd::CVec tmp;
+    for (dd::Qubit col = 0; col < static_cast<dd::Qubit>(size); ++col) {
+        tmp.emplace_back(2.);
+    }
+
+    dd::CMat arbitraryMatrix;
+    for (dd::Qubit row = 0; row < static_cast<dd::Qubit>(size); ++row) {
+        arbitraryMatrix.emplace_back(tmp);
+    }
+
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    auto matDD = dd->makeDDFromMatrix(arbitraryMatrix);
+    // auto test = dd
+    dd->printMatrix(matDD);
+    // const dd::QubitCount nrQubits = 1;
+
+    // auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    // const auto zeroState = dd->makeZeroState(nrQubits);
+    // EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
+}
