@@ -362,10 +362,16 @@ namespace dd {
 
             const auto level = static_cast<Qubit>(std::log2(length) - 1);
 
-            // Bit weird to use begin and end here, could be better to iterate over
-            // Each row of the matrix
+            // Matrix needs to be flattened in a specific way
+            // (a00, a01, | a02, a03,
+            //  a10, a11, | a12, a13,
+            //  ---------------------
+            //  a20, a21, | a22, a23,
+            //  a30, a31, | a32, a33)
+            // -->
+            // (0 Successor, 1 Successor, 2 Successor, 3 Successor)
+            // (a00, a01, a10, a11, | a02, a03, a12, a13, | a20, a21, a30, a31, | a22, a23, a32, a33)
             CVec flattenedMatrix;
-
             if (level > 0) {
                 CVec quad0;
                 CVec quad1;
