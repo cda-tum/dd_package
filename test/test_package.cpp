@@ -1437,47 +1437,103 @@ TEST(DDPackageTest, expectationValueExceptions) {
     EXPECT_ANY_THROW(dd->expectationValue(xGate, zeroState));
 }
 
-TEST(DDPackageTest, DDFromMatrixEmpty) {
-    const dd::QubitCount nrQubits = 2;
-    const int size = static_cast<int>(std::pow(2, nrQubits));
 
-    dd::CVec tmp;
-    for (dd::Qubit col = 0; col < static_cast<dd::Qubit>(size); ++col) {
-        if ((col % 2) != 0) {
-            tmp.emplace_back(2.);
-        } else {
-            tmp.emplace_back(3.);
-        }
+TEST(DDPackageTest, DDFromSingleQubitMatrix) {
+    auto row0 = dd::CVec{0, 1};
+    auto row1 = dd::CVec{2, 3};
+    auto inputMatrix = dd::CMat{row0, row1};
 
-    }
-
-    dd::CMat arbitraryMatrix;
-    for (dd::Qubit row = 0; row < static_cast<dd::Qubit>(size); ++row) {
-        arbitraryMatrix.emplace_back(tmp);
-    }
-
+    const dd::QubitCount nrQubits = 1;
     auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
-    auto matDD = dd->makeDDFromMatrix(arbitraryMatrix);
-    dd->printMatrix(matDD);
+    auto matDD = dd->makeDDFromMatrix(inputMatrix);
+
+    auto outputMatrix = dd->getMatrix(matDD);
+
+    for (std::vector<double>::size_type i = 0; i < outputMatrix.size(); i++) {
+        for (std::vector<double>::size_type j = 0; j < outputMatrix.size(); j++) {
+            EXPECT_EQ(inputMatrix[i][j], outputMatrix[i][j]);
+        }
+    }
 }
 
-TEST(DDPackageTest, DDFromMatrixZeros) {
-    auto row0 = dd::CVec{1, 2, 3, 4};
-    auto row1 = dd::CVec{5, 6, 7, 8};
-    auto row2 = dd::CVec{9, 10, 11, 12};
-    auto row3 = dd::CVec{13, 14, 15, 16};
-    auto arbitraryMatrix = dd::CMat{row0, row1, row2, row3};
-
-    /*
-    auto row0 = dd::CVec{0., 0.};
-    auto row1 = dd::CVec{0., 1.};
-    auto arbitraryMatrix = dd::CMat{row0, row1};
-    */
+TEST(DDPackageTest, DDFromTwoQubitMatrix) {
+    auto row0 = dd::CVec{0, 1, 2, 3};
+    auto row1 = dd::CVec{4, 5, 6, 7};
+    auto row2 = dd::CVec{8, 9, 10, 11};
+    auto row3 = dd::CVec{12, 13, 14, 15};
+    auto inputMatrix = dd::CMat{row0, row1, row2, row3};
 
     const dd::QubitCount nrQubits = 2;
     auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
-    auto matDD = dd->makeDDFromMatrix(arbitraryMatrix);
-    // EXPECT_EQ(dd->makeStateFromVector(v), dd::vEdge::one);
+    auto matDD = dd->makeDDFromMatrix(inputMatrix);
+    auto outputMatrix = dd->getMatrix(matDD);
 
-    dd->printMatrix(matDD);
+    for (std::vector<double>::size_type i = 0; i < outputMatrix.size(); i++) {
+        for (std::vector<double>::size_type j = 0; j < outputMatrix.size(); j++) {
+            EXPECT_EQ(inputMatrix[i][j], outputMatrix[i][j]);
+        }
+    }
+}
+
+TEST(DDPackageTest, DDFromThreeQubitMatrix) {
+    auto row0 = dd::CVec{0, 1, 2, 3, 4, 5, 6, 7};
+    auto row1 = dd::CVec{8, 9, 10, 11, 12, 13, 14, 15};
+    auto row2 = dd::CVec{16, 17, 18, 19, 20, 21, 22, 23};
+    auto row3 = dd::CVec{24, 25, 26, 27, 28, 29, 30, 31};
+    auto row4 = dd::CVec{32, 33, 34, 35, 36, 37, 38, 39};
+    auto row5 = dd::CVec{40, 41, 42, 43, 44, 45, 46, 47};
+    auto row6 = dd::CVec{48, 49, 50, 51, 52, 53, 54, 55};
+    auto row7 = dd::CVec{56, 57, 58, 59, 60, 61, 62, 63};
+    auto inputMatrix = dd::CMat{row0, row1, row2, row3, row4, row5, row6, row7};
+
+    const dd::QubitCount nrQubits = 3;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    auto matDD = dd->makeDDFromMatrix(inputMatrix);
+
+    auto outputMatrix = dd->getMatrix(matDD);
+
+    for (std::vector<double>::size_type i = 0; i < outputMatrix.size(); i++) {
+        for (std::vector<double>::size_type j = 0; j < outputMatrix.size(); j++) {
+            EXPECT_EQ(inputMatrix[i][j], outputMatrix[i][j]);
+        }
+    }
+}
+
+TEST(DDPackageTest, DDFromEmptyMatrix) {
+    auto inputMatrix = dd::CMat{};
+
+    const dd::QubitCount nrQubits = 3;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    EXPECT_EQ(dd->makeDDFromMatrix(inputMatrix), dd::mEdge::one);
+}
+
+TEST(DDPackageTest, DDFromNonPowerOfTwoMatrix) {
+    auto row0 = dd::CVec{0, 1, 2};
+    auto row1 = dd::CVec{3, 4, 5};
+    auto row2 = dd::CVec{6, 7, 8};
+    auto inputMatrix = dd::CMat{row0, row1, row2};
+
+    const dd::QubitCount nrQubits = 3;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    EXPECT_ANY_THROW(dd->makeDDFromMatrix(inputMatrix));
+}
+
+TEST(DDPackageTest, DDFromNonSquareMatrix) {
+    auto row0 = dd::CVec{0, 1, 2, 3};
+    auto row1 = dd::CVec{4, 5, 6, 7};
+    auto inputMatrix = dd::CMat{row0, row1};
+
+    const dd::QubitCount nrQubits = 3;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+    EXPECT_ANY_THROW(dd->makeDDFromMatrix(inputMatrix));
+}
+
+TEST(DDPackageTest, DDFromSingleELementMatrix) {
+    auto row0 = dd::CVec{1};
+    auto inputMatrix = dd::CMat{row0};
+
+    const dd::QubitCount nrQubits = 1;
+    auto       dd        = std::make_unique<dd::Package<>>(nrQubits);
+
+    EXPECT_EQ(dd->makeDDFromMatrix(inputMatrix), dd::mEdge::terminal(dd::Complex::one));
 }

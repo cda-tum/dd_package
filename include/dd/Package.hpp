@@ -333,22 +333,17 @@ namespace dd {
             return state;
         }
 
-        // generates decision diagram from arbitrary operator
+        // generates decision diagram from arbitrary 1- and 2-qubit operators
         mEdge makeDDFromMatrix(const CMat& matrix) {
-            // Based on vector function, should be checked due to unfamiliarity with data structures
-            // Should still work despite being a vector of vectors
             if (matrix.empty()) {
                 return mEdge::one;
             }
 
-            // Matrices are square so this should still work as is
             const auto& length = matrix.size();
-
             if ((length & (length - 1)) != 0) {
                 throw std::invalid_argument("Matrix must have a length of a power of two.");
             }
 
-            // Added a check for square matrices
             const auto& width = matrix[0].size();
             if (length != width) {
                 throw std::invalid_argument("Matrix must be square.");
@@ -362,51 +357,35 @@ namespace dd {
 
             const auto level = static_cast<Qubit>(std::log2(length) - 1);
 
-            // Matrix needs to be flattened in a specific way
-            // (a00, a01, | a02, a03,
-            //  a10, a11, | a12, a13,
-            //  ---------------------
-            //  a20, a21, | a22, a23,
-            //  a30, a31, | a32, a33)
-            // -->
-            // (0 Successor, 1 Successor, 2 Successor, 3 Successor)
-            // (a00, a01, a10, a11, | a02, a03, a12, a13, | a20, a21, a30, a31, | a22, a23, a32, a33)
             CVec flattenedMatrix;
-            if (level > 0) {
-                CVec quad0;
-                CVec quad1;
-                CVec quad2;
-                CVec quad3;
 
-                for (int requiredIterations = level; requiredIterations > 0; --requiredIterations){
-                    for (int i = 0; i < length; ++i) {
-                        for (int j = 0; j < length; ++j) {
-                            std::cout << matrix[i][j] << "\n";
-                            if (i < length / 2 && j < length / 2) {
-                                quad0.emplace_back(matrix[i][j]);
-                            } else if (i < length / 2 && j >= length / 2) {
-                                quad1.emplace_back(matrix[i][j]);
-                            } else if (i >= length / 2 && j < length / 2) {
-                                quad2.emplace_back(matrix[i][j]);
-                            } else if (i >= length / 2 && j >= length / 2) {
-                                quad3.emplace_back(matrix[i][j]);
-                            }
-                        }
-                    }
-                    flattenedMatrix.insert(flattenedMatrix.end(), quad0.begin(), quad0.end());
-                    flattenedMatrix.insert(flattenedMatrix.end(), quad1.begin(), quad1.end());
-                    flattenedMatrix.insert(flattenedMatrix.end(), quad2.begin(), quad2.end());
-                    flattenedMatrix.insert(flattenedMatrix.end(), quad3.begin(), quad3.end());
-                }
-            } else {
-                for (int i = 0; i < length; ++i) {
-                    for (int j = 0; j < length; ++j) {
-                        flattenedMatrix.emplace_back(matrix[i][j]);
-                    }
+            std::tuple matrices = quarterMatrix(matrix);
+            auto [quad0, quad1, quad2, quad3] = matrices;
+            std::vector<CMat> allMatrices;
+            allMatrices.push_back(quad0);
+            allMatrices.push_back(quad1);
+            allMatrices.push_back(quad2);
+            allMatrices.push_back(quad3);
+
+            for (Qubit requiredIterations = level; requiredIterations > 0; requiredIterations--){
+                // Iteratively breaks down matrices into quarters until we have single elements
+                // which are in the correct order for a decision diagram
+                auto previousMatrices = allMatrices;
+                allMatrices = {};
+                for (auto previousMatrix : previousMatrices) {
+                    std::tuple subMatrices = quarterMatrix(previousMatrix);
+                    allMatrices.push_back(std::get<0>(subMatrices));
+                    allMatrices.push_back(std::get<1>(subMatrices));
+                    allMatrices.push_back(std::get<2>(subMatrices));
+                    allMatrices.push_back(std::get<3>(subMatrices));
                 }
             }
 
-            auto       matrixDD = makeDDFromMatrix2(flattenedMatrix.begin(), flattenedMatrix.end(), level);
+            for (auto singleElementMatrix : allMatrices) {
+                flattenedMatrix.emplace_back(singleElementMatrix[0][0]);
+            }
+
+            auto       matrixDD = makeDDFromMatrix(flattenedMatrix.begin(), flattenedMatrix.end(), level);
 
             if (matrixDD.w != Complex::zero) {
                   cn.returnToCache(matrixDD.w);
@@ -680,15 +659,37 @@ namespace dd {
             return makeDDNode<vNode>(level, {zeroSuccessor, oneSuccessor}, true);
         }
 
-        mEdge makeDDFromMatrix2(const CVec::const_iterator& begin,
+        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
+            const auto length = matrix.size();
+            const auto half = length / 2;
+
+            CMat quad0 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
+            CMat quad1 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
+            CMat quad2 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
+            CMat quad3 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
+
+            for (std::vector<double>::size_type i = 0; i < length; ++i) {
+                for (std::vector<double>::size_type j = 0; j < length; ++j) {
+                    if (i < half && j < half) {
+                        quad0[i % half][j % half] = matrix[i][j];
+                    } else if (i < half && j >= half) {
+                        quad1[i % half][j % half] = matrix[i][j];
+                    } else if (i >= half && j < half) {
+                        quad2[i % half][j % half] = matrix[i][j];
+                    } else if (i >= half && j >= half) {
+                        quad3[i % half][j % half] = matrix[i][j];
+                    }
+                }
+            }
+
+            return std::tuple{quad0, quad1, quad2, quad3};
+        }
+
+        mEdge makeDDFromMatrix(const CVec::const_iterator& begin,
                                 const CVec::const_iterator& end,
                                 const Qubit                 level) {
-            std::cout << "Level:" << static_cast<int>(level) << '\n';
 
             if (level == 0) {
-                // assert(size == 2);
-                // WIP
-
                 const auto& zeroWeight    = cn.getCached(begin->real(), begin->imag());
                 auto element = std::next(begin);
                 const auto& oneWeight     = cn.getCached(element->real(), element->imag());
@@ -705,27 +706,11 @@ namespace dd {
                 return makeDDNode<mNode>(0, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
             }
 
-            /*
-            const auto half          = std::distance(topRowBegin, topRowEnd) / 2;
-            const auto zeroSuccessor = makeDDFromMatrix2(topRowBegin, topRowBegin + half,
-                                                          bottomRowBegin, bottomRowBegin + half,
-                                                           level - 1);
-            const auto oneSuccessor  = makeDDFromMatrix2(topRowBegin + half, topRowEnd,
-                                                          bottomRowBegin + half, bottomRowEnd,
-                                                           level - 1);
-            const auto twoSuccessor = makeDDFromMatrix2(topRowBegin, topRowBegin + half,
-                                                          bottomRowBegin + half, bottomRowEnd,
-                                                           level - 1);
-            const auto threeSuccessor = makeDDFromMatrix2(topRowBegin + half, topRowEnd,
-                                                          bottomRowBegin + half, bottomRowEnd,
-                                                          level - 1);
-            */
-            // const auto half          = length / 2;
             const auto fourth = std::distance(begin, end) / 4;
-            const auto zeroSuccessor = makeDDFromMatrix2(begin, begin + fourth, level - 1);
-            const auto oneSuccessor  = makeDDFromMatrix2(begin + fourth, begin + 2*fourth, level - 1);
-            const auto twoSuccessor = makeDDFromMatrix2(begin + 2*fourth, begin + 3*fourth, level - 1);
-            const auto threeSuccessor = makeDDFromMatrix2(begin + 3*fourth, end, level-1);
+            const auto zeroSuccessor = makeDDFromMatrix(begin, begin + fourth, level - 1);
+            const auto oneSuccessor  = makeDDFromMatrix(begin + fourth, begin + 2*fourth, level - 1);
+            const auto twoSuccessor = makeDDFromMatrix(begin + 2*fourth, begin + 3*fourth, level - 1);
+            const auto threeSuccessor = makeDDFromMatrix(begin + 3*fourth, end, level-1);
 
             return makeDDNode<mNode>(level, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
         }
