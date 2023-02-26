@@ -333,7 +333,7 @@ namespace dd {
             return state;
         }
 
-        // generates decision diagram from arbitrary 1- and 2-qubit operators
+        // generates decision diagram from arbitrary operators
         mEdge makeDDFromMatrix(const CMat& matrix) {
             if (matrix.empty()) {
                 return mEdge::one;
@@ -659,7 +659,7 @@ namespace dd {
             return makeDDNode<vNode>(level, {zeroSuccessor, oneSuccessor}, true);
         }
 
-        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
+        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix, const std::vector<double>::size_type d = 2) {
             const auto length = matrix.size();
             const auto half   = length / 2;
 
@@ -668,7 +668,7 @@ namespace dd {
             CMat quad2 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
             CMat quad3 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
 
-            if (length > 1) {
+            if (length > d) {
                 for (std::vector<double>::size_type i = 0; i < length; ++i) {
                     for (std::vector<double>::size_type j = 0; j < length; ++j) {
                         if (i < half && j < half) {
