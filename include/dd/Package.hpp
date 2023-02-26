@@ -359,7 +359,7 @@ namespace dd {
 
             CVec flattenedMatrix;
 
-            std::tuple matrices = quarterMatrix(matrix);
+            std::tuple matrices               = quarterMatrix(matrix);
             auto [quad0, quad1, quad2, quad3] = matrices;
             std::vector<CMat> allMatrices;
             allMatrices.push_back(quad0);
@@ -367,12 +367,12 @@ namespace dd {
             allMatrices.push_back(quad2);
             allMatrices.push_back(quad3);
 
-            for (Qubit requiredIterations = level; requiredIterations > 0; requiredIterations--){
+            for (Qubit requiredIterations = level; requiredIterations > 0; requiredIterations--) {
                 // Iteratively breaks down matrices into quarters until we have single elements
                 // which are in the correct order for a decision diagram
                 auto previousMatrices = allMatrices;
-                allMatrices = {};
-                for (auto previousMatrix : previousMatrices) {
+                allMatrices           = {};
+                for (auto previousMatrix: previousMatrices) {
                     std::tuple subMatrices = quarterMatrix(previousMatrix);
                     allMatrices.push_back(std::get<0>(subMatrices));
                     allMatrices.push_back(std::get<1>(subMatrices));
@@ -381,15 +381,15 @@ namespace dd {
                 }
             }
 
-            for (auto singleElementMatrix : allMatrices) {
+            for (auto singleElementMatrix: allMatrices) {
                 flattenedMatrix.emplace_back(singleElementMatrix[0][0]);
             }
 
-            auto       matrixDD = makeDDFromMatrix(flattenedMatrix.begin(), flattenedMatrix.end(), level);
+            auto matrixDD = makeDDFromMatrix(flattenedMatrix.begin(), flattenedMatrix.end(), level);
 
             if (matrixDD.w != Complex::zero) {
-                  cn.returnToCache(matrixDD.w);
-                  matrixDD.w = cn.lookup(matrixDD.w);
+                cn.returnToCache(matrixDD.w);
+                matrixDD.w = cn.lookup(matrixDD.w);
             }
 
             [[maybe_unused]] const auto after = cn.cacheCount();
@@ -661,7 +661,7 @@ namespace dd {
 
         std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
             const auto length = matrix.size();
-            const auto half = length / 2;
+            const auto half   = length / 2;
 
             CMat quad0 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
             CMat quad1 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
@@ -693,31 +693,30 @@ namespace dd {
         }
 
         mEdge makeDDFromMatrix(const CVec::const_iterator& begin,
-                                const CVec::const_iterator& end,
-                                const Qubit                 level) {
-
+                               const CVec::const_iterator& end,
+                               const Qubit                 level) {
             if (level == 0) {
-                const auto& zeroWeight    = cn.getCached(begin->real(), begin->imag());
-                auto element = std::next(begin);
-                const auto& oneWeight     = cn.getCached(element->real(), element->imag());
-                element = std::next(element);
-                const auto& twoWeight    = cn.getCached(element->real(), element->imag());
-                element = std::next(element);
-                const auto& threeWeight     = cn.getCached(element->real(), element->imag());
+                const auto& zeroWeight  = cn.getCached(begin->real(), begin->imag());
+                auto        element     = std::next(begin);
+                const auto& oneWeight   = cn.getCached(element->real(), element->imag());
+                element                 = std::next(element);
+                const auto& twoWeight   = cn.getCached(element->real(), element->imag());
+                element                 = std::next(element);
+                const auto& threeWeight = cn.getCached(element->real(), element->imag());
 
-                const auto  zeroSuccessor = mEdge{mNode::terminal, zeroWeight};
-                const auto  oneSuccessor  = mEdge{mNode::terminal, oneWeight};
-                const auto  twoSuccessor = mEdge{mNode::terminal, twoWeight};
-                const auto  threeSuccessor  = mEdge{mNode::terminal, threeWeight};
+                const auto zeroSuccessor  = mEdge{mNode::terminal, zeroWeight};
+                const auto oneSuccessor   = mEdge{mNode::terminal, oneWeight};
+                const auto twoSuccessor   = mEdge{mNode::terminal, twoWeight};
+                const auto threeSuccessor = mEdge{mNode::terminal, threeWeight};
 
                 return makeDDNode<mNode>(0, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
             }
 
-            const auto fourth = std::distance(begin, end) / 4;
-            const auto zeroSuccessor = makeDDFromMatrix(begin, begin + fourth, level - 1);
-            const auto oneSuccessor  = makeDDFromMatrix(begin + fourth, begin + 2*fourth, level - 1);
-            const auto twoSuccessor = makeDDFromMatrix(begin + 2*fourth, begin + 3*fourth, level - 1);
-            const auto threeSuccessor = makeDDFromMatrix(begin + 3*fourth, end, level-1);
+            const auto fourth         = std::distance(begin, end) / 4;
+            const auto zeroSuccessor  = makeDDFromMatrix(begin, begin + fourth, level - 1);
+            const auto oneSuccessor   = makeDDFromMatrix(begin + fourth, begin + 2 * fourth, level - 1);
+            const auto twoSuccessor   = makeDDFromMatrix(begin + 2 * fourth, begin + 3 * fourth, level - 1);
+            const auto threeSuccessor = makeDDFromMatrix(begin + 3 * fourth, end, level - 1);
 
             return makeDDNode<mNode>(level, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
         }
