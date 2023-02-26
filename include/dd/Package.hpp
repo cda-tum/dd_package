@@ -668,18 +668,25 @@ namespace dd {
             CMat quad2 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
             CMat quad3 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
 
-            for (std::vector<double>::size_type i = 0; i < length; ++i) {
-                for (std::vector<double>::size_type j = 0; j < length; ++j) {
-                    if (i < half && j < half) {
-                        quad0[i % half][j % half] = matrix[i][j];
-                    } else if (i < half && j >= half) {
-                        quad1[i % half][j % half] = matrix[i][j];
-                    } else if (i >= half && j < half) {
-                        quad2[i % half][j % half] = matrix[i][j];
-                    } else if (i >= half && j >= half) {
-                        quad3[i % half][j % half] = matrix[i][j];
+            if (length > 1) {
+                for (std::vector<double>::size_type i = 0; i < length; ++i) {
+                    for (std::vector<double>::size_type j = 0; j < length; ++j) {
+                        if (i < half && j < half) {
+                            quad0[i % half][j % half] = matrix[i][j];
+                        } else if (i < half && j >= half) {
+                            quad1[i % half][j % half] = matrix[i][j];
+                        } else if (i >= half && j < half) {
+                            quad2[i % half][j % half] = matrix[i][j];
+                        } else if (i >= half && j >= half) {
+                            quad3[i % half][j % half] = matrix[i][j];
+                        }
                     }
                 }
+            } else {
+                quad0[0][0] = matrix[0][0];
+                quad1[0][0] = matrix[0][1];
+                quad2[0][0] = matrix[1][0];
+                quad3[0][0] = matrix[1][1];
             }
 
             return std::tuple{quad0, quad1, quad2, quad3};
