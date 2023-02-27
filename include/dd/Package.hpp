@@ -334,11 +334,9 @@ namespace dd {
         }
 
         /**
-            Convert a matrix to a decision diagram.
-            This function converts a given matrix to a DD by iteratively breaking down the matrix
-            into quarters until we have single elements that are in the correct order for a decision diagram.
-            @param matrix A complex matrix to convert to a decision diagram.
-            @return An mEdge that represents the decision diagram.
+            Converts a given matrix to a decision diagram
+            @param matrix A complex matrix to convert to a DD.
+            @return An mEdge that represents the DD.
             @throws std::invalid_argument If the given matrix is not square or its length is not a power of two.
         **/
         mEdge makeDDFromMatrix(const CMat& matrix) {
@@ -639,11 +637,21 @@ namespace dd {
         }
 
         /**
-        Converts a vectorized matrix into a decision diagram starting from the top qubit level.
-                @param begin an iterator to the beginning of the range of complex numbers representing the matrix.
-                @param end an iterator to the end of the range of complex numbers representing the matrix.
-                @param level the qubit level at which to start building the DD.
-                @return a DD representing the matrix.
+        Constructs a decision diagram (DD) from a complex matrix using a recursive algorithm.
+        @param matrix The complex matrix from which to create the DD.
+        @param level The current level of recursion. Starts at the highest level of the matrix (log base 2 of the matrix size - 1).
+        @param rowStart The starting row of the quadrant being processed.
+        @param rowEnd The ending row of the quadrant being processed.
+        @param colStart The starting column of the quadrant being processed.
+        @param colEnd The ending column of the quadrant being processed.
+        @return An mEdge representing the root node of the created DD.
+        @throw std::invalid_argument If level is negative.
+        @details This function recursively breaks down the matrix into quadrants until each quadrant has only one element.
+        At each level of recursion, four new edges are created, one for each quadrant of the matrix.
+        The four resulting decision diagram edges are used to create a new decision diagram node at the current level,
+        and this node is returned as the result of the current recursive call.
+        At the base case of recursion, the matrix has only one element, which is converted into a terminal node of the decision diagram.
+        @note This function assumes that the matrix size is a power of two.
         **/
         mEdge makeDDFromMatrix(const CMat& matrix, const Qubit level,
                                const std::size_t rowStart, const std::size_t rowEnd,
