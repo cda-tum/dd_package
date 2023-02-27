@@ -333,16 +333,15 @@ namespace dd {
             return state;
         }
 
-        // generates decision diagram from arbitrary operators
-        mEdge makeDDFromMatrix(const CMat& matrix) {
-            /**
+        /**
             Convert a matrix to a decision diagram.
             This function converts a given matrix to a DD by iteratively breaking down the matrix
             into quarters until we have single elements that are in the correct order for a decision diagram.
             @param matrix A complex matrix to convert to a decision diagram.
             @return An mEdge that represents the decision diagram.
             @throws std::invalid_argument If the given matrix is not square or its length is not a power of two.
-            */
+        **/
+        mEdge makeDDFromMatrix(const CMat& matrix) {
 
             if (matrix.empty()) {
                 return mEdge::one;
@@ -668,13 +667,13 @@ namespace dd {
             return makeDDNode<vNode>(level, {zeroSuccessor, oneSuccessor}, true);
         }
 
-        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
-            /**
+        /**
 
-            Splits a given square matrix into four smaller matrices, representing the four quadrants of the original matrix.
-            @param matrix the matrix to be split into quadrants.
-            @return a tuple of four matrices representing the four quadrants of the original matrix.
-            */
+        Splits a given square matrix into four smaller matrices, representing the four quadrants of the original matrix.
+                                                                         @param matrix the matrix to be split into quadrants.
+                                                                         @return a tuple of four matrices representing the four quadrants of the original matrix.
+                                                                         */
+        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
             const auto length = matrix.size();
             const auto half   = length / 2;
 
@@ -700,17 +699,17 @@ namespace dd {
             return std::tuple{quad0, quad1, quad2, quad3};
         }
 
+        /**
+        Converts a vectorized matrix into a decision diagram starting from the top qubit level.
+                @param begin an iterator to the beginning of the range of complex numbers representing the matrix.
+                @param end an iterator to the end of the range of complex numbers representing the matrix.
+                @param level the qubit level at which to start building the DD.
+                @return a DD representing the matrix.
+        **/
         mEdge makeDDFromMatrix(const CVec::const_iterator& begin,
                                const CVec::const_iterator& end,
                                const Qubit                 level) {
-            /**
 
-            Converts a vectorized matrix into a decision diagram starting from the top qubit level.
-             @param begin an iterator to the beginning of the range of complex numbers representing the matrix.
-             @param end an iterator to the end of the range of complex numbers representing the matrix.
-             @param level the qubit level at which to start building the DD.
-             @return a DD representing the matrix.
-            */
             if (level == 0) {
                 const auto& zeroWeight  = cn.getCached(begin->real(), begin->imag());
                 auto        element     = std::next(begin);
@@ -1718,8 +1717,7 @@ namespace dd {
         }
 
     public:
-        fp expectationValue(const mEdge& x, const vEdge& y) {
-            /**
+        /**
             Calculates the expectation value of an operator x with respect to a quantum state y given their corresponding decision diagrams.
             @param x a matrix DD representing the operator
             @param y a vector DD representing the quantum state
@@ -1728,8 +1726,8 @@ namespace dd {
             @note This function calls the multiply() function to apply the operator to the quantum state, then calls innerProduct()
                   to calculate the overlap between the original state and the applied state i.e. <Psi| Psi'> = <Psi| (Op|Psi>).
                   It also calls the garbageCollect() function to free up any unused memory.
-            **/
-
+        **/
+        fp expectationValue(const mEdge& x, const vEdge& y) {
             if (x.p->v != y.p->v) {
                 throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
             }
