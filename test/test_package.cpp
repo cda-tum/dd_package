@@ -1442,8 +1442,8 @@ TEST(DDPackageTest, DDFromSingleQubitMatrix) {
                                       {dd::SQRT2_2, -dd::SQRT2_2}};
 
     const dd::QubitCount nrQubits = 1;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
-    const auto                 matDD    = dd->makeDDFromMatrix(inputMatrix);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           matDD    = dd->makeDDFromMatrix(inputMatrix);
 
     const auto outputMatrix = dd->getMatrix(matDD);
 
@@ -1457,9 +1457,9 @@ TEST(DDPackageTest, DDFromTwoQubitMatrix) {
                                       {0, 0, 1, 0}};
 
     const dd::QubitCount nrQubits     = 2;
-    const auto                 dd           = std::make_unique<dd::Package<>>(nrQubits);
-    const auto                 matDD        = dd->makeDDFromMatrix(inputMatrix);
-    const auto                 outputMatrix = dd->getMatrix(matDD);
+    const auto           dd           = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           matDD        = dd->makeDDFromMatrix(inputMatrix);
+    const auto           outputMatrix = dd->getMatrix(matDD);
 
     EXPECT_EQ(inputMatrix, outputMatrix);
 }
@@ -1475,8 +1475,8 @@ TEST(DDPackageTest, DDFromThreeQubitMatrix) {
                                       {0, 0, 0, 0, 0, 0, 1, 0}};
 
     const dd::QubitCount nrQubits = 3;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
-    const auto                 matDD    = dd->makeDDFromMatrix(inputMatrix);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           matDD    = dd->makeDDFromMatrix(inputMatrix);
 
     const auto outputMatrix = dd->getMatrix(matDD);
 
@@ -1487,7 +1487,7 @@ TEST(DDPackageTest, DDFromEmptyMatrix) {
     const auto inputMatrix = dd::CMat{};
 
     const dd::QubitCount nrQubits = 3;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
     EXPECT_EQ(dd->makeDDFromMatrix(inputMatrix), dd::mEdge::one);
 }
 
@@ -1497,16 +1497,16 @@ TEST(DDPackageTest, DDFromNonPowerOfTwoMatrix) {
                                 {6, 7, 8}};
 
     const dd::QubitCount nrQubits = 3;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
     EXPECT_THROW(dd->makeDDFromMatrix(inputMatrix), std::invalid_argument);
 }
 
 TEST(DDPackageTest, DDFromNonSquareMatrix) {
     const auto inputMatrix = dd::CMat{{0, 1, 2, 3},
-                                {4, 5, 6, 7}};
+                                      {4, 5, 6, 7}};
 
     const dd::QubitCount nrQubits = 3;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
     EXPECT_THROW(dd->makeDDFromMatrix(inputMatrix), std::invalid_argument);
 }
 
@@ -1514,7 +1514,7 @@ TEST(DDPackageTest, DDFromSingleELementMatrix) {
     const auto inputMatrix = dd::CMat{{1}};
 
     const dd::QubitCount nrQubits = 1;
-    const auto                 dd       = std::make_unique<dd::Package<>>(nrQubits);
+    const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
 
     EXPECT_EQ(dd->makeDDFromMatrix(inputMatrix), dd::mEdge::one);
 }

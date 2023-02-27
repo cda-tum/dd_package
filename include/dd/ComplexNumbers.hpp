@@ -235,7 +235,6 @@ namespace dd {
             return c;
         }
 
-
         inline Complex getCached(const ComplexValue& c) {
             return getCached(c.r, c.i);
         }

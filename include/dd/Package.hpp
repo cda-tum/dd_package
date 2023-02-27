@@ -660,13 +660,13 @@ namespace dd {
             const auto colMid = (colStart + colEnd) / 2;
 
             const auto edge0 =
-                    makeDDFromMatrix(matrix, level-1, rowStart, rowMid, colStart, colMid);
+                    makeDDFromMatrix(matrix, level - 1, rowStart, rowMid, colStart, colMid);
             const auto edge1 =
-                    makeDDFromMatrix(matrix, level-1, rowStart, rowMid, colMid, colEnd);
+                    makeDDFromMatrix(matrix, level - 1, rowStart, rowMid, colMid, colEnd);
             const auto edge2 =
-                    makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colStart, colMid);
+                    makeDDFromMatrix(matrix, level - 1, rowMid, rowEnd, colStart, colMid);
             const auto edge3 =
-                    makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colMid, colEnd);
+                    makeDDFromMatrix(matrix, level - 1, rowMid, rowEnd, colMid, colEnd);
 
             return makeDDNode<mNode>(level, {edge0, edge1, edge2, edge3}, true);
         }
