@@ -342,7 +342,6 @@ namespace dd {
             @throws std::invalid_argument If the given matrix is not square or its length is not a power of two.
         **/
         mEdge makeDDFromMatrix(const CMat& matrix) {
-
             if (matrix.empty()) {
                 return mEdge::one;
             }
@@ -364,35 +363,7 @@ namespace dd {
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             const auto level = static_cast<Qubit>(std::log2(length) - 1);
-            /*
-            CVec flattenedMatrix;
 
-            std::tuple matrices               = quarterMatrix(matrix);
-            auto [quad0, quad1, quad2, quad3] = matrices;
-            std::vector<CMat> allMatrices;
-            allMatrices.push_back(quad0);
-            allMatrices.push_back(quad1);
-            allMatrices.push_back(quad2);
-            allMatrices.push_back(quad3);
-
-            for (Qubit requiredIterations = level; requiredIterations > 0; requiredIterations--) {
-                // Iteratively breaks down matrices into quarters until we have single elements
-                // which are in the correct order for a decision diagram
-                auto previousMatrices = allMatrices;
-                allMatrices           = {};
-                for (auto previousMatrix: previousMatrices) {
-                    std::tuple subMatrices = quarterMatrix(previousMatrix);
-                    allMatrices.push_back(std::get<0>(subMatrices));
-                    allMatrices.push_back(std::get<1>(subMatrices));
-                    allMatrices.push_back(std::get<2>(subMatrices));
-                    allMatrices.push_back(std::get<3>(subMatrices));
-                }
-            }
-
-            for (auto singleElementMatrix: allMatrices) {
-                flattenedMatrix.emplace_back(singleElementMatrix[0][0]);
-            }
-            */
             auto matrixDD = makeDDFromMatrix(matrix, level, 0, length, 0, width);
 
             if (matrixDD.w != Complex::zero) {
@@ -668,38 +639,6 @@ namespace dd {
         }
 
         /**
-
-        Splits a given square matrix into four smaller matrices, representing the four quadrants of the original matrix.
-                                                                         @param matrix the matrix to be split into quadrants.
-                                                                         @return a tuple of four matrices representing the four quadrants of the original matrix.
-                                                                         */
-        std::tuple<CMat, CMat, CMat, CMat> quarterMatrix(const CMat& matrix) {
-            const auto length = matrix.size();
-            const auto half   = length / 2;
-
-            CMat quad0 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
-            CMat quad1 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
-            CMat quad2 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
-            CMat quad3 = CMat(static_cast<size_t>(half), CVec(static_cast<size_t>(half), {0.0, 0.0}));
-
-            for (std::vector<double>::size_type i = 0; i < length; ++i) {
-                for (std::vector<double>::size_type j = 0; j < length; ++j) {
-                    if (i < half && j < half) {
-                        quad0[i % half][j % half] = matrix[i][j];
-                    } else if (i < half && j >= half) {
-                        quad1[i % half][j % half] = matrix[i][j];
-                    } else if (i >= half && j < half) {
-                        quad2[i % half][j % half] = matrix[i][j];
-                    } else if (i >= half && j >= half) {
-                        quad3[i % half][j % half] = matrix[i][j];
-                    }
-                }
-            }
-
-            return std::tuple{quad0, quad1, quad2, quad3};
-        }
-
-        /**
         Converts a vectorized matrix into a decision diagram starting from the top qubit level.
                 @param begin an iterator to the beginning of the range of complex numbers representing the matrix.
                 @param end an iterator to the end of the range of complex numbers representing the matrix.
@@ -728,8 +667,6 @@ namespace dd {
                     makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colStart, colMid);
             const auto edge3 =
                     makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colMid, colEnd);
-
-            return makeDDNode<mNode>(level, {edge0, edge1, edge2, edge3}, true);
 
             return makeDDNode<mNode>(level, {edge0, edge1, edge2, edge3}, true);
         }
