@@ -314,7 +314,7 @@ namespace dd {
             }
 
             if (length == 1) {
-                return vEdge::terminal(cn.lookup(stateVector[0].real(), stateVector[0].imag()));
+                return vEdge::terminal(cn.lookup(stateVector[0]));
             }
 
             [[maybe_unused]] const auto before = cn.cacheCount();
@@ -358,7 +358,7 @@ namespace dd {
             }
 
             if (length == 1) {
-                return mEdge::terminal(cn.lookup(matrix[0][0].real(), matrix[0][0].imag()));
+                return mEdge::terminal(cn.lookup(matrix[0][0]));
             }
 
             [[maybe_unused]] const auto before = cn.cacheCount();
