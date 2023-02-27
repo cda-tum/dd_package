@@ -357,7 +357,7 @@ namespace dd {
                 throw std::invalid_argument("Matrix must be square.");
             }
 
-            if (length == 1 and width == 1) {
+            if (length == 1) {
                 return mEdge::terminal(cn.lookup(matrix[0][0].real(), matrix[0][0].imag()));
             }
 
