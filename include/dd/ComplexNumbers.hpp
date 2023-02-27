@@ -150,6 +150,11 @@ namespace dd {
             auto vali = CTEntry::val(c.i);
             return lookup(valr, vali);
         }
+        Complex lookup(const std::complex<double>& c) {
+            auto valr = c.real();
+            auto vali = c.imag();
+            return lookup(valr, vali);
+        }
         Complex lookup(const fp& r, const fp& i) {
             Complex ret{};
 
@@ -181,6 +186,7 @@ namespace dd {
 
             return ret;
         }
+
         inline Complex lookup(const ComplexValue& c) { return lookup(c.r, c.i); }
 
         // reference counting and garbage collection
