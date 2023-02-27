@@ -364,7 +364,7 @@ namespace dd {
             [[maybe_unused]] const auto before = cn.cacheCount();
 
             const auto level = static_cast<Qubit>(std::log2(length) - 1);
-
+            /*
             CVec flattenedMatrix;
 
             std::tuple matrices               = quarterMatrix(matrix);
@@ -392,8 +392,8 @@ namespace dd {
             for (auto singleElementMatrix: allMatrices) {
                 flattenedMatrix.emplace_back(singleElementMatrix[0][0]);
             }
-
-            auto matrixDD = makeDDFromMatrix(flattenedMatrix.begin(), flattenedMatrix.end(), level);
+            */
+            auto matrixDD = makeDDFromMatrix(matrix, level, 0, length, 0, width);
 
             if (matrixDD.w != Complex::zero) {
                 cn.returnToCache(matrixDD.w);
@@ -706,34 +706,32 @@ namespace dd {
                 @param level the qubit level at which to start building the DD.
                 @return a DD representing the matrix.
         **/
-        mEdge makeDDFromMatrix(const CVec::const_iterator& begin,
-                               const CVec::const_iterator& end,
-                               const Qubit                 level) {
-
-            if (level == 0) {
-                const auto& zeroWeight  = cn.getCached(begin->real(), begin->imag());
-                auto        element     = std::next(begin);
-                const auto& oneWeight   = cn.getCached(element->real(), element->imag());
-                element                 = std::next(element);
-                const auto& twoWeight   = cn.getCached(element->real(), element->imag());
-                element                 = std::next(element);
-                const auto& threeWeight = cn.getCached(element->real(), element->imag());
-
-                const auto zeroSuccessor  = mEdge{mNode::terminal, zeroWeight};
-                const auto oneSuccessor   = mEdge{mNode::terminal, oneWeight};
-                const auto twoSuccessor   = mEdge{mNode::terminal, twoWeight};
-                const auto threeSuccessor = mEdge{mNode::terminal, threeWeight};
-
-                return makeDDNode<mNode>(0, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
+        mEdge makeDDFromMatrix(const CMat& matrix, const Qubit level,
+                               const std::size_t rowStart, const std::size_t rowEnd,
+                               const std::size_t colStart, const std::size_t colEnd) {
+            // base case
+            if (level == -1) {
+                assert(rowEnd - rowStart == 1);
+                assert(colEnd - colStart == 1);
+                return {mNode::terminal, cn.getCached(matrix[rowStart][colStart])};
             }
 
-            const auto fourth         = std::distance(begin, end) / 4;
-            const auto zeroSuccessor  = makeDDFromMatrix(begin, begin + fourth, level - 1);
-            const auto oneSuccessor   = makeDDFromMatrix(begin + fourth, begin + 2 * fourth, level - 1);
-            const auto twoSuccessor   = makeDDFromMatrix(begin + 2 * fourth, begin + 3 * fourth, level - 1);
-            const auto threeSuccessor = makeDDFromMatrix(begin + 3 * fourth, end, level - 1);
+            // recursively call the function on all quadrants
+            const auto rowMid = (rowStart + rowEnd) / 2;
+            const auto colMid = (colStart + colEnd) / 2;
 
-            return makeDDNode<mNode>(level, {zeroSuccessor, oneSuccessor, twoSuccessor, threeSuccessor}, true);
+            const auto edge0 =
+                    makeDDFromMatrix(matrix, level-1, rowStart, rowMid, colStart, colMid);
+            const auto edge1 =
+                    makeDDFromMatrix(matrix, level-1, rowStart, rowMid, colMid, colEnd);
+            const auto edge2 =
+                    makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colStart, colMid);
+            const auto edge3 =
+                    makeDDFromMatrix(matrix, level-1, rowMid, rowEnd, colMid, colEnd);
+
+            return makeDDNode<mNode>(level, {edge0, edge1, edge2, edge3}, true);
+
+            return makeDDNode<mNode>(level, {edge0, edge1, edge2, edge3}, true);
         }
 
         ///
