@@ -150,10 +150,8 @@ namespace dd {
             auto vali = CTEntry::val(c.i);
             return lookup(valr, vali);
         }
-        Complex lookup(const std::complex<double>& c) {
-            auto valr = c.real();
-            auto vali = c.imag();
-            return lookup(valr, vali);
+        Complex lookup(const std::complex<fp>& c) {
+            return lookup(c.real(), c.imag());
         }
         Complex lookup(const fp& r, const fp& i) {
             Complex ret{};
@@ -238,7 +236,7 @@ namespace dd {
             return getCached(c.r, c.i);
         }
 
-        inline Complex getCached(const std::complex<double>& c) {
+        inline Complex getCached(const std::complex<fp>& c) {
             return getCached(c.real(), c.imag());
         }
 

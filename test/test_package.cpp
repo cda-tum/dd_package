@@ -1510,7 +1510,7 @@ TEST(DDPackageTest, DDFromNonSquareMatrix) {
     EXPECT_THROW(dd->makeDDFromMatrix(inputMatrix), std::invalid_argument);
 }
 
-TEST(DDPackageTest, DDFromSingleELementMatrix) {
+TEST(DDPackageTest, DDFromSingleElementMatrix) {
     const auto inputMatrix = dd::CMat{{1}};
 
     const dd::QubitCount nrQubits = 1;
