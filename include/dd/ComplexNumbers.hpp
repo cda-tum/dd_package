@@ -186,7 +186,6 @@ namespace dd {
 
             return ret;
         }
-
         inline Complex lookup(const ComplexValue& c) { return lookup(c.r, c.i); }
 
         // reference counting and garbage collection
