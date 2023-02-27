@@ -235,8 +235,13 @@ namespace dd {
             return c;
         }
 
+
         inline Complex getCached(const ComplexValue& c) {
             return getCached(c.r, c.i);
+        }
+
+        inline Complex getCached(const std::complex<double>& c) {
+            return getCached(c.real(), c.imag());
         }
 
         void returnToCache(Complex& c) {
