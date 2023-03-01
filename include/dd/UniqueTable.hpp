@@ -107,7 +107,7 @@ namespace dd {
             if (hashedNode != Edge<Node>::zero) {
                 return hashedNode;
             }
-            e.p->next = tables[static_cast<std::size_t>(v)][key];
+            e.p->next                                = tables[static_cast<std::size_t>(v)][key];
             tables[static_cast<std::size_t>(v)][key] = e.p;
             nodeCount++;
             peakNodeCount = std::max(peakNodeCount, nodeCount);
