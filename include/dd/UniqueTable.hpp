@@ -100,19 +100,20 @@ namespace dd {
                 assert(edge.p->v == v - 1 || edge.isTerminal());
             }
 
-            // Search bucket in table corresponding to hashed value for the given node
+            // search bucket in table corresponding to hashed value for the given node
             const auto hashedNode = searchTable(e, key, keepNode);
-
-            // node was not found -> add it to front of unique table bucket
-            if (hashedNode == Edge<Node>::zero) {
-                e.p->next                                = tables[static_cast<std::size_t>(v)][key];
+            
+            // if node not found -> add it to front of unique table bucket
+            if (hashedNode != Edge<Node>::zero){
+                return hashedNode;
+            } else {
+                e.p->next = tables[static_cast<std::size_t>(v)][key];
                 tables[static_cast<std::size_t>(v)][key] = e.p;
                 nodeCount++;
                 peakNodeCount = std::max(peakNodeCount, nodeCount);
 
                 return e;
             }
-            return hashedNode;
         }
 
         [[nodiscard]] Node* getNode() {
