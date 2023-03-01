@@ -103,10 +103,11 @@ namespace dd {
             // search bucket in table corresponding to hashed value for the given node
             const auto hashedNode = searchTable(e, key, keepNode);
 
-            // if node not found -> add it to front of unique table bucket
             if (hashedNode != Edge<Node>::zero) {
                 return hashedNode;
             }
+
+            // if node not found -> add it to front of unique table bucket
             e.p->next                                = tables[static_cast<std::size_t>(v)][key];
             tables[static_cast<std::size_t>(v)][key] = e.p;
             nodeCount++;
