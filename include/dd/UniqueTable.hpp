@@ -91,7 +91,7 @@ namespace dd {
                 return e;
             }
 
-            lookups++;
+            ++lookups;
             const auto key = hash(e.p);
             const auto v   = e.p->v;
 
@@ -100,17 +100,15 @@ namespace dd {
                 assert(edge.p->v == v - 1 || edge.isTerminal());
             }
 
-            // search bucket in table corresponding to hashed value for the given node
-            const auto hashedNode = searchTable(e, key, keepNode);
-
-            if (hashedNode != Edge<Node>::zero) {
+            // search bucket in table corresponding to hashed value for the given node and return it if found.
+            if (const auto hashedNode = searchTable(e, key, keepNode); hashedNode != Edge<Node>::zero) {
                 return hashedNode;
             }
 
             // if node not found -> add it to front of unique table bucket
             e.p->next                                = tables[static_cast<std::size_t>(v)][key];
             tables[static_cast<std::size_t>(v)][key] = e.p;
-            nodeCount++;
+            ++nodeCount;
             peakNodeCount = std::max(peakNodeCount, nodeCount);
 
             return e;
@@ -390,7 +388,7 @@ namespace dd {
         @param keepNode If true, the node pointed to by e.p will not be put on the available chain.
         @return The Edge<Node> found in the hash table or Edge<Node>::zero if not found.
         **/
-        Edge<Node> searchTable(const Edge<Node>& e, const std::size_t& key, bool keepNode = false) {
+        Edge<Node> searchTable(const Edge<Node>& e, const std::size_t& key, const bool keepNode = false) {
             const auto v = e.p->v;
 
             Node* p = tables[static_cast<std::size_t>(v)][key];
@@ -401,7 +399,7 @@ namespace dd {
                         // put node pointed to by e.p on available chain
                         returnNode(e.p);
                     }
-                    hits++;
+                    ++hits;
 
                     // variables should stay the same
                     assert(p->v == e.p->v);
@@ -413,7 +411,7 @@ namespace dd {
 
                     return {p, e.w};
                 }
-                collisions++;
+                ++collisions;
                 p = p->next;
             }
 
