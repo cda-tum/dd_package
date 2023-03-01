@@ -105,7 +105,7 @@ namespace dd {
 
             // node was not found -> add it to front of unique table bucket
             if (hashedNode == Edge<Node>::zero) {
-                e.p->next = tables[static_cast<std::size_t>(v)][key];
+                e.p->next                                = tables[static_cast<std::size_t>(v)][key];
                 tables[static_cast<std::size_t>(v)][key] = e.p;
                 nodeCount++;
                 peakNodeCount = std::max(peakNodeCount, nodeCount);
@@ -392,7 +392,7 @@ namespace dd {
         Edge<Node> searchTable(const Edge<Node>& e, const std::size_t& key, bool keepNode = false) {
             const auto v = e.p->v;
 
-            Node * p = tables[static_cast<std::size_t>(v)][key];
+            Node* p = tables[static_cast<std::size_t>(v)][key];
             while (p != nullptr) {
                 if (nodesAreEqual(e.p, p)) {
                     // Match found
@@ -406,7 +406,7 @@ namespace dd {
                     assert(p->v == e.p->v);
 
                     // successors of a node shall either have successive variable numbers or be terminals
-                    for ([[maybe_unused]] const auto &edge: e.p->e) {
+                    for ([[maybe_unused]] const auto& edge: e.p->e) {
                         assert(edge.p->v == v - 1 || edge.isTerminal());
                     }
 
