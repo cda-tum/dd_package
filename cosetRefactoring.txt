@@ -1,0 +1,89 @@
+--makeDDNode
+  |--normalize
+     |--normalizeQMDD
+     |--normalizeLIMDD
+        |--G := stab(lowChild);   H := stab(highChild);   PHP := P * H * P
+        |--getHighLabel      ~~~~    find the canonical label for the high edge
+           |--GramSchmidt    ~~~~     O(n^2)
+        |--getIsomorphismPauli(node u, node v) -- maybe cache??
+           |--getCosetIntersectionElementPauli(G, H)    ~~~~    is called 4x
+              |--getCosetIntersectionElementModuloPhase(G, h)
+                 |--GH_Id = concatenateAndAppendIdentityMatrix(G, H)   ~~~~ this object is memoized (computed once and then stored for later use)
+                 |--toColumnEchelonFormModuloPhase(GH_Id);
+                    |--sort(GH_Id)
+                    |--GaussianEliminationModuloPhaseSortedFast(GH_Id);    ~~~~    O(n^3) worst case, O(n) best case
+                    |--prune zero columns(GH_Id)
+              |--intersectGroupsModuloPhase(G, H)                      ~~~~    this object is memoized
+                 |--concat = groupConcat(G, H)
+                 |--getKernelModuloPhase(concat)
+                    |--sort(G_Id)
+                    |--G_Id = appendIdentityMatrixBitset(G) : vec<LimBitset<N, 2N>>
+                    |--GaussianEliminationModuloPhaseSortedFast(G_Id)  ~~~~    O(n^3) worst case, O(n) best case
+  |--e.p->limVector = constructStabilizerGeneratorSetPauli
+     |--intersectGroupsPauli(G, PHP)
+        |--intersectGroupsModuloPhase(G, PHP)
+     |-- (the following function is called 3 times)
+     |--getCosetIntersectionElementPauli(G, H)    ~~~~    is called 3x.     ~~~~    here the memoized objects are used
+
+std::vector<std::vector< LimEntry >>
+LimEntry**
+
+to do for being satisfied with experimental setup
+1. retrieve time with decimal point instead of comma
+2. pull the latest changes from optimize-clifford-gates
+3. make the default setting the one with the all the optimizations
+3.1 verify that it works
+4.1 make .qasm files for random Clifford circuits
+4.2 make .qasm files for random non-Clifford circuits
+5. run the qmdd and LIMDD simulator on the new .qasm benchmarks,
+   to see if we're really faster
+
+put profiling behind preprocessor guards
+
+TODO check out what Clion takes issue with in LimEntry<>::multiplyBy
+1. maybe cache things in the normalize routine?
+    1.1 for each normalize call, print what goes in, what comes out?
+2. faster multiplication by using information about #qubits
+3. can stabilizer group be determined quickly when applying Clifford gates?
+4. (low priority) static std::array<std::array< LimEntry, NUM_QUBITS>, NUM_QUBITS>
+
+refactor:
++FIRST PASS:
++ in constructStabilizerGeneratorSetPauli:
+   construct a GH_Id object, call toColumnEchelonForm on it; pass it to getCosetIntersectionElementPauli2()
++ in getCosetIntersectionElementPauli2():
+   get a GH_Id item in column echelon form, i.e., on which Gaussian elimination has been performed, including pruning zero columns
+   pass this on to getCosetIntersectionElementModuloPhase2()
++ in getCosetIntersectionElementModuloPhase
+   get a GH_Id, use that one
+       - prune zero columns modulo phase
+       - sort
+SECOND PASS:
+- in constructStabilizerGeneratorSetPauli:
+   construct a GH_Id object, call sort(); GaussianElimination(); (but do NOT call prune columns and another sort)
+   pass it on to getCosetIntersectionElementPauli2()
+in getCosetIntersectionElementPauli2:
+   get a second parameter `GH_intersection`, which is the intersection of G and H
+in intersectGroupsModuloPhase2:
+   Get a GH_Id parameter, pass it on to getKernelModuloPhase2
++ in getKernelModuloPhase2:
+   get a GH_Id parameter, on which gaussian elimination has been performed, but not pruneZeroColumns
+   use this instead of making your own
+SEVENTH PASS:
+    compute the intersection only when needed in getCosetIntersectionElementPauli2
+    use a bool& intersectionComputed flag to indicate whether the intersection has been computed
+THIRD PASS:
+in getIsomorphismPauli:
+   construct a GH_Id object, call toColumnEchelonForm on it
+   construct a GH_Id object, call sort(); GaussianElimination(); (but do NOT call prune columns and another sort)
+   pass these objects to getCosetIntersectionElementPauli2()
+FOURTH PASS:
+    Find a better way to construct these objects. Can we do with just one object, instead of two?
+SIXTH PASS:
+    use static allocation to store the intermediate results
+EIGHT PASS:
+    compute a Y-element only when no X and no Z element was found
+FIFTH PASS:
+    (probably not feasible)
+    A problem is that the two GH_Id_GE, GH_Id_CEF objects are constructed twice: once in getIsomorphismPauli, and then later in constructStabilizerGeneratorSetPauli
+    Find a way to store the results, such that we only need to compute these objects once per node

@@ -1,6 +1,151 @@
 ====    TODO
 
+Log 30/12/2022
+I profiled the code. There is a clear bottleneck in the code: the coset intersection routine.
+In order of decreasing time, the time is spent in:
+   - coset intersection (~100%)
+   - construct stabilizers (70%)
+   - group intersect (50%)
+   - gaussian elimination (20%)
+   - recover phase (20%)
+   - gram schmidt (2%)
+The numbers add up to more than 100% because some are a part of the others. The numbers are not entirely accurate, because we use clock().
+It is clear that the coset intersection routine takes a lot of time. Is this because it's slow, or because it's called too often?
+We can discard some hypotheses about why the performance is worse than expected:
+Good news: we get the expected number of calls to MakeDDNode, namely, about 1 per qubit per gate, and this is a constant.
+   For QMDD, this number grows as the size of the circuit grows. This is great, because is means the Clifford-specialized algorithms indeed reduce the number of new nodes.
+   That is what they were intended to do, of course.
+Good news: the number of calls to makeDDNode() is the same as the number of calls to normalizeLIMDD(). This is expected.
+Good news: the size of the QMDD grows exponentially with the number of qubits, as expected.
+
+Log 31/12/2022
+I implemented an optimization and the time got 15% better.
+   I added a guard so that, in in constructStabilizerGeneratorSet, if X and Z stabilizers were found, then we don't look for Y stabilizers
+I implemented version 1.2.1 (an optimization so that gaussian elimination is performed fewer times), the implementation is 20% faster in total
+   The coset intersection routine is now called fewer times. I don't understand why that is.
+Log 01/01/2023
+I implemented version 1.2.2. The implementation is 5% faster than the previous one.
+   The gains are that intersectGroups is called 13% fewer times. (independent of #qubits and #gates)
+Log 02/01/2023
+The number of calls to intersectGroups is not consistent between different runs of the same Clifford circuit. This is unexpected.
+  I don't understand why this is. There seems to be a random component: different runs of a limdd on the same circuit gives different numbers of calls sometimes, and not in a consistent pattern.
+  I tested this by instantiating two limdds, and running the two LIMDDs in parallel on the shorTest circuit; then I added an assertion that the number of calls to groupIntersect must be the same in both DDs.
+  Sometimes this fails after 63 gates, sometimes after 37, or 75, sometimes after 170.
+I implemented version 1.2.5. This version is 4% faster than version 1.2.3, and 40% faster (on average, on circuits up to 33 qubits) than a much earlier version
+Log 03/01/2023
+Today ,I want to implement:
+   - put the memoization data for cosetIntersection in the Package, so that it is computed once in total per node
+      GH_Id_CEF, GintersectH
+   - in constructStabilizerGeneratorSetPauli, check whether rhoSquared==-1, and if so, perform a trick
+   - in constructStabilizerGeneratorSetPauli, reserve two slots in `stabgenset`, to make room for the two (potential) newly found stabilizers
+   - in intersectGroups{Pauli,ModuloPhase}, refactor to avoid the use of std::vector
+
 -- coding, functionality
+
+- find out why optimization 1.2.4 doesn't always reduce the number of calls to intersectGroups
+   + add a flag, lazyIntersectMemoization, which toggles this lazy memoization of intersectGroupsModuloPhaseValue()
+   + make getCosetInterectionElementPauli3, which allows lazy memoization
+   + in tests, run LIMDD both with and without lazy memoization. Assert that the lazy memoization never has more calls than the greedy memoization technique
+- optimize Pauli code
+   + in getCosetIntersectionElementPauli
+      - refactor so that no std::vector is made; instead, keep one (or two?) elements in local stack storage, found in the first loop
+      + refactor so that Gaussian elimination is performed only once; currently, this is done twice: first in getCosetIntersectionElementModuloPhase, and second in intersectGroupsModuloPhase.
+        it seems like some redundant work can be expediated
+         + make a new function, getCosetIntersectionElementPauli2(), which takes as input also a const vec<LimBitset<N, 2N>>& GH_Id, which is a gaussian-eliminated matrix of G and H
+         + same for getCosetIntersectionElementModuloPhase2()
+      + in constructStabilizerGroup, check which calls to getCosetIntersectionElementPauli() use the same data
+      - allocate the data using a static std::array<T, 2*NUM_QUBITS>
+   + in getIsomorphismPauli
+      + refactor the calls to getCosetIntersectionElementPauli so that GH_Id is computed only once
+        this should reduce the calls to gaussian elimination from getCosetIntersectionElementPauli inside getIsomorphismPauli, by a factor of 8, at most
+   + on paper, work out whether a node can have stabilizers that start with X, Y and Z. Oh, of course this can happen, simply if X and Z are stabilizers. But then we don't need to check for Y, right?
+      + in constructStabilizerGeneratorSet, if X and Z stabilizers were found, then don't look for Y stabilizers
+   - put the memoization data for cosetIntersection in the Package, so that it is computed once in total per node
+      GH_Id_CEF, GintersectH
+   - in constructStabilizerGeneratorSetPauli, check whether rhoSquared==-1, and if so, perform a trick
+   - in constructStabilizerGeneratorSetPauli, reserve two slots in `stabgenset`, to make room for the two (potential) newly found stabilizers
+   - in intersectGroups{Pauli,ModuloPhase}, refactor to avoid the use of std::vector
+   - make a new function, getCosetIntersectionElementAndPhase(G, H, a), which finds all lambda such that G intersect lambda aH is non-empty. Is lambda unique?
+      the idea is that we can call this function only once, instead of three times, in constructStabilizerGeneratorSet, and perhaps in getIsomorphismPauli
+      (requires a lot of work)
+- put the profiling code behind smart prepreocessing guards
++ implement function which counts the number of nodes
+    incref for nodes increases the refcount, so that active nodes can be counted
+- fix the bug found by hard circuit_5, _7, _11, _12, _13, _14, _15, _16, _17, _18
+- why is add2() called so infrequently? e.g. in generatedCircuit_9, multiply2() is called 4642 times; add2() is called 4 times. What gives??
++ make or find a set of large Clifford circuits, 3..100 qubits
+- implement general-purpose smart caching
+   + std::vector<Qubit> Package::selectActivePart(matrix_DD)
+      ? sorted ascending
+   + flag in Package whether you want this
+   + generate random circuits with controlled-controlled gates, T-gates
+   + implement Tim's dirty trick
+   - implement the feature: when looking up in computeTable, when getting canonical lim, change all non-active qubits to Identity; then look up
+      - implement conjugateDDWithLim(matrix, LimEntry<>)
+      - delete all Lim operators that the vector says to avoid
+      - guarded by flags
+   - perform getActiveQubits() only once per matrix in multiply2(); pass it as a parameter 'const std::vector<Qubit>& activeQubits = {}'
+   - double-check: in getCliffordCaching, do we get as many cache hits as we expect?
+   + time whether we're any faster anyway
+      + profile: where is most time spent?
+         + multiply, add, gaussian elimination, group intersection, makenode, normalize(), normalizeQMDD(), clifford post-processing
+         + output multiply, add, nodecount to file
+         + #calls to coset intersection, normalize(), normalizeLIMDD()
+      + setup infrastructure so that new changes can be rapidly A/B tested
+         + output times and other statistics to csv file
+      + output the number of nodes in a diagram
+      - histogram: multiply2 / add2 is called most often on nodes of how many qubits?
++ rewrite the caching so that the weight of the edge is Complex::one, instead of y.w
++ refactor applyPhaseGate so that it has two input parameters
+- refactor the apply() subroutines so they take nodes of matrices instead of edges
+- stop multiplying by weight of matrix x in postprocessing
+   - refactor processedCachedEdge() so matrix x is not an input
+- write documentation for normalize() function, especially, what are the expected inputs and outputs wrt are weights in the cache or in the table?
+- implement bool complexCache::isInCache(CTEntry* e)
+- condense code in
+   + apply Hadamard
+   + apply controlled Pauli gate
+   - isPauliGate
+   - is controlled Pauli gate
+   + apply projection
++ statistics on calls to applyClifford gates subroutines
++ refactor isControlledPauliGate to take a Control item, instead of a Qubit item
+   + in isControlledPauliGate
+   + in applyControlledPauliGate
++ negative controls
+   + recognize negative controls
+   + implement negative controls in applyControlledPauli
+      + X
+      + Y
++ refactor tuple<Control, Qubit, pauli_op> to new struct CliffordGate
+  + in isControlledPauliGate
+  + in isHadamardGate
+  + in isPauliGate
++ implement applyPauliGate
+LOW PRIORITY:
+    - recognize general phase gate
+    - recognize controlled-controlled Pauli gates
+    - apply controlled controlled Pauli gates
+
+CHANGELOG AND VERSIONS for locality-aware caching
+1.0: implemented dirty trick suggested by Tim, i.e., get the active qubits of a matrix, and use only those qubits for the LIM when caching
+1.1: skip the redundant search for a Y-stabilizer when already an X-stabilizer and a Z-stabilizer were found
+1.2.1: refactor construct StabilizerGeneratorSet, so that in calls to cosetIntersection, we avoid redundant calls to gaussian elimination
+1.2.2: more redundant calls are avoided. specifically, in constructStabilizerGeneratorSet, the group intersection is computed only once, rather than potentially in every invocation of getCosetIntersectionElementPauli2()
+1.2.3: more redundant calls are avoided. specifically, in constructStabilizerGeneratorSet, if an X or a Z element was found, then we no longer search for a Y-element
+1.2.4: only call intersectGroupsModuloPhase when it's needed, in constructStabilizerGeneratorSet
+1.2.5: refactor getIsomorphismPauli to avoid redundant calls, and use memoization
+1.2.6: slightly reduce number of calls to getCosetIntersectionElementPauli in constructStabilizerGeneratorSet
+1.2.7: the memoization in getIsomorphism, and constructStabilizerGeneratorSet, is now coupled together, cooperating
+1.2.8 (planned): avoid the use of std::vector in getCosetIntersectionPauli2
+   - caution: test this very heavily!!
+1.2.9 (planned): avoid the use of std::vector in intersectGroups
+1.2.10 (planned): use static data structures to store the intermediate computations of constructStabilizerGeneratorSet
+1.3 (planned): allow simultaneous use of Clifford-specialized caching AND locality-aware caching
+1.4 (planned): find the active qubits only once per gate. do this in the multiply() routine, then pass it as a parameter to multiply2(..., const std::vector<Qubit>& activeQubits)
+1.5 (planned): use the Identity flag to skip many computations (requires a bugfix, but no new material)
+   - put this behind a flag guard
+1.6 (planned): process minor optimizations to specialized clifford operations
 
 in makeDDNode, delete the old low and high LIMs of the edge
 

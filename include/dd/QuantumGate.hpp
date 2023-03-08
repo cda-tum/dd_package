@@ -5,6 +5,7 @@
 #include "ComplexValue.hpp"
 #include "Definitions.hpp"
 #include "Control.hpp"
+#include "GateMatrixDefinitions.hpp"
 
 #include <array>
 #include <vector>
@@ -53,6 +54,38 @@ public:
 		return 0;
 	}
 
+	char checkControlledPauliGate() const {
+		// check if controlled pauli where all controls are above the target
+		// for now, only consider cases with single control qubit
+		if (isControlledGate() && controls.size() <= 1) {
+			for (auto it = controls.begin(); it != controls.end(); it++) {
+				if ((int) (*it).qubit < (int) target ) return 0;
+			}
+			if (mat == dd::Xmat) return 'X';
+			if (mat == dd::Zmat) return 'Z';
+			if (mat == dd::Ymat) return 'Y';
+		}
+		return 0;
+	}
+
+    pauli_op isDownwardSingleControlledPauliGate() const {
+        // check if controlled pauli where all controls are above the target
+        // for now, only consider cases with single control qubit
+        if (isControlledGate() && controls.size() <= 1) {
+            for (auto it = controls.begin(); it != controls.end(); it++) {
+                if ((int) (*it).qubit < (int) target ) return (pauli_op)0;
+            }
+            if (mat == dd::Xmat) return pauli_x;
+            if (mat == dd::Zmat) return pauli_y;
+            if (mat == dd::Ymat) return pauli_z;
+        }
+        return (pauli_op)0;
+    }
+
+    bool isUncontrolledHadamardGate() const {
+        return (controls.size() == 0 && mat == dd::Hmat);
+    }
+
 	bool isCliffordGate() const {
 		if (mat == dd::Hmat && !isControlledGate()) return true;
 		if (mat == dd::Smat && !isControlledGate()) return true;
@@ -97,6 +130,73 @@ public:
 
 
 };
+
+enum CliffordGateType_t {
+    cliffNoGate   = 'N',   // indicates that a gate is not a Clifford gate, i.e., "no gate"
+    cliffidentity = 'I',
+    cliffpauli_x  = 'X',
+    cliffpauli_y  = 'Y',
+    cliffpauli_z  = 'Z',
+    cliffPhase    = 'P',
+    cliffPhaseInv = 'Q',
+    cliffHadamard = 'H',
+    cliffProject0 = '0',
+    cliffProject1 = '1'
+};
+
+class CliffordGate {
+public:
+    CliffordGateType_t gateType;
+    Control control;
+    Qubit target;
+
+    CliffordGate(CliffordGateType_t _gateType, Control _control, Qubit _target)
+        : gateType(_gateType), control(_control), target(_target) {
+        //
+    }
+
+    CliffordGate inverse() const {
+        if (gateType == cliffPhase) return CliffordGate(cliffPhaseInv, control, target);
+        if (gateType == cliffPhaseInv) return CliffordGate(cliffPhase, control, target);
+        return *this;
+    }
+
+    GateMatrix getGateMatrix() const {
+        switch(gateType) {
+            case cliffpauli_x:  return Xmat;
+            case cliffpauli_y:  return Ymat;
+            case cliffpauli_z:  return Zmat;
+            case cliffHadamard: return Hmat;
+            default:
+                return Imat;
+        }
+    }
+
+    bool isPauliGate() const {
+        return control.qubit == (Qubit)-1 && (gateType == cliffpauli_x || gateType == cliffpauli_y || gateType == cliffpauli_z);
+    }
+
+    bool isNone() const {
+        return gateType == cliffNoGate;
+    }
+
+    //static CliffordGate cliffordGateNone(CliffordGateType_t::cliffNoGate, Control{(Qubit)-1, Control::Type::pos}, -1);
+    static CliffordGate cliffordGateNone() {
+        return CliffordGate(cliffNoGate, Control{-1, Control::Type::pos}, -1);
+    }
+};
+
+//CliffordGate CliffordGate::cliffordGateNone = CliffordGate(cliffNoGate, Control{-1, Control::Type::pos}, -1);
+
+inline std::ostream& operator<<(std::ostream& out, const CliffordGate& gate) {
+    out << (char)gate.gateType << "[" << (int)gate.target;
+    if (gate.control.qubit != -1) {
+        out << " | " << ( (bool)gate.control.type ? "+" : "-") << (int)gate.control.qubit << "]";
+    } else {
+        out << "]";
+    }
+    return out;
+}
 
 }
 

@@ -6,6 +6,17 @@
 #ifndef DDpackage_DATATYPES_HPP
 #define DDpackage_DATATYPES_HPP
 
+// Set to 'false' to activate debugging
+#ifndef NDEBUG
+#define NDEBUG true
+#endif
+
+// Set to 'true' to activate profiling. This enables
+//   - call counts of various functions
+//   - clock() timing of these functions
+#define ENABLE_PROFILING false
+#include "Profiling.hpp"
+
 #include <complex>
 #include <cstdint>
 #include <type_traits>
@@ -107,7 +118,8 @@ namespace dd {
         pauli_id = 'I',
         pauli_x  = 'X',
         pauli_y  = 'Y',
-        pauli_z  = 'Z'
+        pauli_z  = 'Z',
+        pauli_none = 0
     };
 
     enum phase_t {
@@ -124,7 +136,46 @@ namespace dd {
     	Pauli_group
     };
 
-} // namespace dd
+    enum CachingStrategy {
+        QMDDCachingStrategy = 0,
+        cliffordSpecialCaching = 1,
+        localityAwareCachingDirtyTrick = 2,
+        localityAwareCachingClean = 4,
+        lazyMemoizationGroupIntersect = 8,
+        localityAndCliffordCaching = cliffordSpecialCaching | localityAwareCachingDirtyTrick,
+        smartStabilizerGeneration = 16,
+        localityAwarePropagateReducedLim = 32,
+        skipIdentityGateMultiplication   = 64
+    };
 
+    // Set to 'true' to enable (potentially buggy) bit tricks in the LimEntry<>::multiplyBy() routine
+#define fastLazyMultiplication true
+
+    inline bool usingSpecialCliffordCaching(CachingStrategy strategy) {
+        return (strategy & cliffordSpecialCaching) != 0;
+    }
+
+    inline bool usingLazyMemoizationGroupIntersect(CachingStrategy strategy) {
+        return (strategy & lazyMemoizationGroupIntersect) != 0;
+    }
+
+    inline bool usingSmartStabilizerGeneration(CachingStrategy strategy) {
+        return (strategy & smartStabilizerGeneration) != 0;
+    }
+
+    inline bool usingLocalityAwareCachingDirtyTrick(CachingStrategy strategy) {
+        return (strategy & localityAwareCachingDirtyTrick) != 0;
+    }
+
+    inline bool usingLocalityAwarePropagateReducedLim(CachingStrategy strategy) {
+        return (strategy & localityAwarePropagateReducedLim) != 0;
+    }
+
+    inline bool usingSkipIdentityGate(CachingStrategy strategy) {
+        return (strategy & skipIdentityGateMultiplication) != 0;
+    }
+
+
+} // namespace dd
 
 #endif //DDpackage_DATATYPES_HPP

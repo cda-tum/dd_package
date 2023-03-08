@@ -81,8 +81,14 @@ namespace dd {
             [[nodiscard]] static constexpr bool approximatelyEquals(const Entry* left, const Entry* right) {
                 return left == right || approximatelyEquals(val(left), val(right));
             }
+            [[nodiscard]] static constexpr bool veryApproximatelyEquals(const Entry* left, const Entry* right) {
+                return left == right || veryApproximatelyEquals(val(left), val(right));
+            }
             [[nodiscard]] static constexpr bool approximatelyEquals(const fp left, const fp right) {
                 return left == right || std::abs(left - right) <= TOLERANCE;
+            }
+            [[nodiscard]] static constexpr bool veryApproximatelyEquals(const fp left, const fp right) {
+                return left == right || std::abs(left - right) <= 8*TOLERANCE;
             }
 
             [[nodiscard]] static constexpr bool approximatelyZero(const Entry* e) {
@@ -483,6 +489,21 @@ namespace dd {
             }
             os << std::endl;
             return os;
+        }
+
+        bool oneIsIntact() const {
+            return one.value == 1.;
+        }
+
+        void checkConstantsIntegrity() const {
+            if (one.value != 1.) {
+                std::cout << "[ERROR] one has value " << one.value << '\n';
+                throw std::runtime_error("[complexTable] ERROR one does not have value 1.");
+            }
+            if (zero.value != 0.) {
+                std::cout << "[ERROR] zero has value " << zero.value << '\n';
+                throw std::runtime_error("[complexTable] ERROR zero does not have value 1.");
+            }
         }
 
     private:

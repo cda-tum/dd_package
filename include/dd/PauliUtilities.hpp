@@ -61,6 +61,24 @@ namespace dd {
         return true;
     }
 
+    inline void printStabilizerGroup(const StabilizerGroupValue& G, Qubit nQubits = 3) {
+        Log::log << "Stabilizer group (" << G.size() << " elements) = {";
+        for (unsigned int i = 0; i < G.size(); i++) {
+            Log::log << G[i].to_string(nQubits);
+            if (i + 1 < G.size()) Log::log << ", ";
+        }
+        Log::log << "}";
+    }
+
+    inline _Log& outputStabilizerGroup(const StabilizerGroupValue& G, Qubit nQubits = 3) {
+        Log::log << "Stabilizer group (" << G.size() << " elements) = {";
+        for (unsigned int i = 0; i < G.size(); i++) {
+            Log::log << G[i].to_string(nQubits);
+            if (i + 1 < G.size()) Log::log << ", ";
+        }
+        return Log::log << "}";
+    }
+
     inline void printStabilizerGroup(const StabilizerGroup& G) {
         Log::log << "Stabilizer group (" << G.size() << " elements)\n";
         for (unsigned int i = 0; i < G.size(); i++) {
@@ -74,6 +92,15 @@ namespace dd {
             Log::log << LimEntry<>::to_string(G[i], nQubits) << ", ";
         }
         Log::log << "}";
+    }
+
+    inline _Log& outputStabilizerGroup(const StabilizerGroup& G, unsigned int nQubits) {
+        Log::log << "Stabilizer group (" << G.size() << " elements) = {";
+        for (unsigned int i = 0; i < G.size(); i++) {
+            Log::log << LimEntry<>::to_string(G[i], nQubits);
+            if (i + 1 < G.size()) Log::log << ", ";
+        }
+        return Log::log << "}";
     }
 
     template<std::size_t NUM_QUBITS>
@@ -102,6 +129,16 @@ namespace dd {
         ss << "Group (" << G.size() << " elements) = {";
         for (unsigned int i = 0; i < G.size(); i++) {
             ss << LimEntry<>::to_string(G[i], nQubits) << ", ";
+        }
+        ss << "}";
+        return ss.str();
+    }
+
+    inline std::string groupToString(const StabilizerGroupValue& G, Qubit nQubits) {
+        std::stringstream ss;
+        ss << "Group (" << G.size() << " elements) = {";
+        for (unsigned int i = 0; i < G.size(); i++) {
+            ss << LimEntry<>::to_string(&G[i], nQubits) << ", ";
         }
         ss << "}";
         return ss.str();

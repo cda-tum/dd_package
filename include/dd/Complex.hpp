@@ -37,6 +37,10 @@ namespace dd {
             return CTEntry::approximatelyEquals(r, c.r) && CTEntry::approximatelyEquals(i, c.i);
         };
 
+        [[nodiscard]] inline bool veryApproximatelyEquals(const Complex& c) const {
+            return CTEntry::veryApproximatelyEquals(r, c.r) && CTEntry::veryApproximatelyEquals(i, c.i);
+        }
+
         [[nodiscard]] inline bool exactlyZero() const {
             return CTEntry::exactlyZero(r) && CTEntry::exactlyZero(i);
         };
@@ -99,6 +103,27 @@ namespace dd {
         	if (approximatelyEquals(Complex::complex_i)) return phase_t::phase_i;
         	if (approximatelyEquals(Complex::minus_i))   return phase_t::phase_minus_i;
         	return phase_t::no_phase;
+        }
+
+        phase_t toPhaseApproximately() const {
+            if (veryApproximatelyEquals(Complex::one))       return phase_t::phase_one;
+            if (veryApproximatelyEquals(Complex::minus_one)) return phase_t::phase_minus_one;
+            if (veryApproximatelyEquals(Complex::complex_i)) return phase_t::phase_i;
+            if (veryApproximatelyEquals(Complex::minus_i))   return phase_t::phase_minus_i;
+            return phase_t::no_phase;
+        }
+
+        // Returns a phase_t object p such that dist(this, p) is minimal among p in {+1, -1, i, -i}
+        phase_t findClosestPhase() const {
+            fp absReal = std::abs(CTEntry::val(r));
+            fp absImag = std::abs(CTEntry::val(i));
+            if (absReal > absImag) {
+                if (CTEntry::val(r) >= 0) return phase_t::phase_one;
+                else                         return phase_t::phase_minus_one;
+            } else {
+                if (CTEntry::val(i) >= 0) return phase_t::phase_i;
+                else                         return phase_t::phase_minus_i;
+            }
         }
 
         inline bool operator==(const Complex& other) const {
