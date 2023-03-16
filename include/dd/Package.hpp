@@ -1911,13 +1911,13 @@ namespace dd {
             }
 
             auto               yPrime = multiply(x, y);
-            const ComplexValue ip     = innerProduct(y, yPrime);
+            const ComplexValue expValue     = innerProduct(y, yPrime);
 
-            assert(CTEntry::approximatelyZero(ip.i));
+            assert(CTEntry::approximatelyZero(expValue.i));
 
             garbageCollect();
 
-            return ip.r;
+            return expValue.r;
         }
 
         ///
