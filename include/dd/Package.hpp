@@ -1850,9 +1850,9 @@ namespace dd {
             }
 
             auto xCopy = x;
-            xCopy.w    = Complex::zero; // Set to zero to generate more lookup hits
+            xCopy.w    = Complex::one; // Set to one to generate more lookup hits
             auto yCopy = y;
-            yCopy.w    = Complex::zero;
+            yCopy.w    = Complex::one;
 
             auto r = vectorInnerProduct.lookup(xCopy, yCopy);
             if (r.p != nullptr) {
