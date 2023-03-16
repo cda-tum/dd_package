@@ -1782,8 +1782,8 @@ namespace dd {
                 w = y.p->v;
             }
             auto xCopy = x;
-            xCopy.w = ComplexNumbers::conj(x.w); // Overall normalization factor needs to be conjugated
-                                                 // before input into recursive private function
+            xCopy.w    = ComplexNumbers::conj(x.w); // Overall normalization factor needs to be conjugated
+                                                    // before input into recursive private function
             const ComplexValue ip = innerProduct(x, y, static_cast<Qubit>(w + 1));
 
             [[maybe_unused]] const auto after = cn.cacheCount();
@@ -1869,14 +1869,14 @@ namespace dd {
             for (auto i = 0U; i < RADIX; i++) {
                 vEdge e1{};
                 if (!x.isTerminal() && x.p->v == w) {
-                    e1 = x.p->e[i];
+                    e1   = x.p->e[i];
                     e1.w = ComplexNumbers::conj(e1.w);
                 } else {
                     e1 = xCopy;
                 }
                 vEdge e2{};
                 if (!y.isTerminal() && y.p->v == w) {
-                    e2   = y.p->e[i];
+                    e2 = y.p->e[i];
                 } else {
                     e2 = yCopy;
                 }
@@ -1910,8 +1910,8 @@ namespace dd {
                 throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
             }
 
-            auto               yPrime = multiply(x, y);
-            const ComplexValue expValue     = innerProduct(y, yPrime);
+            auto               yPrime   = multiply(x, y);
+            const ComplexValue expValue = innerProduct(y, yPrime);
 
             assert(CTEntry::approximatelyZero(expValue.i));
 
