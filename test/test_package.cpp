@@ -1799,8 +1799,8 @@ TEST(DDPackageTest, InnerProductTopNodeConjugation) {
 
     const auto evolvedState         = dd->multiply(rxx, zeroState);
 
-    // Actual evolution results in approximately -0.4161468365471423
+    // Actual evolution results in approximately -0.416
     // If the top node in the inner product is not conjugated properly,
-    // it will result in +0.4161468365471423.
-    EXPECT_NEAR(dd->expectationValue(op, evolvedState), -0.4161468365471423, 0.001);
+    // it will result in +0.416.
+    EXPECT_NEAR(dd->expectationValue(op, evolvedState), -0.416, 0.001);
 }
