@@ -505,7 +505,7 @@ namespace dd {
                         if (it != controls.end() && it->qubit == z) {
                             if (it->type == Control::Type::neg) { // neg. control
                                 em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero});
-                            } else {                              // pos. control
+                            } else { // pos. control
                                 em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
                             }
                         } else { // not connected
@@ -527,7 +527,7 @@ namespace dd {
                 if (it != controls.end() && it->qubit == q) {
                     if (it->type == Control::Type::neg) { // neg. control
                         e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1))});
-                    } else {                              // pos. control
+                    } else { // pos. control
                         e = makeDDNode(q, std::array{makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1)), mEdge::zero, mEdge::zero, e});
                     }
                     ++it;
@@ -1156,6 +1156,43 @@ namespace dd {
                 garbageCollect();
             }
 
+            return std::string{result.rbegin(), result.rend()};
+        }
+
+        ///
+        /// Measurements from state decision diagrams
+        ///
+        std::string measureAll(dEdge& rootEdge, std::mt19937_64& mt, fp epsilon = 0.001) {
+            if ((CTEntry::val(rootEdge.w.r) - 1.0) > epsilon) {
+                if (rootEdge.w.approximatelyZero()) {
+                    throw std::runtime_error("Numerical instabilities led to a 0-vector! Abort simulation!");
+                }
+                std::cerr << "WARNING in MAll: numerical instability occurred during simulation: |alpha|^2 + |beta|^2 = "
+                          << ComplexNumbers::mag2(rootEdge.w) << ", but should be 1!\n";
+            }
+
+            dEdge      cur            = rootEdge;
+            const auto numberOfQubits = static_cast<QubitCount>(rootEdge.p->v + 1);
+
+            std::string result(numberOfQubits, '0');
+
+            std::uniform_real_distribution<fp> dist(0.0, 1.0L);
+
+            for (Qubit i = rootEdge.p->v; i >= 0; --i) {
+                fp       p0  = CTEntry::val(cur.p->e.at(0).w.r);
+                const fp p1  = CTEntry::val(cur.p->e.at(3).w.r);
+                const fp tmp = p0 + p1;
+
+                p0 /= tmp;
+
+                const fp threshold = dist(mt);
+                if (threshold < p0) {
+                    cur = cur.p->e.at(0);
+                } else {
+                    result[static_cast<std::size_t>(cur.p->v)] = '1';
+                    cur                                        = cur.p->e.at(3);
+                }
+            }
             return std::string{result.rbegin(), result.rend()};
         }
 
