@@ -1804,3 +1804,28 @@ TEST(DDPackageTest, InnerProductTopNodeConjugation) {
     // it will result in +0.416.
     EXPECT_NEAR(dd->expectationValue(op, evolvedState), -0.416, 0.001);
 }
+
+TEST(DDPackageTest, IdentityRemoval) {
+    auto dd = std::make_unique<dd::Package<>>(3);
+
+    auto hGate     = dd->makeGateDD(dd::Xmat, 3, 0);
+    // auto cxGate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
+    auto zeroState = dd->makeZeroState(3);
+    // dd->printVector(zeroState);
+    std::cout << "Nodes: " << dd->size(hGate) << "\n";
+    // dd->printMatrix(hGate);
+    auto newState = dd->multiply(hGate, zeroState);
+    // newState = dd->multiply(hGate, newState);
+    // newState = dd->multiply(hGate, newState);
+
+    dd->printVector(newState);
+
+    // repeated calculation is practically for free
+   // auto bellState2 = dd->multiply(dd->multiply(cxGate, hGate), zeroState);
+   // EXPECT_EQ(bellState, bellState2);
+//
+   // ASSERT_EQ(dd->getValueByPath(bellState, "00"), (dd::ComplexValue{dd::SQRT2_2, 0}));
+   // ASSERT_EQ(dd->getValueByPath(bellState, "01"), (dd::ComplexValue{0, 0}));
+   // ASSERT_EQ(dd->getValueByPath(bellState, "10"), (dd::ComplexValue{0, 0}));
+   // ASSERT_EQ(dd->getValueByPath(bellState, "11"), (dd::ComplexValue{dd::SQRT2_2, 0}));
+}

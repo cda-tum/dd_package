@@ -486,7 +486,6 @@ namespace dd {
                                          " qubits. Please allocate a larger package instance."};
             }
             std::array<mEdge, NEDGE> em{};
-            auto                     it = controls.begin();
             for (auto i = 0U; i < NEDGE; ++i) {
                 // NOLINTNEXTLINE(clang-diagnostic-float-equal) it has to be really zero
                 if (mat[i].r == 0 && mat[i].i == 0) {
@@ -496,45 +495,9 @@ namespace dd {
                 }
             }
 
-            //process lines below target
-            auto z = static_cast<Qubit>(start);
-            for (; z < target; z++) {
-                for (auto i1 = 0U; i1 < RADIX; i1++) {
-                    for (auto i2 = 0U; i2 < RADIX; i2++) {
-                        auto i = i1 * RADIX + i2;
-                        if (it != controls.end() && it->qubit == z) {
-                            if (it->type == Control::Type::neg) { // neg. control
-                                em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero});
-                            } else {                              // pos. control
-                                em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
-                            }
-                        } else { // not connected
-                            em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, em[i]});
-                        }
-                    }
-                }
-                if (it != controls.end() && it->qubit == z) {
-                    ++it;
-                }
-            }
-
-            // target line
+            auto z = target;
             auto e = makeDDNode(z, em);
 
-            //process lines above target
-            for (; z < static_cast<Qubit>(n - 1 + start); z++) {
-                auto q = static_cast<Qubit>(z + 1);
-                if (it != controls.end() && it->qubit == q) {
-                    if (it->type == Control::Type::neg) { // neg. control
-                        e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1))});
-                    } else {                              // pos. control
-                        e = makeDDNode(q, std::array{makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1)), mEdge::zero, mEdge::zero, e});
-                    }
-                    ++it;
-                } else { // not connected
-                    e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, e});
-                }
-            }
             return e;
         }
 
@@ -1678,7 +1641,11 @@ namespace dd {
                         if (!x.isTerminal() && x.p->v == var) {
                             e1 = x.p->e[rows * i + k];
                         } else {
+                            // Effectively inserts an identity node
                             e1 = xCopy;
+                            if (idx == 1 or idx == 2) {
+                                e1.w = Complex::zero;
+                            }
                         }
 
                         REdge e2{};
@@ -1906,9 +1873,9 @@ namespace dd {
                   It also calls the garbageCollect() function to free up any unused memory.
         **/
         fp expectationValue(const mEdge& x, const vEdge& y) {
-            if (x.p->v != y.p->v) {
-                throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
-            }
+           // if (x.p->v != y.p->v) {
+            //    throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
+            //}
 
             auto               yPrime   = multiply(x, y);
             const ComplexValue expValue = innerProduct(y, yPrime);
