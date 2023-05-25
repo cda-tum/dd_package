@@ -1956,10 +1956,6 @@ namespace dd {
                   It also calls the garbageCollect() function to free up any unused memory.
         **/
         fp expectationValue(const mEdge& x, const vEdge& y) {
-           // if (x.p->v != y.p->v) {
-            //    throw std::invalid_argument("Observable and state must act on the same number of qubits to compute the expectation value.");
-            //}
-
             auto               yPrime   = multiply(x, y);
             const ComplexValue expValue = innerProduct(y, yPrime);
 
