@@ -1805,27 +1805,38 @@ TEST(DDPackageTest, InnerProductTopNodeConjugation) {
     EXPECT_NEAR(dd->expectationValue(op, evolvedState), -0.416, 0.001);
 }
 
-TEST(DDPackageTest, IdentityRemoval) {
-    auto dd = std::make_unique<dd::Package<>>(3);
+TEST(DDPackageTest, OneQubitGateIdentityRemoval) {
+    auto dd = std::make_unique<dd::Package<>>(2);
+    auto xGate     = dd->makeGateDD(dd::Xmat, 2, 0);
+    auto zeroState = dd->makeZeroState(2);
+    EXPECT_EQ(dd->size(xGate), 2);
 
-    auto hGate     = dd->makeGateDD(dd::Xmat, 3, 0);
-    // auto cxGate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
-    auto zeroState = dd->makeZeroState(3);
-    // dd->printVector(zeroState);
-    std::cout << "Nodes: " << dd->size(hGate) << "\n";
-    // dd->printMatrix(hGate);
-    auto newState = dd->multiply(hGate, zeroState);
-    // newState = dd->multiply(hGate, newState);
-    // newState = dd->multiply(hGate, newState);
-
+    auto newState = dd->multiply(xGate, zeroState);
     dd->printVector(newState);
 
-    // repeated calculation is practically for free
-   // auto bellState2 = dd->multiply(dd->multiply(cxGate, hGate), zeroState);
-   // EXPECT_EQ(bellState, bellState2);
-//
-   // ASSERT_EQ(dd->getValueByPath(bellState, "00"), (dd::ComplexValue{dd::SQRT2_2, 0}));
-   // ASSERT_EQ(dd->getValueByPath(bellState, "01"), (dd::ComplexValue{0, 0}));
-   // ASSERT_EQ(dd->getValueByPath(bellState, "10"), (dd::ComplexValue{0, 0}));
-   // ASSERT_EQ(dd->getValueByPath(bellState, "11"), (dd::ComplexValue{dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 0), (dd::ComplexValue{0, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 1), (dd::ComplexValue{1, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 2), (dd::ComplexValue{0, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 3), (dd::ComplexValue{0, 0}));
+}
+
+TEST(DDPackageTest, TwoQubitGateIdentityRemoval) {
+    auto dd = std::make_unique<dd::Package<>>(5);
+    auto xGate0     = dd->makeGateDD(dd::Xmat, 5, 0);
+    auto xGate1     = dd->makeGateDD(dd::Xmat, 5, 1);
+    // auto cxGate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
+    auto zeroState = dd->makeZeroState(5);
+    std::cout << "Nodes: " << dd->size(xGate0) << "\n";
+
+    auto firstState = dd->multiply(xGate0, zeroState);
+    dd->printVector(firstState);
+
+    // auto secondState = dd->multiply(xGate1, zeroState);
+    // dd->printVector(secondState);
+
+    auto oneState = dd->multiply(xGate1, firstState);
+    dd->printVector(oneState);
+
+    // auto newState = dd->multiply(cxGate, oneState);
+    // dd->printVector(newState);
 }
