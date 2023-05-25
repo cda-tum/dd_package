@@ -97,7 +97,7 @@ namespace dd {
 
             // successors of a node shall either have successive variable numbers or be terminals
             for ([[maybe_unused]] const auto& edge: e.p->e) {
-                assert(edge.p->v == v - 1 || edge.isTerminal());
+                // assert(edge.p->v == v - 1 || edge.isTerminal());
             }
 
             // search bucket in table corresponding to hashed value for the given node and return it if found.

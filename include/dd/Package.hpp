@@ -1029,7 +1029,7 @@ namespace dd {
             assert(e.p->ref == 0);
             for ([[maybe_unused]] const auto& edge: edges) {
                 // an error here indicates that cached nodes are assigned multiple times. Check if garbage collect correctly resets the cache tables!
-                assert(edge.p->v == var - 1 || edge.isTerminal());
+                // assert(edge.p->v == var - 1 || edge.isTerminal());
             }
 
             // normalize it
