@@ -601,11 +601,11 @@ namespace dd {
             auto       z             = static_cast<Qubit>(start);
             const auto smallerTarget = std::min(target0, target1);
             for (; z < smallerTarget; ++z) {
-                for (auto& row: em) {
-                    for (auto& entry: row) {
-                        entry = makeDDNode(z, std::array{entry, mEdge::zero, mEdge::zero, entry});
-                    }
-                }
+                // for (auto& row: em) {
+                //     for (auto& entry: row) {
+                //         entry = makeDDNode(z, std::array{entry, mEdge::zero, mEdge::zero, entry});
+                //     }
+                // }
             }
 
             // process the smaller target by taking the 16 submatrices and appropriately combining them into four DDs.
@@ -632,9 +632,9 @@ namespace dd {
 
             // process lines between the two targets (by creating identity structures)
             for (++z; z < std::max(target0, target1); ++z) {
-                for (auto& entry: em0) {
-                    entry = makeDDNode(z, std::array{entry, mEdge::zero, mEdge::zero, entry});
-                }
+                // for (auto& entry: em0) {
+                //     entry = makeDDNode(z, std::array{entry, mEdge::zero, mEdge::zero, entry});
+                // }
             }
 
             // process the larger target by combining the four DDs from the smaller target
@@ -642,7 +642,7 @@ namespace dd {
 
             // process lines above the larger target (by creating identity structures)
             for (++z; z < static_cast<Qubit>(n + start); ++z) {
-                e = makeDDNode(z, std::array{e, mEdge::zero, mEdge::zero, e});
+                // e = makeDDNode(z, std::array{e, mEdge::zero, mEdge::zero, e});
             }
 
             return e;
