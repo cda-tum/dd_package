@@ -1720,7 +1720,7 @@ namespace dd {
                         } else {
                             // Effectively inserts an identity node
                             e1 = xCopy;
-                            if ((element1 == 1 or element1 == 2) and std::is_same_v<LeftOperandNode, mNode>) {
+                            if ((element1 == 1 or element1 == 2) and (std::is_same_v<LeftOperandNode, mNode> or std::is_same_v<LeftOperandNode, dNode>)) {
                                 e1.w = Complex::zero;
                             }
                         }
@@ -1732,7 +1732,7 @@ namespace dd {
                         } else {
                             // Effectively inserts an identity node
                             e2 = yCopy;
-                            if ((element2 == 1 or element2 == 2) and std::is_same_v<RightOperandNode, mNode>) {
+                            if ((element2 == 1 or element2 == 2) and (std::is_same_v<RightOperandNode, mNode> or std::is_same_v<RightOperandNode, dNode>)) {
                                 e2.w = Complex::zero;
                             }
                         }
