@@ -1795,31 +1795,28 @@ TEST(DDPackageTest, InnerProductTopNodeConjugation) {
     EXPECT_NEAR(dd->expectationValue(op, evolvedState), -0.416, 0.001);
 }
 
-TEST(DDPackageTest, OneQubitGateIdentityRemoval) {
-    auto dd = std::make_unique<dd::Package<>>(2);
-    auto xGate     = dd->makeGateDD(dd::Xmat, 2, 0);
-    auto zeroState = dd->makeZeroState(2);
-    EXPECT_EQ(dd->size(xGate), 2);
+TEST(DDPackageTest, QubitGateIdentityRemoval) {
+    auto dd = std::make_unique<dd::Package<>>(5);
+    auto hGate     = dd->makeGateDD(dd::Hmat, 5, 0);
+    auto zeroState = dd->makeZeroState(5);
+    EXPECT_EQ(dd->size(hGate), 2);
 
-    auto newState = dd->multiply(xGate, zeroState);
+    auto newState = dd->multiply(hGate, zeroState);
     dd->printVector(newState);
 
-    ASSERT_EQ(dd->getValueByPath(newState, 0), (dd::ComplexValue{0, 0}));
-    ASSERT_EQ(dd->getValueByPath(newState, 1), (dd::ComplexValue{1, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 0), (dd::ComplexValue{dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 1), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(newState, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(newState, 3), (dd::ComplexValue{0, 0}));
-}
 
-TEST(DDPackageTest, TwoQubitGateIdentityRemoval) {
-    auto dd = std::make_unique<dd::Package<>>(2);
-    auto hGate     = dd->makeGateDD(dd::Hmat, 2, 1);
-    auto cxGate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
-    auto zeroState = dd->makeZeroState(2);
-    std::cout << "Nodes: " << dd->size(cxGate) << "\n";
+    auto cxGate    = dd->makeGateDD(dd::Xmat, 5, 0_pc, 1);
+    EXPECT_EQ(dd->size(cxGate), 4);
 
-    auto firstState = dd->multiply(hGate, zeroState);
-    dd->printVector(firstState);
+    newState = dd->multiply(cxGate, newState);
+    dd->printVector(newState);
 
-    auto secondState = dd->multiply(cxGate, firstState);
-    dd->printVector(secondState);
+    ASSERT_EQ(dd->getValueByPath(newState, 0), (dd::ComplexValue{dd::SQRT2_2, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 1), (dd::ComplexValue{0, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 2), (dd::ComplexValue{0, 0}));
+    ASSERT_EQ(dd->getValueByPath(newState, 3), (dd::ComplexValue{dd::SQRT2_2, 0}));
 }
