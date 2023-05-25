@@ -1684,6 +1684,23 @@ namespace dd {
                             return e;
                         }
                     }
+                } else {
+                    std::cout << "Entered else \n";
+                    // If level is lower, then that means there is
+                    // an identity at the current level of that DD
+                    if (x.p->v > y.p->v) {
+                        e = xCopy;
+                    } else {
+                        e = yCopy;
+                    }
+                    computeTable.insert(xCopy, yCopy, {e.p, e.w});
+                    e.w = cn.mulCached(x.w, y.w);
+
+                    if (e.w.approximatelyZero()) {
+                        cn.returnToCache(e.w);
+                        return ResultEdge::zero;
+                    }
+                    return e;
                 }
             }
 
@@ -1697,22 +1714,27 @@ namespace dd {
                     edge[idx] = ResultEdge::zero;
                     for (auto k = 0U; k < rows; k++) {
                         LEdge e1{};
-                        auto element = rows * i + k;
+                        auto element1 = rows * i + k;
                         if (!x.isTerminal() && x.p->v == var) {
-                            e1 = x.p->e[element];
+                            e1 = x.p->e[element1];
                         } else {
                             // Effectively inserts an identity node
                             e1 = xCopy;
-                            if ((element == 1 or element == 2) and std::is_same_v<LeftOperandNode, mNode>) {
+                            if ((element1 == 1 or element1 == 2) and std::is_same_v<LeftOperandNode, mNode>) {
                                 e1.w = Complex::zero;
                             }
                         }
 
                         REdge e2{};
+                        auto element2 = j + cols * k;
                         if (!y.isTerminal() && y.p->v == var) {
                             e2 = y.p->e[j + cols * k];
                         } else {
+                            // Effectively inserts an identity node
                             e2 = yCopy;
+                            if ((element2 == 1 or element2 == 2) and std::is_same_v<RightOperandNode, mNode>) {
+                                e2.w = Complex::zero;
+                            }
                         }
 
                         if constexpr (std::is_same_v<LeftOperandNode, dNode>) {
@@ -1749,7 +1771,7 @@ namespace dd {
                             dEdge::revertDmChangesToEdges(e1, e2);
                         } else {
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
-                            std::cout << "Qubit: " << static_cast<int>(var) << " element: " << element << " e1: " << e1.w << " e2: " << e2.w << " m: " << m.w << "\n";
+                            //std::cout << "Qubit: " << static_cast<int>(var) << " element: " << element << " e1: " << e1.w << " e2: " << e2.w << " m: " << m.w << "\n";
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
@@ -1760,7 +1782,7 @@ namespace dd {
                             }
                         }
                     }
-                    // std::cout << "Qubit: " << static_cast<int>(var) << " Edge: " << idx << " Value: " << edge[idx].w << "\n";
+                    //std::cout << "Qubit: " << static_cast<int>(var) << " Edge: " << idx << " Value: " << edge[idx].w << "\n";
                 }
             }
             e = makeDDNode(var, edge, true, generateDensityMatrix);

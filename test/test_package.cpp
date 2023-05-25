@@ -1821,10 +1821,10 @@ TEST(DDPackageTest, OneQubitGateIdentityRemoval) {
 }
 
 TEST(DDPackageTest, TwoQubitGateIdentityRemoval) {
-    auto dd = std::make_unique<dd::Package<>>(5);
-    auto hGate     = dd->makeGateDD(dd::Hmat, 5, 1);
-    auto cxGate    = dd->makeGateDD(dd::Xmat, 5, 1_pc, 0);
-    auto zeroState = dd->makeZeroState(5);
+    auto dd = std::make_unique<dd::Package<>>(2);
+    auto hGate     = dd->makeGateDD(dd::Hmat, 2, 1);
+    auto cxGate    = dd->makeGateDD(dd::Xmat, 2, 1_pc, 0);
+    auto zeroState = dd->makeZeroState(2);
     std::cout << "Nodes: " << dd->size(cxGate) << "\n";
 
     auto firstState = dd->multiply(hGate, zeroState);
