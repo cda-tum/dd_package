@@ -508,9 +508,7 @@ namespace dd {
                             } else { // pos. control
                                  em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
                             }
-                         }// else { // not connected
-                          //   em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, em[i]});
-                         //}
+                         }
                      }
                  }
                  if (it != controls.end() && it->qubit == z) {
@@ -531,35 +529,11 @@ namespace dd {
                        e = makeDDNode(q, std::array{makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1)), mEdge::zero, mEdge::zero, e});
                    }
                    ++it;
-               } // else { // not connected
-                //   e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, e});
-               //}
+               }
             }
             return e;
         }
 
-       //  mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
-       //      if (n + start > nqubits) {
-       //          throw std::runtime_error{"Requested gate with " +
-       //                                   std::to_string(n + start) +
-       //                                   " qubits, but current package configuration only supports up to " +
-       //                                   std::to_string(nqubits) +
-       //                                   " qubits. Please allocate a larger package instance."};
-       //      }
-       //      std::array<mEdge, NEDGE> em{};
-       //      for (auto i = 0U; i < NEDGE; ++i) {
-       //          // NOLINTNEXTLINE(clang-diagnostic-float-equal) it has to be really zero
-       //          if (mat[i].r == 0 && mat[i].i == 0) {
-       //              em[i] = mEdge::zero;
-       //          } else {
-       //              em[i] = mEdge::terminal(cn.lookup(mat[i]));
-       //          }
-       //      }
-       //      auto z = target;
-       //      auto e = makeDDNode(z, em);
-       //      return e;
-       //  }
-//
         /**
         Creates the DD for a two-qubit gate
         @param mat Matrix representation of the gate
@@ -1685,7 +1659,6 @@ namespace dd {
                         }
                     }
                 } else {
-                    std::cout << "Entered else \n";
                     // If level is lower, then that means there is
                     // an identity at the current level of that DD
                     if (x.p->v > y.p->v) {
@@ -1771,7 +1744,6 @@ namespace dd {
                             dEdge::revertDmChangesToEdges(e1, e2);
                         } else {
                             auto m = multiply2(e1, e2, static_cast<Qubit>(var - 1), start);
-                            //std::cout << "Qubit: " << static_cast<int>(var) << " element: " << element << " e1: " << e1.w << " e2: " << e2.w << " m: " << m.w << "\n";
                             if (k == 0 || edge[idx].w.exactlyZero()) {
                                 edge[idx] = m;
                             } else if (!m.w.exactlyZero()) {
@@ -1782,7 +1754,6 @@ namespace dd {
                             }
                         }
                     }
-                    //std::cout << "Qubit: " << static_cast<int>(var) << " Edge: " << idx << " Value: " << edge[idx].w << "\n";
                 }
             }
             e = makeDDNode(var, edge, true, generateDensityMatrix);

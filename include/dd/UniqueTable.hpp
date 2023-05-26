@@ -404,11 +404,6 @@ namespace dd {
                     // variables should stay the same
                     assert(p->v == e.p->v);
 
-                    // successors of a node shall either have successive variable numbers or be terminals
-                    for ([[maybe_unused]] const auto& edge: e.p->e) {
-                       //  assert(edge.p->v == v - 1 || edge.isTerminal());
-                    }
-
                     return {p, e.w};
                 }
                 ++collisions;
