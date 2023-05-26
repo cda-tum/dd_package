@@ -471,10 +471,10 @@ namespace dd {
         }
 
         // build matrix representation for a single gate on an n-qubit circuit
-         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{}, target, start);
-         }
-         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target, std::size_t start = 0) {
+        }
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{control}, target, start);
         }
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Controls& controls, Qubit target, std::size_t start = 0) {
@@ -499,21 +499,21 @@ namespace dd {
             //process lines below target
             auto z = static_cast<Qubit>(start);
             for (; z < target; z++) {
-                 for (auto i1 = 0U; i1 < RADIX; i1++) {
-                     for (auto i2 = 0U; i2 < RADIX; i2++) {
-                         auto i = i1 * RADIX + i2;
-                         if (it != controls.end() && it->qubit == z) {
-                             if (it->type == Control::Type::neg) { // neg. control
-                                 em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero});
+                for (auto i1 = 0U; i1 < RADIX; i1++) {
+                    for (auto i2 = 0U; i2 < RADIX; i2++) {
+                        auto i = i1 * RADIX + i2;
+                        if (it != controls.end() && it->qubit == z) {
+                            if (it->type == Control::Type::neg) { // neg. control
+                                em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero});
                             } else { // pos. control
-                                 em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
+                                em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
                             }
-                         }
-                     }
-                 }
-                 if (it != controls.end() && it->qubit == z) {
-                     ++it;
-                 }
+                        }
+                    }
+                }
+                if (it != controls.end() && it->qubit == z) {
+                    ++it;
+                }
             }
 
             // target line
@@ -521,15 +521,15 @@ namespace dd {
 
             //process lines above target
             for (; z < static_cast<Qubit>(n - 1 + start); z++) {
-               auto q = static_cast<Qubit>(z + 1);
-               if (it != controls.end() && it->qubit == q) {
-                   if (it->type == Control::Type::neg) { // neg. control
-                       e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1))});
-                   } else { // pos. control
-                       e = makeDDNode(q, std::array{makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1)), mEdge::zero, mEdge::zero, e});
-                   }
-                   ++it;
-               }
+                auto q = static_cast<Qubit>(z + 1);
+                if (it != controls.end() && it->qubit == q) {
+                    if (it->type == Control::Type::neg) { // neg. control
+                        e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1))});
+                    } else { // pos. control
+                        e = makeDDNode(q, std::array{makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1)), mEdge::zero, mEdge::zero, e});
+                    }
+                    ++it;
+                }
             }
             return e;
         }
@@ -1687,7 +1687,7 @@ namespace dd {
                     edge[idx] = ResultEdge::zero;
                     for (auto k = 0U; k < rows; k++) {
                         LEdge e1{};
-                        auto element1 = rows * i + k;
+                        auto  element1 = rows * i + k;
                         if (!x.isTerminal() && x.p->v == var) {
                             e1 = x.p->e[element1];
                         } else {
@@ -1699,7 +1699,7 @@ namespace dd {
                         }
 
                         REdge e2{};
-                        auto element2 = j + cols * k;
+                        auto  element2 = j + cols * k;
                         if (!y.isTerminal() && y.p->v == var) {
                             e2 = y.p->e[j + cols * k];
                         } else {
