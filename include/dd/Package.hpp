@@ -333,7 +333,6 @@ namespace dd {
             return state;
         }
 
-
         mEdge makeDDFromMatrix(const std::array<std::array<ComplexValue, NEDGE>, NEDGE> matrix, Qubit level = -1) {
             CMat convertedMatrix{};
             convertedMatrix.reserve(NEDGE);
