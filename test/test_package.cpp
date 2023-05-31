@@ -1516,7 +1516,7 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
     const auto gateMatrices = std::vector{
             std::pair{dd::Xmat, dd::CXmat},
             // std::pair{dd::Zmat, dd::CZmat}
-            };
+    };
 
     // For every combination of control and target, test that the DD created by makeTwoQubitGateDD is equal to the DD created by makeGateDD.
     // This should cover every scenario of the makeTwoQubitGateDD function.
