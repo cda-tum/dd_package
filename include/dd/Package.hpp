@@ -515,7 +515,7 @@ namespace dd {
                      em[i] = mEdge::terminal(cn.lookup(mat[i]));
                  }
              }
-//
+
              //process lines below target
              auto z = static_cast<Qubit>(start);
              for (; z < target; z++) {
@@ -524,16 +524,23 @@ namespace dd {
                           auto i = i1 * RADIX + i2;
                           if (it != controls.end() && it->qubit == z) {
                               if (it->type == Control::Type::neg) { // neg. control
-                                 // em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, mEdge::one});
-                                 em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero});
-                                 // em[i] = makeDDNode(z, std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero});
+                                auto local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
+                                if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                                    em[i] = mEdge::terminal(cn.lookup(1));
+                                } else {
+                                    em[i] = makeDDNode(z, local);
+                                }
                              } else if (it->type == Control::Type::pos) { // pos. control
-                                  // em[i] = makeDDNode(z, std::array{mEdge::one, mEdge::zero, mEdge::zero, em[i]});
-                                  em[i] = makeDDNode(z, std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
-                                  // em[i] = makeDDNode(z, std::array{(i1 == i2) ? makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(z - 1)) : mEdge::zero, mEdge::zero, mEdge::zero, em[i]});
+                                auto local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
+                                if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                                    em[i] = mEdge::terminal(cn.lookup(1));
+                                } else {
+                                    em[i] = makeDDNode(z, local);
+                                }
                              }
                           }
                       }
+
                   }
                   if (it != controls.end() && it->qubit == z) {
                       ++it;
@@ -549,7 +556,6 @@ namespace dd {
                if (it != controls.end() && it->qubit == q) {
                    if (it->type == Control::Type::neg) { // neg. control
                          e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, mEdge::one});
-                       // e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, makeIdent(static_cast<Qubit>(start), static_cast<Qubit>(q - 1))});
                    } else if (it->type == Control::Type::pos) { // pos. control
                        e = makeDDNode(q, std::array{mEdge::one, mEdge::zero, mEdge::zero, e});
                    }
@@ -600,7 +606,6 @@ namespace dd {
 
             // process the smaller target by taking the 16 submatrices and appropriately combining them into four DDs.
            std::array<mEdge, NEDGE> em0{};
-           mEdge previousNode = mEdge::one;
            for (std::size_t row = 0; row < RADIX; ++row) {
                 for (std::size_t col = 0; col < RADIX; ++col) {
                     std::array<mEdge, NEDGE> local{};
