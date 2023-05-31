@@ -1806,7 +1806,7 @@ TEST(DDPackageTest, InnerProductTopNodeConjugation) {
 }
 
 TEST(DDPackageTest, QubitGateIdentityRemoval) {
-    auto dd = std::make_unique<dd::Package<>>(5);
+    auto dd        = std::make_unique<dd::Package<>>(5);
     auto hGate     = dd->makeGateDD(dd::Hmat, 5, 0);
     auto zeroState = dd->makeZeroState(5);
     EXPECT_EQ(dd->size(hGate), 2);
@@ -1819,7 +1819,7 @@ TEST(DDPackageTest, QubitGateIdentityRemoval) {
     ASSERT_EQ(dd->getValueByPath(newState, 2), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(newState, 3), (dd::ComplexValue{0, 0}));
 
-    auto cxGate    = dd->makeGateDD(dd::Xmat, 5, 0_pc, 1);
+    auto cxGate = dd->makeGateDD(dd::Xmat, 5, 0_pc, 1);
     EXPECT_EQ(dd->size(cxGate), 4);
 
     newState = dd->multiply(cxGate, newState);
