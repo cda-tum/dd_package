@@ -341,7 +341,7 @@ namespace dd {
                 convertedRow.reserve(NEDGE);
                 for (std::size_t col = 0; col < NEDGE; ++col) {
                     auto element = matrix.at(row).at(col);
-                    convertedRow.emplace_back(std::complex<double> {element.r, element.i});
+                    convertedRow.emplace_back(std::complex<double>{element.r, element.i});
                 }
                 convertedMatrix.emplace_back(convertedRow);
             }
@@ -489,77 +489,76 @@ namespace dd {
         }
 
         // build matrix representation for a single gate on an n-qubit circuit
-         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{}, target, start);
-         }
-         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target, std::size_t start = 0) {
+        }
+        mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Control& control, Qubit target, std::size_t start = 0) {
             return makeGateDD(mat, n, Controls{control}, target, start);
         }
 
         mEdge makeGateDD(const std::array<ComplexValue, NEDGE>& mat, QubitCount n, const Controls& controls, Qubit target, std::size_t start = 0) {
-             if (n + start > nqubits) {
-                 throw std::runtime_error{"Requested gate with " +
-                                          std::to_string(n + start) +
-                                          " qubits, but current package configuration only supports up to " +
-                                          std::to_string(nqubits) +
-                                          " qubits. Please allocate a larger package instance."};
-             }
-             std::array<mEdge, NEDGE> em{};
-             auto                     it = controls.begin();
-             for (auto i = 0U; i < NEDGE; ++i) {
-                 // NOLINTNEXTLINE(clang-diagnostic-float-equal) it has to be really zero
-                 if (mat[i].r == 0 && mat[i].i == 0) {
-                     em[i] = mEdge::zero;
-                 } else {
-                     em[i] = mEdge::terminal(cn.lookup(mat[i]));
-                 }
-             }
+            if (n + start > nqubits) {
+                throw std::runtime_error{"Requested gate with " +
+                                         std::to_string(n + start) +
+                                         " qubits, but current package configuration only supports up to " +
+                                         std::to_string(nqubits) +
+                                         " qubits. Please allocate a larger package instance."};
+            }
+            std::array<mEdge, NEDGE> em{};
+            auto                     it = controls.begin();
+            for (auto i = 0U; i < NEDGE; ++i) {
+                // NOLINTNEXTLINE(clang-diagnostic-float-equal) it has to be really zero
+                if (mat[i].r == 0 && mat[i].i == 0) {
+                    em[i] = mEdge::zero;
+                } else {
+                    em[i] = mEdge::terminal(cn.lookup(mat[i]));
+                }
+            }
 
-             //process lines below target
-             auto z = static_cast<Qubit>(start);
-             for (; z < target; z++) {
-                  for (auto i1 = 0U; i1 < RADIX; i1++) {
-                      for (auto i2 = 0U; i2 < RADIX; i2++) {
-                          auto i = i1 * RADIX + i2;
-                          if (it != controls.end() && it->qubit == z) {
-                              if (it->type == Control::Type::neg) { // neg. control
+            //process lines below target
+            auto z = static_cast<Qubit>(start);
+            for (; z < target; z++) {
+                for (auto i1 = 0U; i1 < RADIX; i1++) {
+                    for (auto i2 = 0U; i2 < RADIX; i2++) {
+                        auto i = i1 * RADIX + i2;
+                        if (it != controls.end() && it->qubit == z) {
+                            if (it->type == Control::Type::neg) { // neg. control
                                 auto local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
                                 if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
                                     em[i] = mEdge::terminal(cn.lookup(1));
                                 } else {
                                     em[i] = makeDDNode(z, local);
                                 }
-                             } else if (it->type == Control::Type::pos) { // pos. control
+                            } else if (it->type == Control::Type::pos) { // pos. control
                                 auto local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
                                 if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
                                     em[i] = mEdge::terminal(cn.lookup(1));
                                 } else {
                                     em[i] = makeDDNode(z, local);
                                 }
-                             }
-                          }
-                      }
-
-                  }
-                  if (it != controls.end() && it->qubit == z) {
-                      ++it;
-                  }
-             }
+                            }
+                        }
+                    }
+                }
+                if (it != controls.end() && it->qubit == z) {
+                    ++it;
+                }
+            }
 
             // target line
             auto e = makeDDNode(z, em);
 
             //process lines above target
             for (; z < static_cast<Qubit>(n - 1 + start); z++) {
-               auto q = static_cast<Qubit>(z + 1);
-               if (it != controls.end() && it->qubit == q) {
-                   if (it->type == Control::Type::neg) { // neg. control
-                         e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, mEdge::one});
-                   } else if (it->type == Control::Type::pos) { // pos. control
-                       e = makeDDNode(q, std::array{mEdge::one, mEdge::zero, mEdge::zero, e});
-                   }
-                   ++it;
-               }
+                auto q = static_cast<Qubit>(z + 1);
+                if (it != controls.end() && it->qubit == q) {
+                    if (it->type == Control::Type::neg) { // neg. control
+                        e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, mEdge::one});
+                    } else if (it->type == Control::Type::pos) { // pos. control
+                        e = makeDDNode(q, std::array{mEdge::one, mEdge::zero, mEdge::zero, e});
+                    }
+                    ++it;
+                }
             }
             return e;
         }
@@ -601,11 +600,11 @@ namespace dd {
                 }
             }
 
-           auto       z             = std::min(target0, target1);
+            auto z = std::min(target0, target1);
 
             // process the smaller target by taking the 16 submatrices and appropriately combining them into four DDs.
-           std::array<mEdge, NEDGE> em0{};
-           for (std::size_t row = 0; row < RADIX; ++row) {
+            std::array<mEdge, NEDGE> em0{};
+            for (std::size_t row = 0; row < RADIX; ++row) {
                 for (std::size_t col = 0; col < RADIX; ++col) {
                     std::array<mEdge, NEDGE> local{};
                     if (target0 > target1) {
@@ -628,11 +627,10 @@ namespace dd {
                         em0.at(row * RADIX + col) = makeDDNode(z, local);
                     }
                 }
-
-           }
+            }
 
             // process the larger target by combining the four DDs from the smaller target
-            z = std::max(target0, target1);
+            z      = std::max(target0, target1);
             auto e = makeDDNode(z, em0);
 
             return e;
@@ -1703,7 +1701,7 @@ namespace dd {
                     edge[idx] = ResultEdge::zero;
                     for (auto k = 0U; k < rows; k++) {
                         LEdge e1{};
-                        auto element1 = rows * i + k;
+                        auto  element1 = rows * i + k;
                         if (!x.isTerminal() && x.p->v == var) {
                             e1 = x.p->e[element1];
                         } else {
@@ -1715,7 +1713,7 @@ namespace dd {
                         }
 
                         REdge e2{};
-                        auto element2 = j + cols * k;
+                        auto  element2 = j + cols * k;
                         if (!y.isTerminal() && y.p->v == var) {
                             e2 = y.p->e[j + cols * k];
                         } else {
