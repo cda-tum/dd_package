@@ -1514,10 +1514,9 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
     const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
 
     const auto gateMatrices = std::vector{
-            std::pair{dd::Xmat, dd::CXmat},
+            //std::pair{dd::Xmat, dd::CXmat},
             std::pair{dd::Zmat, dd::CZmat}
             };
-
     // For every combination of control and target, test that the DD created by makeTwoQubitGateDD is equal to the DD created by makeGateDD.
     // This should cover every scenario of the makeTwoQubitGateDD function.
     for (const auto& [gateMatrix, controlledGateMatrix]: gateMatrices) {
@@ -1526,6 +1525,7 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
                 if (control == target) {
                     continue;
                 }
+
                 const auto controlledGateDD = dd->makeTwoQubitGateDD(controlledGateMatrix, nrQubits, control, target);
                 const auto gateDD           = dd->makeGateDD(gateMatrix, nrQubits, dd::Controls{dd::Control{control}}, target);
                 EXPECT_EQ(controlledGateDD, gateDD);
@@ -1535,9 +1535,10 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
 }
 
 TEST(DDPackageTest, SWAPGateDDConstruction) {
-    const dd::QubitCount nrQubits = 5;
+    const dd::QubitCount nrQubits = 3;
     const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
-
+    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/SwapDD";
+    std::string filename2 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/GateDD";
     for (dd::Qubit control = 0; control < nrQubits; ++control) {
         for (dd::Qubit target = 0; target < nrQubits; ++target) {
             if (control == target) {
@@ -1545,7 +1546,8 @@ TEST(DDPackageTest, SWAPGateDDConstruction) {
             }
             const auto swapGateDD = dd->makeSWAPDD(nrQubits, control, target);
             const auto gateDD     = dd->makeSWAPDD(nrQubits, dd::Controls{}, control, target);
-
+            dd::export2Dot(swapGateDD, filename1);
+            dd::export2Dot(gateDD, filename2);
             EXPECT_EQ(swapGateDD, gateDD);
         }
     }

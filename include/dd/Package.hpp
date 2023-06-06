@@ -517,22 +517,23 @@ namespace dd {
 
              //process lines below target
              auto z = static_cast<Qubit>(start);
+             std::array<mEdge, NEDGE> local;
              for (; z < target; z++) {
-                  for (auto i1 = 0U; i1 < RADIX; i1++) {
-                      for (auto i2 = 0U; i2 < RADIX; i2++) {
-                          auto i = i1 * RADIX + i2;
-                          if (it != controls.end() && it->qubit == z) {
-                              if (it->type == Control::Type::neg) { // neg. control
-                                auto local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
+                 for (auto i1 = 0U; i1 < RADIX; i1++) {
+                     for (auto i2 = 0U; i2 < RADIX; i2++) {
+                        auto i = i1 * RADIX + i2;
+                        if (it != controls.end() && it->qubit == z) {
+                            if (it->type == Control::Type::neg) { // neg. control
+                                local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
                                 if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                                    em[i] = mEdge::terminal(cn.lookup(1));
+                                    //em[i] = mEdge::terminal(cn.lookup(1));
                                 } else {
                                     em[i] = makeDDNode(z, local);
                                 }
-                             } else if (it->type == Control::Type::pos) { // pos. control
-                                auto local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
+                            } else if (it->type == Control::Type::pos) { // pos. control
+                                local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
                                 if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                                    em[i] = mEdge::terminal(cn.lookup(1));
+                                    //em[i] = mEdge::terminal(cn.lookup(1));
                                 } else {
                                     em[i] = makeDDNode(z, local);
                                 }
@@ -554,9 +555,17 @@ namespace dd {
                auto q = static_cast<Qubit>(z + 1);
                if (it != controls.end() && it->qubit == q) {
                    if (it->type == Control::Type::neg) { // neg. control
-                         e = makeDDNode(q, std::array{e, mEdge::zero, mEdge::zero, mEdge::one});
+                          local = std::array{e, mEdge::zero, mEdge::zero, mEdge::one};
+                          if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                          } else {
+                             e = makeDDNode(q, local);
+                         }
                    } else if (it->type == Control::Type::pos) { // pos. control
-                       e = makeDDNode(q, std::array{mEdge::one, mEdge::zero, mEdge::zero, e});
+                          local = std::array{mEdge::one, mEdge::zero, mEdge::zero, e};
+                          if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                          } else {
+                             e = makeDDNode(q, local);
+                          }
                    }
                    ++it;
                }
@@ -1014,6 +1023,12 @@ namespace dd {
                 if constexpr (std::is_same_v<Node, dNode>) {
                     e.p->setDensityMatrixNodeFlag(generateDensityMatrix);
                 }
+                // if constexpr (std::is_same_v<Node, mNode>) {
+                //     if (edges.at(0) == mEdge::one && edges.at(1) == mEdge::zero && edges.at(2) == mEdge::zero && edges.at(3) == mEdge::one) {
+                //         std::cout << "Test \n";
+                //         return mEdge::terminal(cn.lookup(1));
+                //     }
+                // }
             }
 
             assert(e.p->ref == 0);
@@ -1024,6 +1039,13 @@ namespace dd {
 
             // normalize it
             e = normalize(e, cached);
+            //e.p->e = edges;
+            //if constexpr (std::is_same_v<Node, mNode>) {
+            //    if (edges.at(0) == mEdge::one && edges.at(1) == mEdge::zero && edges.at(2) == mEdge::zero && edges.at(3) == mEdge::one) {
+            //        std::cout << "Test \n";
+            //        return mEdge::terminal(cn.lookup(1));
+            //    }
+            //}
             assert(e.p->v == var || e.isTerminal());
 
             // look it up in the unique tables
@@ -1638,13 +1660,15 @@ namespace dd {
 
             ResultEdge e{};
             if constexpr (std::is_same_v<RightOperandNode, mCachedEdge>) {
+                std::cout << "Cached entered \n";
                 // This branch is only taken for matrices
                 if (x.p->v == var && x.p->v == y.p->v) {
+                    std::cout << "Cached if entered \n";
                     if (x.p->isIdentity()) {
                         if constexpr (n == NEDGE) {
                             // additionally check if y is the identity in case of matrix multiplication
                             if (y.p->isIdentity()) {
-                                e = makeIdent(start, var);
+                                // e = makeIdent(start, var);
                             } else {
                                 e = yCopy;
                             }
@@ -1689,6 +1713,7 @@ namespace dd {
                         cn.returnToCache(e.w);
                         return ResultEdge::zero;
                     }
+                    std::cout << "Cached else entered \n";
                     return e;
                 }
             }
@@ -1725,6 +1750,7 @@ namespace dd {
                                 e2.w = Complex::zero;
                             }
                         }
+
 
                         if constexpr (std::is_same_v<LeftOperandNode, dNode>) {
                             dEdge m;
@@ -1772,6 +1798,15 @@ namespace dd {
                     }
                 }
             }
+            // if constexpr (std::is_same_v<RightOperandNode, mNode>) {
+            //     if (edge.at(0) == mEdge::one and edge.at(1) == mEdge::zero and edge.at(2) == mEdge::zero and edge.at(3) == mEdge::one) {
+            //         e = mEdge::terminal(cn.lookup(1));
+            //         return e;
+            //     } else {
+            //         e = makeDDNode(var, edge, true, generateDensityMatrix);
+            //     }
+            // }
+
             e = makeDDNode(var, edge, true, generateDensityMatrix);
 
             //            if (r.p != nullptr && e.p != r.p) { // activate for debugging caching
