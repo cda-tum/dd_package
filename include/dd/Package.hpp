@@ -1713,10 +1713,13 @@ namespace dd {
                         if (!x.isTerminal() && x.p->v == var) {
                             e1 = x.p->e[element1];
                         } else {
+                            // LeftOperand does not support vectors
+                            static_assert(!std::is_same_v<LeftOperandNode, vNode>);
                             // Effectively inserts an identity node
-                            e1 = xCopy;
-                            if ((element1 == 1 or element1 == 2) && (std::is_same_v<LeftOperandNode, mNode> || std::is_same_v<LeftOperandNode, dNode>)) {
-                                e1.w = Complex::zero;
+                            if (i == k) {
+                                e1 = xCopy;
+                            } else {
+                                e1 = LEdge::zero;
                             }
                         }
 
@@ -1725,13 +1728,18 @@ namespace dd {
                         if (!y.isTerminal() && y.p->v == var) {
                             e2 = y.p->e[j + cols * k];
                         } else {
-                            // Effectively inserts an identity node
-                            e2 = yCopy;
-                            if ((element2 == 1 or element2 == 2) && (std::is_same_v<RightOperandNode, mNode> || std::is_same_v<RightOperandNode, dNode>)) {
-                                e2.w = Complex::zero;
+                            if constexpr (std::is_same_v<RightOperandNode, vNode>) {
+                                // Skipping nodes not supported for vectors
+                                e2 = yCopy;
+                            } else {
+                                // Effectively inserts an identity node
+                                if (j == k) {
+                                    e2 = yCopy;
+                                } else {
+                                    e2 = REdge::zero;
+                                }
                             }
                         }
-
 
                         if constexpr (std::is_same_v<LeftOperandNode, dNode>) {
                             dEdge m;
