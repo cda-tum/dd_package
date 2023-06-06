@@ -1709,9 +1709,8 @@ namespace dd {
                     edge[idx] = ResultEdge::zero;
                     for (auto k = 0U; k < rows; k++) {
                         LEdge e1{};
-                        auto element1 = rows * i + k;
                         if (!x.isTerminal() && x.p->v == var) {
-                            e1 = x.p->e[element1];
+                            e1 = x.p->e[rows * i + k];
                         } else {
                             // LeftOperand does not support vectors
                             static_assert(!std::is_same_v<LeftOperandNode, vNode>);
@@ -1724,7 +1723,6 @@ namespace dd {
                         }
 
                         REdge e2{};
-                        auto element2 = j + cols * k;
                         if (!y.isTerminal() && y.p->v == var) {
                             e2 = y.p->e[j + cols * k];
                         } else {
