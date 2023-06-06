@@ -525,18 +525,10 @@ namespace dd {
                         if (it != controls.end() && it->qubit == z) {
                             if (it->type == Control::Type::neg) { // neg. control
                                 local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
-                                //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                                    //em[i] = mEdge::terminal(cn.lookup(1));
-                                //} else {
-                                    em[i] = makeDDNode(z, local);
-                                // }
+                                em[i] = makeDDNode(z, local);
                             } else if (it->type == Control::Type::pos) { // pos. control
                                 local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
-                                //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                                    //em[i] = mEdge::terminal(cn.lookup(1));
-                                //} else {
                                 em[i] = makeDDNode(z, local);
-                                // }
                              }
                           }
                       }
@@ -555,16 +547,10 @@ namespace dd {
                if (it != controls.end() && it->qubit == q) {
                    if (it->type == Control::Type::neg) { // neg. control
                           local = std::array{e, mEdge::zero, mEdge::zero, mEdge::one};
-                          //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                          //} else {
-                             e = makeDDNode(q, local);
-                         //}
+                          e = makeDDNode(q, local);
                    } else if (it->type == Control::Type::pos) { // pos. control
                           local = std::array{mEdge::one, mEdge::zero, mEdge::zero, e};
-                          //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                         // } else {
-                             e = makeDDNode(q, local);
-                          //}
+                          e = makeDDNode(q, local);
                    }
                    ++it;
                }
@@ -573,7 +559,7 @@ namespace dd {
         }
 
         /**
-        Creates the DD for a two-qubit gate
+        Creates DD for a two-qubit gate
         @param mat Matrix representation of the gate
         @param n Number of qubits in the circuit
         @param target0 First target qubit
