@@ -515,47 +515,53 @@ namespace dd {
                  }
               }
 
-             //process lines below target
-             auto z = static_cast<Qubit>(start);
-             std::array<mEdge, NEDGE> local;
-             for (; z < target; z++) {
-                 for (auto i1 = 0U; i1 < RADIX; i1++) {
-                     for (auto i2 = 0U; i2 < RADIX; i2++) {
-                        auto i = i1 * RADIX + i2;
-                        if (it != controls.end() && it->qubit == z) {
-                            if (it->type == Control::Type::neg) { // neg. control
-                                local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
-                                em[i] = makeDDNode(z, local);
-                            } else if (it->type == Control::Type::pos) { // pos. control
-                                local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
-                                em[i] = makeDDNode(z, local);
-                             }
-                          }
-                      }
-                  }
-                  if (it != controls.end() && it->qubit == z) {
-                      ++it;
-                  }
-             }
+              Edge<mNode> e{};
+              if (controls.empty()) {
+                 // Single qubit operation
+                 e = makeDDNode(target, em);
+              } else {
+                 //process lines below target
+                 auto                     z = static_cast<Qubit>(start);
+                 std::array<mEdge, NEDGE> local{};
+                 for (; z < target; z++) {
+                     for (auto i1 = 0U; i1 < RADIX; i1++) {
+                        for (auto i2 = 0U; i2 < RADIX; i2++) {
+                            auto i = i1 * RADIX + i2;
+                            if (it != controls.end() && it->qubit == z) {
+                                if (it->type == Control::Type::neg) { // neg. control
+                                    local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
+                                    em[i] = makeDDNode(z, local);
+                                } else if (it->type == Control::Type::pos) { // pos. control
+                                    local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
+                                    em[i] = makeDDNode(z, local);
+                                }
+                            }
+                        }
+                     }
+                     if (it != controls.end() && it->qubit == z) {
+                        ++it;
+                     }
+                 }
 
-            // target line
-            auto e = makeDDNode(z, em);
+                 // target line
+                 e = makeDDNode(z, em);
 
-            //process lines above target
-            for (; z < static_cast<Qubit>(n - 1 + start); z++) {
-               auto q = static_cast<Qubit>(z + 1);
-               if (it != controls.end() && it->qubit == q) {
-                   if (it->type == Control::Type::neg) { // neg. control
-                          local = std::array{e, mEdge::zero, mEdge::zero, mEdge::one};
-                          e = makeDDNode(q, local);
-                   } else if (it->type == Control::Type::pos) { // pos. control
-                          local = std::array{mEdge::one, mEdge::zero, mEdge::zero, e};
-                          e = makeDDNode(q, local);
-                   }
-                   ++it;
-               }
-            }
-            return e;
+                 //process lines above target
+                 for (; z < static_cast<Qubit>(n - 1 + start); z++) {
+                     auto q = static_cast<Qubit>(z + 1);
+                     if (it != controls.end() && it->qubit == q) {
+                        if (it->type == Control::Type::neg) { // neg. control
+                            local = std::array{e, mEdge::zero, mEdge::zero, mEdge::one};
+                            e     = makeDDNode(q, local);
+                        } else if (it->type == Control::Type::pos) { // pos. control
+                            local = std::array{mEdge::one, mEdge::zero, mEdge::zero, e};
+                            e     = makeDDNode(q, local);
+                        }
+                        ++it;
+                     }
+                 }
+              }
+              return e;
         }
 
         /**
