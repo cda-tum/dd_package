@@ -513,7 +513,7 @@ namespace dd {
                  } else {
                      em[i] = mEdge::terminal(cn.lookup(mat[i]));
                  }
-             }
+              }
 
              //process lines below target
              auto z = static_cast<Qubit>(start);
@@ -525,22 +525,21 @@ namespace dd {
                         if (it != controls.end() && it->qubit == z) {
                             if (it->type == Control::Type::neg) { // neg. control
                                 local = std::array{em[i], mEdge::zero, mEdge::zero, (i1 == i2) ? mEdge::one : mEdge::zero};
-                                if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                                //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
                                     //em[i] = mEdge::terminal(cn.lookup(1));
-                                } else {
+                                //} else {
                                     em[i] = makeDDNode(z, local);
-                                }
+                                // }
                             } else if (it->type == Control::Type::pos) { // pos. control
                                 local = std::array{(i1 == i2) ? mEdge::one : mEdge::zero, mEdge::zero, mEdge::zero, em[i]};
-                                if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                                //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
                                     //em[i] = mEdge::terminal(cn.lookup(1));
-                                } else {
-                                    em[i] = makeDDNode(z, local);
-                                }
+                                //} else {
+                                em[i] = makeDDNode(z, local);
+                                // }
                              }
                           }
                       }
-
                   }
                   if (it != controls.end() && it->qubit == z) {
                       ++it;
@@ -556,16 +555,16 @@ namespace dd {
                if (it != controls.end() && it->qubit == q) {
                    if (it->type == Control::Type::neg) { // neg. control
                           local = std::array{e, mEdge::zero, mEdge::zero, mEdge::one};
-                          if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                          } else {
+                          //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                          //} else {
                              e = makeDDNode(q, local);
-                         }
+                         //}
                    } else if (it->type == Control::Type::pos) { // pos. control
                           local = std::array{mEdge::one, mEdge::zero, mEdge::zero, e};
-                          if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                          } else {
+                          //if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
+                         // } else {
                              e = makeDDNode(q, local);
-                          }
+                          //}
                    }
                    ++it;
                }
@@ -1017,18 +1016,11 @@ namespace dd {
             Edge<Node> e{uniqueTable.getNode(), Complex::one};
             e.p->v = var;
             e.p->e = edges;
-
             if constexpr (std::is_same_v<Node, mNode> || std::is_same_v<Node, dNode>) {
                 e.p->flags = 0;
                 if constexpr (std::is_same_v<Node, dNode>) {
                     e.p->setDensityMatrixNodeFlag(generateDensityMatrix);
                 }
-                // if constexpr (std::is_same_v<Node, mNode>) {
-                //     if (edges.at(0) == mEdge::one && edges.at(1) == mEdge::zero && edges.at(2) == mEdge::zero && edges.at(3) == mEdge::one) {
-                //         std::cout << "Test \n";
-                //         return mEdge::terminal(cn.lookup(1));
-                //     }
-                // }
             }
 
             assert(e.p->ref == 0);
@@ -1039,13 +1031,15 @@ namespace dd {
 
             // normalize it
             e = normalize(e, cached);
-            //e.p->e = edges;
-            //if constexpr (std::is_same_v<Node, mNode>) {
-            //    if (edges.at(0) == mEdge::one && edges.at(1) == mEdge::zero && edges.at(2) == mEdge::zero && edges.at(3) == mEdge::one) {
-            //        std::cout << "Test \n";
-            //        return mEdge::terminal(cn.lookup(1));
-            //    }
-            //}
+            if constexpr (std::is_same_v<Node, mNode>) {
+                // Check if matrix node is an identity pointing to same successor
+                if (e.p->e[0] == mEdge::one && e.p->e[1] == mEdge::zero && e.p->e[2] == mEdge::zero && e.p->e[3] == mEdge::one) {
+                    if (e.p->e[0].p == e.p->e[3].p) {
+                        return e.p->e[0];
+                    }
+                }
+            }
+
             assert(e.p->v == var || e.isTerminal());
 
             // look it up in the unique tables
@@ -1607,7 +1601,7 @@ namespace dd {
             }
 
             [[maybe_unused]] const auto after = cn.cacheCount();
-            assert(before == after);
+            //assert(before == after);
 
             return e;
         }

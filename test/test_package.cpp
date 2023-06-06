@@ -1514,9 +1514,11 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
     const auto           dd       = std::make_unique<dd::Package<>>(nrQubits);
 
     const auto gateMatrices = std::vector{
-            //std::pair{dd::Xmat, dd::CXmat},
+            std::pair{dd::Xmat, dd::CXmat},
             std::pair{dd::Zmat, dd::CZmat}
             };
+    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/TwoQubitGateDD";
+    std::string filename2 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/GateDD";
     // For every combination of control and target, test that the DD created by makeTwoQubitGateDD is equal to the DD created by makeGateDD.
     // This should cover every scenario of the makeTwoQubitGateDD function.
     for (const auto& [gateMatrix, controlledGateMatrix]: gateMatrices) {
@@ -1525,9 +1527,12 @@ TEST(DDPackageTest, TwoQubitControlledGateDDConstruction) {
                 if (control == target) {
                     continue;
                 }
-
+                // control = 0;
+                // target = 2;
                 const auto controlledGateDD = dd->makeTwoQubitGateDD(controlledGateMatrix, nrQubits, control, target);
                 const auto gateDD           = dd->makeGateDD(gateMatrix, nrQubits, dd::Controls{dd::Control{control}}, target);
+                dd::export2Dot(controlledGateDD, filename1);
+                dd::export2Dot(gateDD, filename2);
                 EXPECT_EQ(controlledGateDD, gateDD);
             }
         }
