@@ -615,12 +615,7 @@ namespace dd {
                             }
                         }
                     }
-
-                    if (local.at(0) == mEdge::one and local.at(1) == mEdge::zero and local.at(2) == mEdge::zero and local.at(3) == mEdge::one) {
-                        em0.at(row * RADIX + col) = mEdge::terminal(cn.lookup(1));
-                    } else {
-                        em0.at(row * RADIX + col) = makeDDNode(z, local);
-                    }
+                    em0.at(row * RADIX + col) = makeDDNode(z, local);
                 }
 
            }
@@ -1714,7 +1709,7 @@ namespace dd {
                         } else {
                             // Effectively inserts an identity node
                             e1 = xCopy;
-                            if ((element1 == 1 or element1 == 2) and (std::is_same_v<LeftOperandNode, mNode> or std::is_same_v<LeftOperandNode, dNode>)) {
+                            if ((element1 == 1 or element1 == 2) && (std::is_same_v<LeftOperandNode, mNode> || std::is_same_v<LeftOperandNode, dNode>)) {
                                 e1.w = Complex::zero;
                             }
                         }
@@ -1726,7 +1721,7 @@ namespace dd {
                         } else {
                             // Effectively inserts an identity node
                             e2 = yCopy;
-                            if ((element2 == 1 or element2 == 2) and (std::is_same_v<RightOperandNode, mNode> or std::is_same_v<RightOperandNode, dNode>)) {
+                            if ((element2 == 1 or element2 == 2) && (std::is_same_v<RightOperandNode, mNode> || std::is_same_v<RightOperandNode, dNode>)) {
                                 e2.w = Complex::zero;
                             }
                         }
@@ -1778,14 +1773,6 @@ namespace dd {
                     }
                 }
             }
-            // if constexpr (std::is_same_v<RightOperandNode, mNode>) {
-            //     if (edge.at(0) == mEdge::one and edge.at(1) == mEdge::zero and edge.at(2) == mEdge::zero and edge.at(3) == mEdge::one) {
-            //         e = mEdge::terminal(cn.lookup(1));
-            //         return e;
-            //     } else {
-            //         e = makeDDNode(var, edge, true, generateDensityMatrix);
-            //     }
-            // }
 
             e = makeDDNode(var, edge, true, generateDensityMatrix);
 
