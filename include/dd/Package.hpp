@@ -1020,10 +1020,9 @@ namespace dd {
             e = normalize(e, cached);
             if constexpr (std::is_same_v<Node, mNode>) {
                 // Check if matrix node is an identity pointing to same successor
-                if (e.p->e[0] == mEdge::one && e.p->e[1] == mEdge::zero && e.p->e[2] == mEdge::zero && e.p->e[3] == mEdge::one) {
-                    if (e.p->e[0].p == e.p->e[3].p) {
-                        return e.p->e[0];
-                    }
+                // If so, replaces it with an edge with weight of normalization factor
+                if ((e.p->e[0].p == e.p->e[3].p) && (e.p->e[0] == mEdge::one && e.p->e[1] == mEdge::zero && e.p->e[2] == mEdge::zero && e.p->e[3] == mEdge::one)) {
+                    return Edge<mNode>{e.p->e[0].p, e.w};
                 }
             }
 
@@ -1555,6 +1554,7 @@ namespace dd {
 
             Qubit        var = -1;
             RightOperand e;
+            [[maybe_unused]] auto after = cn.cacheCount();
 
             if constexpr (std::is_same_v<LeftOperand, dEdge>) {
                 auto xCopy = x;
@@ -1580,6 +1580,8 @@ namespace dd {
                     var = y.p->v;
                 }
                 e = multiply2(x, y, var, start);
+
+                after = cn.cacheCount();
             }
 
             if (!e.w.exactlyZero() && !e.w.exactlyOne()) {
@@ -1587,8 +1589,8 @@ namespace dd {
                 e.w = cn.lookup(e.w);
             }
 
-            [[maybe_unused]] const auto after = cn.cacheCount();
-            //assert(before == after);
+            after = cn.cacheCount();
+            assert(before == after);
 
             return e;
         }
@@ -1679,23 +1681,23 @@ namespace dd {
                             return e;
                         }
                     }
-                } else {
-                    // If level is lower, then that means there is
-                    // an identity at the current level of that DD
-                    if (x.p->v > y.p->v) {
-                        e = xCopy;
-                    } else {
-                        e = yCopy;
-                    }
-                    computeTable.insert(xCopy, yCopy, {e.p, e.w});
-                    e.w = cn.mulCached(x.w, y.w);
-
-                    if (e.w.approximatelyZero()) {
-                        cn.returnToCache(e.w);
-                        return ResultEdge::zero;
-                    }
-                    std::cout << "Cached else entered \n";
-                    return e;
+                // } else {
+                //     // If level is lower, then that means there is
+                //     // an identity at the current level of that DD
+                //     if (x.p->v > y.p->v) {
+                //         e = xCopy;
+                //     } else {
+                //         e = yCopy;
+                //     }
+                //     computeTable.insert(xCopy, yCopy, {e.p, e.w});
+                //     e.w = cn.mulCached(x.w, y.w);
+//
+                //     if (e.w.approximatelyZero()) {
+                //         cn.returnToCache(e.w);
+                //         return ResultEdge::zero;
+                //     }
+                //     std::cout << "Cached else entered \n";
+                //     return e;
                 }
             }
 
@@ -1806,6 +1808,7 @@ namespace dd {
                     return ResultEdge::zero;
                 }
             }
+
             return e;
         }
 
