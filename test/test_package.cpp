@@ -185,12 +185,7 @@ TEST(DDPackageTest, IdentityTrace) {
 TEST(DDPackageTest, PartialIdentityTrace) {
     auto dd  = std::make_unique<dd::Package<>>(2);
     auto tr  = dd->partialTrace(dd->makeIdent(), {false, true});
-    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/Trace";
-    dd::export2Dot(tr, filename1);
     auto mul = dd->multiply(tr, tr);
-    std::string filename2 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/Multiply";
-    dd::export2Dot(mul, filename2);
-    dd::export2Dot(tr, filename1);
 
     EXPECT_EQ(dd::CTEntry::val(mul.w.r), 4.0);
 }
