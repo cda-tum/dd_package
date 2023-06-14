@@ -2066,7 +2066,15 @@ namespace dd {
     public:
         mEdge partialTrace(const mEdge& a, const std::vector<bool>& eliminate) {
             [[maybe_unused]] const auto before = cn.cacheCount();
-            const auto                  result = trace(a, eliminate);
+            mEdge result;
+            // Check for identity case
+            if (a.isTerminal()) {
+                auto relevantQubits = std::count(eliminate.begin(), eliminate.end(), true);
+                auto ones = std::pow(2, relevantQubits);
+                result = mEdge::terminal(cn.lookup(ones));
+            } else {
+                result = trace(a, eliminate);
+            }
             [[maybe_unused]] const auto after  = cn.cacheCount();
             assert(before == after);
             return result;
@@ -2220,34 +2228,10 @@ namespace dd {
         ///
         /// Identity matrices
         ///
-        // create n-qubit identity DD. makeIdent(n) === makeIdent(0, n-1)
-       // mEdge makeIdent(QubitCount n) { return makeIdent(0, static_cast<Qubit>(n - 1)); }
-       // mEdge makeIdent(Qubit leastSignificantQubit, Qubit mostSignificantQubit) {
-       //     if (mostSignificantQubit < leastSignificantQubit) {
-       //         return mEdge::one;
-       //     }
-//
-       //     if (leastSignificantQubit == 0 && idTable[static_cast<std::size_t>(mostSignificantQubit)].p != nullptr) {
-       //         return idTable[static_cast<std::size_t>(mostSignificantQubit)];
-       //     }
-       //     if (mostSignificantQubit >= 1 && (idTable[static_cast<std::size_t>(mostSignificantQubit - 1)]).p != nullptr) {
-       //         idTable[static_cast<std::size_t>(mostSignificantQubit)] = makeDDNode(mostSignificantQubit,
-       //                                                                              std::array{idTable[static_cast<std::size_t>(mostSignificantQubit - 1)],
-       //                                                                                         mEdge::zero,
-       //                                                                                         mEdge::zero,
-       //                                                                                         idTable[static_cast<std::size_t>(mostSignificantQubit - 1)]});
-       //         return idTable[static_cast<std::size_t>(mostSignificantQubit)];
-       //     }
-//
-       //     auto e = makeDDNode(leastSignificantQubit, std::array{mEdge::one, mEdge::zero, mEdge::zero, mEdge::one});
-       //     for (auto k = static_cast<std::size_t>(leastSignificantQubit + 1); k <= static_cast<std::make_unsigned_t<Qubit>>(mostSignificantQubit); k++) {
-       //         e = makeDDNode(static_cast<Qubit>(k), std::array{e, mEdge::zero, mEdge::zero, e});
-       //     }
-       //     if (leastSignificantQubit == 0) {
-       //         idTable[static_cast<std::size_t>(mostSignificantQubit)] = e;
-       //     }
-       //     return e;
-       // }
+        // create n-qubit identity DD. Equivalent to creating a terminal with weight 1.
+        mEdge makeIdent() {
+            return mEdge::terminal(cn.lookup(1));
+        }
 
         // identity table access and reset
         [[nodiscard]] const auto& getIdentityTable() const { return idTable; }

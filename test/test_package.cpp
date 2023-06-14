@@ -173,22 +173,27 @@ TEST(DDPackageTest, NegativeControl) {
     EXPECT_EQ(dd->getValueByPath(state01, 0b01).r, 1.);
 }
 
-//TEST(DDPackageTest, IdentityTrace) {
-//    auto dd        = std::make_unique<dd::Package<>>(4);
-//    auto identity = dd->makeIdent(4);
-//    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/Identity";
-//    dd::export2Dot(identity, filename1);
-//    auto fullTrace = dd->trace(dd->makeIdent(4));
-//
-//    ASSERT_EQ(fullTrace, (dd::ComplexValue{16, 0}));
-//}
+TEST(DDPackageTest, IdentityTrace) {
+    auto dd        = std::make_unique<dd::Package<>>(4);
+    auto identity = dd->makeIdent();
 
-//TEST(DDPackageTest, PartialIdentityTrace) {
-//    auto dd  = std::make_unique<dd::Package<>>(2);
-//    auto tr  = dd->partialTrace(dd->makeIdent(2), {false, true});
-//    auto mul = dd->multiply(tr, tr);
-//    EXPECT_EQ(dd::CTEntry::val(mul.w.r), 4.0);
-//}
+    auto fullTrace = dd->trace(identity);
+
+    ASSERT_EQ(fullTrace, (dd::ComplexValue{16, 0}));
+}
+
+TEST(DDPackageTest, PartialIdentityTrace) {
+    auto dd  = std::make_unique<dd::Package<>>(2);
+    auto tr  = dd->partialTrace(dd->makeIdent(), {false, true});
+    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/Trace";
+    dd::export2Dot(tr, filename1);
+    auto mul = dd->multiply(tr, tr);
+    std::string filename2 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/Multiply";
+    dd::export2Dot(mul, filename2);
+    dd::export2Dot(tr, filename1);
+
+    EXPECT_EQ(dd::CTEntry::val(mul.w.r), 4.0);
+}
 
 TEST(DDPackageTest, StateGenerationManipulation) {
     const std::size_t nqubits = 6;
@@ -214,6 +219,8 @@ TEST(DDPackageTest, VectorSerializationTest) {
     auto zeroState = dd->makeZeroState(2);
 
     auto bellState = dd->multiply(dd->multiply(cxGate, hGate), zeroState);
+    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/BellState";
+    dd::export2Dot(bellState, filename1, true, true);
 
     serialize(bellState, "bell_state.dd", false);
     auto deserializedBellState = dd->deserialize<dd::vNode>("bell_state.dd", false);
@@ -232,6 +239,8 @@ TEST(DDPackageTest, BellMatrix) {
 
     auto bellMatrix = dd->multiply(cxGate, hGate);
 
+    std::string filename1 = "C:/Users/aaron/OneDrive/Documents/GitHub/ddsim/extern/qfr/extern/dd_package/graphs/BellMatrix";
+    dd::export2Dot(bellMatrix, filename1, true, true);
     ASSERT_EQ(dd->getValueByPath(bellMatrix, "00"), (dd::ComplexValue{dd::SQRT2_2, 0}));
     ASSERT_EQ(dd->getValueByPath(bellMatrix, "02"), (dd::ComplexValue{0, 0}));
     ASSERT_EQ(dd->getValueByPath(bellMatrix, "20"), (dd::ComplexValue{0, 0}));
