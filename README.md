@@ -1,3 +1,7 @@
+> **Warning**
+> As of June 2023, this repository is no longer actively maintained. All code has been directly integrated into [MQT Core](https://github.com/cda-tum/mqt-core).
+> Development is expected to continue there. No new contributions will be accepted here.
+
 [![bench](https://img.shields.io/badge/benchmark-master-blue?logo=github&style=flat-square)](https://cda-tum.github.io/dd_package/dev/bench/)
 ![License MIT](https://img.shields.io/github/license/cda-tum/dd_package?color=blue&style=flat-square)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/cda-tum/dd_package/ci.yml?branch=main&logo=github&style=flat-square)](https://github.com/cda-tum/dd_package/actions?query=workflow%3A%22CI%22)
